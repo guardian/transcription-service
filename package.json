@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "cdk::build": "npm run build --workspace cdk",
+    "cdk::synth": "npm run synth --workspace cdk",
+    "cdk::test": "npm run test --workspace cdk"
   },
   "keywords": [],
   "author": "",
