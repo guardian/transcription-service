@@ -35,12 +35,11 @@ jobs:
       - name: Upload to riff-raff
         uses: guardian/actions-riff-raff@v2
         with:
-          configPath: cdk/cdk.out/riff-raff.yaml
+          configPath: packages/cdk/cdk.out/riff-raff.yaml
           projectName: investigations::transcription-service
-          buildNumberOffset: 60
           contentDirectories: |
             cdk.out:
-              - cdk/cdk.out/transcription-service-CODE.template.json
-              - cdk/cdk.out/transcription-service-PROD.template.json
+              - packages/cdk/cdk.out/TranscriptionService-CODE.template.json
+              - packages/cdk/cdk.out/TranscriptionService-PROD.template.json
             api:
-              - cdk/api.zip
+              - packages/cdk/api.zip
