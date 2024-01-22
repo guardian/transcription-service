@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "esbuild --bundle --platform=node --target=node20 --outfile=dist/index.js index.ts",
-    "package": "cd dist; zip -qr ../../cdk/api.zip ./*"
+    "package": "cd dist; mkdir -p ../target; zip -qr ../target/api.zip ./*"
   },
   "keywords": [],
   "author": "",
