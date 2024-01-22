@@ -64,7 +64,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             "STAGE": "TEST",
           },
         },
-        "Handler": "index.js",
+        "Handler": "index.handler",
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
