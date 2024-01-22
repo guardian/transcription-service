@@ -12,20 +12,21 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v3
         with:
-          node-version-file: .tool-versions
+          node-version-file: .nvmrc
           cache: 'npm'
-      - run: |
-          npm run install
-          npm run build
-          npm run package
+      - name: Install dependencies
+        run: |
+          npm install
+      - name: Package API
+        run: |
+          npm run api::build
+          npm run api::package
       - name: CDK synth
         run: |
-          npm run install
-          npm run tsc
-          npm run lint
-          npm run test
-          npm run synth
-        working-directory: packages/cdk
+          npm run cdk::build
+          npm run cdk::lint
+          npm run cdk::test
+          npm run cdk::synth
       - name: AWS Auth
         uses: aws-actions/configure-aws-credentials@v2
         with:
