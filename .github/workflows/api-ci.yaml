@@ -35,6 +35,7 @@ jobs:
       - name: Upload to riff-raff
         uses: guardian/actions-riff-raff@v3
         with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
           configPath: packages/cdk/cdk.out/riff-raff.yaml
           projectName: investigations::transcription-service
           contentDirectories: |
