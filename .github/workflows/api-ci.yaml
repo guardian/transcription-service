@@ -42,5 +42,5 @@ jobs:
             cdk.out:
               - packages/cdk/cdk.out/TranscriptionService-CODE.template.json
               - packages/cdk/cdk.out/TranscriptionService-PROD.template.json
-            api:
+            transcription-service:
               - packages/api/target/api.zip
