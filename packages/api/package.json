@@ -4,9 +4,18 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "esbuild --bundle --platform=node --target=node20 --outfile=dist/index.js index.ts",
+    "package": "cd dist; zip -qr ../../cdk/api.zip ./*"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "aws-lambda": "^1.0.7"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.131",
+    "@types/node": "^20.11.5",
+    "typescript": "^5.3.3"
+  }
 }
