@@ -9,6 +9,7 @@ export class TranscriptionService extends GuStack {
     super(scope, id, props);
 
     const APP_NAME = "transcription-service";
+    const apiId = `${APP_NAME}-${props.stage}`
 
     new GuApiLambda(this, "transcription-service-api", {
       fileName: "api.zip",
@@ -19,8 +20,8 @@ export class TranscriptionService extends GuStack {
       },
       app: APP_NAME,
       api: {
-        id: "my-api",
-        description: "...",
+        id: apiId,
+        description: "API for transcription service frontend",
       },
     });
   }
