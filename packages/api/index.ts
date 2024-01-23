@@ -3,6 +3,23 @@ import asyncHandler from 'express-async-handler';
 import serverlessExpress from '@codegenie/serverless-express';
 import bodyParser from 'body-parser';
 import path from 'path';
+import { getParameters } from './configHelpers';
+import { SSM } from '@aws-sdk/client-ssm';
+
+const region = process.env['AWS_REGION'];
+
+const ssm = new SSM({
+	region,
+});
+
+export const getConfig = async (): Promise<void> => {
+	const stage = process.env['STAGE'] || 'DEV';
+	const paramPath = `/${stage}/investigations/transcription-service/`;
+
+	const parameters = await getParameters(paramPath, ssm);
+
+	console.log(parameters);
+};
 
 const getApp = async () => {
 	const app = express();
