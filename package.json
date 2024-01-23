@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "api::build": "npm run build --workspace api",
+    "api::build": "npm run build --workspace api; npm run build-frontend --workspace api",
     "api::package": "npm run package --workspace api",
     "cdk::build": "npm run build --workspace cdk",
     "cdk::lint": "npm run lint --workspace cdk",
