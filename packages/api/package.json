@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "esbuild --bundle --platform=node --target=node20 --outfile=dist/index.js index.ts",
+    "build-frontend": "mkdir -p dist/frontend; cp index.html dist/frontend/index.html",
     "package": "cd dist; mkdir -p ../target; zip -qr ../target/api.zip ./*"
   },
   "keywords": [],
