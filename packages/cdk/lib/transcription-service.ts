@@ -11,7 +11,9 @@ export class TranscriptionService extends GuStack {
     super(scope, id, props);
 
     const APP_NAME = "transcription-service";
-    const apiId = `${APP_NAME}-${props.stage}`
+    const apiId = `${APP_NAME}-${props.stage}`;
+    if (!props.env?.region) throw new Error("region not provided in props");
+    
     const ssmPrefix = `arn:aws:ssm:${props.env.region}:${GuardianAwsAccounts.Investigations}:parameter`;
 
     const apiLambda = new GuApiLambda(this, "transcription-service-api", {

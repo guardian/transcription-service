@@ -5,7 +5,7 @@ import { TranscriptionService } from "./transcription-service";
 describe("The TranscriptionService stack", () => {
   it("matches the snapshot", () => {
     const app = new App();
-    const stack = new TranscriptionService(app, "TranscriptionService", { stack: "investigations", stage: "TEST" });
+    const stack = new TranscriptionService(app, "TranscriptionService", { stack: "investigations", stage: "TEST", env: { region: "test-region" } });
     const template = Template.fromStack(stack);
     expect(template.toJSON()).toMatchSnapshot();
   });

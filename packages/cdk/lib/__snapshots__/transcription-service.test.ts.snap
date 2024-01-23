@@ -19,11 +19,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             {
               "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
             },
-            ".execute-api.",
-            {
-              "Ref": "AWS::Region",
-            },
-            ".",
+            ".execute-api.test-region.",
             {
               "Ref": "AWS::URLSuffix",
             },
@@ -204,11 +200,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:",
-                    {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
+                    "arn:aws:ssm:test-region:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -227,11 +219,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:",
-                    {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
+                    "arn:aws:ssm:test-region:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -239,6 +227,14 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                   ],
                 ],
               },
+            },
+            {
+              "Action": [
+                "ssm:GetParameter",
+                "ssm:GetParametersByPath",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:ssm:test-region:745349931791:parameter/TEST/investigations/transcription-service/*",
             },
           ],
           "Version": "2012-10-17",
@@ -270,11 +266,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
               {
                 "Ref": "AWS::Partition",
               },
-              ":execute-api:",
-              {
-                "Ref": "AWS::Region",
-              },
-              ":",
+              ":execute-api:test-region:",
               {
                 "Ref": "AWS::AccountId",
               },
@@ -307,11 +299,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
               {
                 "Ref": "AWS::Partition",
               },
-              ":execute-api:",
-              {
-                "Ref": "AWS::Region",
-              },
-              ":",
+              ":execute-api:test-region:",
               {
                 "Ref": "AWS::AccountId",
               },
@@ -345,11 +333,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                 {
                   "Ref": "AWS::Partition",
                 },
-                ":apigateway:",
-                {
-                  "Ref": "AWS::Region",
-                },
-                ":lambda:path/2015-03-31/functions/",
+                ":apigateway:test-region:lambda:path/2015-03-31/functions/",
                 {
                   "Fn::GetAtt": [
                     "transcriptionserviceapi022C22E7",
@@ -473,7 +457,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       },
       "Type": "AWS::ApiGateway::RestApi",
     },
-    "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDA9f3c8219f1b15f132dbe2e1761e6cad6": {
+    "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDA239aa57b071d08d4c79426ec1366bceb": {
       "DependsOn": [
         "transcriptionserviceapitranscriptionserviceTESTproxyANY65A12BB3",
         "transcriptionserviceapitranscriptionserviceTESTproxy923E1B16",
@@ -493,7 +477,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       ],
       "Properties": {
         "DeploymentId": {
-          "Ref": "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDA9f3c8219f1b15f132dbe2e1761e6cad6",
+          "Ref": "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDA239aa57b071d08d4c79426ec1366bceb",
         },
         "RestApiId": {
           "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
@@ -554,11 +538,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                 {
                   "Ref": "AWS::Partition",
                 },
-                ":apigateway:",
-                {
-                  "Ref": "AWS::Region",
-                },
-                ":lambda:path/2015-03-31/functions/",
+                ":apigateway:test-region:lambda:path/2015-03-31/functions/",
                 {
                   "Fn::GetAtt": [
                     "transcriptionserviceapi022C22E7",
@@ -597,11 +577,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
               {
                 "Ref": "AWS::Partition",
               },
-              ":execute-api:",
-              {
-                "Ref": "AWS::Region",
-              },
-              ":",
+              ":execute-api:test-region:",
               {
                 "Ref": "AWS::AccountId",
               },
@@ -634,11 +610,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
               {
                 "Ref": "AWS::Partition",
               },
-              ":execute-api:",
-              {
-                "Ref": "AWS::Region",
-              },
-              ":",
+              ":execute-api:test-region:",
               {
                 "Ref": "AWS::AccountId",
               },
