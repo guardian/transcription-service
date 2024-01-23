@@ -1,10 +1,10 @@
 import { GuApiLambda } from "@guardian/cdk";
 import { GuStack } from "@guardian/cdk/lib/constructs/core";
 import type { GuStackProps } from "@guardian/cdk/lib/constructs/core";
-import type { App } from "aws-cdk-lib";
-import { Runtime } from "aws-cdk-lib/aws-lambda";
-import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { GuardianAwsAccounts } from "@guardian/private-infrastructure-config";
+import type { App } from "aws-cdk-lib";
+import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Runtime } from "aws-cdk-lib/aws-lambda";
 
 export class TranscriptionService extends GuStack {
   constructor(scope: App, id: string, props: GuStackProps) {
