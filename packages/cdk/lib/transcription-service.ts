@@ -71,7 +71,7 @@ export class TranscriptionService extends GuStack {
 		new GuCname(this, 'transcription DNS entry', {
 			app: APP_NAME,
 			domainName,
-			ttl: Duration.minutes(1),
+			ttl: Duration.hours(1),
 			resourceRecord: apiDomain.domainNameAliasDomainName,
 		});
 	}
