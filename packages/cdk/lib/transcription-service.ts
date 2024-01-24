@@ -20,11 +20,14 @@ export class TranscriptionService extends GuStack {
 
 		const ssmPrefix = `arn:aws:ssm:${props.env.region}:${GuardianAwsAccounts.Investigations}:parameter`;
 		const ssmPath = `${this.stage}/${this.stack}/${APP_NAME}`;
-    const domainName = this.stage === 'PROD' ? 'transcribe.gutools.co.uk' : 'transcribe.code.dev-gutools.co.uk';
+		const domainName =
+			this.stage === 'PROD'
+				? 'transcribe.gutools.co.uk'
+				: 'transcribe.code.dev-gutools.co.uk';
 
 		const certificateId = new GuStringParameter(this, 'certificateId', {
 			fromSSM: true,
-			default: `${ssmPath}/certificateId`,
+			default: `/${ssmPath}/certificateId`,
 		});
 		const certificateArn = `arn:aws:acm:${props.env.region}:${GuardianAwsAccounts.Investigations}:certificate/${certificateId.valueAsString}`;
 		const certificate = Certificate.fromCertificateArn(
@@ -46,8 +49,8 @@ export class TranscriptionService extends GuStack {
 				description: 'API for transcription service frontend',
 				domainName: {
 					certificate,
-          domainName,
-          endpointType: EndpointType.REGIONAL,
+					domainName,
+					endpointType: EndpointType.REGIONAL,
 				},
 			},
 		});
@@ -60,16 +63,16 @@ export class TranscriptionService extends GuStack {
 			}),
 		);
 
-    // The custom domain name mapped to this API
+		// The custom domain name mapped to this API
 		const apiDomain = apiLambda.api.domainName;
 		if (!apiDomain) throw new Error('api lambda domainName is undefined');
 
-    // CNAME mapping between API Gateway and the custom  
+		// CNAME mapping between API Gateway and the custom
 		new GuCname(this, 'transcription DNS entry', {
 			app: APP_NAME,
 			domainName,
 			ttl: Duration.minutes(1),
-			resourceRecord: apiDomain.domainNameAliasDomainName
+			resourceRecord: apiDomain.domainNameAliasDomainName,
 		});
 	}
 }
