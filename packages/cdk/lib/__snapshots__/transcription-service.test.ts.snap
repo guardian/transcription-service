@@ -42,7 +42,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "certificateId": {
-      "Default": "TEST/investigations/transcription-service/certificateId",
+      "Default": "/TEST/investigations/transcription-service/certificateId",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
   },
