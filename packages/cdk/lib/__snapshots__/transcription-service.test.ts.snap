@@ -4,7 +4,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
 {
   "Metadata": {
     "gu:cdk:constructs": [
-      "GuStringParameter",
+      "GuCertificate",
       "GuDistributionBucketParameter",
       "GuApiLambda",
       "GuCname",
@@ -41,12 +41,43 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "Description": "SSM parameter containing the S3 bucket name holding distribution artifacts",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "certificateId": {
-      "Default": "/TEST/investigations/transcription-service/certificateId",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
   },
   "Resources": {
+    "CertificateTranscriptionservice1882E1FE": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "DomainName": "transcribe.code.dev-gutools.co.uk",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Name",
+            "Value": "TranscriptionService/CertificateTranscriptionservice",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "ValidationMethod": "DNS",
+      },
+      "Type": "AWS::CertificateManager::Certificate",
+      "UpdateReplacePolicy": "Retain",
+    },
     "transcriptionDNSentry": {
       "Properties": {
         "Name": "transcribe.code.dev-gutools.co.uk",
@@ -60,7 +91,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
           },
         ],
         "Stage": "TEST",
-        "TTL": 60,
+        "TTL": 3600,
       },
       "Type": "Guardian::DNS::RecordSet",
     },
@@ -460,15 +491,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
           ],
         },
         "RegionalCertificateArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:aws:acm:test-region:745349931791:certificate/",
-              {
-                "Ref": "certificateId",
-              },
-            ],
-          ],
+          "Ref": "CertificateTranscriptionservice1882E1FE",
         },
         "Tags": [
           {

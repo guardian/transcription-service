@@ -1,12 +1,11 @@
 import { GuApiLambda } from '@guardian/cdk';
+import { GuCertificate } from '@guardian/cdk/lib/constructs/acm';
 import { GuStack } from '@guardian/cdk/lib/constructs/core';
 import type { GuStackProps } from '@guardian/cdk/lib/constructs/core';
-import { GuStringParameter } from '@guardian/cdk/lib/constructs/core/parameters';
 import { GuCname } from '@guardian/cdk/lib/constructs/dns';
 import { GuardianAwsAccounts } from '@guardian/private-infrastructure-config';
 import { type App, Duration } from 'aws-cdk-lib';
 import { EndpointType } from 'aws-cdk-lib/aws-apigateway';
-import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 
@@ -25,16 +24,10 @@ export class TranscriptionService extends GuStack {
 				? 'transcribe.gutools.co.uk'
 				: 'transcribe.code.dev-gutools.co.uk';
 
-		const certificateId = new GuStringParameter(this, 'certificateId', {
-			fromSSM: true,
-			default: `/${ssmPath}/certificateId`,
-		});
-		const certificateArn = `arn:aws:acm:${props.env.region}:${GuardianAwsAccounts.Investigations}:certificate/${certificateId.valueAsString}`;
-		const certificate = Certificate.fromCertificateArn(
-			this,
-			`${APP_NAME}-certificate`,
-			certificateArn,
-		);
+    const certificate = new GuCertificate(this, {
+      app: APP_NAME,
+      domainName: domainName,
+    });
 
 		const apiLambda = new GuApiLambda(this, 'transcription-service-api', {
 			fileName: 'api.zip',
