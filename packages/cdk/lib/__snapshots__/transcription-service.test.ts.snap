@@ -4,8 +4,10 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
 {
   "Metadata": {
     "gu:cdk:constructs": [
+      "GuStringParameter",
       "GuDistributionBucketParameter",
       "GuApiLambda",
+      "GuCname",
     ],
     "gu:cdk:version": "TEST",
   },
@@ -39,8 +41,29 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "Description": "SSM parameter containing the S3 bucket name holding distribution artifacts",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "certificateId": {
+      "Default": "TEST/investigations/transcription-service/certificateId",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
   },
   "Resources": {
+    "transcriptionDNSentry": {
+      "Properties": {
+        "Name": "transcribe.code.dev-gutools.co.uk",
+        "RecordType": "CNAME",
+        "ResourceRecords": [
+          {
+            "Fn::GetAtt": [
+              "transcriptionserviceapitranscriptionserviceTESTCustomDomain667B76E8",
+              "RegionalDomainName",
+            ],
+          },
+        ],
+        "Stage": "TEST",
+        "TTL": 60,
+      },
+      "Type": "Guardian::DNS::RecordSet",
+    },
     "transcriptionserviceapi022C22E7": {
       "DependsOn": [
         "transcriptionserviceapiServiceRoleDefaultPolicy0E8B05B2",
@@ -427,6 +450,64 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       },
       "Type": "AWS::IAM::Role",
       "UpdateReplacePolicy": "Retain",
+    },
+    "transcriptionserviceapitranscriptionserviceTESTCustomDomain667B76E8": {
+      "Properties": {
+        "DomainName": "transcribe.code.dev-gutools.co.uk",
+        "EndpointConfiguration": {
+          "Types": [
+            "REGIONAL",
+          ],
+        },
+        "RegionalCertificateArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:acm:test-region:745349931791:certificate/",
+              {
+                "Ref": "certificateId",
+              },
+            ],
+          ],
+        },
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::ApiGateway::DomainName",
+    },
+    "transcriptionserviceapitranscriptionserviceTESTCustomDomainMapTranscriptionServicetranscriptionserviceapitranscriptionserviceTESTDCE62D0F0295EDCD": {
+      "Properties": {
+        "DomainName": {
+          "Ref": "transcriptionserviceapitranscriptionserviceTESTCustomDomain667B76E8",
+        },
+        "RestApiId": {
+          "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
+        },
+        "Stage": {
+          "Ref": "transcriptionserviceapitranscriptionserviceTESTDeploymentStageprodD50A7371",
+        },
+      },
+      "Type": "AWS::ApiGateway::BasePathMapping",
     },
     "transcriptionserviceapitranscriptionserviceTESTD0A6228F": {
       "Properties": {
