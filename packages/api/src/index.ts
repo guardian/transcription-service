@@ -6,10 +6,8 @@ import path from 'path';
 import { getConfig } from './config';
 
 const getApp = async () => {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const config = await getConfig();
-
-	// TODO: This is just for testing. Actual config values should never be logged
-	console.log(`config value retrieved: ${config.test}`);
 
 	const app = express();
 	const apiRouter = express.Router();
