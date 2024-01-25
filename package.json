@@ -4,6 +4,7 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
+		"format": "prettier --write 'packages/**/*.ts'",
 		"api::build": "npm run build --workspace api; npm run build-frontend --workspace api",
 		"api::package": "npm run package --workspace api",
 		"cdk::build": "npm run build --workspace cdk",
