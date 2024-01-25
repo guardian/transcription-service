@@ -44,19 +44,19 @@ export const getParameters = async (
 export const findParameter = (
 	parameters: Parameter[],
 	paramPath: string,
-	paramKey: string
-  ): string => {
-	const parameter = parameters.find(
-		(param: Parameter) => param.Name === `${paramPath}${paramKey}`
-	);
-  
-	return getValueOfParam(paramKey, parameter);
-  };
-
-  export const getValueOfParam = (
 	paramKey: string,
-	parameter?: Parameter
-  ): string => {
+): string => {
+	const parameter = parameters.find(
+		(param: Parameter) => param.Name === `${paramPath}${paramKey}`,
+	);
+
+	return getValueOfParam(paramKey, parameter);
+};
+
+export const getValueOfParam = (
+	paramKey: string,
+	parameter?: Parameter,
+): string => {
 	if (!parameter) {
 		throw new Error(`The parameter ${paramKey} hasn't been configured`);
 	}
@@ -65,4 +65,4 @@ export const findParameter = (
 	}
 	console.log(`Found value of parameter: ${paramKey}`);
 	return parameter.Value;
-  };
+};

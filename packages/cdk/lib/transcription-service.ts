@@ -24,10 +24,10 @@ export class TranscriptionService extends GuStack {
 				? 'transcribe.gutools.co.uk'
 				: 'transcribe.code.dev-gutools.co.uk';
 
-    const certificate = new GuCertificate(this, {
-      app: APP_NAME,
-      domainName: domainName,
-    });
+		const certificate = new GuCertificate(this, {
+			app: APP_NAME,
+			domainName: domainName,
+		});
 
 		const apiLambda = new GuApiLambda(this, 'transcription-service-api', {
 			fileName: 'api.zip',

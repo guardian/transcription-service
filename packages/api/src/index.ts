@@ -9,7 +9,7 @@ const getApp = async () => {
 	const config = await getConfig();
 
 	// TODO: This is just for testing. Actual config values should never be logged
-	console.log(`config value retrieved: ${config.test}`); 
+	console.log(`config value retrieved: ${config.test}`);
 
 	const app = express();
 	const apiRouter = express.Router();
