@@ -25,6 +25,10 @@ jobs:
         run: |
           npm run api::build
           npm run api::package
+      - name: Package Worker
+        run: |
+          npm run worker::build
+          npm run worker::package
       - name: CDK synth
         run: |
           npm run cdk::build
@@ -47,3 +51,4 @@ jobs:
               - packages/cdk/cdk.out/TranscriptionService-PROD.template.json
             transcription-service:
               - packages/api/target/api.zip
+              - packages/api/target/worker.zip
