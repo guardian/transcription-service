@@ -4,10 +4,13 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
 {
   "Metadata": {
     "gu:cdk:constructs": [
+      "GuAmiParameter",
       "GuCertificate",
       "GuDistributionBucketParameter",
       "GuApiLambda",
       "GuCname",
+      "GuVpcParameter",
+      "GuSubnetListParameter",
     ],
     "gu:cdk:version": "TEST",
   },
@@ -36,10 +39,24 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
     },
   },
   "Parameters": {
+    "AMITranscriptionserviceworker": {
+      "Description": "AMI to use for the worker instances",
+      "Type": "AWS::EC2::Image::Id",
+    },
     "DistributionBucketName": {
       "Default": "/account/services/artifact.bucket",
       "Description": "SSM parameter containing the S3 bucket name holding distribution artifacts",
       "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "VpcId": {
+      "Default": "/account/vpc/primary/id",
+      "Description": "Virtual Private Cloud to run EC2 instances within. Should NOT be the account default VPC.",
+      "Type": "AWS::SSM::Parameter::Value<AWS::EC2::VPC::Id>",
+    },
+    "transcriptionserviceworkerPrivateSubnets": {
+      "Default": "/account/vpc/primary/subnets/private",
+      "Description": "A list of private subnets",
+      "Type": "AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>",
     },
   },
   "Resources": {
@@ -77,6 +94,196 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       },
       "Type": "AWS::CertificateManager::Certificate",
       "UpdateReplacePolicy": "Retain",
+    },
+    "TransciptionWorkerASG149262B9": {
+      "Properties": {
+        "AutoScalingGroupName": "transcription-service-workers-TEST",
+        "MaxSize": "4",
+        "MinSize": "0",
+        "MixedInstancesPolicy": {
+          "InstancesDistribution": {
+            "OnDemandBaseCapacity": 0,
+            "OnDemandPercentageAboveBaseCapacity": 100,
+            "SpotAllocationStrategy": "capacity-optimized",
+            "SpotMaxPrice": "0.6202",
+          },
+          "LaunchTemplate": {
+            "LaunchTemplateSpecification": {
+              "LaunchTemplateId": {
+                "Ref": "TranscriptionWorkerLaunchTemplate03F06207",
+              },
+              "Version": {
+                "Fn::GetAtt": [
+                  "TranscriptionWorkerLaunchTemplate03F06207",
+                  "LatestVersionNumber",
+                ],
+              },
+            },
+            "Overrides": [
+              {
+                "InstanceType": "c7g.4xlarge",
+              },
+              {
+                "InstanceType": "c6g.4xlarge",
+              },
+              {
+                "InstanceType": "m7g.4xlarge",
+              },
+              {
+                "InstanceType": "c7g.8xlarge",
+              },
+              {
+                "InstanceType": "c6g.8xlarge",
+              },
+            ],
+          },
+        },
+        "NewInstancesProtectedFromScaleIn": true,
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "PropagateAtLaunch": true,
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "PropagateAtLaunch": true,
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "PropagateAtLaunch": true,
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "PropagateAtLaunch": true,
+            "Value": "TEST",
+          },
+        ],
+        "VPCZoneIdentifier": {
+          "Ref": "transcriptionserviceworkerPrivateSubnets",
+        },
+      },
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "UpdatePolicy": {
+        "AutoScalingScheduledAction": {
+          "IgnoreUnmodifiedGroupSizeProperties": true,
+        },
+      },
+    },
+    "TranscriptionWorkerLaunchTemplate03F06207": {
+      "Properties": {
+        "LaunchTemplateData": {
+          "BlockDeviceMappings": [
+            {
+              "DeviceName": "/dev/sda1",
+              "Ebs": {
+                "VolumeSize": 50,
+              },
+            },
+          ],
+          "ImageId": "ami-12345",
+          "InstanceType": "c7g.4xlarge",
+          "TagSpecifications": [
+            {
+              "ResourceType": "instance",
+              "Tags": [
+                {
+                  "Key": "gu:cdk:version",
+                  "Value": "TEST",
+                },
+                {
+                  "Key": "gu:repo",
+                  "Value": "guardian/transcription-service",
+                },
+                {
+                  "Key": "Name",
+                  "Value": "TranscriptionService/TranscriptionWorkerLaunchTemplate",
+                },
+                {
+                  "Key": "Stack",
+                  "Value": "investigations",
+                },
+                {
+                  "Key": "Stage",
+                  "Value": "TEST",
+                },
+              ],
+            },
+            {
+              "ResourceType": "volume",
+              "Tags": [
+                {
+                  "Key": "gu:cdk:version",
+                  "Value": "TEST",
+                },
+                {
+                  "Key": "gu:repo",
+                  "Value": "guardian/transcription-service",
+                },
+                {
+                  "Key": "Name",
+                  "Value": "TranscriptionService/TranscriptionWorkerLaunchTemplate",
+                },
+                {
+                  "Key": "Stack",
+                  "Value": "investigations",
+                },
+                {
+                  "Key": "Stage",
+                  "Value": "TEST",
+                },
+              ],
+            },
+          ],
+          "UserData": {
+            "Fn::Base64": {
+              "Fn::Join": [
+                "",
+                [
+                  "#!/bin/bash
+aws s3 cp s3://",
+                  {
+                    "Ref": "DistributionBucketName",
+                  },
+                  "/investigations/TEST/transcription-service/worker.zip
+unzip worker.zip
+node index.js",
+                ],
+              ],
+            },
+          },
+        },
+        "TagSpecifications": [
+          {
+            "ResourceType": "launch-template",
+            "Tags": [
+              {
+                "Key": "gu:cdk:version",
+                "Value": "TEST",
+              },
+              {
+                "Key": "gu:repo",
+                "Value": "guardian/transcription-service",
+              },
+              {
+                "Key": "Name",
+                "Value": "TranscriptionService/TranscriptionWorkerLaunchTemplate",
+              },
+              {
+                "Key": "Stack",
+                "Value": "investigations",
+              },
+              {
+                "Key": "Stage",
+                "Value": "TEST",
+              },
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::EC2::LaunchTemplate",
     },
     "transcriptionDNSentry": {
       "Properties": {

@@ -51,4 +51,4 @@ jobs:
               - packages/cdk/cdk.out/TranscriptionService-PROD.template.json
             transcription-service:
               - packages/api/target/api.zip
-              - packages/api/target/worker.zip
+              - packages/worker/target/worker.zip
