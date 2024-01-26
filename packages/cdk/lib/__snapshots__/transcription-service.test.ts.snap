@@ -3,8 +3,736 @@
 exports[`The TranscriptionService stack matches the snapshot 1`] = `
 {
   "Metadata": {
-    "gu:cdk:constructs": [],
+    "gu:cdk:constructs": [
+      "GuCertificate",
+      "GuDistributionBucketParameter",
+      "GuApiLambda",
+      "GuCname",
+    ],
     "gu:cdk:version": "TEST",
+  },
+  "Outputs": {
+    "transcriptionserviceapitranscriptionserviceTESTEndpointA34D5917": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
+            },
+            ".execute-api.test-region.",
+            {
+              "Ref": "AWS::URLSuffix",
+            },
+            "/",
+            {
+              "Ref": "transcriptionserviceapitranscriptionserviceTESTDeploymentStageprodD50A7371",
+            },
+            "/",
+          ],
+        ],
+      },
+    },
+  },
+  "Parameters": {
+    "DistributionBucketName": {
+      "Default": "/account/services/artifact.bucket",
+      "Description": "SSM parameter containing the S3 bucket name holding distribution artifacts",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "CertificateTranscriptionservice1882E1FE": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "DomainName": "transcribe.code.dev-gutools.co.uk",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Name",
+            "Value": "TranscriptionService/CertificateTranscriptionservice",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "ValidationMethod": "DNS",
+      },
+      "Type": "AWS::CertificateManager::Certificate",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "transcriptionDNSentry": {
+      "Properties": {
+        "Name": "transcribe.code.dev-gutools.co.uk",
+        "RecordType": "CNAME",
+        "ResourceRecords": [
+          {
+            "Fn::GetAtt": [
+              "transcriptionserviceapitranscriptionserviceTESTCustomDomain667B76E8",
+              "RegionalDomainName",
+            ],
+          },
+        ],
+        "Stage": "TEST",
+        "TTL": 3600,
+      },
+      "Type": "Guardian::DNS::RecordSet",
+    },
+    "transcriptionserviceapi022C22E7": {
+      "DependsOn": [
+        "transcriptionserviceapiServiceRoleDefaultPolicy0E8B05B2",
+        "transcriptionserviceapiServiceRole0EF40E0F",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DistributionBucketName",
+          },
+          "S3Key": "investigations/TEST/transcription-service/api.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "APP": "transcription-service",
+            "STACK": "investigations",
+            "STAGE": "TEST",
+          },
+        },
+        "Handler": "index.api",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "transcriptionserviceapiServiceRole0EF40E0F",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 30,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "transcriptionserviceapiServiceRole0EF40E0F": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "transcriptionserviceapiServiceRoleDefaultPolicy0E8B05B2": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                      "/investigations/TEST/transcription-service/api.zip",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "ssm:GetParametersByPath",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:GetParameter",
+                "ssm:GetParametersByPath",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:ssm:test-region:745349931791:parameter/TEST/investigations/transcription-service/*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "transcriptionserviceapiServiceRoleDefaultPolicy0E8B05B2",
+        "Roles": [
+          {
+            "Ref": "transcriptionserviceapiServiceRole0EF40E0F",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "transcriptionserviceapitranscriptionserviceTESTANYApiPermissionTestTranscriptionServicetranscriptionserviceapitranscriptionserviceTESTDCE62D0FANYB73C3D22": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "transcriptionserviceapi022C22E7",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:test-region:",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
+              },
+              "/test-invoke-stage/*/",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "transcriptionserviceapitranscriptionserviceTESTANYApiPermissionTranscriptionServicetranscriptionserviceapitranscriptionserviceTESTDCE62D0FANY93BBC400": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "transcriptionserviceapi022C22E7",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:test-region:",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
+              },
+              "/",
+              {
+                "Ref": "transcriptionserviceapitranscriptionserviceTESTDeploymentStageprodD50A7371",
+              },
+              "/*/",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "transcriptionserviceapitranscriptionserviceTESTANYE13DE83D": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "ANY",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:test-region:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "transcriptionserviceapi022C22E7",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Fn::GetAtt": [
+            "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
+            "RootResourceId",
+          ],
+        },
+        "RestApiId": {
+          "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "transcriptionserviceapitranscriptionserviceTESTAccount0135D317": {
+      "DeletionPolicy": "Retain",
+      "DependsOn": [
+        "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
+      ],
+      "Properties": {
+        "CloudWatchRoleArn": {
+          "Fn::GetAtt": [
+            "transcriptionserviceapitranscriptionserviceTESTCloudWatchRole434B26EE",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::ApiGateway::Account",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "transcriptionserviceapitranscriptionserviceTESTCloudWatchRole434B26EE": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "apigateway.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "transcriptionserviceapitranscriptionserviceTESTCustomDomain667B76E8": {
+      "Properties": {
+        "DomainName": "transcribe.code.dev-gutools.co.uk",
+        "EndpointConfiguration": {
+          "Types": [
+            "REGIONAL",
+          ],
+        },
+        "RegionalCertificateArn": {
+          "Ref": "CertificateTranscriptionservice1882E1FE",
+        },
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::ApiGateway::DomainName",
+    },
+    "transcriptionserviceapitranscriptionserviceTESTCustomDomainMapTranscriptionServicetranscriptionserviceapitranscriptionserviceTESTDCE62D0F0295EDCD": {
+      "Properties": {
+        "DomainName": {
+          "Ref": "transcriptionserviceapitranscriptionserviceTESTCustomDomain667B76E8",
+        },
+        "RestApiId": {
+          "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
+        },
+        "Stage": {
+          "Ref": "transcriptionserviceapitranscriptionserviceTESTDeploymentStageprodD50A7371",
+        },
+      },
+      "Type": "AWS::ApiGateway::BasePathMapping",
+    },
+    "transcriptionserviceapitranscriptionserviceTESTD0A6228F": {
+      "Properties": {
+        "Description": "API for transcription service frontend",
+        "Name": "investigations-TEST-transcription-service-TEST",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::ApiGateway::RestApi",
+    },
+    "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDA239aa57b071d08d4c79426ec1366bceb": {
+      "DependsOn": [
+        "transcriptionserviceapitranscriptionserviceTESTproxyANY65A12BB3",
+        "transcriptionserviceapitranscriptionserviceTESTproxy923E1B16",
+        "transcriptionserviceapitranscriptionserviceTESTANYE13DE83D",
+      ],
+      "Properties": {
+        "Description": "API for transcription service frontend",
+        "RestApiId": {
+          "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
+        },
+      },
+      "Type": "AWS::ApiGateway::Deployment",
+    },
+    "transcriptionserviceapitranscriptionserviceTESTDeploymentStageprodD50A7371": {
+      "DependsOn": [
+        "transcriptionserviceapitranscriptionserviceTESTAccount0135D317",
+      ],
+      "Properties": {
+        "DeploymentId": {
+          "Ref": "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDA239aa57b071d08d4c79426ec1366bceb",
+        },
+        "RestApiId": {
+          "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
+        },
+        "StageName": "prod",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::ApiGateway::Stage",
+    },
+    "transcriptionserviceapitranscriptionserviceTESTproxy923E1B16": {
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
+            "RootResourceId",
+          ],
+        },
+        "PathPart": "{proxy+}",
+        "RestApiId": {
+          "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "transcriptionserviceapitranscriptionserviceTESTproxyANY65A12BB3": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "ANY",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:test-region:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "transcriptionserviceapi022C22E7",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "transcriptionserviceapitranscriptionserviceTESTproxy923E1B16",
+        },
+        "RestApiId": {
+          "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "transcriptionserviceapitranscriptionserviceTESTproxyANYApiPermissionTestTranscriptionServicetranscriptionserviceapitranscriptionserviceTESTDCE62D0FANYproxyF592B42E": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "transcriptionserviceapi022C22E7",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:test-region:",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
+              },
+              "/test-invoke-stage/*/*",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "transcriptionserviceapitranscriptionserviceTESTproxyANYApiPermissionTranscriptionServicetranscriptionserviceapitranscriptionserviceTESTDCE62D0FANYproxyD67896CC": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "transcriptionserviceapi022C22E7",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:test-region:",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
+              },
+              "/",
+              {
+                "Ref": "transcriptionserviceapitranscriptionserviceTESTDeploymentStageprodD50A7371",
+              },
+              "/*/*",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
   },
 }
 `;

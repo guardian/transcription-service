@@ -8,6 +8,7 @@
     "test-update": "jest -u",
     "format": "prettier --write \"{lib,bin}/**/*.ts\"",
     "lint": "eslint lib/** bin/** --ext .ts --no-error-on-unmatched-pattern",
+    "lint-fix": "eslint --fix lib/** bin/** --ext .ts --no-error-on-unmatched-pattern",
     "synth": "cdk synth --path-metadata false --version-reporting false",
     "diff": "cdk diff --path-metadata false --version-reporting false"
   },
@@ -15,6 +16,7 @@
     "@guardian/cdk": "53.0.3",
     "@guardian/eslint-config-typescript": "8.0.0",
     "@guardian/prettier": "5.0.0",
+    "@guardian/private-infrastructure-config": "github:guardian/private-infrastructure-config#v2.4.0",
     "@guardian/tsconfig": "^0.2.0",
     "@types/jest": "^29.5.11",
     "@types/node": "20.11.5",

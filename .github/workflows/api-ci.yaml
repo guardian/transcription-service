@@ -1,0 +1,49 @@
+name: 'CI: API'
+on: [push]
+jobs:
+  ci:
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+      - uses: guardian/actions-read-private-repos@v0.1.1
+        with:
+          private-ssh-keys: ${{ secrets.PRIVATE_INFRASTRUCTURE_CONFIG_DEPLOY_KEY }}
+      - name: Install dependencies
+        run: |
+          npm install
+      - name: Package API
+        run: |
+          npm run api::build
+          npm run api::package
+      - name: CDK synth
+        run: |
+          npm run cdk::build
+          npm run cdk::lint
+          npm run cdk::synth
+      - name: AWS Auth
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+          aws-region: eu-west-1
+      - name: Upload to riff-raff
+        uses: guardian/actions-riff-raff@v3
+        with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          configPath: packages/cdk/cdk.out/riff-raff.yaml
+          projectName: investigations::transcription-service
+          contentDirectories: |
+            cdk.out:
+              - packages/cdk/cdk.out/TranscriptionService-CODE.template.json
+              - packages/cdk/cdk.out/TranscriptionService-PROD.template.json
+            transcription-service:
+              - packages/api/target/api.zip
