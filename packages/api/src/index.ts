@@ -5,6 +5,8 @@ import bodyParser from 'body-parser';
 import path from 'path';
 import { getConfig } from './config';
 
+const runningOnAws = process.env['AWS_EXECUTION_ENV'];
+
 const getApp = async () => {
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const config = await getConfig();
@@ -23,7 +25,7 @@ const getApp = async () => {
 
 	app.use('/api', apiRouter);
 
-	if (process.env['AWS_EXECUTION_ENV'] !== undefined) {
+	if (runningOnAws) {
 		app.use(express.static('frontend'));
 		app.get('/*', (req, res) => {
 			res.sendFile(path.resolve(__dirname, 'frontend', 'index.html'));
@@ -34,7 +36,7 @@ const getApp = async () => {
 };
 
 let api;
-if (process.env['AWS_EXECUTION_ENV'] !== undefined) {
+if (runningOnAws) {
 	console.log('Running on lambda');
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -63,6 +63,5 @@ export const getValueOfParam = (
 	if (!parameter.Value) {
 		throw new Error(`The parameter ${paramKey} has no value`);
 	}
-	console.log(`Found value of parameter: ${paramKey}`);
 	return parameter.Value;
 };
