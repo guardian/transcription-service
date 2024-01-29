@@ -85,7 +85,7 @@ export class TranscriptionService extends GuStack {
 		})
 		// basic placeholder commands
 			userData.addCommands([
-			`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/${APP_NAME}/worker.zip .`,
+			`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/${workerApp}/worker.zip .`,
 				`unzip worker.zip`,
 				`node index.js`
 		].join("\n"))

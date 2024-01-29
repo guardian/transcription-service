@@ -46,7 +46,7 @@ deployments:
       - updateLambda
     dependencies:
       - cfn-eu-west-1-investigations-transcription-service
-  s3-upload-transcription-service-worker:
+  transcription-service-worker:
     type: aws-s3
     stacks:
       - investigations
