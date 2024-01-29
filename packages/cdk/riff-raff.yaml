@@ -1,0 +1,60 @@
+allowedStages:
+  - CODE
+  - PROD
+deployments:
+  lambda-upload-eu-west-1-investigations-transcription-service:
+    type: aws-lambda
+    stacks:
+      - investigations
+    regions:
+      - eu-west-1
+    app: transcription-service
+    contentDirectory: transcription-service
+    parameters:
+      bucketSsmLookup: true
+      lookupByTags: true
+      fileName: api.zip
+    actions:
+      - uploadLambda
+  cfn-eu-west-1-investigations-transcription-service:
+    type: cloud-formation
+    regions:
+      - eu-west-1
+    stacks:
+      - investigations
+    app: transcription-service
+    contentDirectory: cdk.out
+    parameters:
+      templateStagePaths:
+        CODE: TranscriptionService-CODE.template.json
+        PROD: TranscriptionService-PROD.template.json
+    dependencies:
+      - lambda-upload-eu-west-1-investigations-transcription-service
+  lambda-update-eu-west-1-investigations-transcription-service:
+    type: aws-lambda
+    stacks:
+      - investigations
+    regions:
+      - eu-west-1
+    app: transcription-service
+    contentDirectory: transcription-service
+    parameters:
+      bucketSsmLookup: true
+      lookupByTags: true
+      fileName: api.zip
+    actions:
+      - updateLambda
+    dependencies:
+      - cfn-eu-west-1-investigations-transcription-service
+  s3-upload-transcription-service-worker:
+    type: aws-s3
+    stacks:
+      - investigations
+    regions:
+      - eu-west-1
+    app: transcription-service
+    contentDirectory: transcription-service-worker
+    parameters:
+      bucketSsmLookup: true
+      cacheControl: public, max-age=60
+      publicReadAcl: false

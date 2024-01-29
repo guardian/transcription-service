@@ -43,7 +43,7 @@ jobs:
         uses: guardian/actions-riff-raff@v3
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          configPath: packages/cdk/cdk.out/riff-raff.yaml
+          configPath: packages/cdk/riff-raff.yaml
           projectName: investigations::transcription-service
           contentDirectories: |
             cdk.out:
@@ -51,4 +51,5 @@ jobs:
               - packages/cdk/cdk.out/TranscriptionService-PROD.template.json
             transcription-service:
               - packages/api/target/api.zip
+            transcription-service-worker:
               - packages/worker/target/worker.zip
