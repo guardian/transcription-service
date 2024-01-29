@@ -11,6 +11,8 @@ import {AutoScalingGroup, BlockDeviceVolume, SpotAllocationStrategy} from "aws-c
 import {InstanceClass, InstanceSize, InstanceType, LaunchTemplate, MachineImage, UserData} from "aws-cdk-lib/aws-ec2";
 import {Effect, PolicyStatement} from 'aws-cdk-lib/aws-iam';
 import {Runtime} from 'aws-cdk-lib/aws-lambda';
+import {GuAutoScalingGroup} from "@guardian/cdk/lib/constructs/autoscaling";
+import {GuInstanceRole} from "@guardian/cdk/lib/constructs/iam";
 
 export class TranscriptionService extends GuStack {
 	constructor(scope: App, id: string, props: GuStackProps) {
@@ -89,6 +91,10 @@ export class TranscriptionService extends GuStack {
 				`node index.js`
 		].join("\n"))
 
+		const role = new GuInstanceRole(this, {
+			app: workerApp
+		})
+
 		const launchTemplate = new LaunchTemplate(this, "TranscriptionWorkerLaunchTemplate", {
 			machineImage: MachineImage.genericLinux({"eu-west-1": workerAmi.valueAsString}),
 			instanceType: InstanceType.of(InstanceClass.C7G, InstanceSize.XLARGE4),
@@ -103,7 +109,8 @@ export class TranscriptionService extends GuStack {
 					volume: BlockDeviceVolume.ebs(50)
 				}
 			],
-			userData
+			userData,
+			role: role
 		})
 
 		// instance types we are happy to use for workers. Note - order matters as when launching 'on demand' instances
