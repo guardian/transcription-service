@@ -4,6 +4,7 @@ import type {GuStackProps} from '@guardian/cdk/lib/constructs/core';
 import {GuAmiParameter, GuDistributionBucketParameter, GuStack} from '@guardian/cdk/lib/constructs/core';
 import {GuCname} from '@guardian/cdk/lib/constructs/dns';
 import {GuVpc, SubnetType} from "@guardian/cdk/lib/constructs/ec2";
+import {GuInstanceRole} from "@guardian/cdk/lib/constructs/iam";
 import {GuardianAwsAccounts} from '@guardian/private-infrastructure-config';
 import {type App, Duration} from 'aws-cdk-lib';
 import {EndpointType} from 'aws-cdk-lib/aws-apigateway';
@@ -84,10 +85,14 @@ export class TranscriptionService extends GuStack {
 		})
 		// basic placeholder commands
 			userData.addCommands([
-			`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/${APP_NAME}/worker.zip`,
+			`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/${workerApp}/worker.zip .`,
 				`unzip worker.zip`,
 				`node index.js`
 		].join("\n"))
+
+		const role = new GuInstanceRole(this, {
+			app: workerApp
+		})
 
 		const launchTemplate = new LaunchTemplate(this, "TranscriptionWorkerLaunchTemplate", {
 			machineImage: MachineImage.genericLinux({"eu-west-1": workerAmi.valueAsString}),
@@ -103,7 +108,8 @@ export class TranscriptionService extends GuStack {
 					volume: BlockDeviceVolume.ebs(50)
 				}
 			],
-			userData
+			userData,
+			role: role
 		})
 
 		// instance types we are happy to use for workers. Note - order matters as when launching 'on demand' instances
