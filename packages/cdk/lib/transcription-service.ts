@@ -4,6 +4,7 @@ import type {GuStackProps} from '@guardian/cdk/lib/constructs/core';
 import {GuAmiParameter, GuDistributionBucketParameter, GuStack} from '@guardian/cdk/lib/constructs/core';
 import {GuCname} from '@guardian/cdk/lib/constructs/dns';
 import {GuVpc, SubnetType} from "@guardian/cdk/lib/constructs/ec2";
+import {GuInstanceRole} from "@guardian/cdk/lib/constructs/iam";
 import {GuardianAwsAccounts} from '@guardian/private-infrastructure-config';
 import {type App, Duration} from 'aws-cdk-lib';
 import {EndpointType} from 'aws-cdk-lib/aws-apigateway';
@@ -11,7 +12,6 @@ import {AutoScalingGroup, BlockDeviceVolume, SpotAllocationStrategy} from "aws-c
 import {InstanceClass, InstanceSize, InstanceType, LaunchTemplate, MachineImage, UserData} from "aws-cdk-lib/aws-ec2";
 import {Effect, PolicyStatement} from 'aws-cdk-lib/aws-iam';
 import {Runtime} from 'aws-cdk-lib/aws-lambda';
-import {GuInstanceRole} from "@guardian/cdk/lib/constructs/iam";
 
 export class TranscriptionService extends GuStack {
 	constructor(scope: App, id: string, props: GuStackProps) {
