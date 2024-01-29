@@ -11,7 +11,6 @@ import {AutoScalingGroup, BlockDeviceVolume, SpotAllocationStrategy} from "aws-c
 import {InstanceClass, InstanceSize, InstanceType, LaunchTemplate, MachineImage, UserData} from "aws-cdk-lib/aws-ec2";
 import {Effect, PolicyStatement} from 'aws-cdk-lib/aws-iam';
 import {Runtime} from 'aws-cdk-lib/aws-lambda';
-import {GuAutoScalingGroup} from "@guardian/cdk/lib/constructs/autoscaling";
 import {GuInstanceRole} from "@guardian/cdk/lib/constructs/iam";
 
 export class TranscriptionService extends GuStack {
