@@ -27,6 +27,7 @@ import {
 } from 'aws-cdk-lib/aws-ec2';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Queue } from 'aws-cdk-lib/aws-sqs';
 
 export class TranscriptionService extends GuStack {
 	constructor(scope: App, id: string, props: GuStackProps) {
@@ -147,38 +148,58 @@ export class TranscriptionService extends GuStack {
 			: [InstanceType.of(InstanceClass.T4G, InstanceSize.MEDIUM)];
 
 		// unfortunately GuAutoscalingGroup doesn't support having a mixedInstancesPolicy so using the basic ASG here
-		new AutoScalingGroup(this, 'TransciptionWorkerASG', {
-			minCapacity: 0,
-			maxCapacity: isProd ? 20 : 4,
-			autoScalingGroupName: `transcription-service-workers-${this.stage}`,
-			vpc: GuVpc.fromIdParameter(this, 'InvestigationsInternetEnabledVpc', {
-				availabilityZones: ['eu-west-1a', 'eu-west-1b', 'eu-west-1c'],
-			}),
-			vpcSubnets: {
-				subnets: GuVpc.subnetsFromParameter(this, {
-					type: SubnetType.PRIVATE,
-					app: workerApp,
+		const transcriptionWorkerASG = new AutoScalingGroup(
+			this,
+			'TranscriptionWorkerASG',
+			{
+				minCapacity: 0,
+				maxCapacity: isProd ? 20 : 4,
+				autoScalingGroupName: `transcription-service-workers-${this.stage}`,
+				vpc: GuVpc.fromIdParameter(this, 'InvestigationsInternetEnabledVpc', {
+					availabilityZones: ['eu-west-1a', 'eu-west-1b', 'eu-west-1c'],
 				}),
-			},
-			// instances should shut themselves down when they have finished the transcription - they should not be terminated
-			// by the ASG
-			newInstancesProtectedFromScaleIn: true,
-			mixedInstancesPolicy: {
-				launchTemplate,
-				instancesDistribution: {
-					// 0 is the default, including this here just to make it more obvious what's happening
-					onDemandBaseCapacity: 0,
-					// if this value is set to 100, then we won't use spot instances at all, if it is 0 then we use 100% spot
-					onDemandPercentageAboveBaseCapacity: 100,
-					spotAllocationStrategy: SpotAllocationStrategy.CAPACITY_OPTIMIZED,
-					spotMaxPrice: '0.6202',
-				},
-				launchTemplateOverrides: acceptableInstanceTypes.map(
-					(instanceType) => ({
-						instanceType,
+				vpcSubnets: {
+					subnets: GuVpc.subnetsFromParameter(this, {
+						type: SubnetType.PRIVATE,
+						app: workerApp,
 					}),
-				),
+				},
+				// instances should shut themselves down when they have finished the transcription - they should not be terminated
+				// by the ASG
+				newInstancesProtectedFromScaleIn: true,
+				mixedInstancesPolicy: {
+					launchTemplate,
+					instancesDistribution: {
+						// 0 is the default, including this here just to make it more obvious what's happening
+						onDemandBaseCapacity: 0,
+						// if this value is set to 100, then we won't use spot instances at all, if it is 0 then we use 100% spot
+						onDemandPercentageAboveBaseCapacity: 100,
+						spotAllocationStrategy: SpotAllocationStrategy.CAPACITY_OPTIMIZED,
+						spotMaxPrice: '0.6202',
+					},
+					launchTemplateOverrides: acceptableInstanceTypes.map(
+						(instanceType) => ({
+							instanceType,
+						}),
+					),
+				},
 			},
+		);
+
+		// SQS queue for transcription tasks from API lambda to worker EC2 instances
+		const transcriptionTaskQueue = new Queue(this, `${APP_NAME}-task-queue`, {
+			fifo: true,
+			queueName: `${APP_NAME}-task-queue-${this.stage}.fifo`,
+			// this is the default. 30 seconds should be enough time to get the
+			// size of the file from s3 and estimate transcription time. If it's
+			// not, we'll need to increase visibilityTimeout
+			visibilityTimeout: Duration.seconds(30),
 		});
+
+		// allow API lambda to write to queue
+		transcriptionTaskQueue.grantSendMessages(apiLambda);
+
+		// allow worker to receive message from queue
+		transcriptionTaskQueue.grantConsumeMessages(transcriptionWorkerASG);
 	}
 }
