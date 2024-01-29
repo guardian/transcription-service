@@ -126,7 +126,7 @@ export class TranscriptionService extends GuStack {
 
 
 		// unfortunately GuAutoscalingGroup doesn't support having a mixedInstancesPolicy so using the basic ASG here
-		new AutoScalingGroup(this, "TransciptionWorkerASG", {
+		new AutoScalingGroup(this, "TranscriptionWorkerASG", {
 			minCapacity: 0,
 			maxCapacity: isProd ? 20 : 4,
 			autoScalingGroupName: `transcription-service-workers-${this.stage}`,
