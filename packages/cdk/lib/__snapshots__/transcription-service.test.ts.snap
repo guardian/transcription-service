@@ -458,7 +458,7 @@ aws s3 cp s3://",
                   {
                     "Ref": "DistributionBucketName",
                   },
-                  "/investigations/TEST/transcription-service/worker.zip
+                  "/investigations/TEST/transcription-service-worker/worker.zip .
 unzip worker.zip
 node index.js",
                 ],
