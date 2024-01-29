@@ -8,14 +8,7 @@ import {GuardianAwsAccounts} from '@guardian/private-infrastructure-config';
 import {type App, Duration} from 'aws-cdk-lib';
 import {EndpointType} from 'aws-cdk-lib/aws-apigateway';
 import {AutoScalingGroup, BlockDeviceVolume, SpotAllocationStrategy} from "aws-cdk-lib/aws-autoscaling";
-import {
-	InstanceClass,
-	InstanceSize,
-	InstanceType,
-	LaunchTemplate,
-	MachineImage,
-	UserData
-} from "aws-cdk-lib/aws-ec2";
+import {InstanceClass, InstanceSize, InstanceType, LaunchTemplate, MachineImage, UserData} from "aws-cdk-lib/aws-ec2";
 import {Effect, PolicyStatement} from 'aws-cdk-lib/aws-iam';
 import {Runtime} from 'aws-cdk-lib/aws-lambda';
 
@@ -84,7 +77,7 @@ export class TranscriptionService extends GuStack {
 			resourceRecord: apiDomain.domainNameAliasDomainName,
 		});
 
-		// worker
+		// worker autoscaling group
 
 		const workerApp = `${APP_NAME}-worker`
 		const userData = UserData.forLinux({ shebang: "#!/bin/bash"
@@ -115,15 +108,17 @@ export class TranscriptionService extends GuStack {
 
 		// instance types we are happy to use for workers. Note - order matters as when launching 'on demand' instances
 		// the ASG will start at the top of the list and work down until it manages to launch an instance
-		const acceptableInstanceTypes = [
+		const acceptableInstanceTypes = isProd ? [
 			InstanceType.of(InstanceClass.C7G, InstanceSize.XLARGE4),
 			InstanceType.of(InstanceClass.C6G, InstanceSize.XLARGE4),
 			InstanceType.of(InstanceClass.M7G, InstanceSize.XLARGE4),
 			InstanceType.of(InstanceClass.C7G, InstanceSize.XLARGE8),
 			InstanceType.of(InstanceClass.C6G, InstanceSize.XLARGE8)
+		]:  [
+			InstanceType.of(InstanceClass.T4G, InstanceSize.MEDIUM)
 		]
 
-		// worker autoscaling group
+
 		// unfortunately GuAutoscalingGroup doesn't support having a mixedInstancesPolicy so using the basic ASG here
 		new AutoScalingGroup(this, "TransciptionWorkerASG", {
 			minCapacity: 0,
