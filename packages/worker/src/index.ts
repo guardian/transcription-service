@@ -1,1 +1,1 @@
-console.log("Ready to transcribe!")
+console.log('Ready to transcribe!');
