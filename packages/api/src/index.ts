@@ -4,6 +4,8 @@ import serverlessExpress from '@codegenie/serverless-express';
 import bodyParser from 'body-parser';
 import path from 'path';
 import { getConfig } from './config';
+import { SQSClient } from '@aws-sdk/client-sqs';
+import { isSuccess, sendMessage } from './sqs';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 
@@ -14,12 +16,29 @@ const getApp = async () => {
 	const app = express();
 	const apiRouter = express.Router();
 
+	const sqsClient = new SQSClient({
+		region: 'eu-west-1',
+		endpoint: new URL(config.taskQueueUrl).origin,
+	});
+
 	app.use(bodyParser.json({ limit: '40mb' }));
 
 	apiRouter.get(
 		'/healthcheck',
 		asyncHandler(async (req, res) => {
 			res.send('It lives!');
+		}),
+	);
+
+	apiRouter.post(
+		'/send-message',
+		asyncHandler(async (req, res) => {
+			const sendResult = await sendMessage(sqsClient, config.taskQueueUrl);
+			if (!isSuccess(sendResult)) {
+				res.status(500).send(sendResult.errorMsg);
+				return;
+			}
+			res.send('Message sent');
 		}),
 	);
 

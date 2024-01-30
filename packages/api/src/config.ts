@@ -2,7 +2,7 @@ import { findParameter, getParameters } from './configHelpers';
 import { Parameter, SSM } from '@aws-sdk/client-ssm';
 
 interface TranscriptionConfig {
-	test: string; // TODO: This is just the foundation of getting params from SSM
+	taskQueueUrl: string;
 }
 
 const region = process.env['AWS_REGION'];
@@ -21,9 +21,9 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 	});
 
 	console.log(`Parameters fetched: ${parameterNames.join(', ')}`);
-	const testParam = findParameter(parameters, paramPath, 'test');
+	const taskQueueUrl = findParameter(parameters, paramPath, 'taskQueueUrl');
 
 	return {
-		test: testParam,
+		taskQueueUrl,
 	};
 };
