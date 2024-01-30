@@ -1,19 +1,18 @@
-import React, { useEffect, useRef } from "react";
+import React from "react";
+import { useSearchParams, usePathname } from 'next/navigation'
 
 export const AuthRequired = () => {
-    const urlParams = useRef<URLSearchParams>(new URLSearchParams());
-    useEffect(() => {
-        // Client-side-only code
-        const params = new URLSearchParams(window.location.search);
-        params.append("returnPath", window.location.pathname);
-        console.log("*******************params:");
-        console.log(params);
-        urlParams.current = params;
-    })
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const params = new URLSearchParams(searchParams?.toString());
+    console.log(`initial params: ${params}`);
+    console.log(`patname: ${pathname}`);
+    params.append("returnPath", pathname || '');
+    console.log(`final params: ${params}`);
 
   return (
     <div>
-      <a href={`/api/auth/google?${urlParams.current.toString()}`}>Click here</a> 
+      <a href={`/api/auth/google?${params.toString()}`}>Click here</a> 
       to log in with Google
     </div>
   );

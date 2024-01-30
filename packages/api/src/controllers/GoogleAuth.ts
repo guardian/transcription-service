@@ -20,12 +20,13 @@ export class GoogleAuth {
 	}
 
 	googleAuth: Action = () => [
-		(req: Request, res: Response, next: NextFunction) => {
-			console.log("google auth called");
+		(req: Request, res: Response, next: NextFunction) => {	
+			const { query } = req;
 			const authenticator = passport.authenticate('google', {
 				scope: ['email'],
+				state: JSON.stringify(query),
 				// we're going to manage this ourselves using JWT
-				//session: false,
+				session: false,
 			});
 			authenticator(req, res, next);
 		},
@@ -36,18 +37,15 @@ export class GoogleAuth {
             session: false,
           }),
 		(req: Request, res: Response) => {
-			console.log('marji req:');
-			// console.log(req.user);
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const { email } = req.user! as any;
 			const { state } = req.query;
-			console.log("req.query: ", req.query);
-			// const returnUrl = new URL("http://localhost:3000/") // TODO: new URL(this.rootUrl);
 			const returnUrl =  new URL(this.rootUrl);
 
 			// preserve query string and path from state
 			if (typeof state === 'string') {
 				const authState = JSON.parse(state);
+				console.log(`authState: `, authState)
 				// path
 				returnUrl.pathname = authState.returnPath;
 				delete authState.returnPath; // remove returnPath from the object - we don't need it in the query string
@@ -58,10 +56,6 @@ export class GoogleAuth {
 
 			const token = jwt.sign({ email }, this.secret, { expiresIn: '1 week' });
 			returnUrl.searchParams.set('auth', token);
-
-			console.log(createLoginEvent(email));
-
-			console.log(`redirecting to ${returnUrl}`);
 
 			res.redirect(returnUrl.toString());
 		},

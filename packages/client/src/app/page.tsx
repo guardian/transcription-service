@@ -1,5 +1,8 @@
-import { AuthRequired } from "@/features/AuthRequired";
+'use client'
 import React, { useEffect, useState } from "react";
+
+import { AuthRequired } from "@/features/AuthRequired";
+
 import { jwtDecode } from "jwt-decode";
 import { createBrowserHistory } from "history";
 import type { BrowserHistory } from "history";
@@ -10,7 +13,6 @@ export type LoggedInUser = {
 };
 
 export type AuthState = {
-  // checkStorage: boolean;
   token?: string;
   loggedInUser?: LoggedInUser;
 };
@@ -18,8 +20,6 @@ export type AuthState = {
 export function isLoginExpired(token: string): boolean {
   const loggedInUser = jwtDecode(token) as LoggedInUser;
   // JWT expiry is epoch seconds, Date.now() is epoch millis
-  console.log("logged in user is: ");
-  console.log(loggedInUser);
   return loggedInUser.exp * 1000 < Date.now();
 }
 
@@ -36,7 +36,7 @@ export const checkAuth = (state: AuthState | undefined, setAuth:  React.Dispatch
   if (maybeParameterToken) {
     console.log("Setting token in local storage");
     window.localStorage.setItem("transcription-auth", maybeParameterToken);
-    urlParams.delete("auth");
+    //urlParams.delete("auth");
     browserHistory.replace({
       search: `?${urlParams.toString()}`,
     });
@@ -61,28 +61,29 @@ export const checkAuth = (state: AuthState | undefined, setAuth:  React.Dispatch
   }
 }
 
-const index = () => {
-  const [auth, setAuth] = useState<AuthState>();
+const Home = () => {
+    const [auth, setAuth] = useState<AuthState>();
+    // const searchParams = useSearchParams()
 
-  useEffect(() => {
-    const browserHistory = createBrowserHistory();
-    checkAuth(auth, setAuth, browserHistory);
-  }, []);
-
-  if (!auth?.token) {
+    useEffect(() => {
+      const browserHistory = createBrowserHistory();
+      checkAuth(auth, setAuth, browserHistory);
+    }, []);
+  
+    if (!auth?.token) {
+      return (
+        <div>
+           <h2>Login Required</h2>
+           <AuthRequired></AuthRequired>
+        </div>
+      )
+    }
+  
     return (
       <div>
-         <h2>Login Required</h2>
-         <AuthRequired></AuthRequired>
+         <h2>You are logged in</h2>
       </div>
     )
-  }
-
-  return (
-    <div>
-       <h2>You are logged in</h2>
-    </div>
-  )
 }
 
-export default index;
+export default Home;
