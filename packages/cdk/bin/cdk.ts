@@ -1,6 +1,6 @@
 import 'source-map-support/register';
 import { GuRoot } from '@guardian/cdk/lib/constructs/root';
-import {TranscriptionServiceRepository} from "../lib/repository";
+import { TranscriptionServiceRepository } from '../lib/repository';
 import { TranscriptionService } from '../lib/transcription-service';
 
 const app = new GuRoot();
@@ -20,4 +20,4 @@ new TranscriptionServiceRepository(app, 'TranscriptionServiceRepository', {
 	stack: 'investigations',
 	stage: 'PROD',
 	env: { region: 'eu-west-1' },
-})
+});
