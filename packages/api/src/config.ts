@@ -3,7 +3,6 @@ import { Parameter, SSM } from '@aws-sdk/client-ssm';
 import { defaultProvider } from '@aws-sdk/credential-provider-node';
 
 export interface TranscriptionConfig {
-	test: string; // TODO: This is just the foundation of getting params from SSM
 	auth: {
 		clientId: string;
 		clientSecret: string;
@@ -11,6 +10,7 @@ export interface TranscriptionConfig {
 	app: {
 		secret: string;
 		rootUrl: string;
+		taskQueueUrl: string;
 	};
 }
 
@@ -36,7 +36,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 	});
 
 	console.log(`Parameters fetched: ${parameterNames.join(', ')}`);
-	const testParam = findParameter(parameters, paramPath, 'test');
+	const taskQueueUrl = findParameter(parameters, paramPath, 'taskQueueUrl');
 
 	const authClientId = findParameter(parameters, paramPath, 'auth/clientId');
 	const authClientSecret = findParameter(
@@ -51,7 +51,6 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 	const appRootUrl = findParameter(parameters, paramPath, 'app/rootUrl');
 
 	return {
-		test: testParam,
 		auth: {
 			clientId: authClientId,
 			clientSecret: authClientSecret,
@@ -59,6 +58,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		app: {
 			rootUrl: appRootUrl,
 			secret: appSecret,
+			taskQueueUrl,
 		},
 	};
 };

@@ -1,9 +1,11 @@
 # transcription-service
 A self service app for journalists to upload audio/video files and receive transcription through email notifications. 
 
+We use localstack to run SQS locally rather than needing to create 'dev' queues in AWS. This is set up via docker.
+
 ## Get started
 1. Get Janus creds (for fetching creds from AWS Parameter Store)
-2. Bootstrap dependencies and the DB. DB will be populated with a recent copy of PROD data.
+2. Use the `scripts/setup.sh` script to install dependencies, set up the nginx mapping and create a docker based sqs queue
 
 ```bash
 nvm use

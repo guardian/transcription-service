@@ -8,6 +8,8 @@ import { checkAuth, initPassportAuth } from './services/passport';
 import { GoogleAuth } from './controllers/GoogleAuth';
 import passport from 'passport';
 import { Request, Response } from 'express';
+import { SQSClient } from '@aws-sdk/client-sqs';
+import { isSuccess, sendMessage } from './sqs';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -20,6 +22,11 @@ const getApp = async () => {
 	const app = express();
 	const apiRouter = express.Router();
 
+	const sqsClient = new SQSClient({
+		region: 'eu-west-1',
+		endpoint: new URL(config.taskQueueUrl).origin,
+	});
+
 	app.use(bodyParser.json({ limit: '40mb' }));
 	app.use(passport.initialize());
 
@@ -29,13 +36,25 @@ const getApp = async () => {
 	apiRouter.get('/auth/google', ...auth.googleAuth());
 	apiRouter.get('/auth/oauth-callback', ...auth.oauthCallback());
 
-	// checkAuth is the pattern of checking auth 
+	// checkAuth is the pattern of checking auth
 	// for every api endpoint that's added
-	apiRouter.get(
-		'/healthcheck',
-		[checkAuth, asyncHandler(async (req, res) => {
+	apiRouter.get('/healthcheck', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
 			res.send('It lives!');
-		})],
+		}),
+	]);
+
+	apiRouter.post(
+		'/send-message',
+		asyncHandler(async (req, res) => {
+			const sendResult = await sendMessage(sqsClient, config.taskQueueUrl);
+			if (!isSuccess(sendResult)) {
+				res.status(500).send(sendResult.errorMsg);
+				return;
+			}
+			res.send('Message sent');
+		}),
 	);
 
 	app.use('/api', apiRouter);
