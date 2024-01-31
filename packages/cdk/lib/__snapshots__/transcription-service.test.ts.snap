@@ -256,6 +256,38 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
+    "InstanceRoleTranscriptionserviceworkerDefaultPolicy994AD936": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionservicetaskqueue428AC4BA",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "InstanceRoleTranscriptionserviceworkerDefaultPolicy994AD936",
+        "Roles": [
+          {
+            "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
     "ParameterStoreReadTranscriptionserviceworkerDFD8F6FE": {
       "Properties": {
         "PolicyDocument": {
@@ -307,7 +339,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
-    "TransciptionWorkerASG149262B9": {
+    "TranscriptionWorkerASGCAE69A98": {
       "Properties": {
         "AutoScalingGroupName": "transcription-service-workers-TEST",
         "MaxSize": "4",
@@ -374,6 +406,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
     },
     "TranscriptionWorkerLaunchTemplate03F06207": {
       "DependsOn": [
+        "InstanceRoleTranscriptionserviceworkerDefaultPolicy994AD936",
         "InstanceRoleTranscriptionserviceworkerA8AC6615",
       ],
       "Properties": {
@@ -454,6 +487,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                 "",
                 [
                   "#!/bin/bash
+export STAGE=TEST
 aws s3 cp s3://",
                   {
                     "Ref": "DistributionBucketName",
@@ -717,6 +751,20 @@ node index.js",
               ],
               "Effect": "Allow",
               "Resource": "arn:aws:ssm:test-region:745349931791:parameter/TEST/investigations/transcription-service/*",
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionservicetaskqueue428AC4BA",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -1160,6 +1208,35 @@ node index.js",
         },
       },
       "Type": "AWS::Lambda::Permission",
+    },
+    "transcriptionservicetaskqueue428AC4BA": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ContentBasedDeduplication": true,
+        "FifoQueue": true,
+        "QueueName": "transcription-service-task-queue-TEST.fifo",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "VisibilityTimeout": 30,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
     },
   },
 }
