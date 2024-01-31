@@ -7,6 +7,8 @@
 		"format": "prettier --write 'packages/**/*.ts'",
 		"api::build": "npm run build --workspace api; npm run build-frontend --workspace api",
 		"api::package": "npm run package --workspace api",
+		"worker::build": "npm run build --workspace worker; npm run build --workspace worker",
+		"worker::package": "npm run package --workspace worker",
 		"cdk::build": "npm run build --workspace cdk",
 		"cdk::lint": "npm run lint --workspace cdk",
 		"cdk::synth": "npm run synth --workspace cdk",
