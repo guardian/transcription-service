@@ -8,7 +8,7 @@ import {
 } from '@guardian/cdk/lib/constructs/core';
 import { GuCname } from '@guardian/cdk/lib/constructs/dns';
 import { GuVpc, SubnetType } from '@guardian/cdk/lib/constructs/ec2';
-import { GuInstanceRole } from '@guardian/cdk/lib/constructs/iam';
+import { GuInstanceRole, GuPolicy } from '@guardian/cdk/lib/constructs/iam';
 import { GuardianAwsAccounts } from '@guardian/private-infrastructure-config';
 import { type App, Duration } from 'aws-cdk-lib';
 import { EndpointType } from 'aws-cdk-lib/aws-apigateway';
@@ -74,13 +74,13 @@ export class TranscriptionService extends GuStack {
 			},
 		});
 
-		apiLambda.addToRolePolicy(
-			new PolicyStatement({
-				effect: Effect.ALLOW,
-				actions: ['ssm:GetParameter', 'ssm:GetParametersByPath'],
-				resources: [`${ssmPrefix}/${ssmPath}/*`],
-			}),
-		);
+		const getParametersPolicy = new PolicyStatement({
+			effect: Effect.ALLOW,
+			actions: ['ssm:GetParameter', 'ssm:GetParametersByPath'],
+			resources: [`${ssmPrefix}/${ssmPath}/*`],
+		});
+
+		apiLambda.addToRolePolicy(getParametersPolicy);
 
 		// The custom domain name mapped to this API
 		const apiDomain = apiLambda.api.domainName;
@@ -111,6 +111,11 @@ export class TranscriptionService extends GuStack {
 
 		const role = new GuInstanceRole(this, {
 			app: workerApp,
+			additionalPolicies: [
+				new GuPolicy(this, 'WorkerGetParameters', {
+					statements: [getParametersPolicy],
+				}),
+			],
 		});
 
 		const launchTemplate = new LaunchTemplate(
