@@ -20,7 +20,7 @@ export class GoogleAuth {
 	}
 
 	googleAuth: Action = () => [
-		(req: Request, res: Response, next: NextFunction) => {	
+		(req: Request, res: Response, next: NextFunction) => {
 			const { query } = req;
 			const authenticator = passport.authenticate('google', {
 				scope: ['email'],
@@ -33,19 +33,19 @@ export class GoogleAuth {
 	];
 
 	oauthCallback: Action = () => [
-        passport.authenticate("google", {
-            session: false,
-          }),
+		passport.authenticate('google', {
+			session: false,
+		}),
 		(req: Request, res: Response) => {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const { email } = req.user! as any;
 			const { state } = req.query;
-			const returnUrl =  new URL(this.rootUrl);
+			const returnUrl = new URL(this.rootUrl);
 
 			// preserve query string and path from state
 			if (typeof state === 'string') {
 				const authState = JSON.parse(state);
-				console.log(`authState: `, authState)
+				console.log(`authState: `, authState);
 				// path
 				returnUrl.pathname = authState.returnPath;
 				delete authState.returnPath; // remove returnPath from the object - we don't need it in the query string
@@ -54,7 +54,9 @@ export class GoogleAuth {
 				returnUrl.search = stringify(authState);
 			}
 
-			const token = jwt.sign({ email }, this.secret, { expiresIn: '1 week' });
+			const token = jwt.sign({ email }, this.secret, {
+				expiresIn: '1 week',
+			});
 			returnUrl.searchParams.set('auth', token);
 
 			res.redirect(returnUrl.toString());
