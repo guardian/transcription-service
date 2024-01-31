@@ -488,6 +488,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                 [
                   "#!/bin/bash
 export STAGE=TEST
+export AWS_REGION=test-region
 aws s3 cp s3://",
                   {
                     "Ref": "DistributionBucketName",

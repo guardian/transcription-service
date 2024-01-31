@@ -103,6 +103,7 @@ export class TranscriptionService extends GuStack {
 		userData.addCommands(
 			[
 				`export STAGE=${props.stage}`,
+				`export AWS_REGION=${props.env.region}`,
 				`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/${workerApp}/worker.zip .`,
 				`unzip worker.zip`,
 				`node index.js`,
