@@ -37,7 +37,7 @@ export class TranscriptionServiceRepository extends GuStack {
 					maxImageCount: 5,
 				},
 			],
-			imageTagMutability: TagMutability.IMMUTABLE,
+			imageTagMutability: TagMutability.MUTABLE,
 			removalPolicy: RemovalPolicy.DESTROY,
 			imageScanOnPush: true,
 		});
