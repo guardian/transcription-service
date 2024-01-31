@@ -44,6 +44,7 @@ jobs:
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           configPath: packages/cdk/riff-raff.yaml
+          buildNumberOffset: 120
           projectName: investigations::transcription-service
           contentDirectories: |
             cdk.out:
