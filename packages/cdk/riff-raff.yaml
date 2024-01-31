@@ -53,7 +53,7 @@ deployments:
     regions:
       - eu-west-1
     app: transcription-service
-    contentDirectory: transcription-service-worker
+    contentDirectory: transcription-service
     parameters:
       bucketSsmLookup: true
       cacheControl: public, max-age=60
