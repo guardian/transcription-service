@@ -9,6 +9,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuDistributionBucketParameter",
       "GuApiLambda",
       "GuCname",
+      "GuPolicy",
       "GuInstanceRole",
       "GuDescribeEC2Policy",
       "GuLoggingStreamNameParameter",
@@ -540,6 +541,30 @@ node index.js",
         ],
       },
       "Type": "AWS::IAM::InstanceProfile",
+    },
+    "WorkerGetParametersD451FEAD": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ssm:GetParameter",
+                "ssm:GetParametersByPath",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:ssm:test-region:745349931791:parameter/TEST/investigations/transcription-service/*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "WorkerGetParametersD451FEAD",
+        "Roles": [
+          {
+            "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "transcriptionDNSentry": {
       "Properties": {
