@@ -16,3 +16,11 @@ Then you can run the service API:
 ```
 npm run api::start
 ```
+
+## Purging local queue
+If you change the structure of messages on the queue you'll probably want to purge all local messages. There's a script
+for that!
+
+```
+./scripts/purge-local-queue.sh
+```
