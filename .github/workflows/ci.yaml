@@ -23,10 +23,15 @@ jobs:
       - name: Install dependencies
         run: |
           npm install
-      - name: Package API
+      - name: build API
         run: |
           npm run api::build
-          npm run api::package
+      - name: build Client
+        run: |
+          npm run client::build
+      - name: Package API/Client
+        run: |
+          npm run package
       - name: Package Worker
         run: |
           npm run worker::build
