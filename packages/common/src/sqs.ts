@@ -61,6 +61,7 @@ export const sendMessage = async (
 			new SendMessageCommand({
 				QueueUrl: queueUrl,
 				MessageBody: JSON.stringify(job),
+				MessageGroupId: 'api-transcribe-request',
 			}),
 		);
 		console.log(`Message sent. Message id: ${result.MessageId}`);
