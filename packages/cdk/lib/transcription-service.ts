@@ -164,8 +164,8 @@ export class TranscriptionService extends GuStack {
 						app: workerApp,
 					}),
 				},
-				// instances should shut themselves down when they have finished the transcription - they should not be terminated
-				// by the ASG
+				// initially protect instances from scale events till they have had a chance to pick up a transcription job
+				// scale in protection will be removed by the worker once it has finished a job
 				newInstancesProtectedFromScaleIn: true,
 				mixedInstancesPolicy: {
 					launchTemplate,

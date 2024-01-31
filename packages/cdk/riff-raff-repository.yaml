@@ -1,0 +1,14 @@
+allowedStages:
+  - PROD
+deployments:
+  cfn-eu-west-1-investigations-transcription-service-repository:
+    type: cloud-formation
+    regions:
+      - eu-west-1
+    stacks:
+      - investigations
+    app: transcription-service-repository
+    contentDirectory: cdk.out
+    parameters:
+      templateStagePaths:
+        PROD: TranscriptionServiceRepository.template.json

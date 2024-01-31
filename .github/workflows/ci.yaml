@@ -51,5 +51,13 @@ jobs:
               - packages/cdk/cdk.out/TranscriptionService-PROD.template.json
             transcription-service:
               - packages/api/target/api.zip
-            transcription-service-worker:
               - packages/worker/target/worker.zip
+      - name: Upload repository project to riff-raff
+        uses: guardian/actions-riff-raff@v3
+        with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          configPath: packages/cdk/riff-raff-repository.yaml
+          projectName: investigations::transcription-service-repository
+          contentDirectories: |
+            cdk.out:
+              - packages/cdk/cdk.out/TranscriptionServiceRepository.template.json
