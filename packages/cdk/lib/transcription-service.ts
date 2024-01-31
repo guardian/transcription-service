@@ -195,6 +195,10 @@ export class TranscriptionService extends GuStack {
 			// size of the file from s3 and estimate transcription time. If it's
 			// not, we'll need to increase visibilityTimeout
 			visibilityTimeout: Duration.seconds(30),
+			// contentBasedDeduplication takes a sha-256 hash of the message body to use as the deduplication ID. In future
+			// we might choose to use a hash of the actual file to be transcribed instead (but I can't really think where
+			// that would be particularly helpful)
+			contentBasedDeduplication: true,
 		});
 
 		// allow API lambda to write to queue
