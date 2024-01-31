@@ -11,7 +11,6 @@ export interface TranscriptionConfig {
 	app: {
 		secret: string;
 		rootUrl: string;
-		externalUsers: string;
 	};
 }
 
@@ -41,14 +40,16 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 	const testParam = findParameter(parameters, paramPath, 'test');
 
 	const authClientId = findParameter(parameters, paramPath, 'auth/clientId');
-	const authClientSecret = findParameter(parameters, paramPath, 'auth/clientSecret');
+	const authClientSecret = findParameter(
+		parameters,
+		paramPath,
+		'auth/clientSecret',
+	);
 
-	// const externalUsers = findParameter(
-	// 	parameters,
-	// 	paramPath,
-	// 	'app/externalUsers',
-	// );
 	const appSecret = findParameter(parameters, paramPath, 'app/secret');
+
+	// To locally emulating production, the value of appRootUrl should be changed to api.transcribe domain
+	const appRootUrl = findParameter(parameters, paramPath, 'app/rootUrl');
 
 	return {
 		test: testParam,
@@ -57,8 +58,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			clientSecret: authClientSecret,
 		},
 		app: {
-			externalUsers: '',
-			rootUrl: 'https://transcribe.local.dev-gutools.co.uk',
+			rootUrl: appRootUrl,
 			secret: appSecret,
 		},
 	};

@@ -5,15 +5,16 @@
 	"main": "index.js",
 	"scripts": {
 		"format": "prettier --write 'packages/**/*.ts'",
-		"api::build": "npm run build --workspace api; npm run build-frontend --workspace api",
-		"api::package": "npm run package --workspace api",
 		"worker::build": "npm run build --workspace worker; npm run build --workspace worker",
 		"worker::package": "npm run package --workspace worker",
+		"api::build": "npm run build --workspace api",
+		"client::build": "npm run build --workspace client",
 		"cdk::build": "npm run build --workspace cdk",
 		"cdk::lint": "npm run lint --workspace cdk",
 		"cdk::synth": "npm run synth --workspace cdk",
 		"cdk::test": "npm run test --workspace cdk",
-		"cdk::test-update": "npm run test-update --workspace cdk"
+		"cdk::test-update": "npm run test-update --workspace cdk",
+		"package": "cd packages/dist; mkdir -p ../target; zip -qr ../target/app.zip *"
 	},
 	"keywords": [],
 	"author": "",

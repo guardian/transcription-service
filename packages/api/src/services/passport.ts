@@ -20,10 +20,14 @@ export const initPassportAuth = (config: TranscriptionConfig) => {
 				clientID: config.auth.clientId,
 				clientSecret: config.auth.clientSecret,
 				callbackURL: `${config.app.rootUrl}/api/auth/oauth-callback`,
-                // passReqToCallback: true
 			},
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			function (accessToken: string, refreshToken: string, profile: any, done: VerifyCallback) {
+			function (
+				accessToken: string,
+				refreshToken: string,
+				profile: any,
+				done: VerifyCallback,
+			) {
 				console.log(`GoogleStrategy called with ${profile}`);
 				//console.log(profile);
 				// Need to cast to any since the type definitions for this library are broken. Great.
@@ -47,17 +51,17 @@ export const initPassportAuth = (config: TranscriptionConfig) => {
 		),
 	);
 
-    passport.use(
-        new JwtStrategy(
-          {
-            secretOrKey: config.app.secret,
-            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-          },
-          function (jwt, done) {
-            // We can optionally do more validation here
-            // For now will assume if the JWT token is valid then we're good.
-            done(null, jwt);
-          }
-        )
-    );
+	passport.use(
+		new JwtStrategy(
+			{
+				secretOrKey: config.app.secret,
+				jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+			},
+			function (jwt, done) {
+				// We can optionally do more validation here
+				// For now will assume if the JWT token is valid then we're good.
+				done(null, jwt);
+			},
+		),
+	);
 };

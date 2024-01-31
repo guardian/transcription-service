@@ -10,7 +10,8 @@ import passport from 'passport';
 import { Request, Response } from 'express';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
-const emulateProductionLocally = process.env["EMULATE_PRODUCTION_SERVER"] === "true";
+const emulateProductionLocally =
+	process.env['EMULATE_PRODUCTION_SERVER'] === 'true';
 
 const getApp = async () => {
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -38,23 +39,21 @@ const getApp = async () => {
 	app.use('/api', apiRouter);
 
 	if (runningOnAws) {
-		console.log('marji 1');
-		app.use(express.static('frontend'));
+		app.use(express.static('client'));
 		app.get('/*', (req, res) => {
-			res.sendFile(path.resolve(__dirname, 'frontend', 'index.html'));
+			res.sendFile(path.resolve(__dirname, 'client', 'index.html'));
 		});
 	} else {
 		if (emulateProductionLocally) {
 			app.use(
-				express.static(path.resolve(__dirname, '..', '..', 'client', 'out'))
+				express.static(path.resolve(__dirname, '..', '..', 'dist', 'client')),
 			);
 			app.get('/*', (req: Request, res: Response) => {
 				res.sendFile(
-					path.resolve(__dirname, '..', '..', 'client', 'out', 'index.html'),
+					path.resolve(__dirname, '..', '..', 'dist', 'client', 'index.html'),
 				);
 			});
 		}
-		
 	}
 
 	return app;
