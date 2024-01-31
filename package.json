@@ -10,6 +10,7 @@
 		"api::start": "npm run start --workspace api",
 		"worker::build": "npm run build --workspace worker; npm run build --workspace worker",
 		"worker::package": "npm run package --workspace worker",
+		"worker::start": "npm run start --workspace worker",
 		"cdk::build": "npm run build --workspace cdk",
 		"cdk::lint": "npm run lint --workspace cdk",
 		"cdk::synth": "npm run synth --workspace cdk",
@@ -25,7 +26,7 @@
 	"devDependencies": {
 		"@types/node": "^20.11.5",
 		"esbuild": "^0.19.11",
-		"ts-node": "^10.9.2",
+		"ts-node-dev": "^2.0.0",
 		"@guardian/prettier": "^8.0.0",
 		"@typescript-eslint/eslint-plugin": "^6.19.0",
 		"@typescript-eslint/parser": "^6.19.0",

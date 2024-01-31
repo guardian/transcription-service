@@ -2,6 +2,7 @@ import { findParameter, getParameters } from './configHelpers';
 import { Parameter, SSM } from '@aws-sdk/client-ssm';
 
 interface TranscriptionConfig {
+	stage: string;
 	taskQueueUrl: string;
 }
 
@@ -24,6 +25,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 	const taskQueueUrl = findParameter(parameters, paramPath, 'taskQueueUrl');
 
 	return {
+		stage,
 		taskQueueUrl,
 	};
 };
