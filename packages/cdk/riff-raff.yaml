@@ -9,7 +9,7 @@ deployments:
     regions:
       - eu-west-1
     app: transcription-service
-    contentDirectory: transcription-service
+    contentDirectory: transcription-service-api
     parameters:
       bucketSsmLookup: true
       lookupByTags: true
@@ -42,7 +42,7 @@ deployments:
     regions:
       - eu-west-1
     app: transcription-service
-    contentDirectory: transcription-service
+    contentDirectory: transcription-service-api
     parameters:
       bucketSsmLookup: true
       lookupByTags: true

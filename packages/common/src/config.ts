@@ -1,7 +1,6 @@
 import { findParameter, getParameters } from './configHelpers';
 import { Parameter, SSM } from '@aws-sdk/client-ssm';
 import { defaultProvider } from '@aws-sdk/credential-provider-node';
-
 export interface TranscriptionConfig {
 	auth: {
 		clientId: string;
@@ -11,6 +10,7 @@ export interface TranscriptionConfig {
 		secret: string;
 		rootUrl: string;
 		taskQueueUrl: string;
+		stage: string;
 	};
 }
 
@@ -59,6 +59,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			rootUrl: appRootUrl,
 			secret: appSecret,
 			taskQueueUrl,
+			stage,
 		},
 	};
 };

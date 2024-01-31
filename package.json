@@ -10,6 +10,7 @@
 		"api::start": "npm run start --workspace api",
 		"worker::build": "npm run build --workspace worker; npm run build --workspace worker",
 		"worker::package": "npm run package --workspace worker",
+		"worker::start": "npm run start --workspace worker",
 		"client::build": "npm run build --workspace client",
 		"client::start": "npm run dev --workspace client",
 		"cdk::build": "npm run build --workspace cdk",

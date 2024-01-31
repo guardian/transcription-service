@@ -3,13 +3,16 @@ import asyncHandler from 'express-async-handler';
 import serverlessExpress from '@codegenie/serverless-express';
 import bodyParser from 'body-parser';
 import path from 'path';
-import { getConfig } from './config';
 import { checkAuth, initPassportAuth } from './services/passport';
 import { GoogleAuth } from './controllers/GoogleAuth';
 import passport from 'passport';
 import { Request, Response } from 'express';
-import { SQSClient } from '@aws-sdk/client-sqs';
-import { isSuccess, sendMessage } from './sqs';
+import {
+	getConfig,
+	getClient,
+	sendMessage,
+	isFailure,
+} from '@guardian/transcription-service-common';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -22,10 +25,9 @@ const getApp = async () => {
 	const app = express();
 	const apiRouter = express.Router();
 
-	const sqsClient = new SQSClient({
-		region: 'eu-west-1',
-		endpoint: new URL(config.taskQueueUrl).origin,
-	});
+	const localstackEndpoint =
+		config.stage === 'DEV' ? new URL(config.taskQueueUrl).origin : undefined;
+	const sqsClient = getClient(localstackEndpoint);
 
 	app.use(bodyParser.json({ limit: '40mb' }));
 	app.use(passport.initialize());
@@ -49,7 +51,7 @@ const getApp = async () => {
 		'/send-message',
 		asyncHandler(async (req, res) => {
 			const sendResult = await sendMessage(sqsClient, config.taskQueueUrl);
-			if (!isSuccess(sendResult)) {
+			if (isFailure(sendResult)) {
 				res.status(500).send(sendResult.errorMsg);
 				return;
 			}
