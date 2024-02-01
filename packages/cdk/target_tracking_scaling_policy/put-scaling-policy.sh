@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 STAGE=$1
 dirname=$(dirname "$0")
 
