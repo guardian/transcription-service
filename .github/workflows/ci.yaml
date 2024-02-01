@@ -1,5 +1,7 @@
-name: 'CI: API'
-on: [push]
+name: 'CI'
+on:
+  workflow_dispatch:
+  push:
 jobs:
   ci:
     permissions:
@@ -44,6 +46,7 @@ jobs:
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           configPath: packages/cdk/riff-raff.yaml
+          buildNumberOffset: 120
           projectName: investigations::transcription-service
           contentDirectories: |
             cdk.out:
