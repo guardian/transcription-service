@@ -1,4 +1,4 @@
-name: 'CI: API'
+name: 'CI'
 on: [push, workflow_dispatch]
 jobs:
   ci:
