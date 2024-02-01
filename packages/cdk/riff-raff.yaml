@@ -28,6 +28,10 @@ deployments:
       templateStagePaths:
         CODE: TranscriptionService-CODE.template.json
         PROD: TranscriptionService-PROD.template.json
+      amiTags:
+        Recipe: investigations-transcription-service
+        AmigoStage: PROD
+      amiEncrypted: true
     dependencies:
       - lambda-upload-eu-west-1-investigations-transcription-service
   lambda-update-eu-west-1-investigations-transcription-service:
