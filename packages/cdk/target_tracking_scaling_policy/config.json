@@ -1,0 +1,67 @@
+{
+	"CustomizedMetricSpecification": {
+		"Metrics": [
+			{
+				"Label": "Number of visible messages",
+				"Id": "m1",
+				"MetricStat": {
+					"Metric": {
+						"MetricName": "ApproximateNumberOfMessagesVisible",
+						"Namespace": "AWS/SQS",
+						"Dimensions": [
+							{
+								"Name": "QueueName",
+								"Value": "transcription-service-task-queue-STAGE.fifo"
+							}
+						]
+					},
+					"Stat": "Sum"
+				},
+				"ReturnData": false
+			},
+			{
+				"Label": "Number of invisible (in-flight) messages",
+				"Id": "m2",
+				"MetricStat": {
+					"Metric": {
+						"MetricName": "ApproximateNumberOfMessagesNotVisible",
+						"Namespace": "AWS/SQS",
+						"Dimensions": [
+							{
+								"Name": "QueueName",
+								"Value": "transcription-service-task-queue-STAGE.fifo"
+							}
+						]
+					},
+					"Stat": "Sum"
+				},
+				"ReturnData": false
+			},
+			{
+				"Label": "Get the group size (the number of InService instances)",
+				"Id": "m3",
+				"MetricStat": {
+					"Metric": {
+						"MetricName": "GroupInServiceInstances",
+						"Namespace": "AWS/AutoScaling",
+						"Dimensions": [
+							{
+								"Name": "AutoScalingGroupName",
+								"Value": "transcription-service-workers-STAGE"
+							}
+						]
+					},
+					"Stat": "Average"
+				},
+				"ReturnData": false
+			},
+			{
+				"Label": "Calculate the backlog per instance",
+				"Id": "e1",
+				"Expression": "(m1 + m2) / m3",
+				"ReturnData": true
+			}
+		]
+	},
+	"TargetValue": 1
+}
