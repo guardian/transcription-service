@@ -15,8 +15,8 @@ import { EndpointType } from 'aws-cdk-lib/aws-apigateway';
 import {
 	AutoScalingGroup,
 	BlockDeviceVolume,
-	SpotAllocationStrategy,
 	GroupMetrics,
+	SpotAllocationStrategy,
 } from 'aws-cdk-lib/aws-autoscaling';
 import {
 	InstanceClass,
