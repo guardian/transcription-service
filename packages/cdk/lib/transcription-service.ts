@@ -16,6 +16,7 @@ import {
 	AutoScalingGroup,
 	BlockDeviceVolume,
 	SpotAllocationStrategy,
+	GroupMetrics,
 } from 'aws-cdk-lib/aws-autoscaling';
 import {
 	InstanceClass,
@@ -182,6 +183,7 @@ export class TranscriptionService extends GuStack {
 						}),
 					),
 				},
+				groupMetrics: [GroupMetrics.all()],
 			},
 		);
 
