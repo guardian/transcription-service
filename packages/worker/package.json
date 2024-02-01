@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "esbuild --bundle --platform=node --target=node20 --outfile=dist/index.js src/index.ts",
-    "package": "docker run --rm -it -v $PWD:/worker $(docker build -q deb-build/) fpm",
+    "package": "docker run --rm -v $PWD:/worker $(docker build -q deb-build/) fpm",
     "start": "ts-node-dev src/index.ts"
   },
   "keywords": [],
