@@ -430,6 +430,9 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
           },
           "ImageId": "ami-12345",
           "InstanceType": "c7g.4xlarge",
+          "MetadataOptions": {
+            "InstanceMetadataTags": "enabled",
+          },
           "TagSpecifications": [
             {
               "ResourceType": "instance",
@@ -494,9 +497,8 @@ aws s3 cp s3://",
                   {
                     "Ref": "DistributionBucketName",
                   },
-                  "/investigations/TEST/transcription-service-worker/worker.zip .
-unzip worker.zip
-node index.js",
+                  "/investigations/TEST/transcription-service-worker/transcription-service-worker_1.0.0_all.deb .
+dpkg -i transcription-service-worker_1.0.0_all.deb",
                 ],
               ],
             },

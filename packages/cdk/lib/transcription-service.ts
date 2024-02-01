@@ -126,6 +126,8 @@ export class TranscriptionService extends GuStack {
 					'eu-west-1': workerAmi.valueAsString,
 				}),
 				instanceType: InstanceType.of(InstanceClass.C7G, InstanceSize.XLARGE4),
+				// include tags in instance metadata so that we can work out the STAGE
+				instanceMetadataTags: true,
 				// the size of this block device will determine the max input file size for transcription. In future we could
 				// attach the block device on startup once we know how large the file to be transcribed is, or try some kind
 				// of streaming approach to the transcription so we don't need the whole file on disk
