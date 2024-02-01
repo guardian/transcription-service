@@ -11,7 +11,7 @@
 						"Dimensions": [
 							{
 								"Name": "QueueName",
-								"Value": "transcription-service-task-queue-PROD.fifo"
+								"Value": "transcription-service-task-queue-STAGE.fifo"
 							}
 						]
 					},
@@ -29,7 +29,7 @@
 						"Dimensions": [
 							{
 								"Name": "QueueName",
-								"Value": "transcription-service-task-queue-PROD.fifo"
+								"Value": "transcription-service-task-queue-STAGE.fifo"
 							}
 						]
 					},
@@ -47,7 +47,7 @@
 						"Dimensions": [
 							{
 								"Name": "AutoScalingGroupName",
-								"Value": "transcription-service-workers-PROD"
+								"Value": "transcription-service-workers-STAGE"
 							}
 						]
 					},
