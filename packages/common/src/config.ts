@@ -6,14 +6,30 @@ interface TranscriptionConfig {
 	taskQueueUrl: string;
 }
 
-const region = process.env['AWS_REGION'];
+const getStage = async (): Promise<string> => {
+	if (process.env['STAGE']) {
+		return process.env['STAGE'];
+	}
+	return 'DEV';
+};
 
-const ssm = new SSM({
-	region,
-});
+const getRegion = async (): Promise<string> => {
+	if (process.env['AWS_REGION']) {
+		return Promise.resolve(process.env['AWS_REGION']);
+	}
+	const availabilityZone = await fetch(
+		'http://169.254.169.254/latest/meta-data/placement/availability-zone',
+	).then((res) => res.text());
+	// availabilityZone is in the form eu-west-1a
+	return availabilityZone.slice(0, -1);
+};
 
 export const getConfig = async (): Promise<TranscriptionConfig> => {
-	const stage = process.env['STAGE'] || 'DEV';
+	const region = await getRegion();
+	const ssm = new SSM({
+		region,
+	});
+	const stage = await getStage();
 	const paramPath = `/${stage}/investigations/transcription-service/`;
 
 	const parameters = await getParameters(paramPath, ssm);
