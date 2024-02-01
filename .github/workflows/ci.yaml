@@ -53,7 +53,7 @@ jobs:
             transcription-service-api:
               - packages/api/target/api.zip
             transcription-service-worker:
-              - packages/worker/target/worker.zip
+              - packages/worker/dist/transcription-service-worker_1.0.0_all.deb
       - name: Upload repository project to riff-raff
         uses: guardian/actions-riff-raff@v3
         with:

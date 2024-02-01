@@ -1,0 +1,13 @@
+[Unit]
+Description=Worker app for the guardian's transcription service
+Documentation=https://github.com/guardian/transcription-service
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+ExecStart=/usr/bin/node /opt/transcription-service/index.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

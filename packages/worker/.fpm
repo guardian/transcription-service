@@ -1,0 +1,11 @@
+-s dir
+--name transcription-service-worker
+--version 1.0.0
+--architecture all
+--depends nodejs
+--description "Transcription Service Worker"
+--url "https://github.com/guardian/transcription-service"
+-t deb
+-p dist
+
+dist/index.js=/opt/transcription-service/index.js transcription-service-worker.service=/lib/systemd/system/transcription-service-worker.service
