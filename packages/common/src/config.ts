@@ -27,6 +27,7 @@ const getEnvVarOrMetadata = async (
 	if (process.env[envVar]) {
 		return Promise.resolve(process.env[envVar]);
 	}
+	// see https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html for metadata docs
 	const metadataResult = await fetch(
 		`http://169.254.169.254/latest/meta-data/${metadataPath}`,
 	).then((res) => res.text());
