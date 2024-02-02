@@ -172,9 +172,9 @@ export class TranscriptionService extends GuStack {
 						app: workerApp,
 					}),
 				},
-				// initially protect instances from scale events till they have had a chance to pick up a transcription job
-				// scale in protection will be removed by the worker once it has finished a job
-				newInstancesProtectedFromScaleIn: true,
+				// we might want to set this to true once we are actually doing transcriptions to protect the instance from
+				// being terminated before it has a chance to complete a transcription job.
+				newInstancesProtectedFromScaleIn: false,
 				mixedInstancesPolicy: {
 					launchTemplate,
 					instancesDistribution: {
