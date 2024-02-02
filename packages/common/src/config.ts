@@ -22,29 +22,46 @@ const credentialProvider =
 const getEnvVarOrMetadata = async (
 	envVar: string,
 	metadataPath: string,
+	fallback?: string,
 	clean?: (input: string) => string,
 ): Promise<string> => {
-	if (process.env[envVar]) {
-		return Promise.resolve(process.env[envVar]);
+	const env = process.env[envVar];
+	if (env !== undefined) {
+		return Promise.resolve(env);
 	}
 	// see https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html for metadata docs
 	const metadataResult = await fetch(
 		`http://169.254.169.254/latest/meta-data/${metadataPath}`,
-	).then((res) => res.text());
-	return clean ? clean(metadataResult) : metadataResult;
+	);
+	if (!metadataResult.ok) {
+		if (fallback) {
+			return fallback;
+		} else {
+			throw new Error(
+				`Failed to fetch required variable ${envVar} from environment/metadata`,
+			);
+		}
+	}
+	const metadataValue = await metadataResult.text();
+	return clean ? clean(metadataValue) : metadataValue;
 };
 
 export const getConfig = async (): Promise<TranscriptionConfig> => {
 	const region = await getEnvVarOrMetadata(
 		'AWS_REGION',
 		'placement/availability-zone',
+		'eu-west-1',
 		(az) => az.slice(0, -1),
 	);
 	const ssm = new SSM({
 		region,
 		credentials: credentialProvider,
 	});
-	const stage = await getEnvVarOrMetadata('STAGE', 'tags/instance/Stage');
+	const stage = await getEnvVarOrMetadata(
+		'STAGE',
+		'tags/instance/Stage',
+		'DEV',
+	);
 	const paramPath = `/${stage}/investigations/transcription-service/`;
 
 	const parameters = await getParameters(paramPath, ssm);
