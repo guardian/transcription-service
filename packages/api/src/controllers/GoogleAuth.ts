@@ -41,6 +41,7 @@ export class GoogleAuth {
 			const { email } = req.user! as any;
 			const { state } = req.query;
 			const returnUrl = new URL(this.rootUrl);
+			console.log(`user ${email} logged in`);
 
 			// preserve query string and path from state
 			if (typeof state === 'string') {
