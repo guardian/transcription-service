@@ -28,8 +28,6 @@ export const initPassportAuth = (config: TranscriptionConfig) => {
 				profile: any,
 				done: VerifyCallback,
 			) {
-				console.log(`GoogleStrategy called with ${profile}`);
-				//console.log(profile);
 				// Need to cast to any since the type definitions for this library are broken. Great.
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				const profileAny = profile as any;
@@ -37,13 +35,11 @@ export const initPassportAuth = (config: TranscriptionConfig) => {
 					profileAny._json.domain === 'guardian.co.uk' ||
 					validateEmail(profileAny._json.email)
 				) {
-					console.log('logged in');
 					done(null, profile);
 				} else {
-					console.log('logged in');
 					done(
 						new Error(
-							'Your Google account is not authorised to use Lurch. Contact prod.eng.investigations@guardian.co.uk for help',
+							'Your Google account is not authorised to use transcription-service. Contact prod.eng.investigations@guardian.co.uk for help',
 						),
 					);
 				}

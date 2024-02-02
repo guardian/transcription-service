@@ -28,7 +28,6 @@ const ssm = new SSM({
 
 export const getConfig = async (): Promise<TranscriptionConfig> => {
 	const stage = process.env['STAGE'] || 'DEV';
-	console.log(`stage: ${stage}`);
 	const paramPath = `/${stage}/investigations/transcription-service/`;
 
 	const parameters = await getParameters(paramPath, ssm);

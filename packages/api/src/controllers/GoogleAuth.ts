@@ -45,7 +45,6 @@ export class GoogleAuth {
 			// preserve query string and path from state
 			if (typeof state === 'string') {
 				const authState = JSON.parse(state);
-				console.log(`authState: `, authState);
 				// path
 				returnUrl.pathname = authState.returnPath;
 				delete authState.returnPath; // remove returnPath from the object - we don't need it in the query string
