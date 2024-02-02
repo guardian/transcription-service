@@ -58,7 +58,7 @@ jobs:
               - packages/cdk/cdk.out/TranscriptionService-CODE.template.json
               - packages/cdk/cdk.out/TranscriptionService-PROD.template.json
             transcription-service:
-              - target/app.zip
+              - target/api.zip
             transcription-service-worker:
               - packages/worker/target/worker.zip
       - name: Upload repository project to riff-raff
