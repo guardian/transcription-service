@@ -14,36 +14,36 @@ export interface TranscriptionConfig {
 	};
 }
 
-const getStage = async (): Promise<string> => {
-	if (process.env['STAGE']) {
-		return process.env['STAGE'];
-	}
-	return 'DEV';
-};
-
 const credentialProvider =
 	process.env['AWS_EXECUTION_ENV'] === undefined
 		? defaultProvider({ profile: 'investigations' })
 		: undefined;
 
-const getRegion = async (): Promise<string> => {
-	if (process.env['AWS_REGION']) {
-		return Promise.resolve(process.env['AWS_REGION']);
+const getEnvVarOrMetadata = async (
+	envVar: string,
+	metadataPath: string,
+	clean?: (input: string) => string,
+): Promise<string> => {
+	if (process.env[envVar]) {
+		return Promise.resolve(process.env[envVar]);
 	}
-	const availabilityZone = await fetch(
-		'http://169.254.169.254/latest/meta-data/placement/availability-zone',
+	const metadataResult = await fetch(
+		`http://169.254.169.254/latest/meta-data/${metadataPath}`,
 	).then((res) => res.text());
-	// availabilityZone is in the form eu-west-1a
-	return availabilityZone.slice(0, -1);
+	return clean ? clean(metadataResult) : metadataResult;
 };
 
 export const getConfig = async (): Promise<TranscriptionConfig> => {
-	const region = await getRegion();
+	const region = await getEnvVarOrMetadata(
+		'AWS_REGION',
+		'placement/availability-zone',
+		(az) => az.slice(0, -1),
+	);
 	const ssm = new SSM({
 		region,
 		credentials: credentialProvider,
 	});
-	const stage = await getStage();
+	const stage = await getEnvVarOrMetadata('STAGE', 'tags/instance/Stage');
 	const paramPath = `/${stage}/investigations/transcription-service/`;
 
 	const parameters = await getParameters(paramPath, ssm);
