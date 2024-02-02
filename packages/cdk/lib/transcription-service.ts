@@ -106,6 +106,7 @@ export class TranscriptionService extends GuStack {
 				`export AWS_REGION=${props.env.region}`,
 				`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
 				`dpkg -i transcription-service-worker_1.0.0_all.deb`,
+				`service transcription-service-worker start`,
 			].join('\n'),
 		);
 
