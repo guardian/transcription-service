@@ -18,7 +18,7 @@ npm run api::start
 1. Run the [Next.js](https://nextjs.org/) frontend:
 
 ```bash
-npm run client::dev
+npm run client::start
 ```
 
 If all goes well the frontend is available at https://transcribe.local.dev-gutools.co.uk and the backend is available at https://api.transcribe.local.dev-gutools.co.uk
