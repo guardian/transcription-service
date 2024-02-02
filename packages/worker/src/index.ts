@@ -10,9 +10,11 @@ import {
 const main = async () => {
 	const config = await getConfig();
 	const localstackEndpoint =
-		config.stage === 'DEV' ? new URL(config.taskQueueUrl).origin : undefined;
+		config.app.stage === 'DEV'
+			? new URL(config.app.taskQueueUrl).origin
+			: undefined;
 	const client = getClient(localstackEndpoint);
-	const message = await getNextMessage(client, config.taskQueueUrl);
+	const message = await getNextMessage(client, config.app.taskQueueUrl);
 	if (isFailure(message)) {
 		return;
 	}
@@ -26,14 +28,14 @@ const main = async () => {
 		// wait for 3 minutes then delete the message to simulate the transcription
 		setTimeout(
 			() => {
-				console.log(`Deleting message ${message.message.MessageId}`);
+				console.log(`Deleting message ${message.message?.MessageId}`);
 				deleteMessage(
 					client,
-					config.taskQueueUrl,
+					config.app.taskQueueUrl,
 					message.message?.ReceiptHandle as string,
 				);
 			},
-			config.stage === 'DEV' ? 10000 : 180000,
+			config.app.stage === 'DEV' ? 10000 : 180000,
 		);
 	}
 };

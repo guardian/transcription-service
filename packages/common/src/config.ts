@@ -30,18 +30,12 @@ const getEnvVarOrMetadata = async (
 		return Promise.resolve(env);
 	}
 	// see https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html for metadata docs
+	if (fallback) {
+		return fallback;
+	}
 	const metadataResult = await fetch(
 		`http://169.254.169.254/latest/meta-data/${metadataPath}`,
 	);
-	if (!metadataResult.ok) {
-		if (fallback) {
-			return fallback;
-		} else {
-			throw new Error(
-				`Failed to fetch required variable ${envVar} from environment/metadata`,
-			);
-		}
-	}
 	const metadataValue = await metadataResult.text();
 	return clean ? clean(metadataValue) : metadataValue;
 };

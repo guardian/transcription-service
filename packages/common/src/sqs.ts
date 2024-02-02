@@ -144,12 +144,15 @@ export const deleteMessage = async (
 export const parseTranscriptJobMessage = (
 	message: Message,
 ): TranscriptionJob | undefined => {
+	if (!message.Body) {
+		return undefined;
+	}
 	const job = TranscriptionJob.safeParse(JSON.parse(message.Body));
 	if (job.success) {
 		return job.data;
 	}
 	console.error(
-		`Failed to parseee message ${message.MessageId}, contents: ${message.Body}`,
+		`Failed to parse message ${message.MessageId}, contents: ${message.Body}`,
 	);
 	return undefined;
 };

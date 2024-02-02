@@ -26,7 +26,9 @@ const getApp = async () => {
 	const apiRouter = express.Router();
 
 	const localstackEndpoint =
-		config.stage === 'DEV' ? new URL(config.taskQueueUrl).origin : undefined;
+		config.app.stage === 'DEV'
+			? new URL(config.app.taskQueueUrl).origin
+			: undefined;
 	const sqsClient = getClient(localstackEndpoint);
 
 	app.use(bodyParser.json({ limit: '40mb' }));
@@ -50,7 +52,7 @@ const getApp = async () => {
 	apiRouter.post(
 		'/send-message',
 		asyncHandler(async (req, res) => {
-			const sendResult = await sendMessage(sqsClient, config.taskQueueUrl);
+			const sendResult = await sendMessage(sqsClient, config.app.taskQueueUrl);
 			if (isFailure(sendResult)) {
 				res.status(500).send(sendResult.errorMsg);
 				return;

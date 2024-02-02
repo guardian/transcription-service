@@ -6,7 +6,7 @@
   "scripts": {
     "build": "esbuild --bundle --platform=node --target=node20 --outfile=dist/index.js src/index.ts",
     "package": "docker run --rm -v $PWD:/worker $(docker build -q deb-build/) fpm",
-    "start": "ts-node-dev src/index.ts"
+    "start": "STAGE=DEV nodemon src/index.ts"
   },
   "keywords": [],
   "author": "",
