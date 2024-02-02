@@ -14,7 +14,8 @@
 		"cdk::synth": "npm run synth --workspace cdk",
 		"cdk::test": "npm run test --workspace cdk",
 		"cdk::test-update": "npm run test-update --workspace cdk",
-		"package": "cd packages/dist; mkdir -p ../target; zip -qr ../target/app.zip *"
+		"package": "cd dist; mkdir -p ../target; zip -qr ../target/app.zip *",
+		"emulate-prod-locally": "npm run build --workspace client; EMULATE_PRODUCTION_SERVER=true npm run start --workspace api"
 	},
 	"keywords": [],
 	"author": "",

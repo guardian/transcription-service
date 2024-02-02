@@ -46,11 +46,21 @@ const getApp = async () => {
 	} else {
 		if (emulateProductionLocally) {
 			app.use(
-				express.static(path.resolve(__dirname, '..', '..', 'dist', 'client')),
+				express.static(
+					path.resolve(__dirname, '..', '..', '..', 'dist', 'client'),
+				),
 			);
 			app.get('/*', (req: Request, res: Response) => {
 				res.sendFile(
-					path.resolve(__dirname, '..', '..', 'dist', 'client', 'index.html'),
+					path.resolve(
+						__dirname,
+						'..',
+						'..',
+						'..',
+						'dist',
+						'client',
+						'index.html',
+					),
 				);
 			});
 		}
