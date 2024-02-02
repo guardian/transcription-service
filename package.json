@@ -5,15 +5,19 @@
 	"main": "index.js",
 	"scripts": {
 		"format": "prettier --write 'packages/**/*.ts'",
-		"api::build": "npm run build --workspace api; npm run build-frontend --workspace api",
-		"api::package": "npm run package --workspace api",
 		"worker::build": "npm run build --workspace worker; npm run build --workspace worker",
 		"worker::package": "npm run package --workspace worker",
+		"api::build": "npm run build --workspace api",
+		"api::start": "npm run start --workspace api",
+		"client::build": "npm run build --workspace client",
+		"client::start": "npm run dev --workspace client",
 		"cdk::build": "npm run build --workspace cdk",
 		"cdk::lint": "npm run lint --workspace cdk",
 		"cdk::synth": "npm run synth --workspace cdk",
 		"cdk::test": "npm run test --workspace cdk",
-		"cdk::test-update": "npm run test-update --workspace cdk"
+		"cdk::test-update": "npm run test-update --workspace cdk",
+		"package": "mkdir -p build/client; mkdir -p target; mv packages/api/dist/index.js build; mv packages/client/out/* build/client; cd build; zip -qr ../target/api.zip *",
+		"emulate-prod-locally": "npm run build --workspace client; EMULATE_PRODUCTION_SERVER=true npm run start --workspace api"
 	},
 	"keywords": [],
 	"author": "",
@@ -22,14 +26,14 @@
 		"packages/*"
 	],
 	"devDependencies": {
-		"@types/node": "^20.11.5",
-		"esbuild": "^0.19.11",
-		"ts-node": "^10.9.2",
 		"@guardian/prettier": "^8.0.0",
+		"@types/node": "^20.11.5",
 		"@typescript-eslint/eslint-plugin": "^6.19.0",
 		"@typescript-eslint/parser": "^6.19.0",
+		"esbuild": "^0.19.11",
 		"eslint": "^8.56.0",
 		"prettier": "^3.2.4",
+		"ts-node": "^10.9.2",
 		"typescript": "^5.3.3"
 	}
 }

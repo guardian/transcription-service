@@ -23,10 +23,15 @@ jobs:
       - name: Install dependencies
         run: |
           npm install
-      - name: Package API
+      - name: build API
         run: |
           npm run api::build
-          npm run api::package
+      - name: build Client
+        run: |
+          npm run client::build
+      - name: Package API/Client
+        run: |
+          npm run package
       - name: Package Worker
         run: |
           npm run worker::build
@@ -53,7 +58,7 @@ jobs:
               - packages/cdk/cdk.out/TranscriptionService-CODE.template.json
               - packages/cdk/cdk.out/TranscriptionService-PROD.template.json
             transcription-service:
-              - packages/api/target/api.zip
+              - target/api.zip
             transcription-service-worker:
               - packages/worker/target/worker.zip
       - name: Upload repository project to riff-raff

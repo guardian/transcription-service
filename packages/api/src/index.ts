@@ -4,8 +4,14 @@ import serverlessExpress from '@codegenie/serverless-express';
 import bodyParser from 'body-parser';
 import path from 'path';
 import { getConfig } from './config';
+import { initPassportAuth } from './services/passport';
+import { GoogleAuth } from './controllers/GoogleAuth';
+import passport from 'passport';
+import { Request, Response } from 'express';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
+const emulateProductionLocally =
+	process.env['EMULATE_PRODUCTION_SERVER'] === 'true';
 
 const getApp = async () => {
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -15,6 +21,13 @@ const getApp = async () => {
 	const apiRouter = express.Router();
 
 	app.use(bodyParser.json({ limit: '40mb' }));
+	app.use(passport.initialize());
+
+	// auth
+	initPassportAuth(config);
+	const auth = new GoogleAuth(config);
+	apiRouter.get('/auth/google', ...auth.googleAuth());
+	apiRouter.get('/auth/oauth-callback', ...auth.oauthCallback());
 
 	apiRouter.get(
 		'/healthcheck',
@@ -26,10 +39,30 @@ const getApp = async () => {
 	app.use('/api', apiRouter);
 
 	if (runningOnAws) {
-		app.use(express.static('frontend'));
+		app.use(express.static('client'));
 		app.get('/*', (req, res) => {
-			res.sendFile(path.resolve(__dirname, 'frontend', 'index.html'));
+			res.sendFile(path.resolve(__dirname, 'client', 'index.html'));
 		});
+	} else {
+		if (emulateProductionLocally) {
+			app.use(
+				express.static(
+					path.resolve(__dirname, '..', '..', '..', 'packages/client/dist/client'),
+				),
+			);
+			app.get('/*', (req: Request, res: Response) => {
+				res.sendFile(
+					path.resolve(
+						__dirname,
+						'..',
+						'..',
+						'..',
+						'packages/client/dist/client',
+						'index.html',
+					),
+				);
+			});
+		}
 	}
 
 	return app;

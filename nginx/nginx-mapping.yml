@@ -1,0 +1,9 @@
+name: transcription-service
+mappings:
+  - prefix: transcribe
+    port: 3000
+    websocket: /_next/webpack-hmr
+    client_max_body_size: 128m
+  - prefix: api.transcribe
+    port: 9103
+    client_max_body_size: 128m
