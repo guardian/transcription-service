@@ -4,7 +4,7 @@ import serverlessExpress from '@codegenie/serverless-express';
 import bodyParser from 'body-parser';
 import path from 'path';
 import { getConfig } from './config';
-import { initPassportAuth } from './services/passport';
+import { checkAuth, initPassportAuth } from './services/passport';
 import { GoogleAuth } from './controllers/GoogleAuth';
 import passport from 'passport';
 import { Request, Response } from 'express';
@@ -29,11 +29,13 @@ const getApp = async () => {
 	apiRouter.get('/auth/google', ...auth.googleAuth());
 	apiRouter.get('/auth/oauth-callback', ...auth.oauthCallback());
 
+	// checkAuth is the pattern of checking auth 
+	// for every api endpoint that's added
 	apiRouter.get(
 		'/healthcheck',
-		asyncHandler(async (req, res) => {
+		[checkAuth, asyncHandler(async (req, res) => {
 			res.send('It lives!');
-		}),
+		})],
 	);
 
 	app.use('/api', apiRouter);
@@ -47,7 +49,7 @@ const getApp = async () => {
 		if (emulateProductionLocally) {
 			app.use(
 				express.static(
-					path.resolve(__dirname, '..', '..', '..', 'packages/client/dist/client'),
+					path.resolve(__dirname, '..', '..', '..', 'packages/client/out'),
 				),
 			);
 			app.get('/*', (req: Request, res: Response) => {
@@ -57,7 +59,7 @@ const getApp = async () => {
 						'..',
 						'..',
 						'..',
-						'packages/client/dist/client',
+						'packages/client/out',
 						'index.html',
 					),
 				);
