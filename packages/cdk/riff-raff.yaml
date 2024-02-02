@@ -31,8 +31,9 @@ deployments:
       amiTags:
         Recipe: investigations-transcription-service
         AmigoStage: PROD
+        Encrypted: investigations
       amiParameter: AMITranscriptionserviceworker
-      amiEncrypted: investigations
+      amiEncrypted: true
     dependencies:
       - lambda-upload-eu-west-1-investigations-transcription-service
   lambda-update-eu-west-1-investigations-transcription-service:
