@@ -23,7 +23,7 @@ fi
 # Starting localstack
 docker-compose up -d
 # If the queue already exists this command appears to still work and returns the existing queue url
-QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=transcription-service-task-queue-DEV | jq .QueueUrl)
+QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=transcription-service-task-queue-DEV.fifo --attributes "FifoQueue=true,ContentBasedDeduplication=true" | jq .QueueUrl)
 # We don't install the localstack dns so need to replace the endpoint with localhost
 QUEUE_URL_LOCALHOST=${QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
 

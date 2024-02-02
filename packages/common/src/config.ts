@@ -14,10 +14,8 @@ export interface TranscriptionConfig {
 	};
 }
 
-const credentialProvider =
-	process.env['AWS_EXECUTION_ENV'] === undefined
-		? defaultProvider({ profile: 'investigations' })
-		: undefined;
+const credentialProvider = (onAws: boolean) =>
+	onAws ? undefined : defaultProvider({ profile: 'investigations' });
 
 const getEnvVarOrMetadata = async (
 	envVar: string,
@@ -47,15 +45,16 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		'eu-west-1',
 		(az) => az.slice(0, -1),
 	);
-	const ssm = new SSM({
-		region,
-		credentials: credentialProvider,
-	});
 	const stage = await getEnvVarOrMetadata(
 		'STAGE',
 		'tags/instance/Stage',
 		'DEV',
 	);
+	const ssm = new SSM({
+		region,
+		credentials: credentialProvider(stage !== 'DEV'),
+	});
+
 	const paramPath = `/${stage}/investigations/transcription-service/`;
 
 	const parameters = await getParameters(paramPath, ssm);
