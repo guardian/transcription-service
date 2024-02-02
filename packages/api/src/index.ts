@@ -47,7 +47,7 @@ const getApp = async () => {
 		if (emulateProductionLocally) {
 			app.use(
 				express.static(
-					path.resolve(__dirname, '..', '..', '..', 'dist', 'client'),
+					path.resolve(__dirname, '..', '..', '..', 'packages/client/dist/client'),
 				),
 			);
 			app.get('/*', (req: Request, res: Response) => {
@@ -57,8 +57,7 @@ const getApp = async () => {
 						'..',
 						'..',
 						'..',
-						'dist',
-						'client',
+						'packages/client/dist/client',
 						'index.html',
 					),
 				);
