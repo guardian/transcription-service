@@ -12,6 +12,8 @@ const validateEmail = (email: string) => {
 	);
 };
 
+export const checkAuth = passport.authenticate("jwt", { session: false });
+
 export const initPassportAuth = (config: TranscriptionConfig) => {
 	passport.use(
 		new GoogleStrategy(
