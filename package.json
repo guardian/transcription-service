@@ -9,6 +9,7 @@
 		"worker::package": "npm run package --workspace worker",
 		"api::build": "npm run build --workspace api",
 		"client::build": "npm run build --workspace client",
+		"client::start": "npm run dev --workspace client",
 		"cdk::build": "npm run build --workspace cdk",
 		"cdk::lint": "npm run lint --workspace cdk",
 		"cdk::synth": "npm run synth --workspace cdk",
