@@ -12,9 +12,9 @@ const main = async () => {
 	const client = getClient(config.aws.region, config.aws.localstackEndpoint);
 
 	// to simulate a transcription job, delay 5 seconds in DEV, 2 minutes in PROD before deleting the message
-	const dummyDelay = config.app.stage === 'DEV' ? 5000 : 120000;
+	const dummyDelay = config.app.stage === 'DEV' ? 5 : 120;
 	// override timeout to allow enough time for our dummy delay before message becomes available
-	const timeoutOverride = dummyDelay + 1000;
+	const timeoutOverride = dummyDelay + 1;
 	const message = await getNextMessage(
 		client,
 		config.app.taskQueueUrl,
@@ -38,7 +38,7 @@ const main = async () => {
 				config.app.taskQueueUrl,
 				message.message?.ReceiptHandle as string,
 			);
-		}, dummyDelay);
+		}, dummyDelay * 1000);
 	}
 };
 
