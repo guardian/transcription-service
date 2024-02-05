@@ -26,6 +26,7 @@ const getApp = async () => {
 	const apiRouter = express.Router();
 
 	const sqsClient = getClient(config.aws.region, config.aws.localstackEndpoint);
+	const s3Client = getClient();
 
 	app.use(bodyParser.json({ limit: '40mb' }));
 	app.use(passport.initialize());
@@ -54,6 +55,17 @@ const getApp = async () => {
 				return;
 			}
 			res.send('Message sent');
+		}),
+	]);
+
+	apiRouter.get('/signedUrl', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			const presignedS3Url = s3Client.getSignedUrl('putObject', {
+				Bucket: config.sourceMediaBucket,
+				Expires: 60, // override default expiration time of 15 minutes
+			});
+			res.send(presignedS3Url);
 		}),
 	]);
 
