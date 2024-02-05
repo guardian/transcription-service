@@ -27,7 +27,7 @@ interface ReceiveSuccess {
 
 interface SQSFailure {
 	status: SQSStatus.Failure;
-	error?: any;
+	error?: unknown;
 	errorMsg?: string;
 }
 
@@ -95,6 +95,7 @@ export const sendMessage = async (
 export const getNextMessage = async (
 	client: SQSClient,
 	queueUrl: string,
+	timeoutOverride?: number,
 ): Promise<ReceiveResult> => {
 	try {
 		const message = await client.send(
@@ -103,7 +104,7 @@ export const getNextMessage = async (
 				// workers process one transcript at a time
 				MaxNumberOfMessages: 1,
 				// Not sure we need to set this here - could just rely on the queue default
-				VisibilityTimeout: 300,
+				VisibilityTimeout: timeoutOverride ?? 300,
 			}),
 		);
 		const messages = message.Messages;

@@ -9,12 +9,17 @@ import {
 
 const main = async () => {
 	const config = await getConfig();
-	const localstackEndpoint =
-		config.app.stage === 'DEV'
-			? new URL(config.app.taskQueueUrl).origin
-			: undefined;
 	const client = getClient(config.aws.region, config.aws.localstackEndpoint);
-	const message = await getNextMessage(client, config.app.taskQueueUrl);
+
+	// to simulate a transcription job, delay 5 seconds in DEV, 2 minutes in PROD before deleting the message
+	const dummyDelay = config.app.stage === 'DEV' ? 5000 : 120000;
+	// override timeout to allow enough time for our dummy delay before message becomes available
+	const timeoutOverride = dummyDelay + 1000;
+	const message = await getNextMessage(
+		client,
+		config.app.taskQueueUrl,
+		timeoutOverride,
+	);
 	if (isFailure(message)) {
 		return;
 	}
@@ -26,17 +31,14 @@ const main = async () => {
 			job,
 		);
 		// wait for 3 minutes then delete the message to simulate the transcription
-		setTimeout(
-			() => {
-				console.log(`Deleting message ${message.message?.MessageId}`);
-				deleteMessage(
-					client,
-					config.app.taskQueueUrl,
-					message.message?.ReceiptHandle as string,
-				);
-			},
-			config.app.stage === 'DEV' ? 10000 : 180000,
-		);
+		setTimeout(() => {
+			console.log(`Deleting message ${message.message?.MessageId}`);
+			deleteMessage(
+				client,
+				config.app.taskQueueUrl,
+				message.message?.ReceiptHandle as string,
+			);
+		}, dummyDelay);
 	}
 };
 
