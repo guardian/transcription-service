@@ -4,7 +4,8 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"format": "prettier --write 'packages/**/*.ts'",
+		"prettier:check": "prettier . --check",
+		"prettier:fix": "prettier . --write",
 		"api::build": "npm run build --workspace api",
 		"api::package": "npm run package --workspace api",
 		"api::start": "AWS_REGION=eu-west-1 STAGE=DEV npm run start --workspace api",
@@ -19,7 +20,14 @@
 		"cdk::test": "npm run test --workspace cdk",
 		"cdk::test-update": "npm run test-update --workspace cdk",
 		"package": "mkdir -p build/client; mkdir -p target; mv packages/api/dist/index.js build; mv packages/client/out/* build/client; cd build; zip -qr ../target/api.zip *",
-		"emulate-prod-locally": "npm run build --workspace client; EMULATE_PRODUCTION_SERVER=true npm run start --workspace api"
+		"emulate-prod-locally": "npm run build --workspace client; EMULATE_PRODUCTION_SERVER=true npm run start --workspace api",
+		"prepare": "husky install"
+	},
+	"lint-staged": {
+		"*": "prettier --ignore-unknown --write",
+		"*.ts": [
+			"eslint --fix"
+		]
 	},
 	"keywords": [],
 	"author": "",
@@ -34,6 +42,8 @@
 		"@typescript-eslint/parser": "^6.19.0",
 		"esbuild": "^0.19.11",
 		"eslint": "^8.56.0",
+		"husky": "^8.0.0",
+		"lint-staged": "^15.2.0",
 		"prettier": "^3.2.4",
 		"ts-node": "^10.9.2",
 		"typescript": "^5.3.3"
