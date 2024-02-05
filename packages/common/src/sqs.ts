@@ -38,7 +38,7 @@ export const getClient = (region: string, localstackEndpoint?: string) => {
 	const clientBaseConfig = {
 		region,
 	};
-	console.log(localstackEndpoint);
+
 	const clientConfig = localstackEndpoint
 		? { ...clientBaseConfig, endpoint: localstackEndpoint }
 		: clientBaseConfig;
@@ -54,7 +54,7 @@ export const sendMessage = async (
 	queueUrl: string,
 ): Promise<SendResult> => {
 	const job: TranscriptionJob = {
-		id: new Date().toISOString(), // uuid
+		id: 'my-first-transcription', // uuid
 		s3Url: 's3://test/test',
 		retryCount: 0,
 		sentTimestamp: new Date().toISOString(),
@@ -62,7 +62,6 @@ export const sendMessage = async (
 		transcriptDestinationService: DestinationService.TranscriptionService,
 		originalFilename: 'test.mp3',
 	};
-	console.log(queueUrl);
 
 	try {
 		const result = await client.send(

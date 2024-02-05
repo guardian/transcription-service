@@ -46,7 +46,7 @@ const getApp = async () => {
 	]);
 
 	apiRouter.post('/send-message', [
-		// checkAuth,
+		checkAuth,
 		asyncHandler(async (req, res) => {
 			const sendResult = await sendMessage(sqsClient, config.app.taskQueueUrl);
 			if (isFailure(sendResult)) {
