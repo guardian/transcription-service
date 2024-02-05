@@ -1,21 +1,23 @@
 # transcription-service
 A self service app for journalists to upload audio/video files and receive transcription through email notifications. 
 
+We use localstack to run SQS locally rather than needing to create 'dev' queues in AWS. This is set up via docker.
+
 ## Get started
 1. Get Janus creds (for fetching creds from AWS Parameter Store)
-2. Bootstrap dependencies and the DB. DB will be populated with a recent copy of PROD data.
+2. Use the `scripts/setup.sh` script to install dependencies, set up the nginx mapping and create a docker based sqs queue
 
 ```bash
 nvm use
 scripts/setup.sh
 ```
-5. Run the [express](https://expressjs.com/) backend API:
+3. Run the [express](https://expressjs.com/) backend API:
 
 ```bash
 npm run api::start
 ```
 
-1. Run the [Next.js](https://nextjs.org/) frontend:
+4. Run the [Next.js](https://nextjs.org/) frontend:
 
 ```bash
 npm run client::start
@@ -34,4 +36,12 @@ In production we only run an express server which serves the client bundle whene
 If you are writing something that depends specifically on interactions between the API sever and the frontend you may want to check it works in production. First you need to update the config value of `rootUrl` to `https://api.transcribe.local.dev-gutools.co.uk` and then run `npm run emulate-prod-locally`. This will trigger a build and have your express web server provide the frontend bundle, rather than the nextjs server. 
 
 Then you can test the app using [https://api.transcribe.local.dev-gutools.co.uk](https://api.transcribe.local.dev-gutools.co.uk)
+
+## Purging local queue
+If you change the structure of messages on the queue you'll probably want to purge all local messages. There's a script
+for that!
+
+```
+./scripts/purge-local-queue.sh
+```
 

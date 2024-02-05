@@ -8,7 +8,7 @@ import {
 } from '@guardian/cdk/lib/constructs/core';
 import { GuCname } from '@guardian/cdk/lib/constructs/dns';
 import { GuVpc, SubnetType } from '@guardian/cdk/lib/constructs/ec2';
-import { GuInstanceRole } from '@guardian/cdk/lib/constructs/iam';
+import { GuInstanceRole, GuPolicy } from '@guardian/cdk/lib/constructs/iam';
 import { GuardianAwsAccounts } from '@guardian/private-infrastructure-config';
 import { type App, Duration } from 'aws-cdk-lib';
 import { EndpointType } from 'aws-cdk-lib/aws-apigateway';
@@ -75,13 +75,13 @@ export class TranscriptionService extends GuStack {
 			},
 		});
 
-		apiLambda.addToRolePolicy(
-			new PolicyStatement({
-				effect: Effect.ALLOW,
-				actions: ['ssm:GetParameter', 'ssm:GetParametersByPath'],
-				resources: [`${ssmPrefix}/${ssmPath}/*`],
-			}),
-		);
+		const getParametersPolicy = new PolicyStatement({
+			effect: Effect.ALLOW,
+			actions: ['ssm:GetParameter', 'ssm:GetParametersByPath'],
+			resources: [`${ssmPrefix}/${ssmPath}/*`],
+		});
+
+		apiLambda.addToRolePolicy(getParametersPolicy);
 
 		// The custom domain name mapped to this API
 		const apiDomain = apiLambda.api.domainName;
@@ -102,14 +102,21 @@ export class TranscriptionService extends GuStack {
 		// basic placeholder commands
 		userData.addCommands(
 			[
-				`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/${workerApp}/worker.zip .`,
-				`unzip worker.zip`,
-				`node index.js`,
+				`export STAGE=${props.stage}`,
+				`export AWS_REGION=${props.env.region}`,
+				`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
+				`dpkg -i transcription-service-worker_1.0.0_all.deb`,
+				`service transcription-service-worker start`,
 			].join('\n'),
 		);
 
 		const role = new GuInstanceRole(this, {
 			app: workerApp,
+			additionalPolicies: [
+				new GuPolicy(this, 'WorkerGetParameters', {
+					statements: [getParametersPolicy],
+				}),
+			],
 		});
 
 		const launchTemplate = new LaunchTemplate(
@@ -120,6 +127,8 @@ export class TranscriptionService extends GuStack {
 					'eu-west-1': workerAmi.valueAsString,
 				}),
 				instanceType: InstanceType.of(InstanceClass.C7G, InstanceSize.XLARGE4),
+				// include tags in instance metadata so that we can work out the STAGE
+				instanceMetadataTags: true,
 				// the size of this block device will determine the max input file size for transcription. In future we could
 				// attach the block device on startup once we know how large the file to be transcribed is, or try some kind
 				// of streaming approach to the transcription so we don't need the whole file on disk
@@ -164,9 +173,9 @@ export class TranscriptionService extends GuStack {
 						app: workerApp,
 					}),
 				},
-				// initially protect instances from scale events till they have had a chance to pick up a transcription job
-				// scale in protection will be removed by the worker once it has finished a job
-				newInstancesProtectedFromScaleIn: true,
+				// we might want to set this to true once we are actually doing transcriptions to protect the instance from
+				// being terminated before it has a chance to complete a transcription job.
+				newInstancesProtectedFromScaleIn: false,
 				mixedInstancesPolicy: {
 					launchTemplate,
 					instancesDistribution: {
@@ -195,6 +204,10 @@ export class TranscriptionService extends GuStack {
 			// size of the file from s3 and estimate transcription time. If it's
 			// not, we'll need to increase visibilityTimeout
 			visibilityTimeout: Duration.seconds(30),
+			// contentBasedDeduplication takes a sha-256 hash of the message body to use as the deduplication ID. In future
+			// we might choose to use a hash of the actual file to be transcribed instead (but I can't really think where
+			// that would be particularly helpful)
+			contentBasedDeduplication: true,
 		});
 
 		// allow API lambda to write to queue

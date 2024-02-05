@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import passport from 'passport';
 import { stringify } from 'qs';
 import { URL } from 'url';
-import { TranscriptionConfig } from '../config';
+import { TranscriptionConfig } from '@guardian/transcription-service-common';
 import { NextFunction, Request, RequestHandler, Response } from 'express';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -5,13 +5,14 @@
   "main": "index.js",
   "scripts": {
     "build": "esbuild --bundle --platform=node --target=node20 --outfile=dist/index.js src/index.ts",
-    "package": "cd dist; mkdir -p ../target; zip -qr ../target/worker.zip ./*"
+    "package": "docker run --rm -v $PWD:/worker $(docker build -q deb-build/) fpm",
+    "start": "STAGE=DEV nodemon src/index.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-
+    "@guardian/transcription-service-common" : "1.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.5",

@@ -19,7 +19,9 @@
 		"jwt-decode": "^4.0.0",
 		"passport": "^0.7.0",
 		"passport-google-oauth2": "^0.2.0",
-		"passport-jwt": "^4.0.1"
+		"passport-jwt": "^4.0.1",
+		"@aws-sdk/client-sqs": "^3.496.0",
+		"@guardian/transcription-service-common": "1.0.0"
 	},
 	"devDependencies": {
 		"@types/aws-lambda": "^8.10.131",
