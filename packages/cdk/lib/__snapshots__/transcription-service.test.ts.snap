@@ -6,10 +6,12 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
     "gu:cdk:constructs": [
       "GuAmiParameter",
       "GuCertificate",
+      "GuS3Bucket",
       "GuDistributionBucketParameter",
       "GuApiLambda",
       "GuCname",
       "GuPolicy",
+      "GuAllowPolicy",
       "GuInstanceRole",
       "GuDescribeEC2Policy",
       "GuLoggingStreamNameParameter",
@@ -125,6 +127,43 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
           "Version": "2012-10-17",
         },
         "PolicyName": "describe-ec2-policy",
+        "Roles": [
+          {
+            "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "GetDeleteSourceMedia6AC3A8D5": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject",
+                "s3:DeleteObject",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "GetDeleteSourceMedia6AC3A8D5",
         "Roles": [
           {
             "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
@@ -340,6 +379,50 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
+    "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "BucketName": "transcription-service-source-media-test",
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "ExpirationInDays": 7,
+              "Status": "Enabled",
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
     "TranscriptionWorkerASGCAE69A98": {
       "Properties": {
         "AutoScalingGroupName": "transcription-service-workers-TEST",
@@ -503,7 +586,8 @@ aws s3 cp s3://",
                     "Ref": "DistributionBucketName",
                   },
                   "/investigations/TEST/transcription-service-worker/transcription-service-worker_1.0.0_all.deb .
-dpkg -i transcription-service-worker_1.0.0_all.deb",
+dpkg -i transcription-service-worker_1.0.0_all.deb
+service transcription-service-worker start",
                 ],
               ],
             },
