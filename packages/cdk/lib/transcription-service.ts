@@ -81,7 +81,7 @@ export class TranscriptionService extends GuStack {
 				'TranscriptionServiceUploadsBucket',
 				{
 					app: APP_NAME,
-					bucketName: `transcription-service-source-media-DEV`,
+					bucketName: `transcription-service-source-media-dev`,
 				},
 			);
 			sourceMediaBucketDev.addLifecycleRule({
