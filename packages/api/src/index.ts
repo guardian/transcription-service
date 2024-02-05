@@ -25,11 +25,13 @@ const getApp = async () => {
 	const app = express();
 	const apiRouter = express.Router();
 
+	// AWS clients take an optional 'endpoint' property that is only needed by localstack - on code/prod you don't need
+	// to set it. Here we inder the endpoint (http://localhost:4566) from the sqs url
 	const localstackEndpoint =
 		config.app.stage === 'DEV'
 			? new URL(config.app.taskQueueUrl).origin
 			: undefined;
-	const sqsClient = getClient(localstackEndpoint);
+	const sqsClient = getClient(config.aws.region, localstackEndpoint);
 
 	app.use(bodyParser.json({ limit: '40mb' }));
 	app.use(passport.initialize());

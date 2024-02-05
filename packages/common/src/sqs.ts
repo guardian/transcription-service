@@ -31,9 +31,9 @@ interface SQSFailure {
 type SendResult = SendSuccess | SQSFailure;
 type ReceiveResult = ReceiveSuccess | SQSFailure;
 
-export const getClient = (localstackEndpoint?: string) => {
+export const getClient = (region: string, localstackEndpoint?: string) => {
 	const clientBaseConfig = {
-		region: 'eu-west-1',
+		region,
 	};
 	const clientConfig = localstackEndpoint
 		? { ...clientBaseConfig, endpoint: localstackEndpoint }

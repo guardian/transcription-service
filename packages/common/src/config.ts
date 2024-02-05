@@ -12,6 +12,9 @@ export interface TranscriptionConfig {
 		taskQueueUrl: string;
 		stage: string;
 	};
+	aws: {
+		region: string;
+	};
 }
 
 const credentialProvider = (onAws: boolean) =>
@@ -87,6 +90,9 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			secret: appSecret,
 			taskQueueUrl,
 			stage,
+		},
+		aws: {
+			region,
 		},
 	};
 };
