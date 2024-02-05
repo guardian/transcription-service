@@ -67,6 +67,11 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 
 	console.log(`Parameters fetched: ${parameterNames.join(', ')}`);
 	const taskQueueUrl = findParameter(parameters, paramPath, 'taskQueueUrl');
+	const destinationTopic = findParameter(
+		parameters,
+		paramPath,
+		'destinationTopicArns/transcriptionService',
+	);
 	// AWS clients take an optional 'endpoint' property that is only needed by localstack - on code/prod you don't need
 	// to set it. Here we inder the endpoint (http://localhost:4566) from the sqs url
 	const localstackEndpoint =
@@ -96,7 +101,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			stage,
 			sourceMediaBucket: 'my-bucket',
 			destinationTopicArns: {
-				transcriptionService: 'replaceme',
+				transcriptionService: destinationTopic,
 			},
 		},
 		aws: {

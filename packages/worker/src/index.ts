@@ -6,23 +6,42 @@ import {
 	isFailure,
 	deleteMessage,
 } from '@guardian/transcription-service-common';
+import { getSNSClient, publishTranscriptionOutput } from './sns';
 
 const main = async () => {
 	const config = await getConfig();
 	const client = getClient(config.aws.region, config.aws.localstackEndpoint);
 
 	// to simulate a transcription job, delay 5 seconds in DEV, 2 minutes in PROD before deleting the message
-	const dummyDelay = config.app.stage === 'DEV' ? 5000 : 120000;
+	const dummyDelay = config.app.stage === 'DEV' ? 5 : 120;
 	// override timeout to allow enough time for our dummy delay before message becomes available
-	const timeoutOverride = dummyDelay + 1000;
+	const timeoutOverride = dummyDelay + 1;
 	const message = await getNextMessage(
 		client,
 		config.app.taskQueueUrl,
 		timeoutOverride,
 	);
+
+	const snsClient = getSNSClient(
+		config.aws.region,
+		config.aws.localstackEndpoint,
+	);
+
 	if (isFailure(message)) {
 		return;
 	}
+	console.log(config.app.taskQueueUrl);
+
+	await publishTranscriptionOutput(
+		snsClient,
+		config.app.destinationTopicArns.transcriptionService,
+		{
+			id: 'test-id',
+			transcriptionSrt: 'test-srt',
+			languageCode: 'en',
+			userEmail: 'test@test.com',
+		},
+	);
 
 	if (message.message?.ReceiptHandle) {
 		const job = parseTranscriptJobMessage(message.message);
@@ -38,7 +57,7 @@ const main = async () => {
 				config.app.taskQueueUrl,
 				message.message?.ReceiptHandle as string,
 			);
-		}, dummyDelay);
+		}, dummyDelay * 1000);
 	}
 };
 
