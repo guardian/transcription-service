@@ -89,6 +89,12 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 	// To locally emulating production, the value of appRootUrl should be changed to api.transcribe domain
 	const appRootUrl = findParameter(parameters, paramPath, 'app/rootUrl');
 
+	const sourceMediaBucket = findParameter(
+		parameters,
+		paramPath,
+		'app/sourceMediaBucket',
+	);
+
 	return {
 		auth: {
 			clientId: authClientId,
@@ -99,7 +105,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			secret: appSecret,
 			taskQueueUrl,
 			stage,
-			sourceMediaBucket: 'my-bucket',
+			sourceMediaBucket,
 			destinationTopicArns: {
 				transcriptionService: destinationTopic,
 			},

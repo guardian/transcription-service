@@ -34,7 +34,7 @@ interface SQSFailure {
 type SendResult = SendSuccess | SQSFailure;
 type ReceiveResult = ReceiveSuccess | SQSFailure;
 
-export const getClient = (region: string, localstackEndpoint?: string) => {
+export const getSQSClient = (region: string, localstackEndpoint?: string) => {
 	const clientBaseConfig = {
 		region,
 	};

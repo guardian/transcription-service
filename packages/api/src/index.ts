@@ -9,10 +9,13 @@ import passport from 'passport';
 import { Request, Response } from 'express';
 import {
 	getConfig,
-	getClient,
+	getS3Client,
+	getSQSClient,
 	sendMessage,
 	isFailure,
 } from '@guardian/transcription-service-common';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -25,8 +28,11 @@ const getApp = async () => {
 	const app = express();
 	const apiRouter = express.Router();
 
-	const sqsClient = getClient(config.aws.region, config.aws.localstackEndpoint);
-	const s3Client = getClient();
+	const sqsClient = getSQSClient(
+		config.aws.region,
+		config.aws.localstackEndpoint,
+	);
+	const s3Client = getS3Client(config.aws.region);
 
 	app.use(bodyParser.json({ limit: '40mb' }));
 	app.use(passport.initialize());
@@ -61,10 +67,14 @@ const getApp = async () => {
 	apiRouter.get('/signedUrl', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
-			const presignedS3Url = s3Client.getSignedUrl('putObject', {
-				Bucket: config.sourceMediaBucket,
-				Expires: 60, // override default expiration time of 15 minutes
-			});
+			const presignedS3Url = await getSignedUrl(
+				s3Client,
+				new PutObjectCommand({
+					Bucket: config.app.sourceMediaBucket,
+					Key: 'exampleObject',
+				}),
+				{ expiresIn: 60 }, // override default expiration time of 15 minutes
+			);
 			res.send(presignedS3Url);
 		}),
 	]);
