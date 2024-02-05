@@ -45,6 +45,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 	const region = await getEnvVarOrMetadata(
 		'AWS_REGION',
 		'placement/availability-zone',
+		// availability zone has the format eu-west-1a, we need to remove the last character to get the region
 		(az) => az.slice(0, -1),
 	);
 	const stage = await getEnvVarOrMetadata('STAGE', 'tags/instance/Stage');
