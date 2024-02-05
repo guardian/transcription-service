@@ -9,6 +9,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuS3Bucket",
       "GuDistributionBucketParameter",
       "GuApiLambda",
+      "GuPolicy",
       "GuCname",
       "GuPolicy",
       "GuAllowPolicy",
@@ -323,6 +324,43 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         "Roles": [
           {
             "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "LambdaMediaUploadBucketInlinePolicyD28A1181": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "LambdaMediaUploadBucketInlinePolicyD28A1181",
+        "Roles": [
+          {
+            "Ref": "transcriptionserviceapiServiceRole0EF40E0F",
           },
         ],
       },
