@@ -20,10 +20,12 @@ export interface TranscriptionConfig {
 const credentialProvider = (onAws: boolean) =>
 	onAws ? undefined : defaultProvider({ profile: 'investigations' });
 
+// We need to know the region and STAGE before fetching parameters from SSM. On lambda these values can be retrieved from
+// environment variables, on EC2 instances we need to use the instance metadata service. Locally, we hard code
+// the relevant environment variables in our package.json scripts.
 const getEnvVarOrMetadata = async (
 	envVar: string,
 	metadataPath: string,
-	fallback?: string,
 	clean?: (input: string) => string,
 ): Promise<string> => {
 	const env = process.env[envVar];
@@ -31,9 +33,6 @@ const getEnvVarOrMetadata = async (
 		return Promise.resolve(env);
 	}
 	// see https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html for metadata docs
-	if (fallback) {
-		return fallback;
-	}
 	const metadataResult = await fetch(
 		`http://169.254.169.254/latest/meta-data/${metadataPath}`,
 	);
@@ -45,14 +44,9 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 	const region = await getEnvVarOrMetadata(
 		'AWS_REGION',
 		'placement/availability-zone',
-		'eu-west-1',
 		(az) => az.slice(0, -1),
 	);
-	const stage = await getEnvVarOrMetadata(
-		'STAGE',
-		'tags/instance/Stage',
-		'DEV',
-	);
+	const stage = await getEnvVarOrMetadata('STAGE', 'tags/instance/Stage');
 	const ssm = new SSM({
 		region,
 		credentials: credentialProvider(stage !== 'DEV'),
