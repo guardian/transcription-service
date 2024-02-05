@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-enum DestinationService {
+export enum DestinationService {
 	TranscriptionService = 'TranscriptionService',
 }
 

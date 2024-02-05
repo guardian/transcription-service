@@ -5,7 +5,10 @@ import {
 	ReceiveMessageCommand,
 	DeleteMessageCommand,
 } from '@aws-sdk/client-sqs';
-import { TranscriptionJob } from '@guardian/transcription-service-common';
+import {
+	DestinationService,
+	TranscriptionJob,
+} from '@guardian/transcription-service-common';
 
 enum SQSStatus {
 	Success,
@@ -50,10 +53,13 @@ export const sendMessage = async (
 	queueUrl: string,
 ): Promise<SendResult> => {
 	const job: TranscriptionJob = {
-		id: 'my-first-transcription',
+		id: 'my-first-transcription', // uuid
 		s3Url: 's3://test/test',
 		retryCount: 0,
 		sentTimestamp: new Date().toISOString(),
+		userEmail: 'email',
+		transcriptDestinationService: DestinationService.TranscriptionService,
+		originalFilename: 'test.mp3',
 	};
 
 	try {
