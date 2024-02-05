@@ -13,7 +13,7 @@ const main = async () => {
 		config.app.stage === 'DEV'
 			? new URL(config.app.taskQueueUrl).origin
 			: undefined;
-	const client = getClient(localstackEndpoint);
+	const client = getClient(config.aws.region, config.aws.localstackEndpoint);
 	const message = await getNextMessage(client, config.app.taskQueueUrl);
 	if (isFailure(message)) {
 		return;

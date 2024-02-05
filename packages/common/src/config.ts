@@ -14,6 +14,7 @@ export interface TranscriptionConfig {
 	};
 	aws: {
 		region: string;
+		localstackEndpoint?: string;
 	};
 }
 
@@ -61,6 +62,10 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 
 	console.log(`Parameters fetched: ${parameterNames.join(', ')}`);
 	const taskQueueUrl = findParameter(parameters, paramPath, 'taskQueueUrl');
+	// AWS clients take an optional 'endpoint' property that is only needed by localstack - on code/prod you don't need
+	// to set it. Here we inder the endpoint (http://localhost:4566) from the sqs url
+	const localstackEndpoint =
+		stage === 'DEV' ? new URL(taskQueueUrl).origin : undefined;
 
 	const authClientId = findParameter(parameters, paramPath, 'auth/clientId');
 	const authClientSecret = findParameter(
@@ -87,6 +92,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		},
 		aws: {
 			region,
+			localstackEndpoint,
 		},
 	};
 };
