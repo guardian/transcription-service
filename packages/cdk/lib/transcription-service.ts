@@ -8,7 +8,12 @@ import {
 } from '@guardian/cdk/lib/constructs/core';
 import { GuCname } from '@guardian/cdk/lib/constructs/dns';
 import { GuVpc, SubnetType } from '@guardian/cdk/lib/constructs/ec2';
-import { GuInstanceRole, GuPolicy } from '@guardian/cdk/lib/constructs/iam';
+import {
+	GuAllowPolicy,
+	GuInstanceRole,
+	GuPolicy,
+} from '@guardian/cdk/lib/constructs/iam';
+import { GuS3Bucket } from '@guardian/cdk/lib/constructs/s3';
 import { GuardianAwsAccounts } from '@guardian/private-infrastructure-config';
 import { type App, Duration } from 'aws-cdk-lib';
 import { EndpointType } from 'aws-cdk-lib/aws-apigateway';
@@ -55,6 +60,34 @@ export class TranscriptionService extends GuStack {
 			app: APP_NAME,
 			domainName: domainName,
 		});
+
+		const sourceMediaBucket = new GuS3Bucket(
+			this,
+			'TranscriptionServiceSourceMediaBucket',
+			{
+				app: APP_NAME,
+				bucketName: `transcription-service-source-media-${this.stage.toLowerCase()}`,
+			},
+		);
+
+		sourceMediaBucket.addLifecycleRule({
+			expiration: Duration.days(7),
+		});
+
+		// we only want one dev bucket so only create on CODE
+		if (props.stage === 'CODE') {
+			const sourceMediaBucketDev = new GuS3Bucket(
+				this,
+				'TranscriptionServiceUploadsBucket',
+				{
+					app: APP_NAME,
+					bucketName: `transcription-service-source-media-dev`,
+				},
+			);
+			sourceMediaBucketDev.addLifecycleRule({
+				expiration: Duration.days(1),
+			});
+		}
 
 		const apiLambda = new GuApiLambda(this, 'transcription-service-api', {
 			fileName: 'api.zip',
@@ -115,6 +148,10 @@ export class TranscriptionService extends GuStack {
 			additionalPolicies: [
 				new GuPolicy(this, 'WorkerGetParameters', {
 					statements: [getParametersPolicy],
+				}),
+				new GuAllowPolicy(this, 'GetDeleteSourceMedia', {
+					actions: ['s3:GetObject', 's3:DeleteObject'],
+					resources: [`${sourceMediaBucket.bucketArn}/*`],
 				}),
 			],
 		});

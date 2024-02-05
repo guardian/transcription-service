@@ -11,6 +11,10 @@ export interface TranscriptionConfig {
 		rootUrl: string;
 		taskQueueUrl: string;
 		stage: string;
+		sourceMediaBucket: string;
+		destinationTopicArns: {
+			transcriptionService: string;
+		};
 	};
 	aws: {
 		region: string;
@@ -90,6 +94,10 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			secret: appSecret,
 			taskQueueUrl,
 			stage,
+			sourceMediaBucket: 'my-bucket',
+			destinationTopicArns: {
+				transcriptionService: 'replaceme',
+			},
 		},
 		aws: {
 			region,
