@@ -111,6 +111,18 @@ export class TranscriptionService extends GuStack {
 			},
 		});
 
+		apiLambda.role?.attachInlinePolicy(
+			new GuPolicy(this, 'LambdaMediaUploadBucketInlinePolicy', {
+				statements: [
+					new PolicyStatement({
+						effect: Effect.ALLOW,
+						actions: ['s3:GetObject', 's3:PutObject'],
+						resources: [`${sourceMediaBucket.bucketArn}/*`],
+					}),
+				],
+			}),
+		);
+
 		const getParametersPolicy = new PolicyStatement({
 			effect: Effect.ALLOW,
 			actions: ['ssm:GetParameter', 'ssm:GetParametersByPath'],
