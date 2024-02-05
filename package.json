@@ -5,7 +5,7 @@
 	"main": "index.js",
 	"scripts": {
 		"format": "prettier --write 'packages/**/*.ts'",
-		"api::build": "npm run build --workspace api; npm run build-frontend --workspace api",
+		"api::build": "npm run build --workspace api",
 		"api::package": "npm run package --workspace api",
 		"api::start": "npm run start --workspace api",
 		"worker::build": "npm run build --workspace worker; npm run build --workspace worker",

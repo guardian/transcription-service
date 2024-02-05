@@ -127,17 +127,17 @@ export const getNextMessage = async (
 export const deleteMessage = async (
 	client: SQSClient,
 	queueUrl: string,
-	reciptHandle: string,
+	receiptHandle: string,
 ) => {
 	try {
 		await client.send(
 			new DeleteMessageCommand({
 				QueueUrl: queueUrl,
-				ReceiptHandle: reciptHandle,
+				ReceiptHandle: receiptHandle,
 			}),
 		);
 	} catch (error) {
-		console.error(`Failed to delete message ${reciptHandle}`, error);
+		console.error(`Failed to delete message ${receiptHandle}`, error);
 	}
 };
 
