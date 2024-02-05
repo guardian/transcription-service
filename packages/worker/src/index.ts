@@ -1,6 +1,6 @@
 import {
 	getConfig,
-	getClient,
+	getSQSClient,
 	getNextMessage,
 	parseTranscriptJobMessage,
 	isFailure,
@@ -10,7 +10,7 @@ import { getSNSClient, publishTranscriptionOutput } from './sns';
 
 const main = async () => {
 	const config = await getConfig();
-	const client = getClient(config.aws.region, config.aws.localstackEndpoint);
+	const client = getSQSClient(config.aws.region, config.aws.localstackEndpoint);
 
 	// to simulate a transcription job, delay 5 seconds in DEV, 2 minutes in PROD before deleting the message
 	const dummyDelay = config.app.stage === 'DEV' ? 5 : 120;
