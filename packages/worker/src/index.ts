@@ -7,8 +7,12 @@ import {
 	deleteMessage,
 } from '@guardian/transcription-service-common';
 import { getSNSClient, publishTranscriptionOutput } from './sns';
+import { convertAndTranscribe } from './transcribe';
 
 const main = async () => {
+	console.log('current dir: ', __dirname);
+
+	convertAndTranscribe(`${__dirname}/sample/tif.mp3`, `${__dirname}/sample`);
 	const config = await getConfig();
 	const client = getClient(config.aws.region, config.aws.localstackEndpoint);
 
