@@ -77,6 +77,7 @@ const getApp = async () => {
 				}),
 				{ expiresIn: 60 }, // override default expiration time of 15 minutes
 			);
+			res.set('Cache-Control', 'no-cache');
 			res.send({ presignedS3Url, key });
 		}),
 	]);
