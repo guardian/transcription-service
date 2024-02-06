@@ -19,12 +19,12 @@ export const runSpawnCommand = (
 		const stdout: string[] = [];
 		const stderr: string[] = [];
 		cp.stdout.on('data', (data) => {
-			console.log(data);
+			console.log(data.toString());
 			stdout.push(data.toString());
 		});
 
 		cp.stderr.on('data', (data) => {
-			console.log(data);
+			console.log(data.toString());
 			stderr.push(data.toString());
 		});
 
