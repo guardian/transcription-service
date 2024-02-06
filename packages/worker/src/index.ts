@@ -14,13 +14,12 @@ import {
 } from '@guardian/transcription-service-common/src/s3';
 
 const main = async () => {
-	console.log('current dir: ', __dirname);
 	const config = await getConfig();
 
 	const s3Client = getS3Client(config.aws.region);
 	const fileToTranscribe = await getFile(
 		s3Client,
-		'transcription-service-source-media-code',
+		`transcription-service-source-media-${config.app.stage.toLowerCase()}`,
 		'tifsample.wav',
 		config.app.stage === 'DEV' ? `${__dirname}/sample` : '/tmp',
 	);

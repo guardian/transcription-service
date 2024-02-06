@@ -64,7 +64,7 @@ export const runExecCommand = async (command: string): Promise<string> => {
 };
 
 const createContainer = async (tempDir: string): Promise<string> => {
-	const container = await runSpawnCommand('docker', [
+	const existingContainer = await runSpawnCommand('docker', [
 		'ps',
 		'--filter',
 		'name=whisper',
@@ -72,8 +72,8 @@ const createContainer = async (tempDir: string): Promise<string> => {
 		'{{.ID}}',
 	]);
 
-	if (container.stdout) {
-		return container.stdout.trim();
+	if (existingContainer.stdout) {
+		return existingContainer.stdout.trim();
 	}
 
 	const newContainer = await runSpawnCommand('docker', [
@@ -157,6 +157,8 @@ const transcribe = async (
 			'--output-txt',
 			'--output-file',
 			outputFile,
+			'--language',
+			'auto',
 		]);
 		console.log('Transcription finished successfully');
 	} catch (error) {

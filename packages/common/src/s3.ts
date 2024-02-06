@@ -24,6 +24,7 @@ export const getFile = async (
 			}),
 		);
 		(data.Body as Readable).pipe(createWriteStream(destinationPath));
+		console.log('successfully retrieved file from S3 into ', destinationPath);
 		return destinationPath;
 	} catch (e) {
 		console.error(e);
