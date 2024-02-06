@@ -4,8 +4,10 @@ import { createBrowserHistory } from 'history';
 import { AuthRequired } from '@/components/AuthRequired';
 import { initAuth, initialState, logOutIfLoginExpired } from '@/services/auth';
 import { AuthState } from '@/types';
+import { createContext } from 'react';
 
 export const authExpiryCheckPeriodInSeconds = 30;
+export const AuthContext = createContext({});
 
 export default function Template({ children }: { children: React.ReactNode }) {
 	const [auth, setAuth] = useState<AuthState>(initialState);
@@ -32,5 +34,5 @@ export default function Template({ children }: { children: React.ReactNode }) {
 			</div>
 		);
 	}
-	return <div>{children}</div>;
+	return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 }
