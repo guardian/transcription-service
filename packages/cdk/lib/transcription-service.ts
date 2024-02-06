@@ -34,6 +34,7 @@ import {
 } from 'aws-cdk-lib/aws-ec2';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
@@ -70,6 +71,12 @@ export class TranscriptionService extends GuStack {
 			{
 				app: APP_NAME,
 				bucketName: `transcription-service-source-media-${this.stage.toLowerCase()}`,
+				cors: [
+					{
+						allowedOrigins: [`https://${domainName}`],
+						allowedMethods: [HttpMethods.PUT],
+					},
+				],
 			},
 		);
 
@@ -79,12 +86,19 @@ export class TranscriptionService extends GuStack {
 
 		// we only want one dev bucket so only create on CODE
 		if (props.stage === 'CODE') {
+			const domainNameDev = 'transcribe.local.dev-gutools.co.uk';
 			const sourceMediaBucketDev = new GuS3Bucket(
 				this,
 				'TranscriptionServiceUploadsBucket',
 				{
 					app: APP_NAME,
 					bucketName: `transcription-service-source-media-dev`,
+					cors: [
+						{
+							allowedOrigins: [`https://${domainNameDev}`],
+							allowedMethods: [HttpMethods.PUT],
+						},
+					],
 				},
 			);
 			sourceMediaBucketDev.addLifecycleRule({
