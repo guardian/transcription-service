@@ -16,6 +16,7 @@ import {
 } from '@guardian/transcription-service-common';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { v4 as uuidv4 } from 'uuid';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -67,15 +68,16 @@ const getApp = async () => {
 	apiRouter.get('/signedUrl', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
+			const key = uuidv4();
 			const presignedS3Url = await getSignedUrl(
 				s3Client,
 				new PutObjectCommand({
 					Bucket: config.app.sourceMediaBucket,
-					Key: 'exampleObject',
+					Key: key,
 				}),
 				{ expiresIn: 60 }, // override default expiration time of 15 minutes
 			);
-			res.send(presignedS3Url);
+			res.send({ presignedS3Url, key });
 		}),
 	]);
 
