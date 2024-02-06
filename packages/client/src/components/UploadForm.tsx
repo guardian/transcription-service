@@ -1,5 +1,6 @@
 import { authFetch } from '@/helpers';
 import { AuthState } from '@/types';
+import { useState } from 'react';
 
 const uploadToS3 = async (url: string, blob: Blob) => {
 	try {
@@ -18,6 +19,7 @@ const uploadToS3 = async (url: string, blob: Blob) => {
 
 export const UploadForm = ({ auth }: { auth: AuthState }) => {
 	console.log(auth);
+	const [status, setStatus] = useState<boolean | undefined>(undefined);
 
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
@@ -37,8 +39,16 @@ export const UploadForm = ({ auth }: { auth: AuthState }) => {
 		}
 		const blob = new Blob([files[0] as BlobPart]);
 
-		await uploadToS3(body.presignedS3Url, blob);
+		const uploadSuccess = await uploadToS3(body.presignedS3Url, blob);
+		setStatus(uploadSuccess);
+		if (uploadSuccess) {
+			maybeFileInput.value = '';
+		}
 	};
+
+	const statusString =
+		status === undefined ? '' : status ? 'Success' : 'Failure';
+
 	return (
 		<>
 			<form id="media-upload-form" onSubmit={handleSubmit}>
@@ -50,7 +60,7 @@ export const UploadForm = ({ auth }: { auth: AuthState }) => {
 					<input type="submit"></input>
 				</label>
 			</form>
-			<p id="upload-status"></p>
+			<p id="upload-status">{statusString}</p>
 		</>
 	);
 };
