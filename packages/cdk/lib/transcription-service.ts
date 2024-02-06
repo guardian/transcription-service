@@ -166,6 +166,9 @@ export class TranscriptionService extends GuStack {
 		// basic placeholder commands
 		userData.addCommands(
 			[
+				// this should be done in AMIgo but for now need to do linux postinstall here https://docs.docker.com/engine/install/linux-postinstall/
+				`usermod -aG docker ubuntu`,
+				`newgrp docker`,
 				`export STAGE=${props.stage}`,
 				`export AWS_REGION=${props.env.region}`,
 				`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
