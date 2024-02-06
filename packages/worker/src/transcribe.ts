@@ -1,6 +1,7 @@
 import { exec, spawn } from 'child_process';
 import util from 'node:util';
 import path from 'path';
+import * as fs from 'fs';
 
 const asyncExec = util.promisify(exec);
 
@@ -124,6 +125,11 @@ export const convertToWav = async (
 	}
 };
 
+const readFile = (filePath: string): string => {
+	const file = fs.readFileSync(filePath, 'utf8');
+	return file;
+};
+
 export const convertAndTranscribe = async (file: string) => {
 	const fileName = path.basename(file);
 	const containerId = await createContainer(path.parse(file).dir);
@@ -134,7 +140,11 @@ export const convertAndTranscribe = async (file: string) => {
 		'/input',
 	);
 
-	await transcribe(containerId, wavPath, '/input');
+	const resultFile = await transcribe(containerId, wavPath, '/input');
+	const transcriptText = readFile(
+		path.resolve(path.parse(file).dir, resultFile),
+	);
+	return transcriptText;
 };
 
 const transcribe = async (
@@ -161,6 +171,7 @@ const transcribe = async (
 			'auto',
 		]);
 		console.log('Transcription finished successfully');
+		return `${path.parse(file).name}.txt`;
 	} catch (error) {
 		console.log(`transcribe failed due to `, error);
 		throw error;

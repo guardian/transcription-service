@@ -7,7 +7,7 @@ export enum DestinationService {
 export const TranscriptionJob = z.object({
 	id: z.string(),
 	originalFilename: z.string(),
-	s3Url: z.string(),
+	s3Key: z.string(),
 	retryCount: z.number(),
 	sentTimestamp: z.string(),
 	userEmail: z.string(),
