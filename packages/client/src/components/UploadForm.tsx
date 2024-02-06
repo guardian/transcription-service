@@ -1,16 +1,18 @@
 import { authFetch } from '@/helpers';
 import { AuthState } from '@/types';
 
-const uploadToS3 = async (url: string, formData: FormData) => {
+const uploadToS3 = async (url: string, blob: Blob) => {
 	try {
 		const response = await fetch(url, {
 			method: 'PUT',
-			body: formData,
+			body: blob,
 		});
-		const result = await response.json();
-		console.log('Success:', result);
+		const status = await response.status;
+		console.log('upload success:', status);
+		return status == 200;
 	} catch (error) {
-		console.error('Error:', error);
+		console.error('upload error:', error);
+		return false;
 	}
 };
 
@@ -19,29 +21,36 @@ export const UploadForm = ({ auth }: { auth: AuthState }) => {
 
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
-		console.log(event);
 		const response = await authFetch('/signedUrl', auth.token);
+		// TODO: parse response with zod
 		const body = await response.json();
 
-		const formData = new FormData();
-		// const fileField = event.target;
-		console.log(event.target);
+		const maybeFileInput = document.querySelector(
+			'input[name=file]',
+		) as HTMLInputElement;
+		if (!maybeFileInput) {
+			return;
+		}
+		const files = maybeFileInput.files;
+		if (files == undefined || files.length == 0 || !files[0]) {
+			return;
+		}
+		const blob = new Blob([files[0] as BlobPart]);
 
-		// formData.append('file', fileField.files[0]);
-
-		// TODO: zod
-		uploadToS3(body.presignedS3Url, formData);
-		console.log(body);
+		await uploadToS3(body.presignedS3Url, blob);
 	};
 	return (
-		<form onSubmit={handleSubmit}>
-			<label>
-				file
-				<input name="file" type="file"></input>
-			</label>
-			<label>
-				<input type="submit"></input>
-			</label>
-		</form>
+		<>
+			<form id="media-upload-form" onSubmit={handleSubmit}>
+				<label>
+					file
+					<input name="file" multiple={false} type="file"></input>
+				</label>
+				<label>
+					<input type="submit"></input>
+				</label>
+			</form>
+			<p id="upload-status"></p>
+		</>
 	);
 };
