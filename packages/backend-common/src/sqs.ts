@@ -55,7 +55,7 @@ export const sendMessage = async (
 ): Promise<SendResult> => {
 	const job: TranscriptionJob = {
 		id: 'my-first-transcription', // uuid
-		s3Url: 's3://test/test',
+		s3Key: 'tifsample.wav',
 		retryCount: 0,
 		sentTimestamp: new Date().toISOString(),
 		userEmail: 'email',
