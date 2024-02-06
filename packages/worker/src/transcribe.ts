@@ -19,12 +19,12 @@ export const runSpawnCommand = (
 		const stdout: string[] = [];
 		const stderr: string[] = [];
 		cp.stdout.on('data', (data) => {
-			console.log(`%c ${data}`, 'color:blue;');
+			console.log(data);
 			stdout.push(data.toString());
 		});
 
 		cp.stderr.on('data', (data) => {
-			console.log(`%c ${data}`, 'color:blue;');
+			console.log(data);
 			stderr.push(data.toString());
 		});
 
@@ -146,7 +146,7 @@ const transcribe = async (
 	console.log(`transcribe outputFile: ${outputFile}`);
 
 	try {
-		const result = await runSpawnCommand('docker', [
+		await runSpawnCommand('docker', [
 			'exec',
 			containerId,
 			'whisper.cpp/main',
@@ -158,8 +158,6 @@ const transcribe = async (
 			'--output-file',
 			outputFile,
 		]);
-		console.log(`%c ${result.stdout}`, 'color: blue;');
-		console.log(`%c ${result.stderr}`, 'color: pink;');
 		console.log('Transcription finished successfully');
 	} catch (error) {
 		console.log(`transcribe failed due to `, error);
