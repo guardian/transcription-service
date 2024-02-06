@@ -164,14 +164,14 @@ const transcribe = async (
 			'whisper.cpp/models/ggml-medium.bin',
 			'-f',
 			file,
-			'--output-txt',
+			'--output-srt',
 			'--output-file',
 			outputFile,
 			'--language',
 			'auto',
 		]);
 		console.log('Transcription finished successfully');
-		return `${path.parse(file).name}.txt`;
+		return `${path.parse(file).name}.srt`;
 	} catch (error) {
 		console.log(`transcribe failed due to `, error);
 		throw error;
