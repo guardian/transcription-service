@@ -124,9 +124,9 @@ export const convertToWav = async (
 	}
 };
 
-export const convertAndTranscribe = async (file: string, tempDir: string) => {
+export const convertAndTranscribe = async (file: string) => {
 	const fileName = path.basename(file);
-	const containerId = await createContainer(tempDir);
+	const containerId = await createContainer(path.parse(file).dir);
 
 	const wavPath = await convertToWav(
 		containerId,
@@ -142,7 +142,7 @@ const transcribe = async (
 	file: string,
 	tmpDir: string,
 ) => {
-	const outputFile = path.resolve(tmpDir, `${path.parse(file).name}.txt`);
+	const outputFile = path.resolve(tmpDir, path.parse(file).name);
 	console.log(`transcribe outputFile: ${outputFile}`);
 
 	try {

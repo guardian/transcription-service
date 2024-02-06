@@ -8,12 +8,25 @@ import {
 } from '@guardian/transcription-service-common';
 import { getSNSClient, publishTranscriptionOutput } from './sns';
 import { convertAndTranscribe } from './transcribe';
+import {
+	getFile,
+	getS3Client,
+} from '@guardian/transcription-service-common/src/s3';
 
 const main = async () => {
 	console.log('current dir: ', __dirname);
-
-	convertAndTranscribe(`${__dirname}/sample/tif.mp3`, `${__dirname}/sample`);
 	const config = await getConfig();
+
+	const s3Client = getS3Client(config.aws.region);
+	const fileToTranscribe = await getFile(
+		s3Client,
+		'transcription-service-source-media-code',
+		'tifsample.wav',
+		config.app.stage === 'DEV' ? `${__dirname}/sample` : '/tmp',
+	);
+
+	await convertAndTranscribe(fileToTranscribe);
+
 	const client = getClient(config.aws.region, config.aws.localstackEndpoint);
 
 	// to simulate a transcription job, delay 5 seconds in DEV, 2 minutes in PROD before deleting the message
