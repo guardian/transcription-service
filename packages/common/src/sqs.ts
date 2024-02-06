@@ -38,6 +38,7 @@ export const getClient = (region: string, localstackEndpoint?: string) => {
 	const clientBaseConfig = {
 		region,
 	};
+
 	const clientConfig = localstackEndpoint
 		? { ...clientBaseConfig, endpoint: localstackEndpoint }
 		: clientBaseConfig;

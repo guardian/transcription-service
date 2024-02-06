@@ -5,6 +5,7 @@ import {
 	GuAmiParameter,
 	GuDistributionBucketParameter,
 	GuStack,
+	GuStringParameter,
 } from '@guardian/cdk/lib/constructs/core';
 import { GuCname } from '@guardian/cdk/lib/constructs/dns';
 import { GuVpc, SubnetType } from '@guardian/cdk/lib/constructs/ec2';
@@ -33,6 +34,8 @@ import {
 } from 'aws-cdk-lib/aws-ec2';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Topic } from 'aws-cdk-lib/aws-sns';
+import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 
 export class TranscriptionService extends GuStack {
@@ -128,6 +131,34 @@ export class TranscriptionService extends GuStack {
 			resourceRecord: apiDomain.domainNameAliasDomainName,
 		});
 
+		// worker output infrastructure
+		const transcriptDestinationTopic = new Topic(
+			this,
+			'TranscriptDestinationTopic',
+			{
+				topicName: `transcription-service-destination-topic-${props.stage}`,
+			},
+		);
+
+		// for testing purposes - probably eventually replaced with destination lambda. To avoid endless emails only apply
+		// on PROD - we can manually set up subscriptions to specific developer emails in the console if needs be on CODE
+		if (props.stage === 'PROD') {
+			const destinationSNSTestEmail = new GuStringParameter(
+				this,
+				'DestinationSNSTestEmail',
+				{
+					fromSSM: true,
+					default: `/${this.stage}/${this.stack}/${APP_NAME}/destinationSNSTestEmail`,
+					description:
+						'Email address to send SNS notifications to for testing purposes',
+				},
+			);
+			const emailSubscription = new EmailSubscription(
+				destinationSNSTestEmail.valueAsString,
+			);
+			transcriptDestinationTopic.addSubscription(emailSubscription);
+		}
+
 		// worker autoscaling group
 
 		const workerApp = `${APP_NAME}-worker`;
@@ -152,6 +183,10 @@ export class TranscriptionService extends GuStack {
 				new GuAllowPolicy(this, 'GetDeleteSourceMedia', {
 					actions: ['s3:GetObject', 's3:DeleteObject'],
 					resources: [`${sourceMediaBucket.bucketArn}/*`],
+				}),
+				new GuAllowPolicy(this, 'WriteToDestinationTopic', {
+					actions: ['sns:Publish'],
+					resources: [transcriptDestinationTopic.topicArn],
 				}),
 			],
 		});

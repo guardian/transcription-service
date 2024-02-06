@@ -28,3 +28,7 @@ QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-na
 QUEUE_URL_LOCALHOST=${QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
 
 echo "Created queue in localstack, url: ${QUEUE_URL_LOCALHOST}"
+
+TOPIC_ARN=$(aws --endpoint-url=http://localhost:4566 sns create-topic --name transcription-service-destination-topic-DEV | jq .TopicArn)
+
+echo "Created topic in localstack, arn: ${TOPIC_ARN}"
