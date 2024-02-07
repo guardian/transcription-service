@@ -1,9 +1,6 @@
-import { exec, spawn } from 'child_process';
-import util from 'node:util';
+import { spawn } from 'child_process';
 import path from 'path';
 import * as fs from 'fs';
-
-const asyncExec = util.promisify(exec);
 
 interface ProcessResult {
 	code?: number;
@@ -18,7 +15,7 @@ interface FfmpegResult {
 
 const CONTAINER_FOLDER = '/input';
 
-export const runSpawnCommand = (
+const runSpawnCommand = (
 	cmd: string,
 	args: ReadonlyArray<string>,
 ): Promise<ProcessResult> => {
@@ -56,19 +53,6 @@ export const runSpawnCommand = (
 			}
 		});
 	});
-};
-
-export const runExecCommand = async (command: string): Promise<string> => {
-	try {
-		const { stdout, stderr } = await asyncExec(command);
-		if (stderr) {
-			throw new Error(stderr);
-		}
-		return Promise.resolve(stdout);
-	} catch (ex) {
-		console.log(`error:`, ex);
-		throw ex;
-	}
 };
 
 export const createContainer = async (tempDir: string): Promise<string> => {
