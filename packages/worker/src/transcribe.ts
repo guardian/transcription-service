@@ -87,13 +87,12 @@ export const convertToWav = async (
 ): Promise<FfmpegResult> => {
 	const fileName = path.basename(file);
 	const filePath = `${CONTAINER_FOLDER}/${fileName}`;
-	const wavPath = `${CONTAINER_FOLDER}/output.wav`;
+	const wavPath = `${CONTAINER_FOLDER}/${fileName}-converted.wav`;
 	console.log(`containerId: ${containerId}`);
 	console.log('file path: ', filePath);
 	console.log('wav file path: ', wavPath);
 
 	try {
-		console.log('calling ffmpeg');
 		const res = await runSpawnCommand('docker', [
 			'exec',
 			containerId,
