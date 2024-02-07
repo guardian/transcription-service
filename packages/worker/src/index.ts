@@ -23,6 +23,8 @@ const main = async () => {
 	try {
 		const config = await getConfig();
 
+		const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
+
 		const client = getSQSClient(
 			config.aws.region,
 			config.aws.localstackEndpoint,
@@ -81,6 +83,7 @@ const main = async () => {
 			containerId,
 			ffmpegResult.wavPath,
 			fileToTranscribe,
+			numberOfThreads,
 		);
 
 		const transcriptionOutput: TranscriptionOutput = {
