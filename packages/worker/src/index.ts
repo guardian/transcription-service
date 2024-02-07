@@ -5,7 +5,7 @@ import {
 	parseTranscriptJobMessage,
 	isFailure,
 	deleteMessage,
-} from '@guardian/transcription-service-common';
+} from '@guardian/transcription-service-backend-common';
 import { getSNSClient, publishTranscriptionOutput } from './sns';
 
 const main = async () => {

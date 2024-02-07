@@ -15,7 +15,7 @@
 		"@aws-sdk/client-ssm": "^3.496.0",
 		"@aws-sdk/s3-request-presigner": "^3.504.0",
 		"@codegenie/serverless-express": "^4.13.0",
-		"@guardian/transcription-service-common": "1.0.0",
+		"@guardian/transcription-service-backend-common": "1.0.0",
 		"aws-lambda": "^1.0.7",
 		"express": "^4.18.2",
 		"express-async-handler": "^1.2.0",

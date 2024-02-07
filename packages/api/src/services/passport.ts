@@ -2,7 +2,7 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth2';
 import type { VerifyCallback } from 'passport-google-oauth2';
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
-import { TranscriptionConfig } from '@guardian/transcription-service-common';
+import { TranscriptionConfig } from '@guardian/transcription-service-backend-common';
 
 const validateEmail = (email: string) => {
 	// https://stackoverflow.com/questions/46155/whats-the-best-way-to-validate-an-email-address-in-javascript
