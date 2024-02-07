@@ -18,7 +18,6 @@ const uploadToS3 = async (url: string, blob: Blob) => {
 };
 
 export const UploadForm = ({ auth }: { auth: AuthState }) => {
-	console.log(auth);
 	const [status, setStatus] = useState<boolean | undefined>(undefined);
 
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
