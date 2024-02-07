@@ -325,5 +325,7 @@ export class TranscriptionService extends GuStack {
 				resources: ['*'],
 			}),
 		);
+
+		updateLambda.addToRolePolicy(getParametersPolicy);
 	}
 }
