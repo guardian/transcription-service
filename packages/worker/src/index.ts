@@ -7,6 +7,7 @@ import {
 	deleteMessage,
 	getFile,
 	getS3Client,
+	changeMessageVisibility,
 } from '@guardian/transcription-service-backend-common';
 import { getSNSClient, publishTranscriptionOutput } from './sns';
 import {
@@ -50,6 +51,19 @@ const main = async () => {
 
 	const containerId = await createContainer(path.parse(fileToTranscribe).dir);
 	const ffmpegResult = await convertToWav(containerId, fileToTranscribe);
+
+	if (
+		message.message?.ReceiptHandle &&
+		ffmpegResult.duration &&
+		ffmpegResult.duration !== 0
+	) {
+		await changeMessageVisibility(
+			client,
+			config.app.taskQueueUrl,
+			message.message.ReceiptHandle,
+			ffmpegResult.duration + 300,
+		);
+	}
 
 	const text = await getTranscriptionText(
 		containerId,
