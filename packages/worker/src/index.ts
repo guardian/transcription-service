@@ -59,6 +59,8 @@ const main = async () => {
 
 		const fileToTranscribe = await getFileFromS3(config, job?.s3Key);
 
+		console.log('file is here');
+
 		// docker container to run ffmpeg and whisper on file
 		const containerId = await createContainer(path.parse(fileToTranscribe).dir);
 
@@ -116,14 +118,14 @@ const main = async () => {
 const getFileFromS3 = async (config: TranscriptionConfig, s3Key: string) => {
 	const s3Client = getS3Client(config.aws.region);
 
-	const fileToTranscribe = await getFile(
+	const file = await getFile(
 		s3Client,
 		config.app.sourceMediaBucket,
 		s3Key,
 		config.app.stage === 'DEV' ? `${__dirname}/sample` : '/tmp',
 	);
 
-	return fileToTranscribe;
+	return file;
 };
 
 main();
