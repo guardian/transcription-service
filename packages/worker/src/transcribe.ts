@@ -193,7 +193,7 @@ const transcribe = async (containerId: string, file: string) => {
 		console.log('Transcription finished successfully');
 		return `${path.parse(file).name}.srt`;
 	} catch (error) {
-		console.log(`transcribe failed due to `, error);
+		console.log(`Transcription failed due to `, error);
 		throw error;
 	}
 };
