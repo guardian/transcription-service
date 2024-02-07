@@ -10,7 +10,6 @@ const uploadToS3 = async (url: string, blob: Blob) => {
 			body: blob,
 		});
 		const status = response.status;
-		console.log('upload success:', status);
 		return status === 200;
 	} catch (error) {
 		console.error('upload error:', error);
