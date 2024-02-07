@@ -114,6 +114,7 @@ export const changeMessageVisibility = async (
 	} catch (error) {
 		const errorMsg = 'Failed to update VisibilityTimeout for message';
 		console.error(errorMsg, error);
+		throw error;
 	}
 };
 

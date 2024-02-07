@@ -23,7 +23,22 @@ export const getFile = async (
 				Key: key,
 			}),
 		);
-		(data.Body as Readable).pipe(createWriteStream(destinationPath));
+
+		const stream = (data.Body as Readable).pipe(
+			createWriteStream(destinationPath),
+		);
+
+		await new Promise<void>((resolve, reject) => {
+			stream
+				.on('finish', () => {
+					console.log(` pipe done `);
+					resolve();
+				})
+				.on('error', (error) => {
+					console.log(`Failed to writing the S3 object ${key} into file`);
+					reject(error);
+				});
+		});
 		console.log('successfully retrieved file from S3 into ', destinationPath);
 		return destinationPath;
 	} catch (e) {
