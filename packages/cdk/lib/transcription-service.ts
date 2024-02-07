@@ -15,6 +15,7 @@ import {
 	GuInstanceRole,
 	GuPolicy,
 } from '@guardian/cdk/lib/constructs/iam';
+import { GuLambdaFunction } from '@guardian/cdk/lib/constructs/lambda';
 import { GuS3Bucket } from '@guardian/cdk/lib/constructs/s3';
 import { GuardianAwsAccounts } from '@guardian/private-infrastructure-config';
 import { type App, Duration, Tags } from 'aws-cdk-lib';
@@ -35,9 +36,13 @@ import {
 } from 'aws-cdk-lib/aws-ec2';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
-import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
+import {
+	EmailSubscription,
+	SqsSubscription,
+} from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 
 export class TranscriptionService extends GuStack {
@@ -343,5 +348,30 @@ export class TranscriptionService extends GuStack {
 
 		// allow worker to receive message from queue
 		transcriptionTaskQueue.grantConsumeMessages(transcriptionWorkerASG);
+
+		const updateLambda = new GuLambdaFunction(
+			this,
+			'transcription-service-update',
+			{
+				fileName: 'update.zip',
+				handler: 'index.update',
+				runtime: Runtime.NODEJS_20_X,
+				app: `${APP_NAME}-update`,
+			},
+		);
+
+		const transcriptionUpdateQueue = new Queue(
+			this,
+			`${APP_NAME}-update-queue`,
+			{
+				queueName: `${APP_NAME}-update-queue-${this.stage}`,
+			},
+		);
+		transcriptDestinationTopic.addSubscription(
+			new SqsSubscription(transcriptionUpdateQueue),
+		);
+
+		// trigger update lambda from queue
+		updateLambda.addEventSource(new SqsEventSource(transcriptionUpdateQueue));
 	}
 }

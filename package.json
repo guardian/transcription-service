@@ -9,6 +9,8 @@
 		"api::build": "npm run build --workspace api",
 		"api::package": "npm run package --workspace api",
 		"api::start": "AWS_REGION=eu-west-1 STAGE=DEV npm run start --workspace api",
+		"update::build": "npm run build --workspace update",
+		"update::start": "npm run start --workspace update",
 		"worker::build": "npm run build --workspace worker; npm run build --workspace worker",
 		"worker::package": "npm run package --workspace worker",
 		"worker::start": "AWS_REGION=eu-west-1 STAGE=DEV npm run start --workspace worker",
@@ -19,7 +21,7 @@
 		"cdk::synth": "npm run synth --workspace cdk",
 		"cdk::test": "npm run test --workspace cdk",
 		"cdk::test-update": "npm run test-update --workspace cdk",
-		"package": "mkdir -p build/client; mkdir -p target; mv packages/api/dist/index.js build; mv packages/client/out/* build/client; cd build; zip -qr ../target/api.zip *",
+		"package": "mkdir -p target; zip -j target/update.zip packages/update/dist/index.js; mkdir -p build/client; mv packages/api/dist/index.js build; mv packages/client/out/* build/client; cd build; zip -qr ../target/api.zip *",
 		"emulate-prod-locally": "npm run build --workspace client; EMULATE_PRODUCTION_SERVER=true npm run start --workspace api",
 		"prepare": "husky install"
 	},

@@ -63,3 +63,33 @@ deployments:
       bucketSsmLookup: true
       cacheControl: public, max-age=60
       publicReadAcl: false
+  lambda-upload-eu-west-1-investigations-transcription-service-update:
+    type: aws-lambda
+    stacks:
+      - investigations
+    regions:
+      - eu-west-1
+    app: transcription-service-update
+    contentDirectory: transcription-service-update
+    parameters:
+      bucketSsmLookup: true
+      lookupByTags: true
+      fileName: update.zip
+    actions:
+      - uploadLambda
+  lambda-update-eu-west-1-investigations-transcription-service-update:
+    type: aws-lambda
+    stacks:
+      - investigations
+    regions:
+      - eu-west-1
+    app: transcription-service-update
+    contentDirectory: transcription-service-update
+    parameters:
+      bucketSsmLookup: true
+      lookupByTags: true
+      fileName: update.zip
+    actions:
+      - updateLambda
+    dependencies:
+      - cfn-eu-west-1-investigations-transcription-service
