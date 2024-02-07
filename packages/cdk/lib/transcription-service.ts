@@ -4,6 +4,7 @@ import type { GuStackProps } from '@guardian/cdk/lib/constructs/core';
 import {
 	GuAmiParameter,
 	GuDistributionBucketParameter,
+	GuLoggingStreamNameParameter,
 	GuStack,
 	GuStringParameter,
 } from '@guardian/cdk/lib/constructs/core';
@@ -16,7 +17,7 @@ import {
 } from '@guardian/cdk/lib/constructs/iam';
 import { GuS3Bucket } from '@guardian/cdk/lib/constructs/s3';
 import { GuardianAwsAccounts } from '@guardian/private-infrastructure-config';
-import { type App, Duration } from 'aws-cdk-lib';
+import { type App, Duration, Tags } from 'aws-cdk-lib';
 import { EndpointType } from 'aws-cdk-lib/aws-apigateway';
 import {
 	AutoScalingGroup,
@@ -174,6 +175,15 @@ export class TranscriptionService extends GuStack {
 			].join('\n'),
 		);
 
+		const loggingStreamName =
+			GuLoggingStreamNameParameter.getInstance(this).valueAsString;
+
+		const loggingStreamArn = this.formatArn({
+			service: 'kinesis',
+			resource: 'stream',
+			resourceName: loggingStreamName,
+		});
+
 		const role = new GuInstanceRole(this, {
 			app: workerApp,
 			additionalPolicies: [
@@ -187,6 +197,14 @@ export class TranscriptionService extends GuStack {
 				new GuAllowPolicy(this, 'WriteToDestinationTopic', {
 					actions: ['sns:Publish'],
 					resources: [transcriptDestinationTopic.topicArn],
+				}),
+				new GuAllowPolicy(this, 'WriteToELK', {
+					actions: [
+						'kinesis:DescribeStream',
+						'kinesis:PutRecord',
+						'kinesis:PutRecords',
+					],
+					resources: [loggingStreamArn],
 				}),
 			],
 		});
@@ -266,6 +284,12 @@ export class TranscriptionService extends GuStack {
 				},
 				groupMetrics: [GroupMetrics.all()],
 			},
+		);
+
+		Tags.of(transcriptionWorkerASG).add(
+			'LogKinesisStreamName',
+			GuLoggingStreamNameParameter.getInstance(this).valueAsString,
+			{ applyToLaunchedInstances: true },
 		);
 
 		// SQS queue for transcription tasks from API lambda to worker EC2 instances
