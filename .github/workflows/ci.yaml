@@ -29,16 +29,16 @@ jobs:
       - name: build Client
         run: |
           npm run client::build
-      - name: Package API/Client
+      - name: Build Update
+        run: |
+          npm run update::build
+      - name: Package API/Client/Update
         run: |
           npm run package
       - name: Package Worker
         run: |
           npm run worker::build
           npm run worker::package
-      - name: Package Update
-        run: |
-          npm run update::build
       - name: CDK synth
         run: |
           npm run cdk::build
