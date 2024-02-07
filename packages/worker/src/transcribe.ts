@@ -11,6 +11,13 @@ interface ProcessResult {
 	stderr: string;
 }
 
+interface FfmpegResult {
+	wavPath: string;
+	duration?: number;
+}
+
+const CONTAINER_FOLDER = '/input';
+
 export const runSpawnCommand = (
 	cmd: string,
 	args: ReadonlyArray<string>,
@@ -64,7 +71,7 @@ export const runExecCommand = async (command: string): Promise<string> => {
 	}
 };
 
-const createContainer = async (tempDir: string): Promise<string> => {
+export const createContainer = async (tempDir: string): Promise<string> => {
 	const existingContainer = await runSpawnCommand('docker', [
 		'ps',
 		'--filter',
@@ -84,7 +91,7 @@ const createContainer = async (tempDir: string): Promise<string> => {
 		'--name',
 		'whisper',
 		'-v',
-		`${tempDir}:/input`,
+		`${tempDir}:${CONTAINER_FOLDER}`,
 		'ghcr.io/guardian/transcription-service',
 	]);
 	return newContainer.stdout.trim();
@@ -92,23 +99,24 @@ const createContainer = async (tempDir: string): Promise<string> => {
 
 export const convertToWav = async (
 	containerId: string,
-	path: string,
-	tempDir: string,
-) => {
-	const wavPath = `${tempDir}/output.wav`;
+	file: string,
+): Promise<FfmpegResult> => {
+	const fileName = path.basename(file);
+	const filePath = `${CONTAINER_FOLDER}/${fileName}`;
+	const wavPath = `${CONTAINER_FOLDER}/output.wav`;
 	console.log(`containerId: ${containerId}`);
-	console.log('original file path: ', path);
+	console.log('file path: ', filePath);
 	console.log('wav file path: ', wavPath);
 
 	try {
 		console.log('calling ffmpeg');
-		await runSpawnCommand('docker', [
+		const res = await runSpawnCommand('docker', [
 			'exec',
 			containerId,
 			'ffmpeg',
 			'-y',
 			'-i',
-			path,
+			filePath,
 			'-ar',
 			'16000',
 			'-ac',
@@ -118,11 +126,32 @@ export const convertToWav = async (
 			wavPath,
 		]);
 
-		return wavPath;
+		const duration = getDuration(res.stderr);
+
+		return {
+			wavPath,
+			duration,
+		};
 	} catch (error) {
 		console.log('ffmpeg failed error:', error);
 		throw error;
 	}
+};
+
+const getDuration = (ffmpegOutput: string) => {
+	const reg = /Duration: (\d{1,2}):(\d{1,2}):(\d{1,2}).\d{1,2},/.exec(
+		ffmpegOutput,
+	);
+	if (!reg || reg.length < 4) {
+		console.warn('Could not retrieve duration from the ffmpeg result.');
+		return undefined;
+	}
+	const hour = reg[1] ? parseInt(reg[1]) : 0;
+	const minute = reg[2] ? parseInt(reg[2]) : 0;
+	const seconds = reg[3] ? parseInt(reg[3]) : 0;
+	const duration = hour * 3600 + minute * 60 + seconds;
+	console.log(`calculated file duration is ${duration} seconds`);
+	return duration;
 };
 
 const readFile = (filePath: string): string => {
@@ -130,29 +159,20 @@ const readFile = (filePath: string): string => {
 	return file;
 };
 
-export const convertAndTranscribe = async (file: string) => {
-	const fileName = path.basename(file);
-	const containerId = await createContainer(path.parse(file).dir);
-
-	const wavPath = await convertToWav(
-		containerId,
-		`/input/${fileName}`,
-		'/input',
-	);
-
-	const resultFile = await transcribe(containerId, wavPath, '/input');
+export const getTranscriptionText = async (
+	containerId: string,
+	wavPath: string,
+	file: string,
+) => {
+	const resultFile = await transcribe(containerId, wavPath);
 	const transcriptText = readFile(
 		path.resolve(path.parse(file).dir, resultFile),
 	);
 	return transcriptText;
 };
 
-const transcribe = async (
-	containerId: string,
-	file: string,
-	tmpDir: string,
-) => {
-	const outputFile = path.resolve(tmpDir, path.parse(file).name);
+const transcribe = async (containerId: string, file: string) => {
+	const outputFile = path.resolve(CONTAINER_FOLDER, path.parse(file).name);
 	console.log(`transcribe outputFile: ${outputFile}`);
 
 	try {

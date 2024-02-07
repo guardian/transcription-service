@@ -9,7 +9,12 @@ import {
 	getS3Client,
 } from '@guardian/transcription-service-backend-common';
 import { getSNSClient, publishTranscriptionOutput } from './sns';
-import { convertAndTranscribe } from './transcribe';
+import {
+	getTranscriptionText,
+	convertToWav,
+	createContainer,
+} from './transcribe';
+import path from 'path';
 
 const main = async () => {
 	const config = await getConfig();
@@ -42,7 +47,15 @@ const main = async () => {
 		job?.s3Key,
 		config.app.stage === 'DEV' ? `${__dirname}/sample` : '/tmp',
 	);
-	const text = await convertAndTranscribe(fileToTranscribe);
+
+	const containerId = await createContainer(path.parse(fileToTranscribe).dir);
+	const ffmpegResult = await convertToWav(containerId, fileToTranscribe);
+
+	const text = await getTranscriptionText(
+		containerId,
+		ffmpegResult.wavPath,
+		fileToTranscribe,
+	);
 	console.log(text);
 
 	await publishTranscriptionOutput(
