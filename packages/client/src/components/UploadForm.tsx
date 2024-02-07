@@ -9,9 +9,9 @@ const uploadToS3 = async (url: string, blob: Blob) => {
 			method: 'PUT',
 			body: blob,
 		});
-		const status = await response.status;
+		const status = response.status;
 		console.log('upload success:', status);
-		return status == 200;
+		return status === 200;
 	} catch (error) {
 		console.error('upload error:', error);
 		return false;
