@@ -13,6 +13,7 @@ import {
 	getSQSClient,
 	sendMessage,
 	isFailure,
+	SignedUrlQueryParams,
 } from '@guardian/transcription-service-common';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -69,6 +70,12 @@ const getApp = async () => {
 		checkAuth,
 		asyncHandler(async (req, res) => {
 			const key = uuidv4();
+			const queryParams = SignedUrlQueryParams.safeParse(req.query);
+			if (queryParams.success == false) {
+				res.status(422).send('missing query parameters');
+				return;
+			}
+
 			const presignedS3Url = await getSignedUrl(
 				s3Client,
 				new PutObjectCommand({
@@ -76,7 +83,7 @@ const getApp = async () => {
 					Key: key,
 					Metadata: {
 						'user-email': req.user?.email ?? 'not found',
-						'file-name': req.query.fileName as string,
+						'file-name': queryParams.data.fileName,
 					},
 				}),
 				{ expiresIn: 60 }, // override default expiration time of 15 minutes
