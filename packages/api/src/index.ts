@@ -74,6 +74,9 @@ const getApp = async () => {
 				new PutObjectCommand({
 					Bucket: config.app.sourceMediaBucket,
 					Key: key,
+					Metadata: {
+						'user-email': req.user?.email ?? 'not found',
+					},
 				}),
 				{ expiresIn: 60 }, // override default expiration time of 15 minutes
 			);
