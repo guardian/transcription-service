@@ -317,5 +317,13 @@ export class TranscriptionService extends GuStack {
 
 		// trigger update lambda from queue
 		updateLambda.addEventSource(new SqsEventSource(transcriptionUpdateQueue));
+
+		updateLambda.addToRolePolicy(
+			new PolicyStatement({
+				effect: Effect.ALLOW,
+				actions: ['ses:SendEmail', 'ses:SendRawEmail'],
+				resources: ['*'],
+			}),
+		);
 	}
 }

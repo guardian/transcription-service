@@ -11,6 +11,7 @@ export interface TranscriptionConfig {
 		rootUrl: string;
 		taskQueueUrl: string;
 		stage: string;
+		emailNotificationFromAddress: string;
 		sourceMediaBucket: string;
 		destinationTopicArns: {
 			transcriptionService: string;
@@ -86,6 +87,12 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 
 	const appSecret = findParameter(parameters, paramPath, 'app/secret');
 
+	const emailNotificationFromAddress = findParameter(
+		parameters,
+		paramPath,
+		'app/emailNotificationFromAddress',
+	);
+
 	// To locally emulating production, the value of appRootUrl should be changed to api.transcribe domain
 	const appRootUrl = findParameter(parameters, paramPath, 'app/rootUrl');
 
@@ -106,6 +113,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			taskQueueUrl,
 			stage,
 			sourceMediaBucket,
+			emailNotificationFromAddress,
 			destinationTopicArns: {
 				transcriptionService: destinationTopic,
 			},
