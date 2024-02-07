@@ -37,8 +37,7 @@ export class GoogleAuth {
 			session: false,
 		}),
 		(req: Request, res: Response) => {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const { email } = req.user! as any;
+			const email = req.user?.email;
 			const { state } = req.query;
 			const returnUrl = new URL(this.rootUrl);
 			console.log(`user ${email} logged in`);

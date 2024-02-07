@@ -12,7 +12,7 @@ const validateEmail = (email: string) => {
 	);
 };
 
-export const checkAuth = passport.authenticate("jwt", { session: false });
+export const checkAuth = passport.authenticate('jwt', { session: false });
 
 export const initPassportAuth = (config: TranscriptionConfig) => {
 	passport.use(
@@ -22,10 +22,10 @@ export const initPassportAuth = (config: TranscriptionConfig) => {
 				clientSecret: config.auth.clientSecret,
 				callbackURL: `${config.app.rootUrl}/api/auth/oauth-callback`,
 			},
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			function (
 				accessToken: string,
 				refreshToken: string,
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				profile: any,
 				done: VerifyCallback,
 			) {
