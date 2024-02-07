@@ -76,6 +76,7 @@ const getApp = async () => {
 					Key: key,
 					Metadata: {
 						'user-email': req.user?.email ?? 'not found',
+						'file-name': req.query.fileName as string,
 					},
 				}),
 				{ expiresIn: 60 }, // override default expiration time of 15 minutes

@@ -23,9 +23,6 @@ export const UploadForm = ({ auth }: { auth: AuthState }) => {
 
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
-		const response = await authFetch('/signedUrl', auth.token);
-		// TODO: parse response with zod
-		const body = await response.json();
 
 		const maybeFileInput = document.querySelector(
 			'input[name=file]',
@@ -37,7 +34,16 @@ export const UploadForm = ({ auth }: { auth: AuthState }) => {
 		if (files == undefined || files.length == 0 || !files[0]) {
 			return;
 		}
-		const blob = new Blob([files[0] as BlobPart]);
+		const file = files[0];
+		const blob = new Blob([file as BlobPart]);
+
+		const urlParams = new URLSearchParams({ fileName: file.name });
+		const response = await authFetch(
+			`/signedUrl?${urlParams.toString()}`,
+			auth.token,
+		);
+		// TODO: parse response with zod
+		const body = await response.json();
 
 		const uploadSuccess = await uploadToS3(body.presignedS3Url, blob);
 		setStatus(uploadSuccess);
