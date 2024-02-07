@@ -292,7 +292,9 @@ export class TranscriptionService extends GuStack {
 			{ applyToLaunchedInstances: true },
 		);
 
-		Tags.of(transcriptionWorkerASG).add('SystemdUnit', `${workerApp}.service`);
+		Tags.of(transcriptionWorkerASG).add('SystemdUnit', `${workerApp}.service`, {
+			applyToLaunchedInstances: true,
+		});
 
 		// SQS queue for transcription tasks from API lambda to worker EC2 instances
 		const transcriptionTaskQueue = new Queue(this, `${APP_NAME}-task-queue`, {
