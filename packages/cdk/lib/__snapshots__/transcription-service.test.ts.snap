@@ -13,6 +13,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuCname",
       "GuPolicy",
       "GuAllowPolicy",
+      "GuAllowPolicy",
       "GuInstanceRole",
       "GuDescribeEC2Policy",
       "GuLoggingStreamNameParameter",
@@ -417,6 +418,30 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
+    "TranscriptDestinationTopic831E3125": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "TopicName": "transcription-service-destination-topic-TEST",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
     "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040": {
       "DeletionPolicy": "Retain",
       "Properties": {
@@ -702,6 +727,29 @@ service transcription-service-worker start",
           "Version": "2012-10-17",
         },
         "PolicyName": "WorkerGetParametersD451FEAD",
+        "Roles": [
+          {
+            "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "WriteToDestinationTopic3E565788": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "TranscriptDestinationTopic831E3125",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "WriteToDestinationTopic3E565788",
         "Roles": [
           {
             "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
