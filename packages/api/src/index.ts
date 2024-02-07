@@ -9,16 +9,13 @@ import passport from 'passport';
 import { Request, Response } from 'express';
 import {
 	getConfig,
-	getS3Client,
+	getSignedUrl,
 	getSQSClient,
 	sendMessage,
 	isFailure,
 } from '@guardian/transcription-service-backend-common';
 import { SignedUrlQueryParams } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { v4 as uuidv4 } from 'uuid';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -35,7 +32,6 @@ const getApp = async () => {
 		config.aws.region,
 		config.aws.localstackEndpoint,
 	);
-	const s3Client = getS3Client(config.aws.region);
 
 	app.use(bodyParser.json({ limit: '40mb' }));
 	app.use(passport.initialize());
@@ -70,25 +66,18 @@ const getApp = async () => {
 	apiRouter.get('/signedUrl', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
-			const key = uuidv4();
 			const queryParams = SignedUrlQueryParams.safeParse(req.query);
 			if (!queryParams.success) {
 				res.status(422).send('missing query parameters');
 				return;
 			}
-
 			const presignedS3Url = await getSignedUrl(
-				s3Client,
-				new PutObjectCommand({
-					Bucket: config.app.sourceMediaBucket,
-					Key: key,
-					Metadata: {
-						'user-email': req.user?.email ?? 'not found',
-						'file-name': queryParams.data.fileName,
-					},
-				}),
-				{ expiresIn: 60 }, // override default expiration time of 15 minutes
+				config.aws.region,
+				config.app.sourceMediaBucket,
+				req.user?.email ?? 'not found',
+				queryParams.data.fileName,
 			);
+
 			res.set('Cache-Control', 'no-cache');
 			const responseBody: SignedUrlResponseBody = { presignedS3Url };
 			res.send(responseBody);
