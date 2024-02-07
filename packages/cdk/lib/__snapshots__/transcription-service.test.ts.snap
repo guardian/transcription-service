@@ -420,7 +420,22 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
     "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040": {
       "DeletionPolicy": "Retain",
       "Properties": {
+        "AccelerateConfiguration": {
+          "AccelerationStatus": "Enabled",
+        },
         "BucketName": "transcription-service-source-media-test",
+        "CorsConfiguration": {
+          "CorsRules": [
+            {
+              "AllowedMethods": [
+                "PUT",
+              ],
+              "AllowedOrigins": [
+                "https://transcribe.code.dev-gutools.co.uk",
+              ],
+            },
+          ],
+        },
         "LifecycleConfiguration": {
           "Rules": [
             {

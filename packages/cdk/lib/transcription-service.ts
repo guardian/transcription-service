@@ -77,6 +77,7 @@ export class TranscriptionService extends GuStack {
 						allowedMethods: [HttpMethods.PUT],
 					},
 				],
+				transferAcceleration: true,
 			},
 		);
 
@@ -99,6 +100,7 @@ export class TranscriptionService extends GuStack {
 							allowedMethods: [HttpMethods.PUT],
 						},
 					],
+					transferAcceleration: true,
 				},
 			);
 			sourceMediaBucketDev.addLifecycleRule({
