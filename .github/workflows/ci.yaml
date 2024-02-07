@@ -36,6 +36,9 @@ jobs:
         run: |
           npm run worker::build
           npm run worker::package
+      - name: Package Update
+        run: |
+          npm run update::build
       - name: CDK synth
         run: |
           npm run cdk::build
@@ -59,6 +62,8 @@ jobs:
               - packages/cdk/cdk.out/TranscriptionService-PROD.template.json
             transcription-service-api:
               - target/api.zip
+            transcription-service-update:
+              - target/update.zip
             transcription-service-worker:
               - packages/worker/dist/transcription-service-worker_1.0.0_all.deb
       - name: Upload repository project to riff-raff
