@@ -4,6 +4,7 @@ import {
 	Message,
 	ReceiveMessageCommand,
 	DeleteMessageCommand,
+	ChangeMessageVisibilityCommand,
 } from '@aws-sdk/client-sqs';
 import {
 	DestinationService,
@@ -90,6 +91,27 @@ export const sendMessage = async (
 			error: e,
 			errorMsg: msg,
 		};
+	}
+};
+
+export const changeMessageVisibility = async (
+	client: SQSClient,
+	queueUrl: string,
+	receiptHandle: string,
+	timeoutOverride: number,
+) => {
+	const command = new ChangeMessageVisibilityCommand({
+		QueueUrl: queueUrl,
+		VisibilityTimeout: timeoutOverride,
+		ReceiptHandle: receiptHandle,
+	});
+
+	try {
+		await client.send(command);
+		console.log('Successfully updated the VisibilityTimeout of the message');
+	} catch (error) {
+		const errorMsg = 'Failed to update VisibilityTimeout for message';
+		console.error(errorMsg, error);
 	}
 };
 
