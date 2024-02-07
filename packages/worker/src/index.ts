@@ -25,6 +25,8 @@ const main = async () => {
 	try {
 		const config = await getConfig();
 
+		const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
+
 		const client = getClient(config.aws.region, config.aws.localstackEndpoint);
 		const message = await getNextMessage(client, config.app.taskQueueUrl);
 		const snsClient = getSNSClient(
@@ -80,6 +82,7 @@ const main = async () => {
 			containerId,
 			ffmpegResult.wavPath,
 			fileToTranscribe,
+			numberOfThreads,
 		);
 
 		const transcriptionOutput: TranscriptionOutput = {

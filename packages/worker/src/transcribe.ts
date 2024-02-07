@@ -150,7 +150,7 @@ const getDuration = (ffmpegOutput: string) => {
 	const minute = reg[2] ? parseInt(reg[2]) : 0;
 	const seconds = reg[3] ? parseInt(reg[3]) : 0;
 	const duration = hour * 3600 + minute * 60 + seconds;
-	console.log(`calculated file duration is ${duration} seconds`);
+	console.log(`File duration is ${duration} seconds`);
 	return duration;
 };
 
@@ -163,15 +163,20 @@ export const getTranscriptionText = async (
 	containerId: string,
 	wavPath: string,
 	file: string,
+	numberOfThreads: number,
 ) => {
-	const resultFile = await transcribe(containerId, wavPath);
+	const resultFile = await transcribe(containerId, wavPath, numberOfThreads);
 	const transcriptText = readFile(
 		path.resolve(path.parse(file).dir, resultFile),
 	);
 	return transcriptText;
 };
 
-const transcribe = async (containerId: string, file: string) => {
+const transcribe = async (
+	containerId: string,
+	file: string,
+	numberOfThreads: number,
+) => {
 	const outputFile = path.resolve(CONTAINER_FOLDER, path.parse(file).name);
 	console.log(`transcribe outputFile: ${outputFile}`);
 
@@ -180,9 +185,11 @@ const transcribe = async (containerId: string, file: string) => {
 			'exec',
 			containerId,
 			'whisper.cpp/main',
-			'-m',
+			'--model',
 			'whisper.cpp/models/ggml-medium.bin',
-			'-f',
+			'--threads',
+			numberOfThreads.toString(),
+			'--file',
 			file,
 			'--output-srt',
 			'--output-file',
