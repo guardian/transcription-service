@@ -108,7 +108,9 @@ export const changeMessageVisibility = async (
 
 	try {
 		await client.send(command);
-		console.log('Successfully updated the VisibilityTimeout of the message');
+		console.log(
+			`Successfully updated the VisibilityTimeout of the message to ${timeoutOverride}`,
+		);
 	} catch (error) {
 		const errorMsg = 'Failed to update VisibilityTimeout for message';
 		console.error(errorMsg, error);
@@ -168,6 +170,7 @@ export const deleteMessage = async (
 		);
 	} catch (error) {
 		console.error(`Failed to delete message ${receiptHandle}`, error);
+		throw error;
 	}
 };
 
