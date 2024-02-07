@@ -13,8 +13,9 @@ import {
 	getSQSClient,
 	sendMessage,
 	isFailure,
-	SignedUrlQueryParams,
 } from '@guardian/transcription-service-backend-common';
+import { SignedUrlQueryParams } from '@guardian/transcription-service-common';
+import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
@@ -71,7 +72,7 @@ const getApp = async () => {
 		asyncHandler(async (req, res) => {
 			const key = uuidv4();
 			const queryParams = SignedUrlQueryParams.safeParse(req.query);
-			if (queryParams.success == false) {
+			if (!queryParams.success) {
 				res.status(422).send('missing query parameters');
 				return;
 			}
@@ -89,7 +90,8 @@ const getApp = async () => {
 				{ expiresIn: 60 }, // override default expiration time of 15 minutes
 			);
 			res.set('Cache-Control', 'no-cache');
-			res.send({ presignedS3Url, key });
+			const responseBody: SignedUrlResponseBody = { presignedS3Url };
+			res.send(responseBody);
 		}),
 	]);
 

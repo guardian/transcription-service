@@ -1,6 +1,7 @@
 import { authFetch } from '@/helpers';
 import { AuthState } from '@/types';
 import { useState } from 'react';
+import { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 
 const uploadToS3 = async (url: string, blob: Blob) => {
 	try {
@@ -42,10 +43,14 @@ export const UploadForm = ({ auth }: { auth: AuthState }) => {
 			`/signedUrl?${urlParams.toString()}`,
 			auth.token,
 		);
-		// TODO: parse response with zod
-		const body = await response.json();
 
-		const uploadSuccess = await uploadToS3(body.presignedS3Url, blob);
+		const body = SignedUrlResponseBody.safeParse(await response.json());
+		if (!body.success) {
+			console.error('response from signedUrl endpoint in wrong shape');
+			return;
+		}
+
+		const uploadSuccess = await uploadToS3(body.data.presignedS3Url, blob);
 		setStatus(uploadSuccess);
 		if (uploadSuccess) {
 			maybeFileInput.value = '';
