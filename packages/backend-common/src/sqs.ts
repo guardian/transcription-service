@@ -8,7 +8,7 @@ import {
 import {
 	DestinationService,
 	TranscriptionJob,
-} from '@guardian/transcription-service-backend-common';
+} from '@guardian/transcription-service-common';
 
 enum SQSStatus {
 	Success,
