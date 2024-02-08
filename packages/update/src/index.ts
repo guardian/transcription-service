@@ -5,61 +5,47 @@ import {
 } from '@guardian/transcription-service-common';
 import { sendEmail, getSESClient } from './ses';
 import { z } from 'zod';
-
-export const IncomingSQSEvent = z.object({
-	Records: z.array(
-		z.object({
-			body: z.string(),
-		}),
-	),
-});
+import { stringToJSONSchema } from './json';
 
 export const SQSMessageBody = z.object({
 	MessageId: z.string(),
 	Timestamp: z.string(),
-	Message: z.string(),
+	Message: stringToJSONSchema.pipe(TranscriptionOutput),
+});
+
+export const IncomingSQSEvent = z.object({
+	Records: z.array(
+		z.object({
+			body: stringToJSONSchema.pipe(SQSMessageBody),
+		}),
+	),
 });
 
 export type SQSMessageBody = z.infer<typeof SQSMessageBody>;
 
 export type IncomingSQSEvent = z.infer<typeof IncomingSQSEvent>;
 
-const handler: Handler = async (event, context) => {
-	console.log('EVENT: \n' + JSON.stringify(event, null, 2));
+const handler: Handler = async (event) => {
+	const config = await getConfig();
+	const sesClient = getSESClient(config.aws.region);
 
-	const sqsMessage = IncomingSQSEvent.safeParse(event);
-	if (!sqsMessage.success || !sqsMessage.data.Records[0]) {
+	const parsedEvent = IncomingSQSEvent.safeParse(event);
+	if (!parsedEvent.success) {
+		console.error('Failed to parse SQS message', parsedEvent.error.message);
 		throw new Error('Failed to parse SQS message');
 	}
 
-	const messageBody = SQSMessageBody.safeParse(
-		JSON.parse(sqsMessage.data.Records[0].body),
-	);
-
-	if (!messageBody.success) {
-		throw new Error('Failed to parse SQS message body');
+	for (const record of parsedEvent.data.Records) {
+		const transcriptionOutput = record.body.Message;
+		await sendEmail(
+			sesClient,
+			config.app.emailNotificationFromAddress,
+			transcriptionOutput.userEmail,
+			transcriptionOutput.originalFilename,
+		);
 	}
 
-	const transcriptionOutput = TranscriptionOutput.safeParse(
-		JSON.parse(messageBody.data.Message),
-	);
-
-	if (!transcriptionOutput.success) {
-		console.log(sqsMessage.data);
-		console.log(sqsMessage.data.Records[0]);
-		console.log(JSON.parse(sqsMessage.data.Records[0].body));
-		throw new Error('Failed to parse transcription output from SQS message');
-	}
-
-	const config = await getConfig();
-	const sesClient = getSESClient(config.aws.region);
-	await sendEmail(
-		sesClient,
-		config.app.emailNotificationFromAddress,
-		transcriptionOutput.data.userEmail,
-		transcriptionOutput.data.originalFilename,
-	);
-	return context.logStreamName;
+	return 'Finished processing Event';
 };
 
 export { handler as update };
