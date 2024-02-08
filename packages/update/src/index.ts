@@ -28,6 +28,9 @@ const handler: Handler = async (event, context) => {
 		JSON.parse(sqsMessage.data.Records[0].body),
 	);
 	if (!transcriptionOutput.success) {
+		console.log(sqsMessage.data);
+		console.log(sqsMessage.data.Records[0]);
+		console.log(JSON.parse(sqsMessage.data.Records[0].body));
 		throw new Error('Failed to parse transcription output from SQS message');
 	}
 
