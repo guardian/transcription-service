@@ -1,29 +1,22 @@
 import { Handler } from 'aws-lambda';
-import {
-	getConfig,
-	TranscriptionOutput,
-} from '@guardian/transcription-service-common';
+import { getConfig } from '@guardian/transcription-service-common';
 import { sendEmail, getSESClient } from './ses';
-import { z } from 'zod';
-import { stringToJSONSchema } from './json';
+import { IncomingSQSEvent } from './sqs-event-types';
 
-export const SQSMessageBody = z.object({
-	MessageId: z.string(),
-	Timestamp: z.string(),
-	Message: stringToJSONSchema.pipe(TranscriptionOutput),
-});
-
-export const IncomingSQSEvent = z.object({
-	Records: z.array(
-		z.object({
-			body: stringToJSONSchema.pipe(SQSMessageBody),
-		}),
-	),
-});
-
-export type SQSMessageBody = z.infer<typeof SQSMessageBody>;
-
-export type IncomingSQSEvent = z.infer<typeof IncomingSQSEvent>;
+const messageBody = (
+	transcriptId: string,
+	transcript: string,
+	originalFilename: string,
+	rootUrl: string,
+): string => {
+	const exportUrl = `${rootUrl}/export/${transcriptId}`;
+	return `
+		<h1>Transcript for ${originalFilename} ready</h1>
+		<p>Click <a href="${exportUrl}">here</a> to export to a google doc.</p>
+		<h2>Transcript</h2>
+		<p>${transcript}</p>
+	`;
+};
 
 const handler: Handler = async (event) => {
 	const config = await getConfig();
@@ -42,6 +35,12 @@ const handler: Handler = async (event) => {
 			config.app.emailNotificationFromAddress,
 			transcriptionOutput.userEmail,
 			transcriptionOutput.originalFilename,
+			messageBody(
+				transcriptionOutput.id,
+				transcriptionOutput.transcriptionSrt,
+				transcriptionOutput.originalFilename,
+				config.app.rootUrl,
+			),
 		);
 	}
 
