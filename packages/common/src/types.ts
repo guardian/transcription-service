@@ -25,3 +25,10 @@ export const TranscriptionOutput = z.object({
 });
 
 export type TranscriptionOutput = z.infer<typeof TranscriptionOutput>;
+
+export const SignedUrlQueryParams = z.object({ fileName: z.string() });
+
+export const SignedUrlResponseBody = z.object({
+	presignedS3Url: z.string(),
+});
+export type SignedUrlResponseBody = z.infer<typeof SignedUrlResponseBody>;

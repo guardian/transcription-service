@@ -18,4 +18,8 @@
 		"target": "esnext",
 	},
 	"include": ["src"],
+	"ts-node": {
+		"files": true,
+	},
+	"files": ["src/types/express/index.d.ts"],
 }

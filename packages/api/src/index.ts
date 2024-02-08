@@ -9,10 +9,13 @@ import passport from 'passport';
 import { Request, Response } from 'express';
 import {
 	getConfig,
-	getClient,
+	getSignedUrl,
+	getSQSClient,
 	sendMessage,
 	isFailure,
-} from '@guardian/transcription-service-common';
+} from '@guardian/transcription-service-backend-common';
+import { SignedUrlQueryParams } from '@guardian/transcription-service-common';
+import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -25,7 +28,10 @@ const getApp = async () => {
 	const app = express();
 	const apiRouter = express.Router();
 
-	const sqsClient = getClient(config.aws.region, config.aws.localstackEndpoint);
+	const sqsClient = getSQSClient(
+		config.aws.region,
+		config.aws.localstackEndpoint,
+	);
 
 	app.use(bodyParser.json({ limit: '40mb' }));
 	app.use(passport.initialize());
@@ -54,6 +60,27 @@ const getApp = async () => {
 				return;
 			}
 			res.send('Message sent');
+		}),
+	]);
+
+	apiRouter.get('/signedUrl', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			const queryParams = SignedUrlQueryParams.safeParse(req.query);
+			if (!queryParams.success) {
+				res.status(422).send('missing query parameters');
+				return;
+			}
+			const presignedS3Url = await getSignedUrl(
+				config.aws.region,
+				config.app.sourceMediaBucket,
+				req.user?.email ?? 'not found',
+				queryParams.data.fileName,
+			);
+
+			res.set('Cache-Control', 'no-cache');
+			const responseBody: SignedUrlResponseBody = { presignedS3Url };
+			res.send(responseBody);
 		}),
 	]);
 

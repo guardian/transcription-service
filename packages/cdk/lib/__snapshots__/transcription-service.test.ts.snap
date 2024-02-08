@@ -9,8 +9,10 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuS3Bucket",
       "GuDistributionBucketParameter",
       "GuApiLambda",
+      "GuPolicy",
       "GuCname",
       "GuPolicy",
+      "GuAllowPolicy",
       "GuAllowPolicy",
       "GuInstanceRole",
       "GuDescribeEC2Policy",
@@ -328,6 +330,43 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
+    "LambdaMediaUploadBucketInlinePolicyD28A1181": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "LambdaMediaUploadBucketInlinePolicyD28A1181",
+        "Roles": [
+          {
+            "Ref": "transcriptionserviceapiServiceRole0EF40E0F",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
     "ParameterStoreReadTranscriptionserviceworkerDFD8F6FE": {
       "Properties": {
         "PolicyDocument": {
@@ -379,10 +418,49 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
+    "TranscriptDestinationTopic831E3125": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "TopicName": "transcription-service-destination-topic-TEST",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
     "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040": {
       "DeletionPolicy": "Retain",
       "Properties": {
+        "AccelerateConfiguration": {
+          "AccelerationStatus": "Enabled",
+        },
         "BucketName": "transcription-service-source-media-test",
+        "CorsConfiguration": {
+          "CorsRules": [
+            {
+              "AllowedMethods": [
+                "PUT",
+              ],
+              "AllowedOrigins": [
+                "https://transcribe.code.dev-gutools.co.uk",
+              ],
+            },
+          ],
+        },
         "LifecycleConfiguration": {
           "Rules": [
             {
@@ -649,6 +727,29 @@ service transcription-service-worker start",
           "Version": "2012-10-17",
         },
         "PolicyName": "WorkerGetParametersD451FEAD",
+        "Roles": [
+          {
+            "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "WriteToDestinationTopic3E565788": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "TranscriptDestinationTopic831E3125",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "WriteToDestinationTopic3E565788",
         "Roles": [
           {
             "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
