@@ -14,6 +14,14 @@ export const IncomingSQSEvent = z.object({
 	),
 });
 
+export const SQSMessageBody = z.object({
+	MessageId: z.string(),
+	Timestamp: z.string(),
+	Message: z.string(),
+});
+
+export type SQSMessageBody = z.infer<typeof SQSMessageBody>;
+
 export type IncomingSQSEvent = z.infer<typeof IncomingSQSEvent>;
 
 const handler: Handler = async (event, context) => {
@@ -24,9 +32,18 @@ const handler: Handler = async (event, context) => {
 		throw new Error('Failed to parse SQS message');
 	}
 
-	const transcriptionOutput = TranscriptionOutput.safeParse(
+	const messageBody = SQSMessageBody.safeParse(
 		JSON.parse(sqsMessage.data.Records[0].body),
 	);
+
+	if (!messageBody.success) {
+		throw new Error('Failed to parse SQS message body');
+	}
+
+	const transcriptionOutput = TranscriptionOutput.safeParse(
+		JSON.parse(messageBody.data.Message),
+	);
+
 	if (!transcriptionOutput.success) {
 		console.log(sqsMessage.data);
 		console.log(sqsMessage.data.Records[0]);
