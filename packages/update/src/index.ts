@@ -1,7 +1,7 @@
 import { Handler } from 'aws-lambda';
-import { getConfig } from '@guardian/transcription-service-common';
 import { sendEmail, getSESClient } from './ses';
 import { IncomingSQSEvent } from './sqs-event-types';
+import { getConfig } from '@guardian/transcription-service-backend-common';
 
 const messageBody = (
 	transcriptId: string,
