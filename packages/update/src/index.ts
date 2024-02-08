@@ -14,7 +14,10 @@ const messageBody = (
 		<h1>Transcript for ${originalFilename} ready</h1>
 		<p>Click <a href="${exportUrl}">here</a> to export to a google doc.</p>
 		<h2>Transcript</h2>
-		<p>${transcript}</p>
+		${transcript
+			.split('\n')
+			.map((line) => `<p>${line}</p>`)
+			.join('')}
 	`;
 };
 
