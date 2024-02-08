@@ -58,7 +58,7 @@
 			{
 				"Label": "Calculate the backlog per instance",
 				"Id": "e1",
-				"Expression": "(m1 + m2) / m3",
+				"Expression": "(m1 + m2) / IF(m3 == 0, 0.99, m3)",
 				"ReturnData": true
 			}
 		]
