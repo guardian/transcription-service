@@ -18,6 +18,7 @@ export type TranscriptionJob = z.infer<typeof TranscriptionJob>;
 
 export const TranscriptionOutput = z.object({
 	id: z.string(),
+	originalFilename: z.string(),
 	transcriptionSrt: z.string(),
 	languageCode: z.string(),
 	englishTranslation: z.optional(z.string()),

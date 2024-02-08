@@ -92,6 +92,7 @@ const main = async () => {
 			transcriptionSrt: text,
 			languageCode: 'en',
 			userEmail: job.userEmail,
+			originalFilename: job.originalFilename,
 		};
 
 		await publishTranscriptionOutput(
