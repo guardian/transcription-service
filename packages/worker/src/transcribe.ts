@@ -13,6 +13,8 @@ interface FfmpegResult {
 	duration?: number;
 }
 
+export type WhisperModel = 'medium' | 'tiny';
+
 const CONTAINER_FOLDER = '/input';
 
 const runSpawnCommand = (
@@ -144,8 +146,14 @@ export const getTranscriptionText = async (
 	wavPath: string,
 	file: string,
 	numberOfThreads: number,
+	model: WhisperModel,
 ) => {
-	const resultFile = await transcribe(containerId, wavPath, numberOfThreads);
+	const resultFile = await transcribe(
+		containerId,
+		wavPath,
+		numberOfThreads,
+		model,
+	);
 	const transcriptText = readFile(
 		path.resolve(path.parse(file).dir, resultFile),
 	);
@@ -156,6 +164,7 @@ const transcribe = async (
 	containerId: string,
 	file: string,
 	numberOfThreads: number,
+	model: WhisperModel,
 ) => {
 	const outputFile = path.resolve(CONTAINER_FOLDER, path.parse(file).name);
 	console.log(`transcribe outputFile: ${outputFile}`);
@@ -166,7 +175,7 @@ const transcribe = async (
 			containerId,
 			'whisper.cpp/main',
 			'--model',
-			'whisper.cpp/models/ggml-medium.bin',
+			`whisper.cpp/models/ggml-${model}.bin`,
 			'--threads',
 			numberOfThreads.toString(),
 			'--file',
