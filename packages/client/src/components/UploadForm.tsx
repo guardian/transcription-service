@@ -30,7 +30,7 @@ export const UploadForm = ({ auth }: { auth: AuthState }) => {
 			return;
 		}
 		const files = maybeFileInput.files;
-		if (files == undefined || files.length == 0 || !files[0]) {
+		if (files == undefined || files.length === 0 || !files[0]) {
 			return;
 		}
 		const file = files[0];
