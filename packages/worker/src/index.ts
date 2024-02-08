@@ -9,8 +9,8 @@ import {
 	getS3Client,
 	changeMessageVisibility,
 	TranscriptionConfig,
-	TranscriptionOutput,
 } from '@guardian/transcription-service-backend-common';
+import { TranscriptionOutput } from '@guardian/transcription-service-common';
 import { getSNSClient, publishTranscriptionOutput } from './sns';
 import {
 	getTranscriptionText,
