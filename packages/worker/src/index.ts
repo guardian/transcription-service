@@ -10,7 +10,7 @@ import {
 	changeMessageVisibility,
 	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
-import { TranscriptionOutput } from '@guardian/transcription-service-common';
+import type { TranscriptionOutput } from '@guardian/transcription-service-common';
 import { getSNSClient, publishTranscriptionOutput } from './sns';
 import {
 	getTranscriptionText,
