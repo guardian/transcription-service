@@ -3,11 +3,9 @@ on:
   workflow_dispatch:
   push:
 jobs:
-  ci:
+  setup:
     permissions:
-      id-token: write
       contents: read
-      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,6 +21,10 @@ jobs:
       - name: Install dependencies
         run: |
           npm install
+  build-package-api-client-update:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
       - name: build API
         run: |
           npm run api::build
@@ -32,15 +34,30 @@ jobs:
       - name: Package API/Client
         run: |
           npm run package
+  build-package-worker:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
       - name: Package Worker
         run: |
           npm run worker::build
           npm run worker::package
+  cdk:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
       - name: CDK synth
         run: |
           npm run cdk::build
           npm run cdk::lint
           npm run cdk::synth
+  upload-to-riff-raff:
+    needs: [build-package-api-client-update, build-package-worker, cdk]
+    permissions:
+      id-token: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
       - name: AWS Auth
         uses: aws-actions/configure-aws-credentials@v4
         with:
