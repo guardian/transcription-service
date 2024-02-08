@@ -8,6 +8,7 @@ export const sendEmail = async (
 	fromAddress: string,
 	recipientEmail: string,
 	originalFilename: string,
+	body: string,
 ) => {
 	console.log(`Sending email from ${fromAddress} to ${recipientEmail}`);
 	const sendCommand = new SendEmailCommand({
@@ -23,7 +24,7 @@ export const sendEmail = async (
 			Body: {
 				Html: {
 					Charset: 'UTF-8',
-					Data: `Your transcript is ready to download - click <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">here</a>.`,
+					Data: body,
 				},
 			},
 		},
