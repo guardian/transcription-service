@@ -5,6 +5,9 @@ import { v4 as uuid4 } from 'uuid';
 import { createWriteStream } from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
+import { z } from 'zod';
+
+const ReadableBody = z.instanceof(Readable);
 
 export const getS3Client = (region: string) => {
 	return new S3Client({
@@ -47,9 +50,9 @@ export const getFile = async (
 			}),
 		);
 
-		const stream = (data.Body as Readable).pipe(
-			createWriteStream(destinationPath),
-		);
+		const body = ReadableBody.parse(data.Body);
+
+		const stream = body.pipe(createWriteStream(destinationPath));
 
 		await new Promise<void>((resolve, reject) => {
 			stream
