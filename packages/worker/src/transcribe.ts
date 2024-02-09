@@ -55,7 +55,9 @@ const runSpawnCommand = (
 	});
 };
 
-export const createContainer = async (tempDir: string): Promise<string> => {
+export const getOrCreateContainer = async (
+	tempDir: string,
+): Promise<string> => {
 	const existingContainer = await runSpawnCommand('docker', [
 		'ps',
 		'--filter',

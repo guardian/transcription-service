@@ -112,7 +112,7 @@ export const changeMessageVisibility = async (
 			`Successfully updated the VisibilityTimeout of the message to ${timeoutOverride}`,
 		);
 	} catch (error) {
-		const errorMsg = 'Failed to update VisibilityTimeout for message';
+		const errorMsg = `Failed to update VisibilityTimeout to ${timeoutOverride} for message`;
 		console.error(errorMsg, error);
 		throw error;
 	}

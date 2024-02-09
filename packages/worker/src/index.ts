@@ -15,35 +15,33 @@ import { getSNSClient, publishTranscriptionOutput } from './sns';
 import {
 	getTranscriptionText,
 	convertToWav,
-	createContainer,
+	getOrCreateContainer,
 } from './transcribe';
 import path from 'path';
 
 const main = async () => {
+	const config = await getConfig();
+
+	const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
+
+	const client = getSQSClient(config.aws.region, config.aws.localstackEndpoint);
+	const message = await getNextMessage(client, config.app.taskQueueUrl);
+
+	if (isFailure(message)) {
+		console.error(`Failed to fetch message due to ${message.errorMsg}`);
+		return;
+	}
+
+	if (!message.message) {
+		console.log('No messages available');
+		return;
+	}
+
 	try {
-		const config = await getConfig();
-
-		const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
-
-		const client = getSQSClient(
-			config.aws.region,
-			config.aws.localstackEndpoint,
-		);
-		const message = await getNextMessage(client, config.app.taskQueueUrl);
 		const snsClient = getSNSClient(
 			config.aws.region,
 			config.aws.localstackEndpoint,
 		);
-
-		if (isFailure(message)) {
-			console.error(`Failed to fetch message due to ${message.errorMsg}`);
-			return;
-		}
-
-		if (!message.message) {
-			console.log('No messages available');
-			return;
-		}
 
 		const job = parseTranscriptJobMessage(message.message);
 
@@ -57,12 +55,14 @@ const main = async () => {
 			return;
 		}
 
-		const fileToTranscribe = await getFileFromS3(config, job?.s3Key);
+		const fileToTranscribe = await getFileFromS3(config, job.s3Key);
 
 		console.log('file is here');
 
 		// docker container to run ffmpeg and whisper on file
-		const containerId = await createContainer(path.parse(fileToTranscribe).dir);
+		const containerId = await getOrCreateContainer(
+			path.parse(fileToTranscribe).dir,
+		);
 
 		const ffmpegResult = await convertToWav(containerId, fileToTranscribe);
 
@@ -112,6 +112,15 @@ const main = async () => {
 	} catch (error) {
 		const msg = 'Worker failed to complete';
 		console.error(msg, error);
+		if (message.message?.ReceiptHandle) {
+			// Terminate the message visibility timeout
+			await changeMessageVisibility(
+				client,
+				config.app.taskQueueUrl,
+				message.message.ReceiptHandle,
+				0,
+			);
+		}
 	}
 };
 
