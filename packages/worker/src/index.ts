@@ -23,22 +23,23 @@ import { updateScaleInProtection } from './asg';
 const main = async () => {
 	const config = await getConfig();
 	const stage = config.app.stage;
+	const region = config.aws.region;
 	console.log('stage is: ', stage);
 
 	const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
 
-	const client = getSQSClient(config.aws.region, config.aws.localstackEndpoint);
+	const client = getSQSClient(region, config.aws.localstackEndpoint);
 	const message = await getNextMessage(client, config.app.taskQueueUrl);
 
 	if (isFailure(message)) {
 		console.error(`Failed to fetch message due to ${message.errorMsg}`);
-		await updateScaleInProtection(stage, false);
+		await updateScaleInProtection(region, stage, false);
 		return;
 	}
 
 	if (!message.message) {
 		console.log('No messages available');
-		await updateScaleInProtection(stage, false);
+		await updateScaleInProtection(region, stage, false);
 		return;
 	}
 
@@ -128,7 +129,7 @@ const main = async () => {
 			);
 		}
 	} finally {
-		await updateScaleInProtection(stage, false);
+		await updateScaleInProtection(region, stage, false);
 	}
 };
 

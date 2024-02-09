@@ -5,14 +5,18 @@ import {
 import { readFile } from './transcribe';
 
 export const updateScaleInProtection = async (
+	region: string,
 	stage: string,
 	value: boolean,
 ) => {
+	const clientConfig = {
+		region,
+	};
 	try {
 		if (stage !== 'DEV') {
 			const instanceId = readFile('/var/lib/cloud/data/instance-id');
 			console.log(`instanceId: ${instanceId}`);
-			const autoScalingClient = new AutoScalingClient();
+			const autoScalingClient = new AutoScalingClient(clientConfig);
 			const input = {
 				InstanceIds: [instanceId],
 				AutoScalingGroupName: `transcription-service-workers-${stage}`,
