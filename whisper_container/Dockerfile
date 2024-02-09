@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM debian:bookworm-slim
 WORKDIR /opt
 LABEL com.theguardian.transcription-service.whisper-container="Whisper.cpp container with models downloaded, including ffmpeg"
 

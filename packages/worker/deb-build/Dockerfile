@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 WORKDIR /worker
 
 #suppress installation prompts
