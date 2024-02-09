@@ -139,7 +139,7 @@ const getDuration = (ffmpegOutput: string) => {
 	return duration;
 };
 
-const readFile = (filePath: string): string => {
+export const readFile = (filePath: string): string => {
 	const file = fs.readFileSync(filePath, 'utf8');
 	return file;
 };

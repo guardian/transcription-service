@@ -18,9 +18,12 @@ import {
 	getOrCreateContainer,
 } from './transcribe';
 import path from 'path';
+import { updateScaleInProtection } from './asg';
 
 const main = async () => {
 	const config = await getConfig();
+	const stage = config.app.stage;
+	console.log('stage is: ', stage);
 
 	const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
 
@@ -121,6 +124,10 @@ const main = async () => {
 				message.message.ReceiptHandle,
 				0,
 			);
+		}
+	} finally {
+		if (stage !== 'DEV') {
+			await updateScaleInProtection(stage, false);
 		}
 	}
 };
