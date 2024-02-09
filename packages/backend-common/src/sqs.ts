@@ -4,6 +4,7 @@ import {
 	Message,
 	ReceiveMessageCommand,
 	DeleteMessageCommand,
+	ChangeMessageVisibilityCommand,
 } from '@aws-sdk/client-sqs';
 import {
 	DestinationService,
@@ -55,7 +56,7 @@ export const sendMessage = async (
 ): Promise<SendResult> => {
 	const job: TranscriptionJob = {
 		id: 'my-first-transcription', // uuid
-		s3Url: 's3://test/test',
+		s3Key: 'tifsample.wav',
 		retryCount: 0,
 		sentTimestamp: new Date().toISOString(),
 		userEmail: 'email',
@@ -90,6 +91,30 @@ export const sendMessage = async (
 			error: e,
 			errorMsg: msg,
 		};
+	}
+};
+
+export const changeMessageVisibility = async (
+	client: SQSClient,
+	queueUrl: string,
+	receiptHandle: string,
+	timeoutOverride: number,
+) => {
+	const command = new ChangeMessageVisibilityCommand({
+		QueueUrl: queueUrl,
+		VisibilityTimeout: timeoutOverride,
+		ReceiptHandle: receiptHandle,
+	});
+
+	try {
+		await client.send(command);
+		console.log(
+			`Successfully updated the VisibilityTimeout of the message to ${timeoutOverride}`,
+		);
+	} catch (error) {
+		const errorMsg = `Failed to update VisibilityTimeout to ${timeoutOverride} for message`;
+		console.error(errorMsg, error);
+		throw error;
 	}
 };
 
@@ -146,6 +171,7 @@ export const deleteMessage = async (
 		);
 	} catch (error) {
 		console.error(`Failed to delete message ${receiptHandle}`, error);
+		throw error;
 	}
 };
 
