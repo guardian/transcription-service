@@ -32,11 +32,13 @@ const main = async () => {
 
 	if (isFailure(message)) {
 		console.error(`Failed to fetch message due to ${message.errorMsg}`);
+		await updateScaleInProtection(stage, false);
 		return;
 	}
 
 	if (!message.message) {
 		console.log('No messages available');
+		await updateScaleInProtection(stage, false);
 		return;
 	}
 
@@ -126,9 +128,7 @@ const main = async () => {
 			);
 		}
 	} finally {
-		if (stage !== 'DEV') {
-			await updateScaleInProtection(stage, false);
-		}
+		await updateScaleInProtection(stage, false);
 	}
 };
 
