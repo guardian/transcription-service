@@ -11,17 +11,19 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuApiLambda",
       "GuPolicy",
       "GuCname",
+      "GuLoggingStreamNameParameter",
       "GuPolicy",
+      "GuAllowPolicy",
       "GuAllowPolicy",
       "GuAllowPolicy",
       "GuInstanceRole",
       "GuDescribeEC2Policy",
-      "GuLoggingStreamNameParameter",
       "GuLogShippingPolicy",
       "GuGetDistributablePolicy",
       "GuParameterStoreReadPolicy",
       "GuVpcParameter",
       "GuSubnetListParameter",
+      "GuLambdaFunction",
     ],
     "gu:cdk:version": "TEST",
   },
@@ -550,6 +552,13 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             "Value": "guardian/transcription-service",
           },
           {
+            "Key": "LogKinesisStreamName",
+            "PropagateAtLaunch": true,
+            "Value": {
+              "Ref": "LoggingStreamName",
+            },
+          },
+          {
             "Key": "Stack",
             "PropagateAtLaunch": true,
             "Value": "investigations",
@@ -558,6 +567,11 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             "Key": "Stage",
             "PropagateAtLaunch": true,
             "Value": "TEST",
+          },
+          {
+            "Key": "SystemdUnit",
+            "PropagateAtLaunch": true,
+            "Value": "transcription-service-worker.service",
           },
         ],
         "VPCZoneIdentifier": {
@@ -750,6 +764,49 @@ service transcription-service-worker start",
           "Version": "2012-10-17",
         },
         "PolicyName": "WriteToDestinationTopic3E565788",
+        "Roles": [
+          {
+            "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "WriteToELKD15C7623": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "kinesis:DescribeStream",
+                "kinesis:PutRecord",
+                "kinesis:PutRecords",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":kinesis:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":stream/",
+                    {
+                      "Ref": "LoggingStreamName",
+                    },
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "WriteToELKD15C7623",
         "Roles": [
           {
             "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
@@ -1426,6 +1483,330 @@ service transcription-service-worker start",
         },
       },
       "Type": "AWS::Lambda::Permission",
+    },
+    "transcriptionserviceoutputhandler5AC33606": {
+      "DependsOn": [
+        "transcriptionserviceoutputhandlerServiceRoleDefaultPolicy926F9B97",
+        "transcriptionserviceoutputhandlerServiceRoleF2BC6254",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DistributionBucketName",
+          },
+          "S3Key": "investigations/TEST/transcription-service-output-handler/output-handler.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "APP": "transcription-service-output-handler",
+            "STACK": "investigations",
+            "STAGE": "TEST",
+          },
+        },
+        "Handler": "index.outputHandler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "transcriptionserviceoutputhandlerServiceRoleF2BC6254",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service-output-handler",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 30,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "transcriptionserviceoutputhandlerServiceRoleDefaultPolicy926F9B97": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                      "/investigations/TEST/transcription-service-output-handler/output-handler.zip",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "ssm:GetParametersByPath",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service-output-handler",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service-output-handler/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionserviceoutputqueue2A0B1C70",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ses:SendEmail",
+                "ses:SendRawEmail",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "ssm:GetParameter",
+                "ssm:GetParametersByPath",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:ssm:test-region:745349931791:parameter/TEST/investigations/transcription-service/*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "transcriptionserviceoutputhandlerServiceRoleDefaultPolicy926F9B97",
+        "Roles": [
+          {
+            "Ref": "transcriptionserviceoutputhandlerServiceRoleF2BC6254",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "transcriptionserviceoutputhandlerServiceRoleF2BC6254": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service-output-handler",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "transcriptionserviceoutputhandlerSqsEventSourceTranscriptionServicetranscriptionserviceoutputqueueE7F60E5F58A187EA": {
+      "Properties": {
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "transcriptionserviceoutputqueue2A0B1C70",
+            "Arn",
+          ],
+        },
+        "FunctionName": {
+          "Ref": "transcriptionserviceoutputhandler5AC33606",
+        },
+      },
+      "Type": "AWS::Lambda::EventSourceMapping",
+    },
+    "transcriptionserviceoutputqueue2A0B1C70": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "transcription-service-output-queue-TEST",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "transcriptionserviceoutputqueuePolicyF172243A": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sqs:SendMessage",
+              "Condition": {
+                "ArnEquals": {
+                  "aws:SourceArn": {
+                    "Ref": "TranscriptDestinationTopic831E3125",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "sns.amazonaws.com",
+              },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionserviceoutputqueue2A0B1C70",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Queues": [
+          {
+            "Ref": "transcriptionserviceoutputqueue2A0B1C70",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::QueuePolicy",
+    },
+    "transcriptionserviceoutputqueueTranscriptionServiceTranscriptDestinationTopicB4E201A61D45605F": {
+      "DependsOn": [
+        "transcriptionserviceoutputqueuePolicyF172243A",
+      ],
+      "Properties": {
+        "Endpoint": {
+          "Fn::GetAtt": [
+            "transcriptionserviceoutputqueue2A0B1C70",
+            "Arn",
+          ],
+        },
+        "Protocol": "sqs",
+        "TopicArn": {
+          "Ref": "TranscriptDestinationTopic831E3125",
+        },
+      },
+      "Type": "AWS::SNS::Subscription",
     },
     "transcriptionservicetaskqueue428AC4BA": {
       "DeletionPolicy": "Delete",
