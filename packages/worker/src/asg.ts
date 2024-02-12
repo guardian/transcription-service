@@ -24,7 +24,9 @@ export const updateScaleInProtection = async (
 			};
 			const command = new SetInstanceProtectionCommand(input);
 			await autoScalingClient.send(command);
-			console.log(`added scale-in protection to instance ${instanceId}`);
+			console.log(
+				`Updated scale-in protection to value ${value} for instance ${instanceId}`,
+			);
 		}
 	} catch (error) {
 		console.log(`Could not remove scale-in protection`, error);
