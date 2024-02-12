@@ -239,6 +239,12 @@ export class TranscriptionService extends GuStack {
 					],
 					resources: [loggingStreamArn],
 				}),
+				new GuAllowPolicy(this, 'SetInstanceProtection', {
+					actions: ['autoscaling:SetInstanceProtection'],
+					resources: [
+						`arn:aws:autoscaling:${props.env.region}:${GuardianAwsAccounts.Investigations}:autoScalingGroup:*:autoScalingGroupName/transcription-service-workers-${this.stage}`,
+					],
+				}),
 			],
 		});
 
