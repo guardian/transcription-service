@@ -52,6 +52,7 @@ export class TranscriptionService extends GuStack {
 		const APP_NAME = 'transcription-service';
 		const apiId = `${APP_NAME}-${props.stage}`;
 		const isProd = props.stage === 'PROD';
+		const autoScalingGroupName = `transcription-service-workers-${this.stage}`;
 		if (!props.env?.region) throw new Error('region not provided in props');
 
 		const workerAmi = new GuAmiParameter(this, {
@@ -242,7 +243,7 @@ export class TranscriptionService extends GuStack {
 				new GuAllowPolicy(this, 'SetInstanceProtection', {
 					actions: ['autoscaling:SetInstanceProtection'],
 					resources: [
-						`arn:aws:autoscaling:${props.env.region}:${GuardianAwsAccounts.Investigations}:autoScalingGroup:*:autoScalingGroupName/transcription-service-workers-${this.stage}`,
+						`arn:aws:autoscaling:${props.env.region}:${GuardianAwsAccounts.Investigations}:autoScalingGroup:*:autoScalingGroupName/${autoScalingGroupName}`,
 					],
 				}),
 			],
@@ -292,7 +293,7 @@ export class TranscriptionService extends GuStack {
 			{
 				minCapacity: 0,
 				maxCapacity: isProd ? 20 : 4,
-				autoScalingGroupName: `transcription-service-workers-${this.stage}`,
+				autoScalingGroupName,
 				vpc: GuVpc.fromIdParameter(this, 'InvestigationsInternetEnabledVpc', {
 					availabilityZones: ['eu-west-1a', 'eu-west-1b', 'eu-west-1c'],
 				}),
