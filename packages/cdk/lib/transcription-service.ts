@@ -26,6 +26,7 @@ import {
 	GroupMetrics,
 	SpotAllocationStrategy,
 } from 'aws-cdk-lib/aws-autoscaling';
+import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
 import {
 	InstanceClass,
 	InstanceSize,
@@ -356,6 +357,16 @@ export class TranscriptionService extends GuStack {
 		// allow worker to receive message from queue
 		transcriptionTaskQueue.grantConsumeMessages(transcriptionWorkerASG);
 
+		const transcriptTable = new Table(this, 'TranscriptTable', {
+			tableName: `${APP_NAME}-${this.stage}`,
+			partitionKey: {
+				name: 'id',
+				type: AttributeType.STRING,
+			},
+			readCapacity: 1,
+			writeCapacity: 1,
+		});
+
 		const outputHandlerLambda = new GuLambdaFunction(
 			this,
 			'transcription-service-output-handler',
@@ -366,6 +377,8 @@ export class TranscriptionService extends GuStack {
 				app: `${APP_NAME}-output-handler`,
 			},
 		);
+
+		transcriptTable.grantReadWriteData(outputHandlerLambda);
 
 		const transcriptionOutputQueue = new Queue(
 			this,

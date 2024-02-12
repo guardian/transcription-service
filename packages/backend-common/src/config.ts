@@ -16,6 +16,7 @@ export interface TranscriptionConfig {
 		destinationTopicArns: {
 			transcriptionService: string;
 		};
+		tableName: string;
 	};
 	aws: {
 		region: string;
@@ -102,6 +103,8 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		'app/sourceMediaBucket',
 	);
 
+	const tableName = findParameter(parameters, paramPath, 'app/tableName');
+
 	return {
 		auth: {
 			clientId: authClientId,
@@ -117,6 +120,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			destinationTopicArns: {
 				transcriptionService: destinationTopic,
 			},
+			tableName,
 		},
 		aws: {
 			region,
