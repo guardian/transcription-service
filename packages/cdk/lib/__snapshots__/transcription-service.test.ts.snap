@@ -16,6 +16,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuAllowPolicy",
       "GuAllowPolicy",
       "GuAllowPolicy",
+      "GuAllowPolicy",
       "GuInstanceRole",
       "GuDescribeEC2Policy",
       "GuLogShippingPolicy",
@@ -420,6 +421,27 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
+    "SetInstanceProtection5DD5610F": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "autoscaling:SetInstanceProtection",
+              "Effect": "Allow",
+              "Resource": "arn:aws:autoscaling:test-region:745349931791:autoScalingGroup:*:autoScalingGroupName/transcription-service-workers-TEST",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "SetInstanceProtection5DD5610F",
+        "Roles": [
+          {
+            "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
     "TranscriptDestinationTopic831E3125": {
       "Properties": {
         "Tags": [
@@ -539,7 +561,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             ],
           },
         },
-        "NewInstancesProtectedFromScaleIn": false,
+        "NewInstancesProtectedFromScaleIn": true,
         "Tags": [
           {
             "Key": "gu:cdk:version",
