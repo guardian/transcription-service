@@ -10,7 +10,7 @@
 		"api::package": "npm run package --workspace api",
 		"api::start": "AWS_REGION=eu-west-1 STAGE=DEV npm run start --workspace api",
 		"output-handler::build": "npm run build --workspace output-handler",
-		"output-handler::start": "AWS_REGION=eu-west-1 npm run start --workspace output-handler",
+		"output-handler::start": "AWS_REGION=eu-west-1 STAGE=DEV npm run start --workspace output-handler",
 		"worker::build": "npm run build --workspace worker; npm run build --workspace worker",
 		"worker::package": "npm run package --workspace worker",
 		"worker::start": "AWS_REGION=eu-west-1 STAGE=DEV npm run start --workspace worker",
