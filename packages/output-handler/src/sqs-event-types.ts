@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { stringToJSONSchema } from './zod-string-to-json';
 import { TranscriptionOutput } from '@guardian/transcription-service-common';
 
-export const SQSMessageBody = z.object({
+const SQSMessageBody = z.object({
 	MessageId: z.string(),
 	Timestamp: z.string(),
 	Message: stringToJSONSchema.pipe(TranscriptionOutput),
