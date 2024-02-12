@@ -24,7 +24,6 @@ const main = async () => {
 	const config = await getConfig();
 	const stage = config.app.stage;
 	const region = config.aws.region;
-	console.log('stage is: ', stage);
 
 	const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
 

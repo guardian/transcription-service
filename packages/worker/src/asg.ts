@@ -2,7 +2,7 @@ import {
 	AutoScalingClient,
 	SetInstanceProtectionCommand,
 } from '@aws-sdk/client-auto-scaling';
-import { readFile } from './transcribe';
+import { readFile } from './util';
 
 export const updateScaleInProtection = async (
 	region: string,
@@ -23,8 +23,8 @@ export const updateScaleInProtection = async (
 				ProtectedFromScaleIn: value,
 			};
 			const command = new SetInstanceProtectionCommand(input);
-			const response = await autoScalingClient.send(command);
-			console.log('added scale-in protection', response);
+			await autoScalingClient.send(command);
+			console.log(`added scale-in protection to instance ${instanceId}`);
 		}
 	} catch (error) {
 		console.log(`Could not remove scale-in protection`, error);

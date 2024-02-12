@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
 import path from 'path';
-import * as fs from 'fs';
+import { readFile } from './util';
 
 interface ProcessResult {
 	code?: number;
@@ -137,11 +137,6 @@ const getDuration = (ffmpegOutput: string) => {
 	const duration = hour * 3600 + minute * 60 + seconds;
 	console.log(`File duration is ${duration} seconds`);
 	return duration;
-};
-
-export const readFile = (filePath: string): string => {
-	const file = fs.readFileSync(filePath, 'utf8');
-	return file;
 };
 
 export const getTranscriptionText = async (
