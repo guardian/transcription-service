@@ -63,8 +63,6 @@ const main = async () => {
 
 		const fileToTranscribe = await getFileFromS3(config, job.s3Key);
 
-		console.log('file is here');
-
 		// docker container to run ffmpeg and whisper on file
 		const containerId = await getOrCreateContainer(
 			path.parse(fileToTranscribe).dir,
