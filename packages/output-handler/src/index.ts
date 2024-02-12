@@ -50,4 +50,4 @@ const handler: Handler = async (event) => {
 	return 'Finished processing Event';
 };
 
-export { handler as update };
+export { handler as outputHandler };

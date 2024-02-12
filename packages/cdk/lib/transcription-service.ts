@@ -349,32 +349,34 @@ export class TranscriptionService extends GuStack {
 		// allow worker to receive message from queue
 		transcriptionTaskQueue.grantConsumeMessages(transcriptionWorkerASG);
 
-		const updateLambda = new GuLambdaFunction(
+		const outputHandlerLambda = new GuLambdaFunction(
 			this,
-			'transcription-service-update',
+			'transcription-service-output-handler',
 			{
-				fileName: 'update.zip',
-				handler: 'index.update',
+				fileName: 'output-handler.zip',
+				handler: 'index.outputHandler',
 				runtime: Runtime.NODEJS_20_X,
-				app: `${APP_NAME}-update`,
+				app: `${APP_NAME}-output-handler`,
 			},
 		);
 
-		const transcriptionUpdateQueue = new Queue(
+		const transcriptionOutputQueue = new Queue(
 			this,
-			`${APP_NAME}-update-queue`,
+			`${APP_NAME}-output-queue`,
 			{
-				queueName: `${APP_NAME}-update-queue-${this.stage}`,
+				queueName: `${APP_NAME}-output-queue-${this.stage}`,
 			},
 		);
 		transcriptDestinationTopic.addSubscription(
-			new SqsSubscription(transcriptionUpdateQueue),
+			new SqsSubscription(transcriptionOutputQueue),
 		);
 
-		// trigger update lambda from queue
-		updateLambda.addEventSource(new SqsEventSource(transcriptionUpdateQueue));
+		// trigger output-handler lambda from queue
+		outputHandlerLambda.addEventSource(
+			new SqsEventSource(transcriptionOutputQueue),
+		);
 
-		updateLambda.addToRolePolicy(
+		outputHandlerLambda.addToRolePolicy(
 			new PolicyStatement({
 				effect: Effect.ALLOW,
 				actions: ['ses:SendEmail', 'ses:SendRawEmail'],
@@ -382,6 +384,6 @@ export class TranscriptionService extends GuStack {
 			}),
 		);
 
-		updateLambda.addToRolePolicy(getParametersPolicy);
+		outputHandlerLambda.addToRolePolicy(getParametersPolicy);
 	}
 }
