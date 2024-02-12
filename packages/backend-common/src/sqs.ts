@@ -59,7 +59,7 @@ export const sendMessage = async (
 		s3Key: 'tifsample.wav',
 		retryCount: 0,
 		sentTimestamp: new Date().toISOString(),
-		userEmail: 'email',
+		userEmail: 'digital.investigations@theguardian.com',
 		transcriptDestinationService: DestinationService.TranscriptionService,
 		originalFilename: 'test.mp3',
 	};

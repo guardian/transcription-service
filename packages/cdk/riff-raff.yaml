@@ -63,3 +63,33 @@ deployments:
       bucketSsmLookup: true
       cacheControl: public, max-age=60
       publicReadAcl: false
+  lambda-upload-eu-west-1-investigations-transcription-service-output-handler:
+    type: aws-lambda
+    stacks:
+      - investigations
+    regions:
+      - eu-west-1
+    app: transcription-service-output-handler
+    contentDirectory: transcription-service-output-handler
+    parameters:
+      bucketSsmLookup: true
+      lookupByTags: true
+      fileName: output-handler.zip
+    actions:
+      - uploadLambda
+  lambda-output-handler-eu-west-1-investigations-transcription-service-output-handler:
+    type: aws-lambda
+    stacks:
+      - investigations
+    regions:
+      - eu-west-1
+    app: transcription-service-output-handler
+    contentDirectory: transcription-service-output-handler
+    parameters:
+      bucketSsmLookup: true
+      lookupByTags: true
+      fileName: output-handler.zip
+    actions:
+      - updateLambda
+    dependencies:
+      - cfn-eu-west-1-investigations-transcription-service

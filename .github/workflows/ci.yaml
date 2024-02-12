@@ -29,7 +29,10 @@ jobs:
       - name: build Client
         run: |
           npm run client::build
-      - name: Package API/Client
+      - name: Build output-handler
+        run: |
+          npm run output-handler::build
+      - name: Package API/Client/Update
         run: |
           npm run package
       - name: Package Worker
@@ -59,6 +62,8 @@ jobs:
               - packages/cdk/cdk.out/TranscriptionService-PROD.template.json
             transcription-service-api:
               - target/api.zip
+            transcription-service-output-handler:
+              - target/output-handler.zip
             transcription-service-worker:
               - packages/worker/dist/transcription-service-worker_1.0.0_all.deb
       - name: Upload repository project to riff-raff

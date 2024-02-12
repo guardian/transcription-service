@@ -15,6 +15,7 @@ import {
 	GuInstanceRole,
 	GuPolicy,
 } from '@guardian/cdk/lib/constructs/iam';
+import { GuLambdaFunction } from '@guardian/cdk/lib/constructs/lambda';
 import { GuS3Bucket } from '@guardian/cdk/lib/constructs/s3';
 import { GuardianAwsAccounts } from '@guardian/private-infrastructure-config';
 import { type App, Duration, Tags } from 'aws-cdk-lib';
@@ -35,9 +36,13 @@ import {
 } from 'aws-cdk-lib/aws-ec2';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
-import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
+import {
+	EmailSubscription,
+	SqsSubscription,
+} from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 
 export class TranscriptionService extends GuStack {
@@ -343,5 +348,42 @@ export class TranscriptionService extends GuStack {
 
 		// allow worker to receive message from queue
 		transcriptionTaskQueue.grantConsumeMessages(transcriptionWorkerASG);
+
+		const outputHandlerLambda = new GuLambdaFunction(
+			this,
+			'transcription-service-output-handler',
+			{
+				fileName: 'output-handler.zip',
+				handler: 'index.outputHandler',
+				runtime: Runtime.NODEJS_20_X,
+				app: `${APP_NAME}-output-handler`,
+			},
+		);
+
+		const transcriptionOutputQueue = new Queue(
+			this,
+			`${APP_NAME}-output-queue`,
+			{
+				queueName: `${APP_NAME}-output-queue-${this.stage}`,
+			},
+		);
+		transcriptDestinationTopic.addSubscription(
+			new SqsSubscription(transcriptionOutputQueue),
+		);
+
+		// trigger output-handler lambda from queue
+		outputHandlerLambda.addEventSource(
+			new SqsEventSource(transcriptionOutputQueue),
+		);
+
+		outputHandlerLambda.addToRolePolicy(
+			new PolicyStatement({
+				effect: Effect.ALLOW,
+				actions: ['ses:SendEmail', 'ses:SendRawEmail'],
+				resources: ['*'],
+			}),
+		);
+
+		outputHandlerLambda.addToRolePolicy(getParametersPolicy);
 	}
 }
