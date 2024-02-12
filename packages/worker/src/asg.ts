@@ -18,7 +18,7 @@ export const updateScaleInProtection = async (
 			console.log(`instanceId: ${instanceId}`);
 			const autoScalingClient = new AutoScalingClient(clientConfig);
 			const input = {
-				InstanceIds: [instanceId],
+				InstanceIds: [instanceId.trim()],
 				AutoScalingGroupName: `transcription-service-workers-${stage}`,
 				ProtectedFromScaleIn: value,
 			};
