@@ -69,7 +69,7 @@ deployments:
       - investigations
     regions:
       - eu-west-1
-    app: transcription-service-update
+    app: transcription-service
     contentDirectory: transcription-service-output-handler
     parameters:
       bucketSsmLookup: true
@@ -83,7 +83,7 @@ deployments:
       - investigations
     regions:
       - eu-west-1
-    app: transcription-service-output-handler
+    app: transcription-service
     contentDirectory: transcription-service-output-handler
     parameters:
       bucketSsmLookup: true
