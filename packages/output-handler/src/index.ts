@@ -15,7 +15,7 @@ const messageBody = (
 	originalFilename: string,
 	rootUrl: string,
 ): string => {
-	const exportUrl = `${rootUrl}/export/${transcriptId}`;
+	const exportUrl = `${rootUrl}/export?transcriptId=${transcriptId}`;
 	return `
 		<h1>Transcript for ${originalFilename} ready</h1>
 		<p>Click <a href="${exportUrl}">here</a> to export to a google doc.</p>
