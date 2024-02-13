@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
 import path from 'path';
-import { readFile } from './util';
+// import { readFile } from './util';
 
 interface ProcessResult {
 	code?: number;
@@ -14,6 +14,12 @@ interface FfmpegResult {
 }
 
 export type WhisperModel = 'medium' | 'tiny';
+
+export interface Transcripts {
+	srt: string;
+	text: string;
+	json: string;
+}
 
 const CONTAINER_FOLDER = '/input';
 
@@ -147,27 +153,40 @@ export const getTranscriptionText = async (
 	file: string,
 	numberOfThreads: number,
 	model: WhisperModel,
-) => {
+): Promise<Transcripts> => {
+	console.log(`my original file: ${file}`);
 	const resultFile = await transcribe(
 		containerId,
 		wavPath,
 		numberOfThreads,
 		model,
 	);
-	const transcriptText = readFile(
-		path.resolve(path.parse(file).dir, resultFile),
-	);
-	return transcriptText;
+	console.log(`result file: ${path.resolve(path.parse(file).dir, resultFile)}`);
+	// const transcriptText = readFile(
+	// 	path.resolve(path.parse(file).dir, resultFile),
+	// );
+
+	const res = {
+		srt: path.resolve(path.parse(file).dir, `${resultFile}.srt`),
+		text: path.resolve(path.parse(file).dir, `${resultFile}.txt`),
+		json: path.resolve(path.parse(file).dir, `${resultFile}.json`),
+	};
+
+	console.log('transcribe all files: ');
+	console.log(res);
+
+	return res;
 };
 
-const transcribe = async (
+export const transcribe = async (
 	containerId: string,
 	file: string,
 	numberOfThreads: number,
 	model: WhisperModel,
 ) => {
-	const outputFile = path.resolve(CONTAINER_FOLDER, path.parse(file).name);
-	console.log(`transcribe outputFile: ${outputFile}`);
+	const fileName = path.parse(file).name;
+	const containerOutputFilePath = path.resolve(CONTAINER_FOLDER, fileName);
+	console.log(`transcribe outputFile: ${containerOutputFilePath}`);
 
 	try {
 		await runSpawnCommand('docker', [
@@ -181,13 +200,16 @@ const transcribe = async (
 			'--file',
 			file,
 			'--output-srt',
+			'--output-txt',
+			'--output-json',
 			'--output-file',
-			outputFile,
+			containerOutputFilePath,
 			'--language',
 			'auto',
 		]);
 		console.log('Transcription finished successfully');
-		return `${path.parse(file).name}.srt`;
+		console.log(`transcript result: ${fileName}`);
+		return fileName;
 	} catch (error) {
 		console.log(`Transcription failed due to `, error);
 		throw error;

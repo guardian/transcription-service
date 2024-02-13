@@ -21,18 +21,20 @@ export const getSignedUrl = (
 	bucket: string,
 	userEmail: string,
 	fileName: string,
+	expiresIn: number,
+	id?: string,
 ) =>
 	getSignedUrlSdk(
 		getS3Client(region),
 		new PutObjectCommand({
 			Bucket: bucket,
-			Key: uuid4(),
+			Key: id || uuid4(),
 			Metadata: {
 				'user-email': userEmail,
 				'file-name': fileName,
 			},
 		}),
-		{ expiresIn: 60 }, // override default expiration time of 15 minutes
+		{ expiresIn }, // override default expiration time of 15 minutes
 	);
 
 export const getFile = async (

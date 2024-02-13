@@ -7,9 +7,11 @@ import {
 	ChangeMessageVisibilityCommand,
 } from '@aws-sdk/client-sqs';
 import {
+	OutputBucketUrls,
 	DestinationService,
 	TranscriptionJob,
 } from '@guardian/transcription-service-common';
+import { getSignedUrl } from '@guardian/transcription-service-backend-common';
 
 enum SQSStatus {
 	Success,
@@ -53,15 +55,31 @@ export const isFailure = (
 export const sendMessage = async (
 	client: SQSClient,
 	queueUrl: string,
+	outputBucket: string,
+	region: string,
 ): Promise<SendResult> => {
+	const userEmail = 'digital.investigations@theguardian.com';
+	const originalFilename = 'test.mp3';
+	const id = 'my-first-transcription';
+
+	const signedUrls = await generateOutputSignedUrls(
+		id,
+		region,
+		outputBucket,
+		userEmail,
+		originalFilename,
+		7,
+	);
+
 	const job: TranscriptionJob = {
-		id: 'my-first-transcription', // uuid
+		id, // id of the source file
 		s3Key: 'tifsample.wav',
 		retryCount: 0,
 		sentTimestamp: new Date().toISOString(),
-		userEmail: 'digital.investigations@theguardian.com',
+		userEmail,
 		transcriptDestinationService: DestinationService.TranscriptionService,
-		originalFilename: 'test.mp3',
+		originalFilename,
+		outputBucketUrls: signedUrls,
 	};
 
 	try {
@@ -189,4 +207,45 @@ export const parseTranscriptJobMessage = (
 		`Failed to parse message ${message.MessageId}, contents: ${message.Body}`,
 	);
 	return undefined;
+};
+
+const generateOutputSignedUrls = async (
+	id: string,
+	region: string,
+	outputBucket: string,
+	userEmail: string,
+	originalFilename: string,
+	expiresInDays: number,
+): Promise<OutputBucketUrls> => {
+	const expiresIn = expiresInDays * 24 * 60;
+	const srtSignedS3Url = await getSignedUrl(
+		region,
+		outputBucket,
+		userEmail,
+		originalFilename,
+		expiresIn,
+		`srt/${id}.srt`,
+	);
+	const textSignedS3Url = await getSignedUrl(
+		region,
+		outputBucket,
+		userEmail,
+		originalFilename,
+		expiresIn,
+		`text/${id}.txt`,
+	);
+	const jsonSignedS3Url = await getSignedUrl(
+		region,
+		outputBucket,
+		userEmail,
+		originalFilename,
+		expiresIn,
+		`json/${id}.json`,
+	);
+
+	return {
+		srt: srtSignedS3Url,
+		text: textSignedS3Url,
+		json: jsonSignedS3Url,
+	};
 };

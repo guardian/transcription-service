@@ -10,12 +10,16 @@ import {
 	changeMessageVisibility,
 	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
-import type { TranscriptionOutput } from '@guardian/transcription-service-common';
+import type {
+	OutputBucketUrls,
+	TranscriptionOutput,
+} from '@guardian/transcription-service-common';
 import { getSNSClient, publishTranscriptionOutput } from './sns';
 import {
 	getTranscriptionText,
 	convertToWav,
 	getOrCreateContainer,
+	Transcripts,
 } from './transcribe';
 import path from 'path';
 import { updateScaleInProtection } from './asg';
@@ -50,15 +54,17 @@ const main = async () => {
 
 		const job = parseTranscriptJobMessage(message.message);
 
-		console.log(
-			`Fetched transcription job with id ${message.message.MessageId}}`,
-			job,
-		);
-
 		if (!job) {
 			console.error('Failed to parse job message', message);
 			return;
 		}
+
+		const { outputBucketUrls, ...loggableJob } = job;
+
+		console.log(
+			`Fetched transcription job with id ${message.message.MessageId}}`,
+			loggableJob,
+		);
 
 		const fileToTranscribe = await getFileFromS3(config, job.s3Key);
 
@@ -84,7 +90,7 @@ const main = async () => {
 			);
 		}
 
-		const text = await getTranscriptionText(
+		const transcripts = await getTranscriptionText(
 			containerId,
 			ffmpegResult.wavPath,
 			fileToTranscribe,
@@ -92,12 +98,14 @@ const main = async () => {
 			config.app.stage === 'PROD' ? 'medium' : 'tiny',
 		);
 
+		await uploadAllTranscriptsToS3(outputBucketUrls, transcripts);
+
 		const transcriptionOutput: TranscriptionOutput = {
 			id: job.id,
-			transcriptionSrt: text,
 			languageCode: 'en',
 			userEmail: job.userEmail,
 			originalFilename: job.originalFilename,
+			outputBucketUrls,
 		};
 
 		await publishTranscriptionOutput(
@@ -142,6 +150,46 @@ const getFileFromS3 = async (config: TranscriptionConfig, s3Key: string) => {
 	);
 
 	return file;
+};
+
+export const uploadAllTranscriptsToS3 = async (
+	destinationBucketUrls: OutputBucketUrls,
+	files: Transcripts,
+) => {
+	const getBlob = (file: string) => new Blob([file as BlobPart]);
+	const getFileName = (file: string) => path.basename(file);
+	const blobs: [string, string, Blob][] = [
+		[getFileName(files.srt), destinationBucketUrls.srt, getBlob(files.srt)],
+		[getFileName(files.json), destinationBucketUrls.json, getBlob(files.json)],
+		[getFileName(files.text), destinationBucketUrls.text, getBlob(files.text)],
+	];
+
+	try {
+		for (const blobDetail of blobs) {
+			const [fileName, url, blob] = blobDetail;
+			const response = await uploadToS3(url, blob);
+			if (!response) {
+				throw new Error(`Could not upload ${fileName} to S3`);
+			}
+			console.log(`Successfully uploaded ${fileName} to S3`);
+		}
+	} catch (error) {
+		console.error('failed to upload transcript to S3', error);
+	}
+};
+
+const uploadToS3 = async (url: string, blob: Blob) => {
+	try {
+		const response = await fetch(url, {
+			method: 'PUT',
+			body: blob,
+		});
+		const status = response.status;
+		return status === 200;
+	} catch (error) {
+		console.error('upload error:', error);
+		return false;
+	}
 };
 
 main();

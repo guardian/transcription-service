@@ -64,7 +64,12 @@ const getApp = async () => {
 	apiRouter.post('/send-message', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
-			const sendResult = await sendMessage(sqsClient, config.app.taskQueueUrl);
+			const sendResult = await sendMessage(
+				sqsClient,
+				config.app.taskQueueUrl,
+				config.app.transcriptionOutputBucket,
+				config.aws.region,
+			);
 			if (isFailure(sendResult)) {
 				res.status(500).send(sendResult.errorMsg);
 				return;
@@ -147,6 +152,7 @@ const getApp = async () => {
 				config.app.sourceMediaBucket,
 				req.user?.email ?? 'not found',
 				queryParams.data.fileName,
+				60,
 			);
 
 			res.set('Cache-Control', 'no-cache');
