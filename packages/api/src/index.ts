@@ -147,10 +147,20 @@ const getApp = async () => {
 
 	app.use('/api', apiRouter);
 
+	const clientPages = ['export'];
+
 	if (runningOnAws) {
 		app.use(express.static('client'));
-		app.get('/*', (req, res) => {
-			res.sendFile(path.resolve(__dirname, 'client', 'index.html'));
+		app.get('/:page', (req, res) => {
+			if (req.params.page && !clientPages.includes(req.params.page)) {
+				res
+					.status(404)
+					.send(
+						`Endpoint not supported. Valid endpoints: /, /${clientPages.join(', /')}`,
+					);
+			}
+			const page = req.params.page ? `${req.params.page}.html` : 'index.html';
+			res.sendFile(path.resolve(__dirname, 'client', page));
 		});
 	} else {
 		if (emulateProductionLocally) {
@@ -159,7 +169,8 @@ const getApp = async () => {
 					path.resolve(__dirname, '..', '..', '..', 'packages/client/out'),
 				),
 			);
-			app.get('/*', (req: Request, res: Response) => {
+			app.get('/:page', (req: Request, res: Response) => {
+				const page = req.params.page ? `${req.params.page}.html` : 'index.html';
 				res.sendFile(
 					path.resolve(
 						__dirname,
@@ -167,7 +178,7 @@ const getApp = async () => {
 						'..',
 						'..',
 						'packages/client/out',
-						'index.html',
+						page,
 					),
 				);
 			});
