@@ -20,6 +20,10 @@ const uploadToS3 = async (url: string, blob: Blob) => {
 export const UploadForm = ({ auth }: { auth: AuthState }) => {
 	const [status, setStatus] = useState<boolean | undefined>(undefined);
 
+	if (!auth.token) {
+		return 'Missing auth token';
+	}
+
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 
@@ -41,6 +45,10 @@ export const UploadForm = ({ auth }: { auth: AuthState }) => {
 			`/signedUrl?${urlParams.toString()}`,
 			auth.token,
 		);
+		if (!response) {
+			console.error('Failed to fetch signed url');
+			return;
+		}
 
 		const body = SignedUrlResponseBody.safeParse(await response.json());
 		if (!body.success) {

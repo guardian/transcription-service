@@ -379,6 +379,7 @@ export class TranscriptionService extends GuStack {
 		);
 
 		transcriptTable.grantReadWriteData(outputHandlerLambda);
+		transcriptTable.grantReadWriteData(apiLambda);
 
 		const transcriptionOutputQueue = new Queue(
 			this,

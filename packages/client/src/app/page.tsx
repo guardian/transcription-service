@@ -8,7 +8,7 @@ const Home = () => {
 	const auth = useContext(AuthContext);
 	return (
 		<div>
-			<h2>This is home page</h2>
+			<h2>Upload file for transcribing</h2>
 			<UploadForm auth={auth}></UploadForm>
 		</div>
 	);

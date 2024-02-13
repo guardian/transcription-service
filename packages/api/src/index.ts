@@ -14,8 +14,18 @@ import {
 	sendMessage,
 	isFailure,
 } from '@guardian/transcription-service-backend-common';
-import { SignedUrlQueryParams } from '@guardian/transcription-service-common';
+import {
+	ClientConfig,
+	SignedUrlQueryParams,
+	TranscriptExportRequest,
+} from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
+import {
+	getDynamoClient,
+	getTranscriptionItem,
+	TranscriptionItem,
+} from '@guardian/transcription-service-backend-common/src/dynamodb';
+import { createTranscriptDocument } from './services/googleDrive';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -60,6 +70,57 @@ const getApp = async () => {
 				return;
 			}
 			res.send('Message sent');
+		}),
+	]);
+
+	apiRouter.get('/client-config', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			const clientConfig: ClientConfig = {
+				googleClientId: config.auth.clientId,
+			};
+			res.send(JSON.stringify(clientConfig));
+		}),
+	]);
+
+	apiRouter.post('/export', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			const exportRequest = TranscriptExportRequest.safeParse(req.body);
+			console.log(exportRequest);
+			const dynamoClient = getDynamoClient(
+				config.aws.region,
+				config.aws.localstackEndpoint,
+			);
+			if (exportRequest.success) {
+				const item = await getTranscriptionItem(
+					dynamoClient,
+					config.app.tableName,
+					exportRequest.data.id,
+				);
+				const parsedItem = TranscriptionItem.safeParse(item);
+				if (parsedItem.success) {
+					console.log('parsed item', parsedItem.data);
+					const exportResult = await createTranscriptDocument(
+						config,
+						`${parsedItem.data.originalFilename} transcript`,
+						exportRequest.data.oAuthTokenResponse,
+						parsedItem.data.transcript.srt,
+					);
+					console.log('Export result', exportResult);
+					res.send({
+						documentId: exportResult,
+					});
+					return;
+				}
+				const msg = `Failed to parse item ${exportRequest.data.id} from dynamodb. Error: ${parsedItem.error.message}`;
+				console.error(msg);
+				res.status(500).send(msg);
+				return;
+			}
+			const msg = `Failed to parse export request ${exportRequest.error.message}`;
+			console.error(msg);
+			res.status(400).send(msg);
 		}),
 	]);
 
