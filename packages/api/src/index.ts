@@ -16,6 +16,7 @@ import {
 } from '@guardian/transcription-service-backend-common';
 import { SignedUrlQueryParams } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
+import { APIGatewayProxyEvent, S3Event, S3EventRecord } from 'aws-lambda';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -130,18 +131,34 @@ const getApp = async () => {
 	return app;
 };
 
-let api;
+const isS3Event = (event: S3Event | APIGatewayProxyEvent): event is S3Event =>
+	'Records' in event;
+
+let handler;
 if (runningOnAws) {
 	console.log('Running on lambda');
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let serverlessExpressHandler: any;
-	const serverlessHandler = getApp().then(
-		(app) => (serverlessExpressHandler = serverlessExpress({ app }).handler),
-	);
+	handler = async (event: S3Event | APIGatewayProxyEvent, context: any) => {
+		// Lambda has either been triggered by API Gateway or by a file being PUT
+		// to the source media S3 bucket.
+		if (isS3Event(event)) {
+			console.log('handle s3 event');
+			event.Records.map((record: S3EventRecord) => {
+				// log every k and v in record
+				Object.entries(record).forEach(([key, value]) => {
+					console.log(`${key}: ${value}`);
+				});
+			});
+			return;
+		}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	api = async (event: any, context: any) => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		let serverlessExpressHandler: any;
+		const serverlessHandler = getApp().then(
+			(app) => (serverlessExpressHandler = serverlessExpress({ app }).handler),
+		);
+
 		if (!serverlessExpressHandler) {
 			await serverlessHandler;
 		}
@@ -158,4 +175,4 @@ if (runningOnAws) {
 	});
 }
 
-export { api };
+export { handler };
