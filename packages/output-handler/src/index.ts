@@ -2,6 +2,12 @@ import { Handler } from 'aws-lambda';
 import { sendEmail, getSESClient } from './ses';
 import { IncomingSQSEvent } from './sqs-event-types';
 import { getConfig } from '@guardian/transcription-service-backend-common';
+import {
+	getDynamoClient,
+	TranscriptionItem,
+	writeTranscriptionItem,
+} from '@guardian/transcription-service-backend-common/src/dynamodb';
+import { testMessage } from '../test/testMessage';
 
 const messageBody = (
 	transcriptId: string,
@@ -21,7 +27,7 @@ const messageBody = (
 	`;
 };
 
-const handler: Handler = async (event) => {
+const processMessage = async (event: unknown) => {
 	const config = await getConfig();
 	const sesClient = getSESClient(config.aws.region);
 
@@ -33,6 +39,24 @@ const handler: Handler = async (event) => {
 
 	for (const record of parsedEvent.data.Records) {
 		const transcriptionOutput = record.body.Message;
+
+		const dynamoItem: TranscriptionItem = {
+			id: transcriptionOutput.id,
+			originalFilename: transcriptionOutput.originalFilename,
+			transcript: {
+				srt: transcriptionOutput.transcriptionSrt,
+				text: '',
+				json: '',
+			},
+			userEmail: transcriptionOutput.userEmail,
+		};
+
+		await writeTranscriptionItem(
+			getDynamoClient(config.aws.region, config.aws.localstackEndpoint),
+			config.app.tableName,
+			dynamoItem,
+		);
+
 		await sendEmail(
 			sesClient,
 			config.app.emailNotificationFromAddress,
@@ -46,8 +70,15 @@ const handler: Handler = async (event) => {
 			),
 		);
 	}
+};
 
+const handler: Handler = async (event) => {
+	await processMessage(event);
 	return 'Finished processing Event';
 };
 
+// when running locally bypass the handler
+if (!process.env['AWS_EXECUTION_ENV']) {
+	processMessage(testMessage);
+}
 export { handler as outputHandler };
