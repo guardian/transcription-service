@@ -7,6 +7,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuAmiParameter",
       "GuCertificate",
       "GuS3Bucket",
+      "GuS3Bucket",
       "GuDistributionBucketParameter",
       "GuApiLambda",
       "GuPolicy",
@@ -150,20 +151,36 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                 "s3:DeleteObject",
               ],
               "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    {
-                      "Fn::GetAtt": [
-                        "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040",
-                        "Arn",
-                      ],
-                    },
-                    "/*",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
                   ],
-                ],
-              },
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "TranscriptionServiceOutputBucketTranscriptionservice35996ED2",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
             },
           ],
           "Version": "2012-10-17",
@@ -343,20 +360,36 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                 "s3:PutObject",
               ],
               "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    {
-                      "Fn::GetAtt": [
-                        "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040",
-                        "Arn",
-                      ],
-                    },
-                    "/*",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
                   ],
-                ],
-              },
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "TranscriptionServiceOutputBucketTranscriptionservice35996ED2",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
             },
           ],
           "Version": "2012-10-17",
@@ -465,6 +498,92 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         "TopicName": "transcription-service-destination-topic-TEST",
       },
       "Type": "AWS::SNS::Topic",
+    },
+    "TranscriptTableA6F8B506": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "id",
+            "AttributeType": "S",
+          },
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "id",
+            "KeyType": "HASH",
+          },
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 1,
+          "WriteCapacityUnits": 1,
+        },
+        "TableName": "transcription-service-TEST",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::DynamoDB::Table",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TranscriptionServiceOutputBucketTranscriptionservice35996ED2": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "BucketName": "transcription-service-output-test",
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "ExpirationInDays": 7,
+              "Status": "Enabled",
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
     },
     "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040": {
       "DeletionPolicy": "Retain",
@@ -1639,6 +1758,34 @@ service transcription-service-worker start",
                   ],
                 ],
               },
+            },
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "TranscriptTableA6F8B506",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Ref": "AWS::NoValue",
+                },
+              ],
             },
             {
               "Action": [
