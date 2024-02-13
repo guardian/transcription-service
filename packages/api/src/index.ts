@@ -98,6 +98,12 @@ const getApp = async () => {
 					config.app.tableName,
 					exportRequest.data.id,
 				);
+				if (!item) {
+					const msg = `Failed to fetch item with id ${exportRequest.data.id} from database.`;
+					console.error(msg);
+					res.status(500).send(msg);
+					return;
+				}
 				const parsedItem = TranscriptionItem.safeParse(item);
 				if (parsedItem.success) {
 					const exportResult = await createTranscriptDocument(
