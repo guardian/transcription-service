@@ -37,8 +37,11 @@ import {
 } from 'aws-cdk-lib/aws-ec2';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
-import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
-import { HttpMethods } from 'aws-cdk-lib/aws-s3';
+import {
+	S3EventSource,
+	SqsEventSource,
+} from 'aws-cdk-lib/aws-lambda-event-sources';
+import { EventType, HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import {
 	EmailSubscription,
@@ -182,6 +185,13 @@ export class TranscriptionService extends GuStack {
 		});
 
 		apiLambda.addToRolePolicy(getParametersPolicy);
+
+		// trigger the api lambda when file uploaded to S# bucket
+		apiLambda.addEventSource(
+			new S3EventSource(sourceMediaBucket, {
+				events: [EventType.OBJECT_CREATED_PUT],
+			}),
+		);
 
 		// The custom domain name mapped to this API
 		const apiDomain = apiLambda.api.domainName;
