@@ -66,11 +66,9 @@ const exportTranscript = async (
 		driveFileScope,
 	);
 
-	// the return type from google doesn't actually respect the TokenResponse interface. Our zod type is more accurate, so
-	// we have to ts-ignore here
 	const exportRequest: TranscriptExportRequest = {
 		id: transcriptId,
-		// @ts-expect-error
+		// @ts-expect-error (return object from google isn't actually a TokenResponse, our zod type is more accurate)
 		oAuthTokenResponse: tokenResponse,
 	};
 
