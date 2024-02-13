@@ -140,6 +140,7 @@ if (runningOnAws) {
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	handler = async (event: S3Event | APIGatewayProxyEvent, context: any) => {
+		console.log('event', event);
 		// Lambda has either been triggered by API Gateway or by a file being PUT
 		// to the source media S3 bucket.
 		if (isS3Event(event)) {
