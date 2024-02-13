@@ -70,7 +70,7 @@ const exportTranscript = async (
 	// we have to ts-ignore here
 	const exportRequest: TranscriptExportRequest = {
 		id: transcriptId,
-		// @ts-ignore
+		// @ts-expect-error
 		oAuthTokenResponse: tokenResponse,
 	};
 
