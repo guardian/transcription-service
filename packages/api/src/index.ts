@@ -100,14 +100,12 @@ const getApp = async () => {
 				);
 				const parsedItem = TranscriptionItem.safeParse(item);
 				if (parsedItem.success) {
-					console.log('parsed item', parsedItem.data);
 					const exportResult = await createTranscriptDocument(
 						config,
 						`${parsedItem.data.originalFilename} transcript`,
 						exportRequest.data.oAuthTokenResponse,
 						parsedItem.data.transcript.srt,
 					);
-					console.log('Export result', exportResult);
 					res.send({
 						documentId: exportResult,
 					});

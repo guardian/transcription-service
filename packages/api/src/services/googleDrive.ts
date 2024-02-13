@@ -3,7 +3,7 @@ import { google, drive_v3, docs_v1 } from 'googleapis';
 import { TranscriptionConfig } from '@guardian/transcription-service-backend-common';
 import { ZTokenResponse } from '@guardian/transcription-service-common';
 
-export const createTranscriptFolder = async (
+export const getOrCreateTranscriptFolder = async (
 	drive: drive_v3.Drive,
 	folderName: string,
 ) => {
@@ -12,15 +12,26 @@ export const createTranscriptFolder = async (
 		mimeType: 'application/vnd.google-apps.folder',
 	};
 	try {
+		// first see if there is already a folder matching folderName
+		const existingFolders = await drive.files.list({
+			q: `mimeType='application/vnd.google-apps.folder' and name ='${folderName}' and trashed=false`,
+			spaces: 'drive',
+		});
+		// there could be multiple folders with this name, let's upload to the first one
+		const [firstMatch] = existingFolders.data.files ?? [];
+		if (firstMatch) {
+			return firstMatch.id;
+		}
+
+		// create a new folder
 		const file = await drive.files.create({
 			requestBody: fileMetadata,
 			fields: 'id',
 		});
-		console.log('Folder Id:', file.data.id);
 		return file.data.id;
 	} catch (err) {
 		console.error('Failed to create folder', err);
-		throw err;
+		return null;
 	}
 };
 
@@ -75,18 +86,6 @@ export const uploadToGoogleDocs = async (
 							},
 						},
 					},
-					// {
-					//     updateParagraphStyle: {
-					//         paragraphStyle: {
-					//             namedStyleType: "NORMAL_TEXT"
-					//         },
-					//         fields: "namedStyleType",
-					//         range: {
-					//             startIndex: fileName.length,
-					//             endIndex: text.length+1
-					//         }
-					//     }
-					// },
 				],
 			},
 		});
@@ -107,7 +106,7 @@ export const createTranscriptDocument = async (
 	const drive = google.drive({ version: 'v3', auth: oAuth2Client });
 	const docs = google.docs({ version: 'v1', auth: oAuth2Client });
 
-	const folderId = await createTranscriptFolder(
+	const folderId = await getOrCreateTranscriptFolder(
 		drive,
 		'Guardian Transcribe Tool',
 	);
