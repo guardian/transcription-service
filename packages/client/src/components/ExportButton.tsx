@@ -9,7 +9,7 @@ import { AuthContext } from '@/app/template';
 import Script from 'next/script';
 import { useSearchParams } from 'next/navigation';
 
-const getClientConfig = async (authToken?: string): Promise<ClientConfig> => {
+const getClientConfig = async (authToken: string): Promise<ClientConfig> => {
 	const configResp = await authFetch('/api/client-config', authToken);
 	if (!configResp) {
 		throw new Error('Failed to fetch client config');
@@ -51,7 +51,7 @@ const promiseInitTokenClient = (
 };
 
 const exportTranscript = async (
-	authToken: string | undefined,
+	authToken: string,
 	transcriptId: string,
 ): Promise<Response | null> => {
 	const config = await getClientConfig(authToken);
@@ -89,8 +89,9 @@ const ExportButton = () => {
 	const searchParams = useSearchParams();
 	const [docId, setDocId] = useState<string | undefined>(undefined);
 	const [loading, setLoading] = useState(false);
-	if (!auth.token) {
-		return <p>Cannot export -missing auth token</p>;
+	const token = auth.token;
+	if (!token) {
+		return <p>Cannot export - missing auth token</p>;
 	}
 	const transcriptId = searchParams.get('transcriptId');
 	if (!transcriptId) {
@@ -112,7 +113,7 @@ const ExportButton = () => {
 			<button
 				onClick={async () => {
 					setLoading(true);
-					const response = await exportTranscript(auth.token, transcriptId);
+					const response = await exportTranscript(token, transcriptId);
 					setLoading(false);
 					const parsedResponse = ExportResponse.safeParse(response);
 					if (parsedResponse.success) {

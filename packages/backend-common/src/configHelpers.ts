@@ -21,7 +21,6 @@ export const getParameters = async (
 					NextToken: nextToken,
 				});
 			if (data.Parameters) {
-				console.log('Paramaters have been fetched');
 				parameters = parameters.concat(data.Parameters);
 			}
 			nextToken = data.NextToken;
