@@ -4,17 +4,17 @@ export enum DestinationService {
 	TranscriptionService = 'TranscriptionService',
 }
 
-const OutputSignedUrl = z.object({
+const SignedUrl = z.object({
 	url: z.string(),
 	key: z.string(),
 });
 
-export type OutputSignedUrl = z.infer<typeof OutputSignedUrl>;
+export type SignedUrl = z.infer<typeof SignedUrl>;
 
 const OutputBucketUrls = z.object({
-	srt: OutputSignedUrl,
-	text: OutputSignedUrl,
-	json: OutputSignedUrl,
+	srt: SignedUrl,
+	text: SignedUrl,
+	json: SignedUrl,
 });
 
 export type OutputBucketUrls = z.infer<typeof OutputBucketUrls>;
