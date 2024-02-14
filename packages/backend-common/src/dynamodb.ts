@@ -24,6 +24,9 @@ export const Transcript = z.object({
 	text: z.string(),
 	json: z.string(),
 });
+
+export type Transcript = z.infer<typeof Transcript>;
+
 export const TranscriptionItem = z.object({
 	id: z.string(),
 	originalFilename: z.string(),
