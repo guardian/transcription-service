@@ -162,9 +162,6 @@ export const getTranscriptionText = async (
 		model,
 	);
 	console.log(`result file: ${path.resolve(path.parse(file).dir, resultFile)}`);
-	// const transcriptText = readFile(
-	// 	path.resolve(path.parse(file).dir, resultFile),
-	// );
 
 	const res = {
 		srt: path.resolve(path.parse(file).dir, `${resultFile}.srt`),

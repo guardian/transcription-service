@@ -33,8 +33,10 @@ export const uploadAllTranscriptsToS3 = async (
 	for (const blobDetail of blobs) {
 		const [fileName, url, blob] = blobDetail;
 		const response = await uploadToS3(url, blob);
-		if (!response) {
-			throw new Error(`Could not upload file: ${fileName} to S3`);
+		if (!response.isSuccess) {
+			throw new Error(
+				`Could not upload file: ${fileName} to S3! ${response.errorMsg}`,
+			);
 		}
 		console.log(`Successfully uploaded ${fileName} to S3`);
 	}

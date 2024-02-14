@@ -47,9 +47,9 @@ export const UploadForm = () => {
 			return;
 		}
 
-		const uploadSuccess = await uploadToS3(body.data.presignedS3Url, blob);
-		setStatus(uploadSuccess);
-		if (uploadSuccess) {
+		const uploadStatus = await uploadToS3(body.data.presignedS3Url, blob);
+		setStatus(uploadStatus.isSuccess);
+		if (uploadStatus.isSuccess) {
 			maybeFileInput.value = '';
 		}
 	};
