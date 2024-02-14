@@ -1,12 +1,8 @@
 export const authFetch = async (
 	url: string,
-	token?: string,
+	token: string,
 	init?: RequestInit,
-): Promise<Response | null> => {
-	if (!token) {
-		console.error('Missing auth token');
-		return null;
-	}
+): Promise<Response> => {
 	const request = new Request(url, init);
 
 	request.headers.set('Authorization', `Bearer ${token}`);
@@ -15,6 +11,5 @@ export const authFetch = async (
 		headers: request.headers,
 	});
 
-	const res = await fetch(authRequest);
-	return res;
+	return await fetch(authRequest);
 };

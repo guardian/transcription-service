@@ -1,7 +1,7 @@
 import { authFetch } from '@/helpers';
-import { AuthState } from '@/types';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { SignedUrlResponseBody } from '@guardian/transcription-service-common';
+import { AuthContext } from '@/app/template';
 
 const uploadToS3 = async (url: string, blob: Blob) => {
 	try {
@@ -17,11 +17,13 @@ const uploadToS3 = async (url: string, blob: Blob) => {
 	}
 };
 
-export const UploadForm = ({ auth }: { auth: AuthState }) => {
+export const UploadForm = () => {
 	const [status, setStatus] = useState<boolean | undefined>(undefined);
+	const auth = useContext(AuthContext);
+	const token = auth.token;
 
-	if (!auth.token) {
-		return 'Missing auth token';
+	if (!token) {
+		return <p>Cannot upload - missing auth token</p>;
 	}
 
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -43,7 +45,7 @@ export const UploadForm = ({ auth }: { auth: AuthState }) => {
 		const urlParams = new URLSearchParams({ fileName: file.name });
 		const response = await authFetch(
 			`/signedUrl?${urlParams.toString()}`,
-			auth.token,
+			token,
 		);
 		if (!response) {
 			console.error('Failed to fetch signed url');
