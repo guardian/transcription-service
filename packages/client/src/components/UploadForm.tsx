@@ -1,21 +1,10 @@
 import { authFetch } from '@/helpers';
 import { AuthState } from '@/types';
 import { useState } from 'react';
-import { SignedUrlResponseBody } from '@guardian/transcription-service-common';
-
-const uploadToS3 = async (url: string, blob: Blob) => {
-	try {
-		const response = await fetch(url, {
-			method: 'PUT',
-			body: blob,
-		});
-		const status = response.status;
-		return status === 200;
-	} catch (error) {
-		console.error('upload error:', error);
-		return false;
-	}
-};
+import {
+	SignedUrlResponseBody,
+	uploadToS3,
+} from '@guardian/transcription-service-common';
 
 export const UploadForm = ({ auth }: { auth: AuthState }) => {
 	const [status, setStatus] = useState<boolean | undefined>(undefined);
