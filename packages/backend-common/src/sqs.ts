@@ -53,15 +53,15 @@ export const isFailure = (
 ): result is SQSFailure => result.status === SQSStatus.Failure;
 
 export const sendMessage = async (
+	id: string,
 	client: SQSClient,
 	queueUrl: string,
 	outputBucket: string,
 	region: string,
+	userEmail: string,
+	originalFilename: string,
+	inputSignedUrl: string,
 ): Promise<SendResult> => {
-	const userEmail = 'digital.investigations@theguardian.com';
-	const originalFilename = 'test.mp3';
-	const id = 'my-first-transcription';
-
 	const signedUrls = await generateOutputSignedUrls(
 		id,
 		region,
@@ -73,7 +73,7 @@ export const sendMessage = async (
 
 	const job: TranscriptionJob = {
 		id, // id of the source file
-		s3Key: 'tifsample.wav',
+		inputSignedUrl,
 		retryCount: 0,
 		sentTimestamp: new Date().toISOString(),
 		userEmail,

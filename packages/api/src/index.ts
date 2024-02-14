@@ -64,11 +64,19 @@ const getApp = async () => {
 	apiRouter.post('/send-message', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
+			const userEmail = 'digital.investigations@theguardian.com';
+			const originalFilename = 'test.mp3';
+			const id = 'my-first-transcription';
+			const signedUrl = 'tifsample.wav';
 			const sendResult = await sendMessage(
+				id,
 				sqsClient,
 				config.app.taskQueueUrl,
 				config.app.transcriptionOutputBucket,
 				config.aws.region,
+				userEmail,
+				originalFilename,
+				signedUrl,
 			);
 			if (isFailure(sendResult)) {
 				res.status(500).send(sendResult.errorMsg);
