@@ -11,7 +11,6 @@ import { testMessage } from '../test/testMessage';
 
 const messageBody = (
 	transcriptId: string,
-	transcript: string,
 	originalFilename: string,
 	rootUrl: string,
 ): string => {
@@ -19,11 +18,6 @@ const messageBody = (
 	return `
 		<h1>Transcript for ${originalFilename} ready</h1>
 		<p>Click <a href="${exportUrl}">here</a> to export to a google doc.</p>
-		<h2>Transcript</h2>
-		${transcript
-			.split('\n')
-			.map((line) => `<p>${line}</p>`)
-			.join('')}
 	`;
 };
 
@@ -64,7 +58,6 @@ const processMessage = async (event: unknown) => {
 			transcriptionOutput.originalFilename,
 			messageBody(
 				transcriptionOutput.id,
-				transcriptionOutput.transcriptionSrt,
 				transcriptionOutput.originalFilename,
 				config.app.rootUrl,
 			),
