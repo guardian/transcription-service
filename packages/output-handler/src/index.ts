@@ -15,6 +15,10 @@ import {
 import type { Transcripts } from '@guardian/transcription-service-backend-common/src/dynamodb';
 import { testMessage } from '../test/testMessage';
 import { type OutputBucketKeys } from '@guardian/transcription-service-common';
+import {
+	MetricsService,
+	TranscriptionFailureMetric,
+} from '@guardian/transcription-service-backend-common/src/metrics';
 
 const messageBody = (
 	transcriptId: string,
@@ -71,6 +75,12 @@ const processMessage = async (event: unknown) => {
 	const config = await getConfig();
 	const sesClient = getSESClient(config.aws.region);
 
+	const metrics = new MetricsService(
+		config.app.stage,
+		config.aws.region,
+		'output-handler',
+	);
+
 	const parsedEvent = IncomingSQSEvent.safeParse(event);
 	if (!parsedEvent.success) {
 		console.error('Failed to parse SQS message', parsedEvent.error.message);
@@ -96,11 +106,12 @@ const processMessage = async (event: unknown) => {
 			userEmail: transcriptionOutput.userEmail,
 		};
 
-		await writeTranscriptionItem(
-			getDynamoClient(config.aws.region, config.aws.localstackEndpoint),
-			config.app.tableName,
-			dynamoItem,
-		);
+		try {
+			await writeTranscriptionItem(
+				getDynamoClient(config.aws.region, config.aws.localstackEndpoint),
+				config.app.tableName,
+				dynamoItem,
+			);
 
 		await sendEmail(
 			sesClient,
@@ -110,9 +121,19 @@ const processMessage = async (event: unknown) => {
 			messageBody(
 				transcriptionOutput.id,
 				transcriptionOutput.originalFilename,
-				config.app.rootUrl,
-			),
-		);
+				messageBody(
+					transcriptionOutput.id,
+					transcriptionOutput.originalFilename,
+					config.app.rootUrl,
+				),
+			);
+		} catch (error) {
+			console.error(
+				'Failed to process sqs message - transcription data may be missing from dynamo or email failed to send',
+				error,
+			);
+			await metrics.putMetric(TranscriptionFailureMetric);
+		}
 	}
 };
 
