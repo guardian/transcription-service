@@ -113,13 +113,10 @@ const processMessage = async (event: unknown) => {
 				dynamoItem,
 			);
 
-		await sendEmail(
-			sesClient,
-			config.app.emailNotificationFromAddress,
-			transcriptionOutput.userEmail,
-			transcriptionOutput.originalFilename,
-			messageBody(
-				transcriptionOutput.id,
+			await sendEmail(
+				sesClient,
+				config.app.emailNotificationFromAddress,
+				transcriptionOutput.userEmail,
 				transcriptionOutput.originalFilename,
 				messageBody(
 					transcriptionOutput.id,
