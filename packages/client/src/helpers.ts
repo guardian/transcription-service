@@ -4,12 +4,7 @@ export const authFetch = async (
 	init?: RequestInit,
 ): Promise<Response> => {
 	const request = new Request(url, init);
-
 	request.headers.set('Authorization', `Bearer ${token}`);
 
-	const authRequest = new Request(request, {
-		headers: request.headers,
-	});
-
-	return await fetch(authRequest);
+	return await fetch(request);
 };

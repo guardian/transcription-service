@@ -60,6 +60,7 @@ export const exportTranscript = async (
 
 	const exportRequest: TranscriptExportRequest = {
 		id: transcriptId,
+		// @ts-expect-error (return object from google isn't actually a TokenResponse, our zod type is more accurate)
 		oAuthTokenResponse: tokenResponse,
 	};
 
