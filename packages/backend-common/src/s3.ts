@@ -1,4 +1,8 @@
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+	GetObjectCommand,
+	HeadObjectCommand,
+	S3Client,
+} from '@aws-sdk/client-s3';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl as getSignedUrlSdk } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuid4 } from 'uuid';
@@ -9,11 +13,14 @@ import { z } from 'zod';
 
 const ReadableBody = z.instanceof(Readable);
 
+let s3Client: S3Client | undefined = undefined;
 export const getS3Client = (region: string) => {
-	return new S3Client({
+	if (s3Client) return s3Client;
+	s3Client = new S3Client({
 		region,
 		useAccelerateEndpoint: true,
 	});
+	return s3Client;
 };
 
 export const getSignedUrl = (
@@ -33,6 +40,21 @@ export const getSignedUrl = (
 				'user-email': userEmail,
 				'file-name': fileName,
 			},
+		}),
+		{ expiresIn }, // override default expiration time of 15 minutes
+	);
+
+export const getDownloadSignedUrl = async (
+	region: string,
+	bucket: string,
+	key: string,
+	expiresIn: number,
+) =>
+	await getSignedUrlSdk(
+		getS3Client(region),
+		new GetObjectCommand({
+			Bucket: bucket,
+			Key: key,
 		}),
 		{ expiresIn }, // override default expiration time of 15 minutes
 	);
@@ -73,4 +95,19 @@ export const getFile = async (
 		console.error(e);
 		throw e;
 	}
+};
+
+export const getObjectMetadata = async (
+	region: string,
+	bucket: string,
+	key: string,
+) => {
+	const client = getS3Client(region);
+	const data = await client.send(
+		new HeadObjectCommand({
+			Bucket: bucket,
+			Key: key,
+		}),
+	);
+	return data.Metadata;
 };

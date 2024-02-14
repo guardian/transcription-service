@@ -13,7 +13,7 @@ import {
 } from '@guardian/transcription-service-common';
 import { getSignedUrl } from '@guardian/transcription-service-backend-common';
 
-enum SQSStatus {
+export enum SQSStatus {
 	Success,
 	Failure,
 }

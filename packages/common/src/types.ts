@@ -57,3 +57,11 @@ export const SignedUrlResponseBody = z.object({
 	presignedS3Url: z.string(),
 });
 export type SignedUrlResponseBody = z.infer<typeof SignedUrlResponseBody>;
+
+export const inputBucketObjectMetadata = z.object({
+	'user-email': z.string(),
+	'file-name': z.string(),
+});
+export type InputBucketObjectMetadata = z.infer<
+	typeof inputBucketObjectMetadata
+>;

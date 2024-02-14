@@ -10,11 +10,17 @@ import { Request, Response } from 'express';
 import {
 	getConfig,
 	getSignedUrl,
+	getDownloadSignedUrl,
 	getSQSClient,
 	sendMessage,
 	isFailure,
+	getObjectMetadata,
+	SQSStatus,
 } from '@guardian/transcription-service-backend-common';
-import { SignedUrlQueryParams } from '@guardian/transcription-service-common';
+import {
+	SignedUrlQueryParams,
+	inputBucketObjectMetadata,
+} from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import { APIGatewayProxyEvent, S3Event, S3EventRecord } from 'aws-lambda';
 
@@ -134,6 +140,56 @@ const getApp = async () => {
 const isS3Event = (event: S3Event | APIGatewayProxyEvent): event is S3Event =>
 	'Records' in event;
 
+const handleS3Event = async (event: S3Event) => {
+	const config = await getConfig();
+
+	const sqsClient = getSQSClient(
+		config.aws.region,
+		config.aws.localstackEndpoint,
+	);
+
+	event.Records.map(async (record: S3EventRecord) => {
+		const key = record.s3.object.key;
+		const bucket = record.s3.bucket.name;
+		const metaData = await getObjectMetadata(config.aws.region, bucket, key);
+
+		const parsedMetadata = inputBucketObjectMetadata.safeParse(metaData);
+		if (!parsedMetadata.success) {
+			console.error(
+				'S3 object creation handler was unable to parse object metadata',
+				metaData,
+			);
+			return;
+		}
+
+		// create signed URL for worker to GET file
+		const signedUrl = await getDownloadSignedUrl(
+			config.aws.region,
+			bucket,
+			key,
+			60,
+		);
+		// send message to queue
+		const sendResult = await sendMessage(
+			key,
+			sqsClient,
+			config.app.taskQueueUrl,
+			config.app.transcriptionOutputBucket,
+			config.aws.region,
+			parsedMetadata.data['user-email'],
+			parsedMetadata.data['file-name'],
+			signedUrl,
+		);
+		if (sendResult.status == SQSStatus.Success) {
+			console.log(`message for file ${key} added to task queue`);
+		} else {
+			console.error(
+				`error sending message to task queue.\n error: ${sendResult.error} \nmessage:${sendResult.errorMsg}`,
+			);
+		}
+	});
+};
+
 let handler;
 if (runningOnAws) {
 	console.log('Running on lambda');
@@ -141,16 +197,12 @@ if (runningOnAws) {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	handler = async (event: S3Event | APIGatewayProxyEvent, context: any) => {
 		console.log('event', event);
+
 		// Lambda has either been triggered by API Gateway or by a file being PUT
 		// to the source media S3 bucket.
 		if (isS3Event(event)) {
-			console.log('handle s3 event');
-			event.Records.map((record: S3EventRecord) => {
-				// log every k and v in record
-				Object.entries(record).forEach(([key, value]) => {
-					console.log(`${key}: ${value}`);
-				});
-			});
+			console.log('handling s3 event');
+			await handleS3Event(event);
 			return;
 		}
 
