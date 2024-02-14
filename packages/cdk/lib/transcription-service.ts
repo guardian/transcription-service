@@ -99,6 +99,7 @@ export class TranscriptionService extends GuStack {
 			{
 				app: APP_NAME,
 				bucketName: `transcription-service-output-${this.stage.toLowerCase()}`,
+				transferAcceleration: true,
 			},
 		);
 
@@ -134,6 +135,7 @@ export class TranscriptionService extends GuStack {
 				{
 					app: APP_NAME,
 					bucketName: `transcription-service-output-dev`,
+					transferAcceleration: true,
 				},
 			);
 			transcriptionOutputBucketDev.addLifecycleRule({
@@ -166,10 +168,19 @@ export class TranscriptionService extends GuStack {
 					new PolicyStatement({
 						effect: Effect.ALLOW,
 						actions: ['s3:GetObject', 's3:PutObject'],
-						resources: [
-							`${sourceMediaBucket.bucketArn}/*`,
-							`${outputBucket.bucketArn}/*`,
-						],
+						resources: [`${sourceMediaBucket.bucketArn}/*`],
+					}),
+				],
+			}),
+		);
+
+		apiLambda.role?.attachInlinePolicy(
+			new GuPolicy(this, 'LambdaOutputBucketInlinePolicy', {
+				statements: [
+					new PolicyStatement({
+						effect: Effect.ALLOW,
+						actions: ['s3:PutObject'],
+						resources: [`${outputBucket.bucketArn}/*`],
 					}),
 				],
 			}),
