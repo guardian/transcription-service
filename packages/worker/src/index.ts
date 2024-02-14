@@ -64,7 +64,7 @@ const main = async () => {
 			loggableJob,
 		);
 
-		const fileToTranscribe = await getFileFromS3(config, job.s3Key);
+		const fileToTranscribe = await getFileFromS3(config, job.inputSignedUrl);
 
 		// docker container to run ffmpeg and whisper on file
 		const containerId = await getOrCreateContainer(

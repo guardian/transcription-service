@@ -30,7 +30,7 @@ export type OutputBucketKeys = z.infer<typeof OutputBucketKeys>;
 export const TranscriptionJob = z.object({
 	id: z.string(),
 	originalFilename: z.string(),
-	s3Key: z.string(),
+	inputSignedUrl: z.string(),
 	retryCount: z.number(),
 	sentTimestamp: z.string(),
 	userEmail: z.string(),
