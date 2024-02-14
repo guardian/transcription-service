@@ -1,4 +1,7 @@
-import { CloudWatchClient } from '@aws-sdk/client-cloudwatch';
+import {
+	CloudWatchClient,
+	PutMetricDataInput,
+} from '@aws-sdk/client-cloudwatch';
 import { getCloudwatchClient, putMetricData } from './cloudwatch';
 
 type Metric = {
@@ -22,20 +25,20 @@ export class MetricsService {
 	}
 
 	async putMetric(metric: Metric) {
-		const metricData = {
+		const metricData: PutMetricDataInput = {
 			Namespace: `TranscriptionService`,
-			Dimensions: [
-				{
-					Name: 'Stage',
-					Value: this.stage,
-				},
-				{
-					Name: 'App',
-					Value: this.app,
-				},
-			],
 			MetricData: [
 				{
+					Dimensions: [
+						{
+							Name: 'Stage',
+							Value: this.stage,
+						},
+						{
+							Name: 'App',
+							Value: this.app,
+						},
+					],
 					MetricName: metric.name,
 					Value: 1,
 					Timestamp: new Date(),
