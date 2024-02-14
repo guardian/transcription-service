@@ -42,7 +42,6 @@ export const uploadToGoogleDocs = async (
 	fileName: string,
 	text: string,
 ): Promise<string> => {
-	console.log(fileName, text);
 	// Create using the Drive API
 	const createResponse = await drive.files.create({
 		supportsAllDrives: true,
@@ -53,45 +52,45 @@ export const uploadToGoogleDocs = async (
 		},
 	});
 
-	if (createResponse.data.id) {
-		await docs.documents.batchUpdate({
-			documentId: createResponse.data.id,
-			requestBody: {
-				requests: [
-					{
-						insertText: {
-							text: fileName,
-							location: {
-								index: 1,
-							},
-						},
-					},
-					{
-						insertText: {
-							text: '\n' + text,
-							endOfSegmentLocation: {
-								segmentId: null,
-							},
-						},
-					},
-					{
-						updateParagraphStyle: {
-							paragraphStyle: {
-								namedStyleType: 'HEADING_1',
-							},
-							fields: 'namedStyleType',
-							range: {
-								startIndex: 1,
-								endIndex: fileName.length,
-							},
-						},
-					},
-				],
-			},
-		});
-		return createResponse.data.id;
+	if (!createResponse.data.id) {
+		throw new Error('Failed to create document');
 	}
-	throw new Error('Failed to create document');
+	await docs.documents.batchUpdate({
+		documentId: createResponse.data.id,
+		requestBody: {
+			requests: [
+				{
+					insertText: {
+						text: fileName,
+						location: {
+							index: 1,
+						},
+					},
+				},
+				{
+					insertText: {
+						text: '\n' + text,
+						endOfSegmentLocation: {
+							segmentId: null,
+						},
+					},
+				},
+				{
+					updateParagraphStyle: {
+						paragraphStyle: {
+							namedStyleType: 'HEADING_1',
+						},
+						fields: 'namedStyleType',
+						range: {
+							startIndex: 1,
+							endIndex: fileName.length,
+						},
+					},
+				},
+			],
+		},
+	});
+	return createResponse.data.id;
 };
 
 export const createTranscriptDocument = async (
@@ -110,15 +109,16 @@ export const createTranscriptDocument = async (
 		drive,
 		'Guardian Transcribe Tool',
 	);
-	if (folderId) {
-		const docId = await uploadToGoogleDocs(
-			drive,
-			docs,
-			folderId,
-			fileName,
-			transcriptText,
-		);
-		return docId;
+	if (!folderId) {
+		console.error('Failed to get or create folder');
+		return null;
 	}
-	return null;
+	const docId = await uploadToGoogleDocs(
+		drive,
+		docs,
+		folderId,
+		fileName,
+		transcriptText,
+	);
+	return docId;
 };

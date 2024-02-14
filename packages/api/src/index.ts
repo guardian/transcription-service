@@ -87,44 +87,50 @@ const getApp = async () => {
 		checkAuth,
 		asyncHandler(async (req, res) => {
 			const exportRequest = TranscriptExportRequest.safeParse(req.body);
-			console.log(exportRequest);
 			const dynamoClient = getDynamoClient(
 				config.aws.region,
 				config.aws.localstackEndpoint,
 			);
-			if (exportRequest.success) {
-				const item = await getTranscriptionItem(
-					dynamoClient,
-					config.app.tableName,
-					exportRequest.data.id,
-				);
-				if (!item) {
-					const msg = `Failed to fetch item with id ${exportRequest.data.id} from database.`;
-					console.error(msg);
-					res.status(500).send(msg);
-					return;
-				}
-				const parsedItem = TranscriptionItem.safeParse(item);
-				if (parsedItem.success) {
-					const exportResult = await createTranscriptDocument(
-						config,
-						`${parsedItem.data.originalFilename} transcript`,
-						exportRequest.data.oAuthTokenResponse,
-						parsedItem.data.transcript.srt,
-					);
-					res.send({
-						documentId: exportResult,
-					});
-					return;
-				}
+			if (!exportRequest.success) {
+				const msg = `Failed to parse export request ${exportRequest.error.message}`;
+				console.error(msg);
+				res.status(400).send(msg);
+				return;
+			}
+			const item = await getTranscriptionItem(
+				dynamoClient,
+				config.app.tableName,
+				exportRequest.data.id,
+			);
+			if (!item) {
+				const msg = `Failed to fetch item with id ${exportRequest.data.id} from database.`;
+				console.error(msg);
+				res.status(500).send(msg);
+				return;
+			}
+			const parsedItem = TranscriptionItem.safeParse(item);
+			if (!parsedItem.success) {
 				const msg = `Failed to parse item ${exportRequest.data.id} from dynamodb. Error: ${parsedItem.error.message}`;
 				console.error(msg);
 				res.status(500).send(msg);
 				return;
 			}
-			const msg = `Failed to parse export request ${exportRequest.error.message}`;
-			console.error(msg);
-			res.status(400).send(msg);
+			const exportResult = await createTranscriptDocument(
+				config,
+				`${parsedItem.data.originalFilename} transcript`,
+				exportRequest.data.oAuthTokenResponse,
+				parsedItem.data.transcript.srt,
+			);
+			if (!exportResult) {
+				const msg = `Failed to create google document for item with id ${parsedItem.data.id}`;
+				console.error(msg);
+				res.status(500).send(msg);
+				return;
+			}
+			res.send({
+				documentId: exportResult,
+			});
+			return;
 		}),
 	]);
 
