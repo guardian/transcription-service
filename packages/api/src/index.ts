@@ -161,6 +161,7 @@ const getApp = async () => {
 				req.user?.email ?? 'not found',
 				queryParams.data.fileName,
 				60,
+				true,
 			);
 
 			res.set('Cache-Control', 'no-cache');

@@ -99,7 +99,6 @@ export class TranscriptionService extends GuStack {
 			{
 				app: APP_NAME,
 				bucketName: `transcription-service-output-${this.stage.toLowerCase()}`,
-				transferAcceleration: true,
 			},
 		);
 
@@ -135,7 +134,6 @@ export class TranscriptionService extends GuStack {
 				{
 					app: APP_NAME,
 					bucketName: `transcription-service-output-dev`,
-					transferAcceleration: true,
 				},
 			);
 			transcriptionOutputBucketDev.addLifecycleRule({

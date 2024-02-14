@@ -227,6 +227,7 @@ const generateOutputSignedUrls = async (
 		userEmail,
 		originalFilename,
 		expiresIn,
+		false,
 		srtKey,
 	);
 	const textSignedS3Url = await getSignedUrl(
@@ -235,6 +236,7 @@ const generateOutputSignedUrls = async (
 		userEmail,
 		originalFilename,
 		expiresIn,
+		false,
 		jsonKey,
 	);
 	const jsonSignedS3Url = await getSignedUrl(
@@ -243,6 +245,7 @@ const generateOutputSignedUrls = async (
 		userEmail,
 		originalFilename,
 		expiresIn,
+		false,
 		textKey,
 	);
 

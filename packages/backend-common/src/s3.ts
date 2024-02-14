@@ -9,10 +9,10 @@ import { z } from 'zod';
 
 const ReadableBody = z.instanceof(Readable);
 
-export const getS3Client = (region: string) => {
+export const getS3Client = (region: string, useAccelerateEndpoint: boolean) => {
 	return new S3Client({
 		region,
-		useAccelerateEndpoint: true,
+		useAccelerateEndpoint,
 	});
 };
 
@@ -22,10 +22,11 @@ export const getSignedUrl = (
 	userEmail: string,
 	fileName: string,
 	expiresIn: number,
+	useAccelerateEndpoint: boolean,
 	id?: string,
 ) =>
 	getSignedUrlSdk(
-		getS3Client(region),
+		getS3Client(region, useAccelerateEndpoint),
 		new PutObjectCommand({
 			Bucket: bucket,
 			Key: id || uuid4(),
