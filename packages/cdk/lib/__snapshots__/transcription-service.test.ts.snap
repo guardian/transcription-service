@@ -11,6 +11,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuDistributionBucketParameter",
       "GuApiLambda",
       "GuPolicy",
+      "GuPolicy",
       "GuCname",
       "GuLoggingStreamNameParameter",
       "GuPolicy",
@@ -360,41 +361,59 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                 "s3:PutObject",
               ],
               "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
                   ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "TranscriptionServiceOutputBucketTranscriptionservice35996ED2",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
         },
         "PolicyName": "LambdaMediaUploadBucketInlinePolicyD28A1181",
+        "Roles": [
+          {
+            "Ref": "transcriptionserviceapiServiceRole0EF40E0F",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "LambdaOutputBucketInlinePolicyC1164987": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:PutObject",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "TranscriptionServiceOutputBucketTranscriptionservice35996ED2",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "LambdaOutputBucketInlinePolicyC1164987",
         "Roles": [
           {
             "Ref": "transcriptionserviceapiServiceRole0EF40E0F",
@@ -544,6 +563,9 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
     "TranscriptionServiceOutputBucketTranscriptionservice35996ED2": {
       "DeletionPolicy": "Retain",
       "Properties": {
+        "AccelerateConfiguration": {
+          "AccelerationStatus": "Enabled",
+        },
         "BucketName": "transcription-service-output-test",
         "LifecycleConfiguration": {
           "Rules": [
@@ -1182,6 +1204,34 @@ service transcription-service-worker start",
                 ],
               },
             },
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "TranscriptTableA6F8B506",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Ref": "AWS::NoValue",
+                },
+              ],
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -1810,6 +1860,24 @@ service transcription-service-worker start",
               ],
               "Effect": "Allow",
               "Resource": "*",
+            },
+            {
+              "Action": "s3:GetObject",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "TranscriptionServiceOutputBucketTranscriptionservice35996ED2",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
             },
             {
               "Action": [
