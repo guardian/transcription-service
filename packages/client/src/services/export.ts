@@ -48,11 +48,8 @@ const promiseInitTokenClient = (
 export const exportTranscript = async (
 	authToken: string,
 	transcriptId: string,
-): Promise<Response | null> => {
+): Promise<Response> => {
 	const config = await getClientConfig(authToken);
-	if (config === null) {
-		throw Error('Client config unavailable. Cannot authenticate with Google');
-	}
 
 	const driveFileScope = 'https://www.googleapis.com/auth/drive.file';
 
@@ -63,7 +60,6 @@ export const exportTranscript = async (
 
 	const exportRequest: TranscriptExportRequest = {
 		id: transcriptId,
-		// @ts-expect-error (return object from google isn't actually a TokenResponse, our zod type is more accurate)
 		oAuthTokenResponse: tokenResponse,
 	};
 
@@ -74,8 +70,5 @@ export const exportTranscript = async (
 		},
 		body: JSON.stringify(exportRequest),
 	});
-	if (exportResponse) {
-		return exportResponse.json();
-	}
-	return null;
+	return exportResponse;
 };

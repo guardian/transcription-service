@@ -10,6 +10,9 @@ const ExportButton = () => {
 	const searchParams = useSearchParams();
 	const [docId, setDocId] = useState<string | undefined>(undefined);
 	const [loading, setLoading] = useState(false);
+	const [exportFailed, setExportFailed] = useState<string | undefined>(
+		undefined,
+	);
 	const token = auth.token;
 	// TODO: once we have some CSS/component library, tidy up this messy error handling
 	if (!token) {
@@ -18,6 +21,9 @@ const ExportButton = () => {
 	const transcriptId = searchParams.get('transcriptId');
 	if (!transcriptId) {
 		return <p>Cannot export -missing transcript id</p>;
+	}
+	if (exportFailed) {
+		return <p>Export failed with error {exportFailed}</p>;
 	}
 	if (loading) {
 		return 'exporting....';
@@ -37,10 +43,24 @@ const ExportButton = () => {
 					setLoading(true);
 					const response = await exportTranscript(token, transcriptId);
 					setLoading(false);
-					const parsedResponse = ExportResponse.safeParse(response);
-					if (parsedResponse.success) {
-						setDocId(parsedResponse.data.documentId);
+					if (response && response.status !== 200) {
+						const text = await response.text();
+						setExportFailed(text);
+						return;
 					}
+					const json = await response.json();
+					const parsedResponse = ExportResponse.safeParse(json);
+					if (!parsedResponse.success) {
+						console.error(
+							'Failed to parse export response',
+							parsedResponse.error,
+						);
+						setExportFailed(
+							`Export succeeded but failed to get document id - check your google drive`,
+						);
+						return;
+					}
+					setDocId(parsedResponse.data.documentId);
 				}}
 			>
 				export
