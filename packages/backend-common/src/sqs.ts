@@ -218,13 +218,16 @@ const generateOutputSignedUrls = async (
 	expiresInDays: number,
 ): Promise<OutputBucketUrls> => {
 	const expiresIn = expiresInDays * 24 * 60;
+	const srtKey = `srt/${id}.srt`;
+	const jsonKey = `json/${id}.json`;
+	const textKey = `text/${id}.txt`;
 	const srtSignedS3Url = await getSignedUrl(
 		region,
 		outputBucket,
 		userEmail,
 		originalFilename,
 		expiresIn,
-		`srt/${id}.srt`,
+		srtKey,
 	);
 	const textSignedS3Url = await getSignedUrl(
 		region,
@@ -232,7 +235,7 @@ const generateOutputSignedUrls = async (
 		userEmail,
 		originalFilename,
 		expiresIn,
-		`text/${id}.txt`,
+		jsonKey,
 	);
 	const jsonSignedS3Url = await getSignedUrl(
 		region,
@@ -240,12 +243,12 @@ const generateOutputSignedUrls = async (
 		userEmail,
 		originalFilename,
 		expiresIn,
-		`json/${id}.json`,
+		textKey,
 	);
 
 	return {
-		srt: srtSignedS3Url,
-		text: textSignedS3Url,
-		json: jsonSignedS3Url,
+		srt: { url: srtSignedS3Url, key: srtKey },
+		text: { url: textSignedS3Url, key: textKey },
+		json: { url: jsonSignedS3Url, key: jsonKey },
 	};
 };

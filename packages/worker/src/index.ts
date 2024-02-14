@@ -7,7 +7,10 @@ import {
 	deleteMessage,
 	changeMessageVisibility,
 } from '@guardian/transcription-service-backend-common';
-import { type TranscriptionOutput } from '@guardian/transcription-service-common';
+import {
+	OutputBucketKeys,
+	type TranscriptionOutput,
+} from '@guardian/transcription-service-common';
 import { getSNSClient, publishTranscriptionOutput } from './sns';
 import {
 	getTranscriptionText,
@@ -95,12 +98,18 @@ const main = async () => {
 
 		await uploadAllTranscriptsToS3(outputBucketUrls, transcripts);
 
+		const outputBucketKeys: OutputBucketKeys = {
+			srt: outputBucketUrls.srt.key,
+			json: outputBucketUrls.json.key,
+			text: outputBucketUrls.text.key,
+		};
+
 		const transcriptionOutput: TranscriptionOutput = {
 			id: job.id,
 			languageCode: 'en',
 			userEmail: job.userEmail,
 			originalFilename: job.originalFilename,
-			outputBucketUrls,
+			outputBucketKeys,
 		};
 
 		await publishTranscriptionOutput(
