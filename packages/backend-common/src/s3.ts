@@ -9,7 +9,10 @@ import { z } from 'zod';
 
 const ReadableBody = z.instanceof(Readable);
 
-export const getS3Client = (region: string, useAccelerateEndpoint: boolean) => {
+export const getS3Client = (
+	region: string,
+	useAccelerateEndpoint: boolean = false,
+) => {
 	return new S3Client({
 		region,
 		useAccelerateEndpoint,
@@ -74,4 +77,17 @@ export const getFile = async (
 		console.error(e);
 		throw e;
 	}
+};
+
+export const getFileFromS3 = async (
+	region: string,
+	destinationDirectory: string,
+	bucket: string,
+	s3Key: string,
+) => {
+	const s3Client = getS3Client(region);
+
+	const file = await getFile(s3Client, bucket, s3Key, destinationDirectory);
+
+	return file;
 };

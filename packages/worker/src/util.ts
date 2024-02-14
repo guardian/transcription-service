@@ -3,11 +3,6 @@ import {
 	uploadToS3,
 	type OutputBucketUrls,
 } from '@guardian/transcription-service-common';
-import {
-	getFile,
-	getS3Client,
-	TranscriptionConfig,
-} from '@guardian/transcription-service-backend-common';
 import path from 'path';
 
 export const uploadAllTranscriptsToS3 = async (
@@ -40,20 +35,4 @@ export const uploadAllTranscriptsToS3 = async (
 		}
 		console.log(`Successfully uploaded ${fileName} to S3`);
 	}
-};
-
-export const getFileFromS3 = async (
-	config: TranscriptionConfig,
-	s3Key: string,
-) => {
-	const s3Client = getS3Client(config.aws.region);
-
-	const file = await getFile(
-		s3Client,
-		config.app.sourceMediaBucket,
-		s3Key,
-		config.app.stage === 'DEV' ? `${__dirname}/sample` : '/tmp',
-	);
-
-	return file;
 };

@@ -4,15 +4,15 @@ import { IncomingSQSEvent } from './sqs-event-types';
 import {
 	TranscriptionConfig,
 	getConfig,
-	getFile,
-	getS3Client,
+	getFileFromS3,
+	readFile,
 } from '@guardian/transcription-service-backend-common';
 import {
 	getDynamoClient,
 	TranscriptionItem,
 	writeTranscriptionItem,
 } from '@guardian/transcription-service-backend-common/src/dynamodb';
-import type { Transcript } from '@guardian/transcription-service-backend-common/src/dynamodb';
+import type { Transcripts } from '@guardian/transcription-service-backend-common/src/dynamodb';
 import { testMessage } from '../test/testMessage';
 import { type OutputBucketKeys } from '@guardian/transcription-service-common';
 
@@ -28,33 +28,43 @@ const messageBody = (
 	`;
 };
 
-export const getFileFromS3 = async (
-	config: TranscriptionConfig,
-	s3Key: string,
-) => {
-	const s3Client = getS3Client(config.aws.region);
-
-	const file = await getFile(
-		s3Client,
-		config.app.transcriptionOutputBucket,
-		s3Key,
-		config.app.stage === 'DEV' ? `${__dirname}/sample` : '/tmp',
-	);
-
-	return file;
-};
-
 export const getTranscriptsText = async (
 	config: TranscriptionConfig,
 	outputBucketKeys: OutputBucketKeys,
-): Promise<Transcript> => {
-	const srt = await getFileFromS3(config, outputBucketKeys.srt);
-	const json = await getFileFromS3(config, outputBucketKeys.json);
-	const text = await getFileFromS3(config, outputBucketKeys.text);
+): Promise<Transcripts> => {
+	try {
+		const destinationDirectory =
+			config.app.stage === 'DEV' ? `${__dirname}/sample` : '/tmp';
+		const srtFile = await getFileFromS3(
+			config.aws.region,
+			destinationDirectory,
+			config.app.transcriptionOutputBucket,
+			outputBucketKeys.srt,
+		);
+		const jsonFile = await getFileFromS3(
+			config.aws.region,
+			destinationDirectory,
+			config.app.transcriptionOutputBucket,
+			outputBucketKeys.json,
+		);
+		const textFile = await getFileFromS3(
+			config.aws.region,
+			destinationDirectory,
+			config.app.transcriptionOutputBucket,
+			outputBucketKeys.text,
+		);
 
-	const result: Transcript = { srt, json, text };
+		const srt = readFile(srtFile);
+		const json = readFile(jsonFile);
+		const text = readFile(textFile);
 
-	return result;
+		const result: Transcripts = { srt, json, text };
+
+		return result;
+	} catch (error) {
+		console.log(`failed to get transcription texts from S3`, error);
+		throw error;
+	}
 };
 
 const processMessage = async (event: unknown) => {
@@ -78,7 +88,7 @@ const processMessage = async (event: unknown) => {
 		const dynamoItem: TranscriptionItem = {
 			id: transcriptionOutput.id,
 			originalFilename: transcriptionOutput.originalFilename,
-			transcript: {
+			transcripts: {
 				srt: transcripts.srt,
 				text: transcripts.text,
 				json: transcripts.json,

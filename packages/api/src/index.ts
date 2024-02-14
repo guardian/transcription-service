@@ -132,7 +132,7 @@ const getApp = async () => {
 				config,
 				`${parsedItem.data.originalFilename} transcript`,
 				exportRequest.data.oAuthTokenResponse,
-				parsedItem.data.transcript.srt,
+				parsedItem.data.transcripts.srt,
 			);
 			if (!exportResult) {
 				const msg = `Failed to create google document for item with id ${parsedItem.data.id}`;

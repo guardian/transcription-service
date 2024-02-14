@@ -1,6 +1,5 @@
 import { spawn } from 'child_process';
 import path from 'path';
-// import { readFile } from './util';
 
 interface ProcessResult {
 	code?: number;

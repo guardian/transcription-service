@@ -1,5 +1,6 @@
 import {
 	getConfig,
+	getFileFromS3,
 	getSQSClient,
 	getNextMessage,
 	parseTranscriptJobMessage,
@@ -20,7 +21,7 @@ import {
 import path from 'path';
 
 import { updateScaleInProtection } from './asg';
-import { getFileFromS3, uploadAllTranscriptsToS3 } from './util';
+import { uploadAllTranscriptsToS3 } from './util';
 
 const main = async () => {
 	const config = await getConfig();
@@ -64,7 +65,15 @@ const main = async () => {
 			loggableJob,
 		);
 
-		const fileToTranscribe = await getFileFromS3(config, job.inputSignedUrl);
+		const destinationDirectory =
+			config.app.stage === 'DEV' ? `${__dirname}/sample` : '/tmp';
+
+		const fileToTranscribe = await getFileFromS3(
+			config.aws.region,
+			destinationDirectory,
+			config.app.sourceMediaBucket,
+			job.inputSignedUrl,
+		);
 
 		// docker container to run ffmpeg and whisper on file
 		const containerId = await getOrCreateContainer(
