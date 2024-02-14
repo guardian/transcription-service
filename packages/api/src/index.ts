@@ -14,8 +14,18 @@ import {
 	sendMessage,
 	isFailure,
 } from '@guardian/transcription-service-backend-common';
-import { SignedUrlQueryParams } from '@guardian/transcription-service-common';
+import {
+	ClientConfig,
+	SignedUrlQueryParams,
+	TranscriptExportRequest,
+} from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
+import {
+	getDynamoClient,
+	getTranscriptionItem,
+	TranscriptionItem,
+} from '@guardian/transcription-service-backend-common/src/dynamodb';
+import { createTranscriptDocument } from './services/googleDrive';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -63,6 +73,67 @@ const getApp = async () => {
 		}),
 	]);
 
+	apiRouter.get('/client-config', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			const clientConfig: ClientConfig = {
+				googleClientId: config.auth.clientId,
+			};
+			res.send(JSON.stringify(clientConfig));
+		}),
+	]);
+
+	apiRouter.post('/export', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			const exportRequest = TranscriptExportRequest.safeParse(req.body);
+			const dynamoClient = getDynamoClient(
+				config.aws.region,
+				config.aws.localstackEndpoint,
+			);
+			if (!exportRequest.success) {
+				const msg = `Failed to parse export request ${exportRequest.error.message}`;
+				console.error(msg);
+				res.status(400).send(msg);
+				return;
+			}
+			const item = await getTranscriptionItem(
+				dynamoClient,
+				config.app.tableName,
+				exportRequest.data.id,
+			);
+			if (!item) {
+				const msg = `Failed to fetch item with id ${exportRequest.data.id} from database.`;
+				console.error(msg);
+				res.status(500).send(msg);
+				return;
+			}
+			const parsedItem = TranscriptionItem.safeParse(item);
+			if (!parsedItem.success) {
+				const msg = `Failed to parse item ${exportRequest.data.id} from dynamodb. Error: ${parsedItem.error.message}`;
+				console.error(msg);
+				res.status(500).send(msg);
+				return;
+			}
+			const exportResult = await createTranscriptDocument(
+				config,
+				`${parsedItem.data.originalFilename} transcript`,
+				exportRequest.data.oAuthTokenResponse,
+				parsedItem.data.transcript.srt,
+			);
+			if (!exportResult) {
+				const msg = `Failed to create google document for item with id ${parsedItem.data.id}`;
+				console.error(msg);
+				res.status(500).send(msg);
+				return;
+			}
+			res.send({
+				documentId: exportResult,
+			});
+			return;
+		}),
+	]);
+
 	apiRouter.get('/signedUrl', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
@@ -86,10 +157,20 @@ const getApp = async () => {
 
 	app.use('/api', apiRouter);
 
+	const clientPages = ['export'];
+
 	if (runningOnAws) {
 		app.use(express.static('client'));
-		app.get('/*', (req, res) => {
-			res.sendFile(path.resolve(__dirname, 'client', 'index.html'));
+		app.get('/:page', (req, res) => {
+			if (req.params.page && !clientPages.includes(req.params.page)) {
+				res
+					.status(404)
+					.send(
+						`Endpoint not supported. Valid endpoints: /, /${clientPages.join(', /')}`,
+					);
+			}
+			const page = req.params.page ? `${req.params.page}.html` : 'index.html';
+			res.sendFile(path.resolve(__dirname, 'client', page));
 		});
 	} else {
 		if (emulateProductionLocally) {
@@ -98,7 +179,8 @@ const getApp = async () => {
 					path.resolve(__dirname, '..', '..', '..', 'packages/client/out'),
 				),
 			);
-			app.get('/*', (req: Request, res: Response) => {
+			app.get('/:page', (req: Request, res: Response) => {
+				const page = req.params.page ? `${req.params.page}.html` : 'index.html';
 				res.sendFile(
 					path.resolve(
 						__dirname,
@@ -106,7 +188,7 @@ const getApp = async () => {
 						'..',
 						'..',
 						'packages/client/out',
-						'index.html',
+						page,
 					),
 				);
 			});

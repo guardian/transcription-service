@@ -7,7 +7,7 @@ import { AuthState } from '@/types';
 import { createContext } from 'react';
 
 export const authExpiryCheckPeriodInSeconds = 30;
-export const AuthContext = createContext({});
+export const AuthContext: React.Context<AuthState> = createContext({});
 
 export default function Template({ children }: { children: React.ReactNode }) {
 	const [auth, setAuth] = useState<AuthState>(initialState);

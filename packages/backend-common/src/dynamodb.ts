@@ -1,5 +1,9 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { PutCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import {
+	PutCommand,
+	DynamoDBDocumentClient,
+	GetCommand,
+} from '@aws-sdk/lib-dynamodb';
 
 import { z } from 'zod';
 
@@ -49,5 +53,25 @@ export const writeTranscriptionItem = async (
 	} catch (error) {
 		console.error('error writing to db', error);
 		throw error;
+	}
+};
+
+export const getTranscriptionItem = async (
+	client: DynamoDBDocumentClient,
+	tableName: string,
+	itemId: string,
+) => {
+	const command = new GetCommand({
+		TableName: tableName,
+		Key: {
+			id: itemId,
+		},
+	});
+	try {
+		const result = await client.send(command);
+		return result.Item;
+	} catch (error) {
+		console.error(`Failed to get item ${itemId} from dynamodb`, error);
+		return undefined;
 	}
 };
