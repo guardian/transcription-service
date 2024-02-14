@@ -44,7 +44,7 @@ export const UploadForm = () => {
 
 		const urlParams = new URLSearchParams({ fileName: file.name });
 		const response = await authFetch(
-			`/signedUrl?${urlParams.toString()}`,
+			`/api/signedUrl?${urlParams.toString()}`,
 			token,
 		);
 		if (!response) {
