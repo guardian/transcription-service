@@ -435,6 +435,14 @@ export class TranscriptionService extends GuStack {
 			}),
 		);
 
+		outputHandlerLambda.addToRolePolicy(
+			new PolicyStatement({
+				effect: Effect.ALLOW,
+				actions: ['s3:GetObject'],
+				resources: [`${outputBucket.bucketArn}/*`],
+			}),
+		);
+
 		outputHandlerLambda.addToRolePolicy(getParametersPolicy);
 	}
 }

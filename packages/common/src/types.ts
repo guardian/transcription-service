@@ -4,13 +4,28 @@ export enum DestinationService {
 	TranscriptionService = 'TranscriptionService',
 }
 
+const OutputSignedUrl = z.object({
+	url: z.string(),
+	key: z.string(),
+});
+
+export type OutputSignedUrl = z.infer<typeof OutputSignedUrl>;
+
 const OutputBucketUrls = z.object({
+	srt: OutputSignedUrl,
+	text: OutputSignedUrl,
+	json: OutputSignedUrl,
+});
+
+export type OutputBucketUrls = z.infer<typeof OutputBucketUrls>;
+
+const OutputBucketKeys = z.object({
 	srt: z.string(),
 	text: z.string(),
 	json: z.string(),
 });
 
-export type OutputBucketUrls = z.infer<typeof OutputBucketUrls>;
+export type OutputBucketKeys = z.infer<typeof OutputBucketKeys>;
 
 export const TranscriptionJob = z.object({
 	id: z.string(),
@@ -31,7 +46,7 @@ export const TranscriptionOutput = z.object({
 	languageCode: z.string(),
 	// englishTranslation: z.optional(z.string()),
 	userEmail: z.string(),
-	outputBucketUrls: OutputBucketUrls,
+	outputBucketKeys: OutputBucketKeys,
 });
 
 export type TranscriptionOutput = z.infer<typeof TranscriptionOutput>;
