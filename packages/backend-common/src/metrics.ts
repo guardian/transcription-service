@@ -5,8 +5,8 @@ type Metric = {
 	name: string;
 	unit: 'Count';
 };
-export const TranscriptionFailureMetric: Metric = {
-	name: 'TranscriptionFailure',
+export const FailureMetric: Metric = {
+	name: 'Failure',
 	unit: 'Count',
 };
 

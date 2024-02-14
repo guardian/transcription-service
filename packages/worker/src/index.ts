@@ -24,7 +24,7 @@ import { updateScaleInProtection } from './asg';
 import { uploadAllTranscriptsToS3 } from './util';
 import {
 	MetricsService,
-	TranscriptionFailureMetric,
+	FailureMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
 
 const main = async () => {
@@ -64,7 +64,7 @@ const main = async () => {
 		const job = parseTranscriptJobMessage(message.message);
 
 		if (!job) {
-			await metrics.putMetric(TranscriptionFailureMetric);
+			await metrics.putMetric(FailureMetric);
 			console.error('Failed to parse job message', message);
 			return;
 		}
@@ -149,7 +149,7 @@ const main = async () => {
 	} catch (error) {
 		const msg = 'Worker failed to complete';
 		console.error(msg, error);
-		await metrics.putMetric(TranscriptionFailureMetric);
+		await metrics.putMetric(FailureMetric);
 		if (message.message?.ReceiptHandle) {
 			// Terminate the message visibility timeout
 			await changeMessageVisibility(

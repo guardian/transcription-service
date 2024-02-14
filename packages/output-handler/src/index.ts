@@ -17,7 +17,7 @@ import { testMessage } from '../test/testMessage';
 import { type OutputBucketKeys } from '@guardian/transcription-service-common';
 import {
 	MetricsService,
-	TranscriptionFailureMetric,
+	FailureMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
 
 const messageBody = (
@@ -132,7 +132,7 @@ const processMessage = async (event: unknown) => {
 				'Failed to process sqs message - transcription data may be missing from dynamo or email failed to send',
 				error,
 			);
-			await metrics.putMetric(TranscriptionFailureMetric);
+			await metrics.putMetric(FailureMetric);
 		}
 	}
 };
