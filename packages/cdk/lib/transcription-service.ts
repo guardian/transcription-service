@@ -146,12 +146,12 @@ export class TranscriptionService extends GuStack {
 
 		const apiLambda = new GuApiLambda(this, 'transcription-service-api', {
 			fileName: 'api.zip',
-			handler: 'index.api',
+			handler: 'index.handler',
 			runtime: Runtime.NODEJS_20_X,
 			monitoringConfiguration: {
 				noMonitoring: true,
 			},
-			app: APP_NAME,
+			app: `${APP_NAME}-api`,
 			api: {
 				id: apiId,
 				description: 'API for transcription service frontend',
@@ -161,6 +161,11 @@ export class TranscriptionService extends GuStack {
 					endpointType: EndpointType.REGIONAL,
 				},
 			},
+			events: [
+				new S3EventSource(sourceMediaBucket, {
+					events: [EventType.OBJECT_CREATED],
+				}),
+			],
 		});
 
 		apiLambda.role?.attachInlinePolicy(
@@ -186,12 +191,17 @@ export class TranscriptionService extends GuStack {
 
 		apiLambda.addToRolePolicy(getParametersPolicy);
 
+		// sourceMediaBucket.addEventNotification(
+		// 	EventType.OBJECT_CREATED,
+		// 	new LambdaDestination(apiLambda),
+		// );
+
 		// trigger the api lambda when file uploaded to S# bucket
-		apiLambda.addEventSource(
-			new S3EventSource(sourceMediaBucket, {
-				events: [EventType.OBJECT_CREATED_PUT],
-			}),
-		);
+		// apiLambda.addEventSource(
+		// 	new S3EventSource(sourceMediaBucket, {
+		// 		events: [EventType.OBJECT_CREATED],
+		// 	}),
+		// );
 
 		// The custom domain name mapped to this API
 		const apiDomain = apiLambda.api.domainName;

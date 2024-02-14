@@ -878,7 +878,7 @@ def submit_response(event: dict, context, response_status: str, error_message: s
           "LambdaFunctionConfigurations": [
             {
               "Events": [
-                "s3:ObjectCreated:Put",
+                "s3:ObjectCreated:*",
               ],
               "LambdaFunctionArn": {
                 "Fn::GetAtt": [
@@ -1237,16 +1237,16 @@ service transcription-service-worker start",
           "S3Bucket": {
             "Ref": "DistributionBucketName",
           },
-          "S3Key": "investigations/TEST/transcription-service/api.zip",
+          "S3Key": "investigations/TEST/transcription-service-api/api.zip",
         },
         "Environment": {
           "Variables": {
-            "APP": "transcription-service",
+            "APP": "transcription-service-api",
             "STACK": "investigations",
             "STAGE": "TEST",
           },
         },
-        "Handler": "index.api",
+        "Handler": "index.handler",
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -1258,7 +1258,7 @@ service transcription-service-worker start",
         "Tags": [
           {
             "Key": "App",
-            "Value": "transcription-service",
+            "Value": "transcription-service-api",
           },
           {
             "Key": "gu:cdk:version",
@@ -1312,7 +1312,7 @@ service transcription-service-worker start",
         "Tags": [
           {
             "Key": "App",
-            "Value": "transcription-service",
+            "Value": "transcription-service-api",
           },
           {
             "Key": "gu:cdk:version",
@@ -1373,7 +1373,7 @@ service transcription-service-worker start",
                       {
                         "Ref": "DistributionBucketName",
                       },
-                      "/investigations/TEST/transcription-service/api.zip",
+                      "/investigations/TEST/transcription-service-api/api.zip",
                     ],
                   ],
                 },
@@ -1390,7 +1390,7 @@ service transcription-service-worker start",
                     {
                       "Ref": "AWS::AccountId",
                     },
-                    ":parameter/TEST/investigations/transcription-service",
+                    ":parameter/TEST/investigations/transcription-service-api",
                   ],
                 ],
               },
@@ -1409,7 +1409,7 @@ service transcription-service-worker start",
                     {
                       "Ref": "AWS::AccountId",
                     },
-                    ":parameter/TEST/investigations/transcription-service/*",
+                    ":parameter/TEST/investigations/transcription-service-api/*",
                   ],
                 ],
               },
@@ -1605,7 +1605,7 @@ service transcription-service-worker start",
         "Tags": [
           {
             "Key": "App",
-            "Value": "transcription-service",
+            "Value": "transcription-service-api",
           },
           {
             "Key": "gu:cdk:version",
@@ -1642,7 +1642,7 @@ service transcription-service-worker start",
         "Tags": [
           {
             "Key": "App",
-            "Value": "transcription-service",
+            "Value": "transcription-service-api",
           },
           {
             "Key": "gu:cdk:version",
@@ -1685,7 +1685,7 @@ service transcription-service-worker start",
         "Tags": [
           {
             "Key": "App",
-            "Value": "transcription-service",
+            "Value": "transcription-service-api",
           },
           {
             "Key": "gu:cdk:version",
@@ -1707,7 +1707,7 @@ service transcription-service-worker start",
       },
       "Type": "AWS::ApiGateway::RestApi",
     },
-    "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDA239aa57b071d08d4c79426ec1366bceb": {
+    "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDAd2059b6daf8e8b62e9e06f13a0ee9ac8": {
       "DependsOn": [
         "transcriptionserviceapitranscriptionserviceTESTproxyANY65A12BB3",
         "transcriptionserviceapitranscriptionserviceTESTproxy923E1B16",
@@ -1727,7 +1727,7 @@ service transcription-service-worker start",
       ],
       "Properties": {
         "DeploymentId": {
-          "Ref": "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDA239aa57b071d08d4c79426ec1366bceb",
+          "Ref": "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDAd2059b6daf8e8b62e9e06f13a0ee9ac8",
         },
         "RestApiId": {
           "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
@@ -1736,7 +1736,7 @@ service transcription-service-worker start",
         "Tags": [
           {
             "Key": "App",
-            "Value": "transcription-service",
+            "Value": "transcription-service-api",
           },
           {
             "Key": "gu:cdk:version",
