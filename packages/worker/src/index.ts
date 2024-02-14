@@ -89,6 +89,7 @@ const main = async () => {
 			ffmpegResult.wavPath,
 			fileToTranscribe,
 			numberOfThreads,
+			config.app.stage === 'PROD' ? 'medium' : 'tiny',
 		);
 
 		const transcriptionOutput: TranscriptionOutput = {
