@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import { Transcripts } from './transcribe';
 import {
 	uploadToS3,
@@ -10,11 +9,6 @@ import {
 	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
 import path from 'path';
-
-export const readFile = (filePath: string): string => {
-	const file = fs.readFileSync(filePath, 'utf8');
-	return file;
-};
 
 export const uploadAllTranscriptsToS3 = async (
 	destinationBucketUrls: OutputBucketUrls,
