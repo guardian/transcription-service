@@ -44,7 +44,6 @@ export const TranscriptionOutput = z.object({
 	id: z.string(),
 	originalFilename: z.string(),
 	languageCode: z.string(),
-	// englishTranslation: z.optional(z.string()),
 	userEmail: z.string(),
 	outputBucketKeys: OutputBucketKeys,
 });

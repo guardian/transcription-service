@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import path from 'path';
+import { readFile } from '@guardian/transcription-service-backend-common';
 
 interface ProcessResult {
 	code?: number;
@@ -153,25 +154,29 @@ export const getTranscriptionText = async (
 	numberOfThreads: number,
 	model: WhisperModel,
 ): Promise<Transcripts> => {
-	console.log(`my original file: ${file}`);
-	const resultFile = await transcribe(
-		containerId,
-		wavPath,
-		numberOfThreads,
-		model,
-	);
-	console.log(`result file: ${path.resolve(path.parse(file).dir, resultFile)}`);
+	try {
+		const resultFile = await transcribe(
+			containerId,
+			wavPath,
+			numberOfThreads,
+			model,
+		);
 
-	const res = {
-		srt: path.resolve(path.parse(file).dir, `${resultFile}.srt`),
-		text: path.resolve(path.parse(file).dir, `${resultFile}.txt`),
-		json: path.resolve(path.parse(file).dir, `${resultFile}.json`),
-	};
+		const srtPath = path.resolve(path.parse(file).dir, `${resultFile}.srt`);
+		const textPath = path.resolve(path.parse(file).dir, `${resultFile}.txt`);
+		const jsonPath = path.resolve(path.parse(file).dir, `${resultFile}.json`);
 
-	console.log('transcribe all files: ');
-	console.log(res);
+		const res = {
+			srt: readFile(srtPath),
+			text: readFile(textPath),
+			json: readFile(jsonPath),
+		};
 
-	return res;
+		return res;
+	} catch (error) {
+		console.log(`Could not read the transcripts result`);
+		throw error;
+	}
 };
 
 export const transcribe = async (
