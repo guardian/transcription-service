@@ -72,6 +72,6 @@ export const getTranscriptionItem = async (
 		return result.Item;
 	} catch (error) {
 		console.error(`Failed to get item ${itemId} from dynamodb`, error);
-		return null;
+		return undefined;
 	}
 };

@@ -8,11 +8,9 @@ import { exportTranscript } from '@/services/export';
 const ExportButton = () => {
 	const auth = useContext(AuthContext);
 	const searchParams = useSearchParams();
-	const [docId, setDocId] = useState<string | undefined>(undefined);
+	const [docId, setDocId] = useState<string | undefined>();
 	const [loading, setLoading] = useState(false);
-	const [exportFailed, setExportFailed] = useState<string | undefined>(
-		undefined,
-	);
+	const [exportFailed, setExportFailed] = useState<string | undefined>();
 	const token = auth.token;
 	// TODO: once we have some CSS/component library, tidy up this messy error handling
 	if (!token) {

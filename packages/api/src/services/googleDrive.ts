@@ -14,7 +14,7 @@ export const getOrCreateTranscriptFolder = async (
 	try {
 		// first see if there is already a folder matching folderName
 		const existingFolders = await drive.files.list({
-			q: `mimeType='application/vnd.google-apps.folder' and name ='${folderName}' and trashed=false`,
+			q: `mimeType='${fileMetadata.mimeType}' and name ='${folderName}' and trashed=false`,
 			spaces: 'drive',
 		});
 		// there could be multiple folders with this name, let's upload to the first one
@@ -111,7 +111,7 @@ export const createTranscriptDocument = async (
 	);
 	if (!folderId) {
 		console.error('Failed to get or create folder');
-		return null;
+		return undefined;
 	}
 	const docId = await uploadToGoogleDocs(
 		drive,
