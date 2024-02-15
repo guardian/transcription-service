@@ -156,7 +156,7 @@ const handleS3Event = async (event: S3Event) => {
 
 		const parsedMetadata = inputBucketObjectMetadata.safeParse(metaData);
 		if (!parsedMetadata.success) {
-			console.error(
+			console.log(
 				'S3 object creation handler was unable to parse object metadata',
 				metaData,
 			);
