@@ -9,15 +9,14 @@ import passport from 'passport';
 import { Request, Response } from 'express';
 import {
 	getConfig,
-	getSignedUrl,
+	getSignedUploadUrl,
 	getSQSClient,
 	sendMessage,
 	isFailure,
-	getDownloadSignedUrl,
+	getSignedDownloadUrl,
 } from '@guardian/transcription-service-backend-common';
 import {
 	ClientConfig,
-	SignedUrlQueryParams,
 	TranscriptExportRequest,
 	sendMessageRequestBody,
 } from '@guardian/transcription-service-common';
@@ -77,7 +76,7 @@ const getApp = async () => {
 			}
 
 			const s3Key = body.data.s3Key;
-			const signedUrl = await getDownloadSignedUrl(
+			const signedUrl = await getSignedDownloadUrl(
 				config.aws.region,
 				config.app.sourceMediaBucket,
 				s3Key,
@@ -162,20 +161,14 @@ const getApp = async () => {
 		}),
 	]);
 
-	apiRouter.get('/signedUrl', [
+	apiRouter.get('/signed-url', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
-			const queryParams = SignedUrlQueryParams.safeParse(req.query);
-			if (!queryParams.success) {
-				res.status(422).send('missing query parameters');
-				return;
-			}
 			const s3Key = uuid4();
-			const presignedS3Url = await getSignedUrl(
+			const presignedS3Url = await getSignedUploadUrl(
 				config.aws.region,
 				config.app.sourceMediaBucket,
 				req.user?.email ?? 'not found',
-				queryParams.data.fileName,
 				60,
 				true,
 				s3Key,

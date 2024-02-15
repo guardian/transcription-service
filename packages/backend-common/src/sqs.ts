@@ -11,7 +11,7 @@ import {
 	DestinationService,
 	TranscriptionJob,
 } from '@guardian/transcription-service-common';
-import { getSignedUrl } from '@guardian/transcription-service-backend-common';
+import { getSignedUploadUrl } from '@guardian/transcription-service-backend-common';
 
 enum SQSStatus {
 	Success,
@@ -221,29 +221,26 @@ const generateOutputSignedUrls = async (
 	const srtKey = `srt/${id}.srt`;
 	const jsonKey = `json/${id}.json`;
 	const textKey = `text/${id}.txt`;
-	const srtSignedS3Url = await getSignedUrl(
+	const srtSignedS3Url = await getSignedUploadUrl(
 		region,
 		outputBucket,
 		userEmail,
-		originalFilename,
 		expiresIn,
 		false,
 		srtKey,
 	);
-	const textSignedS3Url = await getSignedUrl(
+	const textSignedS3Url = await getSignedUploadUrl(
 		region,
 		outputBucket,
 		userEmail,
-		originalFilename,
 		expiresIn,
 		false,
 		jsonKey,
 	);
-	const jsonSignedS3Url = await getSignedUrl(
+	const jsonSignedS3Url = await getSignedUploadUrl(
 		region,
 		outputBucket,
 		userEmail,
-		originalFilename,
 		expiresIn,
 		false,
 		textKey,

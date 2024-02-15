@@ -19,11 +19,10 @@ export const getS3Client = (
 	});
 };
 
-export const getSignedUrl = (
+export const getSignedUploadUrl = (
 	region: string,
 	bucket: string,
 	userEmail: string,
-	fileName: string,
 	expiresIn: number,
 	useAccelerateEndpoint: boolean,
 	id?: string,
@@ -35,13 +34,12 @@ export const getSignedUrl = (
 			Key: id,
 			Metadata: {
 				'user-email': userEmail,
-				'file-name': fileName,
 			},
 		}),
 		{ expiresIn }, // override default expiration time of 15 minutes
 	);
 
-export const getDownloadSignedUrl = async (
+export const getSignedDownloadUrl = async (
 	region: string,
 	bucket: string,
 	key: string,

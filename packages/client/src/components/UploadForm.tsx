@@ -31,11 +31,7 @@ export const UploadForm = () => {
 		const file = files[0];
 		const blob = new Blob([file as BlobPart]);
 
-		const urlParams = new URLSearchParams({ fileName: file.name });
-		const response = await authFetch(
-			`/api/signedUrl?${urlParams.toString()}`,
-			token,
-		);
+		const response = await authFetch(`/api/signed-url`, token);
 		if (!response) {
 			console.error('Failed to fetch signed url');
 			return;
