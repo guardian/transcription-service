@@ -49,6 +49,23 @@ export const UploadForm = () => {
 
 		const uploadStatus = await uploadToS3(body.data.presignedS3Url, blob);
 		setStatus(uploadStatus.isSuccess);
+
+		const sendMessageResponse = await authFetch('/api/send-message', token, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				s3Key: body.data.s3Key,
+				fileName: file.name,
+			}),
+		});
+		const sendMessageSuccess = sendMessageResponse.status !== 200;
+		if (!sendMessageSuccess) {
+			console.error('Failed to call send-message');
+			return;
+		}
+
 		if (uploadStatus.isSuccess) {
 			maybeFileInput.value = '';
 		}
