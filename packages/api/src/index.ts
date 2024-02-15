@@ -168,7 +168,7 @@ const handleS3Event = async (event: S3Event) => {
 			config.aws.region,
 			bucket,
 			key,
-			60,
+			3600,
 		);
 		// send message to queue
 		const sendResult = await sendMessage(
