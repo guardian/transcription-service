@@ -46,7 +46,7 @@ export const UploadForm = () => {
 		const uploadStatus = await uploadToS3(body.data.presignedS3Url, blob);
 		setStatus(uploadStatus.isSuccess);
 
-		const sendMessageResponse = await authFetch('/api/send-message', token, {
+		const sendMessageResponse = await authFetch('/api/transcribe-file', token, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -58,7 +58,7 @@ export const UploadForm = () => {
 		});
 		const sendMessageSuccess = sendMessageResponse.status !== 200;
 		if (!sendMessageSuccess) {
-			console.error('Failed to call send-message');
+			console.error('Failed to call transcribe-file');
 			return;
 		}
 

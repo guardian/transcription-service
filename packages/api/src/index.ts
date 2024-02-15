@@ -63,7 +63,7 @@ const getApp = async () => {
 		}),
 	]);
 
-	apiRouter.post('/send-message', [
+	apiRouter.post('/transcribe-file', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
 			const userEmail = req.user?.email;
