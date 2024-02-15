@@ -30,6 +30,20 @@ export class TranscriptionServiceRepository extends GuStack {
 					'Deploy tools account id - needed to give AMIgo access to this repository',
 			},
 		);
+		const transcriptionWorkerRoleArnCODE = new GuStringParameter(
+			this,
+			'TranscriptionWorkerRoleArnCODE',
+			{
+				description: 'IAM role for the CODE transcription worker instances',
+			},
+		);
+		const transcriptionWorkerRoleArnPROD = new GuStringParameter(
+			this,
+			'TranscriptionWorkerRoleArnPROD',
+			{
+				description: 'IAM role for the PROD transcription worker instances',
+			},
+		);
 		const repository = new Repository(this, 'TranscriptionServiceRepository', {
 			repositoryName: `transcription-service`,
 			lifecycleRules: [
@@ -43,7 +57,11 @@ export class TranscriptionServiceRepository extends GuStack {
 		});
 		repository.addToResourcePolicy(
 			new PolicyStatement({
-				principals: [new ArnPrincipal(githubActionsIAMRoleArn.valueAsString)],
+				principals: [
+					new ArnPrincipal(githubActionsIAMRoleArn.valueAsString),
+					new ArnPrincipal(transcriptionWorkerRoleArnCODE.valueAsString),
+					new ArnPrincipal(transcriptionWorkerRoleArnPROD.valueAsString),
+				],
 				actions: [
 					'ecr:GetAuthorizationToken',
 					'ecr:BatchCheckLayerAvailability',
