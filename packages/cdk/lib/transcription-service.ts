@@ -67,6 +67,17 @@ export class TranscriptionService extends GuStack {
 			description: 'AMI to use for the worker instances',
 		});
 
+		const s3PrefixListId = new GuStringParameter(
+			this,
+			'S3PrefixListIdParameter',
+			{
+				fromSSM: true,
+				default: `/${this.stage}/${this.stack}/${APP_NAME}/s3PrefixListId`,
+				description:
+					'ID of the managed prefix list for the S3 service. See https://docs.aws.amazon.com/systems-manager/latest/userguide/setup-create-vpc.html',
+			},
+		);
+
 		const ssmPrefix = `arn:aws:ssm:${props.env.region}:${GuardianAwsAccounts.Investigations}:parameter`;
 		const ssmPath = `${this.stage}/${this.stack}/${APP_NAME}`;
 		const domainName =
@@ -323,6 +334,11 @@ export class TranscriptionService extends GuStack {
 
 		workerSecurityGroup.addEgressRule(
 			Peer.securityGroupId(privateEndpointSecurityGroup),
+			Port.tcp(443),
+		);
+
+		workerSecurityGroup.addEgressRule(
+			Peer.prefixList(s3PrefixListId.valueAsString),
 			Port.tcp(443),
 		);
 
