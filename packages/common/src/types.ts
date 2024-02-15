@@ -54,6 +54,7 @@ export const SignedUrlQueryParams = z.object({ fileName: z.string() });
 
 export const SignedUrlResponseBody = z.object({
 	presignedS3Url: z.string(),
+	s3Key: z.string(),
 });
 export type SignedUrlResponseBody = z.infer<typeof SignedUrlResponseBody>;
 
@@ -95,3 +96,9 @@ export const ExportResponse = z.object({
 });
 
 export type ExportResponse = z.infer<typeof ExportResponse>;
+
+export const sendMessageRequestBody = z.object({
+	s3Key: z.string(),
+	fileName: z.string(),
+});
+export type SendMessageRequestBody = z.infer<typeof sendMessageRequestBody>;

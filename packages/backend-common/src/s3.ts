@@ -1,7 +1,6 @@
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl as getSignedUrlSdk } from '@aws-sdk/s3-request-presigner';
-import { v4 as uuid4 } from 'uuid';
 import { createWriteStream } from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
@@ -32,11 +31,26 @@ export const getSignedUrl = (
 		getS3Client(region, useAccelerateEndpoint),
 		new PutObjectCommand({
 			Bucket: bucket,
-			Key: id || uuid4(),
+			Key: id,
 			Metadata: {
 				'user-email': userEmail,
 				'file-name': fileName,
 			},
+		}),
+		{ expiresIn }, // override default expiration time of 15 minutes
+	);
+
+export const getDownloadSignedUrl = async (
+	region: string,
+	bucket: string,
+	key: string,
+	expiresIn: number,
+) =>
+	await getSignedUrlSdk(
+		getS3Client(region),
+		new GetObjectCommand({
+			Bucket: bucket,
+			Key: key,
 		}),
 		{ expiresIn }, // override default expiration time of 15 minutes
 	);

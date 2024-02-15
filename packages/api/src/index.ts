@@ -13,11 +13,13 @@ import {
 	getSQSClient,
 	sendMessage,
 	isFailure,
+	getDownloadSignedUrl,
 } from '@guardian/transcription-service-backend-common';
 import {
 	ClientConfig,
 	SignedUrlQueryParams,
 	TranscriptExportRequest,
+	sendMessageRequestBody,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
@@ -26,6 +28,7 @@ import {
 	TranscriptionItem,
 } from '@guardian/transcription-service-backend-common/src/dynamodb';
 import { createTranscriptDocument } from './services/googleDrive';
+import { v4 as uuid4 } from 'uuid';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -64,18 +67,30 @@ const getApp = async () => {
 	apiRouter.post('/send-message', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
-			const userEmail = 'digital.investigations@theguardian.com';
-			const originalFilename = 'test.mp3';
-			const id = 'my-first-transcription';
-			const signedUrl = 'tifsample.wav';
+			const userEmail = req.user?.email;
+			console.log(req.body);
+			const body = sendMessageRequestBody.safeParse(req.body);
+			if (!body.success || !userEmail) {
+				console.error(body, userEmail);
+				res.status(422).send('missing request params');
+				return;
+			}
+
+			const s3Key = body.data.s3Key;
+			const signedUrl = await getDownloadSignedUrl(
+				config.aws.region,
+				config.app.sourceMediaBucket,
+				s3Key,
+				3600,
+			);
 			const sendResult = await sendMessage(
-				id,
+				s3Key,
 				sqsClient,
 				config.app.taskQueueUrl,
 				config.app.transcriptionOutputBucket,
 				config.aws.region,
 				userEmail,
-				originalFilename,
+				body.data.fileName,
 				signedUrl,
 			);
 			if (isFailure(sendResult)) {
@@ -155,6 +170,7 @@ const getApp = async () => {
 				res.status(422).send('missing query parameters');
 				return;
 			}
+			const s3Key = uuid4();
 			const presignedS3Url = await getSignedUrl(
 				config.aws.region,
 				config.app.sourceMediaBucket,
@@ -162,10 +178,11 @@ const getApp = async () => {
 				queryParams.data.fileName,
 				60,
 				true,
+				s3Key,
 			);
 
 			res.set('Cache-Control', 'no-cache');
-			const responseBody: SignedUrlResponseBody = { presignedS3Url };
+			const responseBody: SignedUrlResponseBody = { presignedS3Url, s3Key };
 			res.send(responseBody);
 		}),
 	]);
