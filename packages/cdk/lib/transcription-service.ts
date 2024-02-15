@@ -9,7 +9,11 @@ import {
 	GuStringParameter,
 } from '@guardian/cdk/lib/constructs/core';
 import { GuCname } from '@guardian/cdk/lib/constructs/dns';
-import { GuVpc, SubnetType } from '@guardian/cdk/lib/constructs/ec2';
+import {
+	GuSecurityGroup,
+	GuVpc,
+	SubnetType,
+} from '@guardian/cdk/lib/constructs/ec2';
 import {
 	GuAllowPolicy,
 	GuInstanceRole,
@@ -293,6 +297,23 @@ export class TranscriptionService extends GuStack {
 				}),
 			],
 		});
+		const vpc = GuVpc.fromIdParameter(
+			this,
+			'InvestigationsInternetEnabledVpc',
+			{
+				availabilityZones: ['eu-west-1a', 'eu-west-1b', 'eu-west-1c'],
+			},
+		);
+
+		const workerSecurityGroup = new GuSecurityGroup(
+			this,
+			`TranscriptionServiceWorkerSG`,
+			{
+				app: workerApp,
+				vpc,
+				allowAllOutbound: false,
+			},
+		);
 
 		const launchTemplate = new LaunchTemplate(
 			this,
@@ -316,6 +337,7 @@ export class TranscriptionService extends GuStack {
 				],
 				userData,
 				role: role,
+				securityGroup: workerSecurityGroup,
 			},
 		);
 
@@ -339,9 +361,7 @@ export class TranscriptionService extends GuStack {
 				minCapacity: 0,
 				maxCapacity: isProd ? 20 : 4,
 				autoScalingGroupName,
-				vpc: GuVpc.fromIdParameter(this, 'InvestigationsInternetEnabledVpc', {
-					availabilityZones: ['eu-west-1a', 'eu-west-1b', 'eu-west-1c'],
-				}),
+				vpc,
 				vpcSubnets: {
 					subnets: GuVpc.subnetsFromParameter(this, {
 						type: SubnetType.PRIVATE,
