@@ -1,16 +1,17 @@
 import {
 	GetObjectCommand,
-	GetObjectCommandOutput,
 	HeadObjectCommand,
 	S3Client,
 } from '@aws-sdk/client-s3';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl as getSignedUrlSdk } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuid4 } from 'uuid';
-import { createWriteStream } from 'fs';
+import { ReadStream, createWriteStream } from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
 import { z } from 'zod';
+import axios from 'axios';
+import { StreamingBlobPayloadOutputTypes } from '@smithy/types/dist-types/streaming-payload/streaming-blob-payload-output-types';
 
 const ReadableBody = z.instanceof(Readable);
 
@@ -73,17 +74,21 @@ export const getFile = async (
 			Key: key,
 		}),
 	);
-	await downloadS3Data(data, destinationPath, key);
+	if (data.Body === undefined) {
+		console.error('body of GetObjectCommand response is empty');
+		return;
+	}
+	await downloadS3Data(data.Body, destinationPath, key);
 	return destinationPath;
 };
 
 const downloadS3Data = async (
-	data: GetObjectCommandOutput,
+	data: ReadStream | StreamingBlobPayloadOutputTypes,
 	destinationPath: string,
 	key: string,
 ) => {
 	try {
-		const body = ReadableBody.parse(data.Body);
+		const body = ReadableBody.parse(data);
 
 		const stream = body.pipe(createWriteStream(destinationPath));
 
@@ -112,10 +117,10 @@ export const getObjectWithPresignedUrl = async (
 	workingDirectory: string,
 ) => {
 	const destinationPath = `${workingDirectory}/${path.basename(key)}`;
-	const data = (await fetch(presignedUrl))
-		.body as unknown as GetObjectCommandOutput;
-	console.log(data);
-	downloadS3Data(data, destinationPath, key);
+	const response = await axios.get<ReadStream>(presignedUrl, {
+		responseType: 'stream',
+	});
+	downloadS3Data(response.data, destinationPath, key);
 	return destinationPath;
 };
 
