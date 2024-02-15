@@ -1,12 +1,12 @@
 import {
 	getConfig,
-	getFileFromS3,
 	getSQSClient,
 	getNextMessage,
 	parseTranscriptJobMessage,
 	isFailure,
 	deleteMessage,
 	changeMessageVisibility,
+	getObjectWithPresignedUrl,
 } from '@guardian/transcription-service-backend-common';
 import {
 	OutputBucketKeys,
@@ -68,11 +68,10 @@ const main = async () => {
 		const destinationDirectory =
 			config.app.stage === 'DEV' ? `${__dirname}/sample` : '/tmp';
 
-		const fileToTranscribe = await getFileFromS3(
-			config.aws.region,
-			destinationDirectory,
-			config.app.sourceMediaBucket,
+		const fileToTranscribe = await getObjectWithPresignedUrl(
 			job.inputSignedUrl,
+			job.id,
+			destinationDirectory,
 		);
 
 		// docker container to run ffmpeg and whisper on file

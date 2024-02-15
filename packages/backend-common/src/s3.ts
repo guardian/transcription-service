@@ -1,10 +1,11 @@
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl as getSignedUrlSdk } from '@aws-sdk/s3-request-presigner';
-import { createWriteStream } from 'fs';
+import { ReadStream, createWriteStream } from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
 import { z } from 'zod';
+import axios from 'axios';
 
 const ReadableBody = z.instanceof(Readable);
 
@@ -71,26 +72,50 @@ export const getFile = async (
 		);
 
 		const body = ReadableBody.parse(data.Body);
-
-		const stream = body.pipe(createWriteStream(destinationPath));
-
-		await new Promise<void>((resolve, reject) => {
-			stream
-				.on('finish', () => {
-					console.log(` pipe done `);
-					resolve();
-				})
-				.on('error', (error) => {
-					console.log(`Failed to writing the S3 object ${key} into file`);
-					reject(error);
-				});
-		});
-		console.log('successfully retrieved file from S3 into ', destinationPath);
+		await downloadS3Data(body, destinationPath, key);
 		return destinationPath;
 	} catch (e) {
 		console.error(e);
 		throw e;
 	}
+};
+
+export const getObjectWithPresignedUrl = async (
+	presignedUrl: string,
+	key: string,
+	workingDirectory: string,
+) => {
+	const destinationPath = `${workingDirectory}/${path.basename(key)}`;
+	const response = await axios.get<ReadStream>(presignedUrl, {
+		responseType: 'stream',
+	});
+	const body = ReadableBody.parse(response.data);
+	await downloadS3Data(body, destinationPath, key);
+	return destinationPath;
+};
+
+const downloadS3Data = async (
+	data: Readable,
+	destinationPath: string,
+	key: string,
+) => {
+	const body = ReadableBody.parse(data);
+
+	const stream = body.pipe(createWriteStream(destinationPath));
+
+	await new Promise<void>((resolve, reject) => {
+		stream
+			.on('finish', () => {
+				console.log(` pipe done `);
+				resolve();
+			})
+			.on('error', (error) => {
+				console.log(`Failed to write the S3 object ${key} into file`);
+				reject(error);
+			});
+	});
+	console.log('successfully retrieved file from S3 into ', destinationPath);
+	return destinationPath;
 };
 
 export const getFileFromS3 = async (
