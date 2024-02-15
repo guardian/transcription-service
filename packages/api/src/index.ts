@@ -22,7 +22,7 @@ import {
 	inputBucketObjectMetadata,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
-import { APIGatewayProxyEvent, S3Event, S3EventRecord } from 'aws-lambda';
+import { APIGatewayProxyEvent, S3Event } from 'aws-lambda';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -148,7 +148,7 @@ const handleS3Event = async (event: S3Event) => {
 		config.aws.localstackEndpoint,
 	);
 
-	event.Records.map(async (record: S3EventRecord) => {
+	for (const record of event.Records) {
 		const key = record.s3.object.key;
 		console.log(`adding message to task queue for file ${key}`);
 		const bucket = record.s3.bucket.name;
@@ -156,7 +156,7 @@ const handleS3Event = async (event: S3Event) => {
 
 		const parsedMetadata = inputBucketObjectMetadata.safeParse(metaData);
 		if (!parsedMetadata.success) {
-			console.log(
+			console.error(
 				'S3 object creation handler was unable to parse object metadata',
 				metaData,
 			);
@@ -190,7 +190,7 @@ const handleS3Event = async (event: S3Event) => {
 				`error sending message to task queue.\n error: ${sendResult.error} \nmessage:${sendResult.errorMsg}`,
 			);
 		}
-	});
+	}
 };
 
 let handler;
