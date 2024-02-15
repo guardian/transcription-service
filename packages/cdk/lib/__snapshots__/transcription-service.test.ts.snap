@@ -18,6 +18,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuAllowPolicy",
       "GuAllowPolicy",
       "GuAllowPolicy",
+      "GuAllowPolicy",
       "GuInstanceRole",
       "GuDescribeEC2Policy",
       "GuLogShippingPolicy",
@@ -133,6 +134,59 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
           "Version": "2012-10-17",
         },
         "PolicyName": "describe-ec2-policy",
+        "Roles": [
+          {
+            "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "GetDeleteSourceMedia6AC3A8D5": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject",
+                "s3:DeleteObject",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "TranscriptionServiceOutputBucketTranscriptionservice35996ED2",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "GetDeleteSourceMedia6AC3A8D5",
         "Roles": [
           {
             "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
@@ -509,6 +563,9 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
     "TranscriptionServiceOutputBucketTranscriptionservice35996ED2": {
       "DeletionPolicy": "Retain",
       "Properties": {
+        "AccelerateConfiguration": {
+          "AccelerationStatus": "Enabled",
+        },
         "BucketName": "transcription-service-output-test",
         "LifecycleConfiguration": {
           "Rules": [
