@@ -36,9 +36,11 @@ export const uploadToS3 = async (
 			isSuccess: true,
 		};
 	} catch (error) {
-		console.error('upload error:', error);
+		const errorMsg = `S3 upload failed: ${error}`;
+		console.error(errorMsg, error);
 		return {
 			isSuccess: false,
+			errorMsg,
 		};
 	}
 };
