@@ -150,6 +150,7 @@ const handleS3Event = async (event: S3Event) => {
 
 	event.Records.map(async (record: S3EventRecord) => {
 		const key = record.s3.object.key;
+		console.log(`adding message to task queue for file ${key}`);
 		const bucket = record.s3.bucket.name;
 		const metaData = await getObjectMetadata(config.aws.region, bucket, key);
 
@@ -161,6 +162,7 @@ const handleS3Event = async (event: S3Event) => {
 			);
 			return;
 		}
+		console.log(`metadata ${parsedMetadata}`);
 
 		// create signed URL for worker to GET file
 		const signedUrl = await getDownloadSignedUrl(
@@ -169,6 +171,7 @@ const handleS3Event = async (event: S3Event) => {
 			key,
 			60,
 		);
+		console.log(`created signed url ${signedUrl}. sending message`);
 		// send message to queue
 		const sendResult = await sendMessage(
 			key,
