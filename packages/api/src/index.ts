@@ -67,15 +67,7 @@ const getApp = async () => {
 			const userEmail = 'digital.investigations@theguardian.com';
 			const originalFilename = 'test.mp3';
 			const id = 'my-first-transcription';
-			const signedUrl = await getSignedUrl(
-				config.aws.region,
-				config.app.sourceMediaBucket,
-				userEmail,
-				originalFilename,
-				7,
-				false,
-				id,
-			);
+			const signedUrl = 'tifsample.wav';
 			const sendResult = await sendMessage(
 				id,
 				sqsClient,
