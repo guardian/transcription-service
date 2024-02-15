@@ -22,7 +22,7 @@ import {
 import { GuLambdaFunction } from '@guardian/cdk/lib/constructs/lambda';
 import { GuS3Bucket } from '@guardian/cdk/lib/constructs/s3';
 import { GuardianAwsAccounts } from '@guardian/private-infrastructure-config';
-import { type App, CfnOutput, Duration, Tags } from 'aws-cdk-lib';
+import { type App, CfnOutput, Duration, Fn, Tags } from 'aws-cdk-lib';
 import { EndpointType } from 'aws-cdk-lib/aws-apigateway';
 import {
 	AutoScalingGroup,
@@ -37,6 +37,8 @@ import {
 	InstanceType,
 	LaunchTemplate,
 	MachineImage,
+	Peer,
+	Port,
 	UserData,
 } from 'aws-cdk-lib/aws-ec2';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
@@ -313,6 +315,15 @@ export class TranscriptionService extends GuStack {
 				vpc,
 				allowAllOutbound: false,
 			},
+		);
+
+		const privateEndpointSecurityGroup = Fn.importValue(
+			`internet-enabled-vpc-AWSEndpointSecurityGroup`,
+		);
+
+		workerSecurityGroup.addEgressRule(
+			Peer.securityGroupId(privateEndpointSecurityGroup),
+			Port.tcp(443),
 		);
 
 		const launchTemplate = new LaunchTemplate(
