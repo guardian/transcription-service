@@ -162,7 +162,6 @@ const handleS3Event = async (event: S3Event) => {
 			);
 			return;
 		}
-		console.log(`metadata ${parsedMetadata}`);
 
 		// create signed URL for worker to GET file
 		const signedUrl = await getDownloadSignedUrl(
@@ -171,7 +170,6 @@ const handleS3Event = async (event: S3Event) => {
 			key,
 			60,
 		);
-		console.log(`created signed url ${signedUrl}. sending message`);
 		// send message to queue
 		const sendResult = await sendMessage(
 			key,
