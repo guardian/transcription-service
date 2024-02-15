@@ -1,16 +1,17 @@
 import {
 	getConfig,
+	getFileFromS3,
 	getSQSClient,
 	getNextMessage,
 	parseTranscriptJobMessage,
 	isFailure,
 	deleteMessage,
-	getFile,
-	getS3Client,
 	changeMessageVisibility,
-	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
-import type { TranscriptionOutput } from '@guardian/transcription-service-common';
+import {
+	OutputBucketKeys,
+	type TranscriptionOutput,
+} from '@guardian/transcription-service-common';
 import { getSNSClient, publishTranscriptionOutput } from './sns';
 import {
 	getTranscriptionText,
@@ -18,7 +19,9 @@ import {
 	getOrCreateContainer,
 } from './transcribe';
 import path from 'path';
+
 import { updateScaleInProtection } from './asg';
+import { uploadAllTranscriptsToS3 } from './util';
 
 const main = async () => {
 	const config = await getConfig();
@@ -50,17 +53,27 @@ const main = async () => {
 
 		const job = parseTranscriptJobMessage(message.message);
 
-		console.log(
-			`Fetched transcription job with id ${message.message.MessageId}}`,
-			job,
-		);
-
 		if (!job) {
 			console.error('Failed to parse job message', message);
 			return;
 		}
 
-		const fileToTranscribe = await getFileFromS3(config, job.s3Key);
+		const { outputBucketUrls, ...loggableJob } = job;
+
+		console.log(
+			`Fetched transcription job with id ${message.message.MessageId}}`,
+			loggableJob,
+		);
+
+		const destinationDirectory =
+			config.app.stage === 'DEV' ? `${__dirname}/sample` : '/tmp';
+
+		const fileToTranscribe = await getFileFromS3(
+			config.aws.region,
+			destinationDirectory,
+			config.app.sourceMediaBucket,
+			job.inputSignedUrl,
+		);
 
 		// docker container to run ffmpeg and whisper on file
 		const containerId = await getOrCreateContainer(
@@ -84,7 +97,7 @@ const main = async () => {
 			);
 		}
 
-		const text = await getTranscriptionText(
+		const transcripts = await getTranscriptionText(
 			containerId,
 			ffmpegResult.wavPath,
 			fileToTranscribe,
@@ -92,12 +105,20 @@ const main = async () => {
 			config.app.stage === 'PROD' ? 'medium' : 'tiny',
 		);
 
+		await uploadAllTranscriptsToS3(outputBucketUrls, transcripts);
+
+		const outputBucketKeys: OutputBucketKeys = {
+			srt: outputBucketUrls.srt.key,
+			json: outputBucketUrls.json.key,
+			text: outputBucketUrls.text.key,
+		};
+
 		const transcriptionOutput: TranscriptionOutput = {
 			id: job.id,
-			transcriptionSrt: text,
 			languageCode: 'en',
 			userEmail: job.userEmail,
 			originalFilename: job.originalFilename,
+			outputBucketKeys,
 		};
 
 		await publishTranscriptionOutput(
@@ -129,19 +150,6 @@ const main = async () => {
 	} finally {
 		await updateScaleInProtection(region, stage, false);
 	}
-};
-
-const getFileFromS3 = async (config: TranscriptionConfig, s3Key: string) => {
-	const s3Client = getS3Client(config.aws.region);
-
-	const file = await getFile(
-		s3Client,
-		config.app.sourceMediaBucket,
-		s3Key,
-		config.app.stage === 'DEV' ? `${__dirname}/sample` : '/tmp',
-	);
-
-	return file;
 };
 
 main();

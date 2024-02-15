@@ -13,6 +13,7 @@ export interface TranscriptionConfig {
 		stage: string;
 		emailNotificationFromAddress: string;
 		sourceMediaBucket: string;
+		transcriptionOutputBucket: string;
 		destinationTopicArns: {
 			transcriptionService: string;
 		};
@@ -105,6 +106,12 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 
 	const tableName = findParameter(parameters, paramPath, 'app/tableName');
 
+	const transcriptionOutputBucket = findParameter(
+		parameters,
+		paramPath,
+		'app/transcriptionOutputBucket',
+	);
+
 	return {
 		auth: {
 			clientId: authClientId,
@@ -121,6 +128,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 				transcriptionService: destinationTopic,
 			},
 			tableName,
+			transcriptionOutputBucket,
 		},
 		aws: {
 			region,

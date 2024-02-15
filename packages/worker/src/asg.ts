@@ -2,7 +2,7 @@ import {
 	AutoScalingClient,
 	SetInstanceProtectionCommand,
 } from '@aws-sdk/client-auto-scaling';
-import { readFile } from './util';
+import { readFile } from '@guardian/transcription-service-backend-common';
 
 export const updateScaleInProtection = async (
 	region: string,

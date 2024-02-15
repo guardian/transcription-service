@@ -7,9 +7,11 @@ import {
 	ChangeMessageVisibilityCommand,
 } from '@aws-sdk/client-sqs';
 import {
+	OutputBucketUrls,
 	DestinationService,
 	TranscriptionJob,
 } from '@guardian/transcription-service-common';
+import { getSignedUrl } from '@guardian/transcription-service-backend-common';
 
 enum SQSStatus {
 	Success,
@@ -51,17 +53,33 @@ export const isFailure = (
 ): result is SQSFailure => result.status === SQSStatus.Failure;
 
 export const sendMessage = async (
+	id: string,
 	client: SQSClient,
 	queueUrl: string,
+	outputBucket: string,
+	region: string,
+	userEmail: string,
+	originalFilename: string,
+	inputSignedUrl: string,
 ): Promise<SendResult> => {
+	const signedUrls = await generateOutputSignedUrls(
+		id,
+		region,
+		outputBucket,
+		userEmail,
+		originalFilename,
+		7,
+	);
+
 	const job: TranscriptionJob = {
-		id: 'my-first-transcription', // uuid
-		s3Key: 'tifsample.wav',
+		id, // id of the source file
+		inputSignedUrl,
 		retryCount: 0,
 		sentTimestamp: new Date().toISOString(),
-		userEmail: 'digital.investigations@theguardian.com',
+		userEmail,
 		transcriptDestinationService: DestinationService.TranscriptionService,
-		originalFilename: 'test.mp3',
+		originalFilename,
+		outputBucketUrls: signedUrls,
 	};
 
 	try {
@@ -189,4 +207,51 @@ export const parseTranscriptJobMessage = (
 		`Failed to parse message ${message.MessageId}, contents: ${message.Body}`,
 	);
 	return undefined;
+};
+
+const generateOutputSignedUrls = async (
+	id: string,
+	region: string,
+	outputBucket: string,
+	userEmail: string,
+	originalFilename: string,
+	expiresInDays: number,
+): Promise<OutputBucketUrls> => {
+	const expiresIn = expiresInDays * 24 * 60;
+	const srtKey = `srt/${id}.srt`;
+	const jsonKey = `json/${id}.json`;
+	const textKey = `text/${id}.txt`;
+	const srtSignedS3Url = await getSignedUrl(
+		region,
+		outputBucket,
+		userEmail,
+		originalFilename,
+		expiresIn,
+		false,
+		srtKey,
+	);
+	const textSignedS3Url = await getSignedUrl(
+		region,
+		outputBucket,
+		userEmail,
+		originalFilename,
+		expiresIn,
+		false,
+		jsonKey,
+	);
+	const jsonSignedS3Url = await getSignedUrl(
+		region,
+		outputBucket,
+		userEmail,
+		originalFilename,
+		expiresIn,
+		false,
+		textKey,
+	);
+
+	return {
+		srt: { url: srtSignedS3Url, key: srtKey },
+		text: { url: textSignedS3Url, key: textKey },
+		json: { url: jsonSignedS3Url, key: jsonKey },
+	};
 };

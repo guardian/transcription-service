@@ -93,6 +93,19 @@ export class TranscriptionService extends GuStack {
 			expiration: Duration.days(7),
 		});
 
+		const outputBucket = new GuS3Bucket(
+			this,
+			'TranscriptionServiceOutputBucket',
+			{
+				app: APP_NAME,
+				bucketName: `transcription-service-output-${this.stage.toLowerCase()}`,
+			},
+		);
+
+		outputBucket.addLifecycleRule({
+			expiration: Duration.days(7),
+		});
+
 		// we only want one dev bucket so only create on CODE
 		if (props.stage === 'CODE') {
 			const domainNameDev = 'transcribe.local.dev-gutools.co.uk';
@@ -113,6 +126,18 @@ export class TranscriptionService extends GuStack {
 			);
 			sourceMediaBucketDev.addLifecycleRule({
 				expiration: Duration.days(1),
+			});
+
+			const transcriptionOutputBucketDev = new GuS3Bucket(
+				this,
+				'TranscriptionServiceOutputsBucket',
+				{
+					app: APP_NAME,
+					bucketName: `transcription-service-output-dev`,
+				},
+			);
+			transcriptionOutputBucketDev.addLifecycleRule({
+				expiration: Duration.days(7),
 			});
 		}
 
@@ -142,6 +167,18 @@ export class TranscriptionService extends GuStack {
 						effect: Effect.ALLOW,
 						actions: ['s3:GetObject', 's3:PutObject'],
 						resources: [`${sourceMediaBucket.bucketArn}/*`],
+					}),
+				],
+			}),
+		);
+
+		apiLambda.role?.attachInlinePolicy(
+			new GuPolicy(this, 'LambdaOutputBucketInlinePolicy', {
+				statements: [
+					new PolicyStatement({
+						effect: Effect.ALLOW,
+						actions: ['s3:PutObject'],
+						resources: [`${outputBucket.bucketArn}/*`],
 					}),
 				],
 			}),
@@ -227,7 +264,10 @@ export class TranscriptionService extends GuStack {
 				}),
 				new GuAllowPolicy(this, 'GetDeleteSourceMedia', {
 					actions: ['s3:GetObject', 's3:DeleteObject'],
-					resources: [`${sourceMediaBucket.bucketArn}/*`],
+					resources: [
+						`${sourceMediaBucket.bucketArn}/*`,
+						`${outputBucket.bucketArn}/*`,
+					],
 				}),
 				new GuAllowPolicy(this, 'WriteToDestinationTopic', {
 					actions: ['sns:Publish'],
@@ -402,6 +442,14 @@ export class TranscriptionService extends GuStack {
 				effect: Effect.ALLOW,
 				actions: ['ses:SendEmail', 'ses:SendRawEmail'],
 				resources: ['*'],
+			}),
+		);
+
+		outputHandlerLambda.addToRolePolicy(
+			new PolicyStatement({
+				effect: Effect.ALLOW,
+				actions: ['s3:GetObject'],
+				resources: [`${outputBucket.bucketArn}/*`],
 			}),
 		);
 

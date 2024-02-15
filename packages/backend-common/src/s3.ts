@@ -9,10 +9,13 @@ import { z } from 'zod';
 
 const ReadableBody = z.instanceof(Readable);
 
-export const getS3Client = (region: string) => {
+export const getS3Client = (
+	region: string,
+	useAccelerateEndpoint: boolean = false,
+) => {
 	return new S3Client({
 		region,
-		useAccelerateEndpoint: true,
+		useAccelerateEndpoint,
 	});
 };
 
@@ -21,18 +24,21 @@ export const getSignedUrl = (
 	bucket: string,
 	userEmail: string,
 	fileName: string,
+	expiresIn: number,
+	useAccelerateEndpoint: boolean,
+	id?: string,
 ) =>
 	getSignedUrlSdk(
-		getS3Client(region),
+		getS3Client(region, useAccelerateEndpoint),
 		new PutObjectCommand({
 			Bucket: bucket,
-			Key: uuid4(),
+			Key: id || uuid4(),
 			Metadata: {
 				'user-email': userEmail,
 				'file-name': fileName,
 			},
 		}),
-		{ expiresIn: 60 }, // override default expiration time of 15 minutes
+		{ expiresIn }, // override default expiration time of 15 minutes
 	);
 
 export const getFile = async (
@@ -71,4 +77,17 @@ export const getFile = async (
 		console.error(e);
 		throw e;
 	}
+};
+
+export const getFileFromS3 = async (
+	region: string,
+	destinationDirectory: string,
+	bucket: string,
+	s3Key: string,
+) => {
+	const s3Client = getS3Client(region);
+
+	const file = await getFile(s3Client, bucket, s3Key, destinationDirectory);
+
+	return file;
 };
