@@ -22,7 +22,7 @@ import {
 import { GuLambdaFunction } from '@guardian/cdk/lib/constructs/lambda';
 import { GuS3Bucket } from '@guardian/cdk/lib/constructs/s3';
 import { GuardianAwsAccounts } from '@guardian/private-infrastructure-config';
-import { type App, Duration, Tags } from 'aws-cdk-lib';
+import { type App, CfnOutput, Duration, Tags } from 'aws-cdk-lib';
 import { EndpointType } from 'aws-cdk-lib/aws-apigateway';
 import {
 	AutoScalingGroup,
@@ -267,7 +267,7 @@ export class TranscriptionService extends GuStack {
 			resourceName: loggingStreamName,
 		});
 
-		const role = new GuInstanceRole(this, {
+		const workerRole = new GuInstanceRole(this, {
 			app: workerApp,
 			additionalPolicies: [
 				new GuPolicy(this, 'WorkerGetParameters', {
@@ -336,7 +336,7 @@ export class TranscriptionService extends GuStack {
 					},
 				],
 				userData,
-				role: role,
+				role: workerRole,
 				securityGroup: workerSecurityGroup,
 			},
 		);
@@ -482,5 +482,10 @@ export class TranscriptionService extends GuStack {
 
 		outputHandlerLambda.addToRolePolicy(getParametersPolicy);
 		outputHandlerLambda.addToRolePolicy(putMetricDataPolicy);
+
+		new CfnOutput(this, 'WorkerRoleArn', {
+			exportName: 'WorkerRoleArn',
+			value: workerRole.roleArn,
+		});
 	}
 }
