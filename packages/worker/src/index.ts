@@ -20,7 +20,10 @@ import {
 import path from 'path';
 
 import { updateScaleInProtection } from './asg';
-import { getFileFromS3, uploadAllTranscriptsToS3 } from './util';
+import {
+	getFileFromS3WithPresignedUrl,
+	uploadAllTranscriptsToS3,
+} from './util';
 
 const main = async () => {
 	const config = await getConfig();
@@ -64,7 +67,11 @@ const main = async () => {
 			loggableJob,
 		);
 
-		const fileToTranscribe = await getFileFromS3(config, job.inputSignedUrl);
+		const fileToTranscribe = await getFileFromS3WithPresignedUrl(
+			config,
+			job.inputSignedUrl,
+			job.id,
+		);
 
 		// docker container to run ffmpeg and whisper on file
 		const containerId = await getOrCreateContainer(

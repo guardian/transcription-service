@@ -1,5 +1,6 @@
 import {
 	GetObjectCommand,
+	GetObjectCommandOutput,
 	HeadObjectCommand,
 	S3Client,
 } from '@aws-sdk/client-s3';
@@ -65,15 +66,23 @@ export const getFile = async (
 	key: string,
 	workingDirectory: string,
 ) => {
-	try {
-		const destinationPath = `${workingDirectory}/${path.basename(key)}`;
-		const data = await client.send(
-			new GetObjectCommand({
-				Bucket: bucket,
-				Key: key,
-			}),
-		);
+	const destinationPath = `${workingDirectory}/${path.basename(key)}`;
+	const data = await client.send(
+		new GetObjectCommand({
+			Bucket: bucket,
+			Key: key,
+		}),
+	);
+	await downloadS3Data(data, destinationPath, key);
+	return destinationPath;
+};
 
+const downloadS3Data = async (
+	data: GetObjectCommandOutput,
+	destinationPath: string,
+	key: string,
+) => {
+	try {
 		const body = ReadableBody.parse(data.Body);
 
 		const stream = body.pipe(createWriteStream(destinationPath));
@@ -95,6 +104,19 @@ export const getFile = async (
 		console.error(e);
 		throw e;
 	}
+};
+
+export const getObjectWithPresignedUrl = async (
+	presignedUrl: string,
+	key: string,
+	workingDirectory: string,
+) => {
+	const destinationPath = `${workingDirectory}/${path.basename(key)}`;
+	const data = (await fetch(presignedUrl))
+		.body as unknown as GetObjectCommandOutput;
+	console.log(data);
+	downloadS3Data(data, destinationPath, key);
+	return destinationPath;
 };
 
 export const getObjectMetadata = async (

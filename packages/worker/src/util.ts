@@ -7,6 +7,7 @@ import {
 	getFile,
 	getS3Client,
 	TranscriptionConfig,
+	getObjectWithPresignedUrl,
 } from '@guardian/transcription-service-backend-common';
 import path from 'path';
 
@@ -54,4 +55,18 @@ export const getFileFromS3 = async (
 	);
 
 	return file;
+};
+
+export const getFileFromS3WithPresignedUrl = async (
+	config: TranscriptionConfig,
+	signedUrl: string,
+	s3Key: string,
+) => {
+	const destinationPath = await getObjectWithPresignedUrl(
+		signedUrl,
+		s3Key,
+		config.app.stage === 'DEV' ? `${__dirname}/sample` : '/tmp',
+	);
+
+	return destinationPath;
 };
