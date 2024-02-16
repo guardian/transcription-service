@@ -1,22 +1,17 @@
-import {
-	AutoScalingClient,
-	SetInstanceProtectionCommand,
-} from '@aws-sdk/client-auto-scaling';
-import { readFile } from '@guardian/transcription-service-backend-common';
+import { SetInstanceProtectionCommand } from '@aws-sdk/client-auto-scaling';
+import { readFile } from './util';
+import { getASGClient } from '@guardian/transcription-service-backend-common/src/asg';
 
 export const updateScaleInProtection = async (
 	region: string,
 	stage: string,
 	value: boolean,
 ) => {
-	const clientConfig = {
-		region,
-	};
 	try {
 		if (stage !== 'DEV') {
 			const instanceId = readFile('/var/lib/cloud/data/instance-id');
 			console.log(`instanceId: ${instanceId}`);
-			const autoScalingClient = new AutoScalingClient(clientConfig);
+			const autoScalingClient = getASGClient(region);
 			const input = {
 				InstanceIds: [instanceId.trim()],
 				AutoScalingGroupName: `transcription-service-workers-${stage}`,
