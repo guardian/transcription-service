@@ -418,6 +418,9 @@ export class TranscriptionService extends GuStack {
 			writeCapacity: 1,
 		});
 
+		// Enable nightly backups (via https://github.com/guardian/aws-backup)
+		Tags.of(transcriptTable).add('devx-backup-enabled', 'true');
+
 		const outputHandlerLambda = new GuLambdaFunction(
 			this,
 			'transcription-service-output-handler',
