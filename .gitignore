@@ -8,3 +8,4 @@ build
 **.js
 localstack/
 **/package-lock.json
+**.DS_Store

@@ -5,6 +5,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
   "Metadata": {
     "gu:cdk:constructs": [
       "GuAmiParameter",
+      "GuStringParameter",
       "GuCertificate",
       "GuS3Bucket",
       "GuS3Bucket",
@@ -25,12 +26,24 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuGetDistributablePolicy",
       "GuParameterStoreReadPolicy",
       "GuVpcParameter",
+      "GuSecurityGroup",
       "GuSubnetListParameter",
       "GuLambdaFunction",
     ],
     "gu:cdk:version": "TEST",
   },
   "Outputs": {
+    "WorkerRoleArn": {
+      "Export": {
+        "Name": "WorkerRoleArn",
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "InstanceRoleTranscriptionserviceworkerA8AC6615",
+          "Arn",
+        ],
+      },
+    },
     "transcriptionserviceapitranscriptionserviceTESTEndpointA34D5917": {
       "Value": {
         "Fn::Join": [
@@ -67,6 +80,11 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
     "LoggingStreamName": {
       "Default": "/account/services/logging.stream.name",
       "Description": "SSM parameter containing the Name (not ARN) on the kinesis stream",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "S3PrefixListIdParameter": {
+      "Default": "/TEST/investigations/transcription-service/s3PrefixListId",
+      "Description": "ID of the managed prefix list for the S3 service. See https://docs.aws.amazon.com/systems-manager/latest/userguide/setup-create-vpc.html",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "VpcId": {
@@ -563,9 +581,6 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
     "TranscriptionServiceOutputBucketTranscriptionservice35996ED2": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "AccelerateConfiguration": {
-          "AccelerationStatus": "Enabled",
-        },
         "BucketName": "transcription-service-output-test",
         "LifecycleConfiguration": {
           "Rules": [
@@ -665,6 +680,88 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       },
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
+    },
+    "TranscriptionServiceWorkerSGTranscriptionserviceworker6EE23C91": {
+      "Properties": {
+        "GroupDescription": "TranscriptionService/TranscriptionServiceWorkerSGTranscriptionserviceworker",
+        "SecurityGroupEgress": [
+          {
+            "Description": {
+              "Fn::Join": [
+                "",
+                [
+                  "from ",
+                  {
+                    "Fn::ImportValue": "internet-enabled-vpc-AWSEndpointSecurityGroup",
+                  },
+                  ":443",
+                ],
+              ],
+            },
+            "DestinationSecurityGroupId": {
+              "Fn::ImportValue": "internet-enabled-vpc-AWSEndpointSecurityGroup",
+            },
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service-worker",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcId",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "TranscriptionServiceWorkerSGTranscriptionserviceworkertoIndirectPeer44380412F57": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "to ",
+              {
+                "Ref": "S3PrefixListIdParameter",
+              },
+              ":443",
+            ],
+          ],
+        },
+        "DestinationPrefixListId": {
+          "Ref": "S3PrefixListIdParameter",
+        },
+        "FromPort": 443,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "TranscriptionServiceWorkerSGTranscriptionserviceworker6EE23C91",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "ToPort": 443,
+      },
+      "Type": "AWS::EC2::SecurityGroupEgress",
     },
     "TranscriptionWorkerASGCAE69A98": {
       "Properties": {
@@ -776,6 +873,14 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
           "MetadataOptions": {
             "InstanceMetadataTags": "enabled",
           },
+          "SecurityGroupIds": [
+            {
+              "Fn::GetAtt": [
+                "TranscriptionServiceWorkerSGTranscriptionserviceworker6EE23C91",
+                "GroupId",
+              ],
+            },
+          ],
           "TagSpecifications": [
             {
               "ResourceType": "instance",
