@@ -15,18 +15,10 @@ export const UploadForm = () => {
 		return <p>Cannot upload - missing auth token</p>;
 	}
 
-	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-		event.preventDefault();
-
-		const maybeFileInput = document.querySelector(
-			'input[name=file]',
-		) as HTMLInputElement;
-		if (!maybeFileInput) {
-			return;
-		}
-		const files = maybeFileInput.files;
+	const uploadFileAndTranscribe = async (fileInput: HTMLInputElement) => {
+		const files = fileInput.files;
 		if (files == undefined || files.length === 0 || !files[0]) {
-			return;
+			return false;
 		}
 		const file = files[0];
 		const blob = new Blob([file as BlobPart]);
@@ -34,17 +26,20 @@ export const UploadForm = () => {
 		const response = await authFetch(`/api/signed-url`, token);
 		if (!response) {
 			console.error('Failed to fetch signed url');
-			return;
+			return false;
 		}
 
 		const body = SignedUrlResponseBody.safeParse(await response.json());
 		if (!body.success) {
 			console.error('response from signedUrl endpoint in wrong shape');
-			return;
+			return false;
 		}
 
 		const uploadStatus = await uploadToS3(body.data.presignedS3Url, blob);
-		setStatus(uploadStatus.isSuccess);
+		if (!uploadStatus) {
+			console.error('Failed to upload to s3');
+			return false;
+		}
 
 		const sendMessageResponse = await authFetch('/api/transcribe-file', token, {
 			method: 'POST',
@@ -56,13 +51,27 @@ export const UploadForm = () => {
 				fileName: file.name,
 			}),
 		});
-		const sendMessageSuccess = sendMessageResponse.status !== 200;
+		const sendMessageSuccess = sendMessageResponse.status === 200;
 		if (!sendMessageSuccess) {
 			console.error('Failed to call transcribe-file');
+			return false;
+		}
+		return true;
+	};
+
+	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+
+		const maybeFileInput = document.querySelector(
+			'input[name=file]',
+		) as HTMLInputElement;
+		if (!maybeFileInput) {
 			return;
 		}
 
-		if (uploadStatus.isSuccess) {
+		const success = await uploadFileAndTranscribe(maybeFileInput);
+		setStatus(success);
+		if (success) {
 			maybeFileInput.value = '';
 		}
 	};
