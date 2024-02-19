@@ -101,9 +101,7 @@ const downloadS3Data = async (
 	destinationPath: string,
 	key: string,
 ) => {
-	const body = ReadableBody.parse(data);
-
-	const stream = body.pipe(createWriteStream(destinationPath));
+	const stream = data.pipe(createWriteStream(destinationPath));
 
 	await new Promise<void>((resolve, reject) => {
 		stream
