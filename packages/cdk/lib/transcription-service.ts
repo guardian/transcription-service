@@ -269,13 +269,6 @@ export class TranscriptionService extends GuStack {
 				new GuPolicy(this, 'WorkerGetParameters', {
 					statements: [getParametersPolicy],
 				}),
-				new GuAllowPolicy(this, 'GetDeleteSourceMedia', {
-					actions: ['s3:GetObject', 's3:DeleteObject'],
-					resources: [
-						`${sourceMediaBucket.bucketArn}/*`,
-						`${outputBucket.bucketArn}/*`,
-					],
-				}),
 				new GuAllowPolicy(this, 'WriteToDestinationTopic', {
 					actions: ['sns:Publish'],
 					resources: [transcriptDestinationTopic.topicArn],

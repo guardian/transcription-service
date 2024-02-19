@@ -15,6 +15,50 @@ export const UploadForm = () => {
 		return <p>Cannot upload - missing auth token</p>;
 	}
 
+	const uploadFileAndTranscribe = async (fileInput: HTMLInputElement) => {
+		const files = fileInput.files;
+		if (files == undefined || files.length === 0 || !files[0]) {
+			return false;
+		}
+		const file = files[0];
+		const blob = new Blob([file as BlobPart]);
+
+		const response = await authFetch(`/api/signed-url`, token);
+		if (!response) {
+			console.error('Failed to fetch signed url');
+			return false;
+		}
+
+		const body = SignedUrlResponseBody.safeParse(await response.json());
+		if (!body.success) {
+			console.error('response from signedUrl endpoint in wrong shape');
+			return false;
+		}
+
+		const uploadStatus = await uploadToS3(body.data.presignedS3Url, blob);
+		if (!uploadStatus) {
+			console.error('Failed to upload to s3');
+			return false;
+		}
+
+		const sendMessageResponse = await authFetch('/api/transcribe-file', token, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				s3Key: body.data.s3Key,
+				fileName: file.name,
+			}),
+		});
+		const sendMessageSuccess = sendMessageResponse.status === 200;
+		if (!sendMessageSuccess) {
+			console.error('Failed to call transcribe-file');
+			return false;
+		}
+		return true;
+	};
+
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 
@@ -24,32 +68,10 @@ export const UploadForm = () => {
 		if (!maybeFileInput) {
 			return;
 		}
-		const files = maybeFileInput.files;
-		if (files == undefined || files.length === 0 || !files[0]) {
-			return;
-		}
-		const file = files[0];
-		const blob = new Blob([file as BlobPart]);
 
-		const urlParams = new URLSearchParams({ fileName: file.name });
-		const response = await authFetch(
-			`/api/signedUrl?${urlParams.toString()}`,
-			token,
-		);
-		if (!response) {
-			console.error('Failed to fetch signed url');
-			return;
-		}
-
-		const body = SignedUrlResponseBody.safeParse(await response.json());
-		if (!body.success) {
-			console.error('response from signedUrl endpoint in wrong shape');
-			return;
-		}
-
-		const uploadStatus = await uploadToS3(body.data.presignedS3Url, blob);
-		setStatus(uploadStatus.isSuccess);
-		if (uploadStatus.isSuccess) {
+		const success = await uploadFileAndTranscribe(maybeFileInput);
+		setStatus(success);
+		if (success) {
 			maybeFileInput.value = '';
 		}
 	};

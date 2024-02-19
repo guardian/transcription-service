@@ -9,15 +9,18 @@ import passport from 'passport';
 import { Request, Response } from 'express';
 import {
 	getConfig,
-	getSignedUrl,
+	getSignedUploadUrl,
 	getSQSClient,
 	sendMessage,
 	isFailure,
+	getSignedDownloadUrl,
+	getObjectMetadata,
 } from '@guardian/transcription-service-backend-common';
 import {
 	ClientConfig,
-	SignedUrlQueryParams,
 	TranscriptExportRequest,
+	inputBucketObjectMetadata,
+	sendMessageRequestBody,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
@@ -26,6 +29,7 @@ import {
 	TranscriptionItem,
 } from '@guardian/transcription-service-backend-common/src/dynamodb';
 import { createTranscriptDocument } from './services/googleDrive';
+import { v4 as uuid4 } from 'uuid';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -61,21 +65,58 @@ const getApp = async () => {
 		}),
 	]);
 
-	apiRouter.post('/send-message', [
+	apiRouter.post('/transcribe-file', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
-			const userEmail = 'digital.investigations@theguardian.com';
-			const originalFilename = 'test.mp3';
-			const id = 'my-first-transcription';
-			const signedUrl = 'tifsample.wav';
+			const userEmail = req.user?.email;
+			const body = sendMessageRequestBody.safeParse(req.body);
+			if (!body.success || !userEmail) {
+				res.status(422).send('missing request params');
+				return;
+			}
+
+			// confirm that the current user uploaded the file with this key
+			const s3Key = body.data.s3Key;
+			const objectMetadata = await getObjectMetadata(
+				config.aws.region,
+				config.app.sourceMediaBucket,
+				s3Key,
+			);
+			if (!objectMetadata) {
+				res.status(404).send('missing s3 object metadata');
+				console.error('missing s3 object metadata');
+				return;
+			}
+			const parsedObjectMetadata =
+				inputBucketObjectMetadata.safeParse(objectMetadata);
+			if (!parsedObjectMetadata.success) {
+				res.status(404).send('missing s3 object metadata');
+				console.error('invalid s3 object metadata');
+				return;
+			}
+			const uploadedBy = parsedObjectMetadata.data['user-email'];
+			if (uploadedBy != userEmail) {
+				console.error(
+					`s3 object uploaded by ${uploadedBy} does not belong to user ${userEmail}`,
+				);
+				res.status(404).send('missing s3 object metadata');
+				return;
+			}
+
+			const signedUrl = await getSignedDownloadUrl(
+				config.aws.region,
+				config.app.sourceMediaBucket,
+				s3Key,
+				3600,
+			);
 			const sendResult = await sendMessage(
-				id,
+				s3Key,
 				sqsClient,
 				config.app.taskQueueUrl,
 				config.app.transcriptionOutputBucket,
 				config.aws.region,
 				userEmail,
-				originalFilename,
+				body.data.fileName,
 				signedUrl,
 			);
 			if (isFailure(sendResult)) {
@@ -147,25 +188,21 @@ const getApp = async () => {
 		}),
 	]);
 
-	apiRouter.get('/signedUrl', [
+	apiRouter.get('/signed-url', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
-			const queryParams = SignedUrlQueryParams.safeParse(req.query);
-			if (!queryParams.success) {
-				res.status(422).send('missing query parameters');
-				return;
-			}
-			const presignedS3Url = await getSignedUrl(
+			const s3Key = uuid4();
+			const presignedS3Url = await getSignedUploadUrl(
 				config.aws.region,
 				config.app.sourceMediaBucket,
 				req.user?.email ?? 'not found',
-				queryParams.data.fileName,
 				60,
 				true,
+				s3Key,
 			);
 
 			res.set('Cache-Control', 'no-cache');
-			const responseBody: SignedUrlResponseBody = { presignedS3Url };
+			const responseBody: SignedUrlResponseBody = { presignedS3Url, s3Key };
 			res.send(responseBody);
 		}),
 	]);
