@@ -7,7 +7,8 @@
 		"@aws-sdk/client-sqs": "^3.496.0",
 		"@aws-sdk/client-ssm": "^3.496.0",
 		"@aws-sdk/lib-dynamodb": "^3.509.0",
-		"axios": "^1.6.7"
+		"@aws-sdk/client-cloudwatch": "^3.496.0",
+    "axios": "^1.6.7"
 	},
 	"private": true,
 	"main": "src/index.ts",

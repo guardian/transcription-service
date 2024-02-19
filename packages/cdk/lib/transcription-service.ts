@@ -190,7 +190,14 @@ export class TranscriptionService extends GuStack {
 			resources: [`${ssmPrefix}/${ssmPath}/*`],
 		});
 
+		const putMetricDataPolicy = new PolicyStatement({
+			effect: Effect.ALLOW,
+			actions: ['cloudwatch:PutMetricData'],
+			resources: ['*'],
+		});
+
 		apiLambda.addToRolePolicy(getParametersPolicy);
+		apiLambda.addToRolePolicy(putMetricDataPolicy);
 
 		// The custom domain name mapped to this API
 		const apiDomain = apiLambda.api.domainName;
@@ -279,6 +286,10 @@ export class TranscriptionService extends GuStack {
 					resources: [
 						`arn:aws:autoscaling:${props.env.region}:${GuardianAwsAccounts.Investigations}:autoScalingGroup:*:autoScalingGroupName/${autoScalingGroupName}`,
 					],
+				}),
+				new GuAllowPolicy(this, 'WriteCloudwatch', {
+					actions: ['cloudwatch:PutMetricData'],
+					resources: ['*'],
 				}),
 			],
 		});
@@ -400,6 +411,9 @@ export class TranscriptionService extends GuStack {
 			writeCapacity: 1,
 		});
 
+		// Enable nightly backups (via https://github.com/guardian/aws-backup)
+		Tags.of(transcriptTable).add('devx-backup-enabled', 'true');
+
 		const outputHandlerLambda = new GuLambdaFunction(
 			this,
 			'transcription-service-output-handler',
@@ -447,5 +461,6 @@ export class TranscriptionService extends GuStack {
 		);
 
 		outputHandlerLambda.addToRolePolicy(getParametersPolicy);
+		outputHandlerLambda.addToRolePolicy(putMetricDataPolicy);
 	}
 }
