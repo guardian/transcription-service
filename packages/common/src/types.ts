@@ -100,3 +100,10 @@ export const sendMessageRequestBody = z.object({
 	fileName: z.string(),
 });
 export type SendMessageRequestBody = z.infer<typeof sendMessageRequestBody>;
+
+export const inputBucketObjectMetadata = z.object({
+	'user-email': z.string(),
+});
+export type InputBucketObjectMetadata = z.infer<
+	typeof inputBucketObjectMetadata
+>;

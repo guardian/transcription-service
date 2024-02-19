@@ -14,10 +14,12 @@ import {
 	sendMessage,
 	isFailure,
 	getSignedDownloadUrl,
+	getObjectMetadata,
 } from '@guardian/transcription-service-backend-common';
 import {
 	ClientConfig,
 	TranscriptExportRequest,
+	inputBucketObjectMetadata,
 	sendMessageRequestBody,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
@@ -67,15 +69,40 @@ const getApp = async () => {
 		checkAuth,
 		asyncHandler(async (req, res) => {
 			const userEmail = req.user?.email;
-			console.log(req.body);
 			const body = sendMessageRequestBody.safeParse(req.body);
 			if (!body.success || !userEmail) {
-				console.error(body, userEmail);
 				res.status(422).send('missing request params');
 				return;
 			}
 
+			// confirm that the current user uploaded the file with this key
 			const s3Key = body.data.s3Key;
+			const objectMetadata = await getObjectMetadata(
+				config.aws.region,
+				config.app.sourceMediaBucket,
+				s3Key,
+			);
+			if (!objectMetadata) {
+				res.status(404).send('missing s3 object metadata');
+				console.error('missing s3 object metadata');
+				return;
+			}
+			const parsedObjectMetadata =
+				inputBucketObjectMetadata.safeParse(objectMetadata);
+			if (!parsedObjectMetadata.success) {
+				res.status(404).send('missing s3 object metadata');
+				console.error('invalid s3 object metadata');
+				return;
+			}
+			const uploadedBy = parsedObjectMetadata.data['user-email'];
+			if (uploadedBy != userEmail) {
+				console.error(
+					`s3 object uploaded by ${uploadedBy} does not belong to user ${userEmail}`,
+				);
+				res.status(404).send('missing s3 object metadata');
+				return;
+			}
+
 			const signedUrl = await getSignedDownloadUrl(
 				config.aws.region,
 				config.app.sourceMediaBucket,

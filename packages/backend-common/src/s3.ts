@@ -1,4 +1,8 @@
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+	GetObjectCommand,
+	HeadObjectCommand,
+	S3Client,
+} from '@aws-sdk/client-s3';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl as getSignedUrlSdk } from '@aws-sdk/s3-request-presigner';
 import { ReadStream, createWriteStream } from 'fs';
@@ -127,4 +131,23 @@ export const getFileFromS3 = async (
 	const file = await getFile(s3Client, bucket, s3Key, destinationDirectory);
 
 	return file;
+};
+
+export const getObjectMetadata = async (
+	region: string,
+	bucket: string,
+	key: string,
+) => {
+	try {
+		const client = getS3Client(region);
+		const data = await client.send(
+			new HeadObjectCommand({
+				Bucket: bucket,
+				Key: key,
+			}),
+		);
+		return data.Metadata;
+	} catch (e) {
+		return;
+	}
 };
