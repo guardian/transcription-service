@@ -160,59 +160,6 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
-    "GetDeleteSourceMedia6AC3A8D5": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "s3:GetObject",
-                "s3:DeleteObject",
-              ],
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "TranscriptionServiceOutputBucketTranscriptionservice35996ED2",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "GetDeleteSourceMedia6AC3A8D5",
-        "Roles": [
-          {
-            "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
     "GetDistributablePolicyTranscriptionserviceworker2DFD604E": {
       "Properties": {
         "PolicyDocument": {
@@ -557,6 +504,10 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         },
         "TableName": "transcription-service-TEST",
         "Tags": [
+          {
+            "Key": "devx-backup-enabled",
+            "Value": "true",
+          },
           {
             "Key": "gu:cdk:version",
             "Value": "TEST",
@@ -1017,6 +968,27 @@ service transcription-service-worker start",
       },
       "Type": "AWS::IAM::Policy",
     },
+    "WriteCloudwatch15686221": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "cloudwatch:PutMetricData",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "WriteCloudwatch15686221",
+        "Roles": [
+          {
+            "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
     "WriteToDestinationTopic3E565788": {
       "Properties": {
         "PolicyDocument": {
@@ -1294,6 +1266,11 @@ service transcription-service-worker start",
               ],
               "Effect": "Allow",
               "Resource": "arn:aws:ssm:test-region:745349931791:parameter/TEST/investigations/transcription-service/*",
+            },
+            {
+              "Action": "cloudwatch:PutMetricData",
+              "Effect": "Allow",
+              "Resource": "*",
             },
             {
               "Action": [
@@ -1991,6 +1968,11 @@ service transcription-service-worker start",
               ],
               "Effect": "Allow",
               "Resource": "arn:aws:ssm:test-region:745349931791:parameter/TEST/investigations/transcription-service/*",
+            },
+            {
+              "Action": "cloudwatch:PutMetricData",
+              "Effect": "Allow",
+              "Resource": "*",
             },
           ],
           "Version": "2012-10-17",
