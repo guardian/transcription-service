@@ -1,11 +1,13 @@
 import { authFetch } from '@/helpers';
-import { useContext, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
 	SignedUrlResponseBody,
 	uploadToS3,
 } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
 import { FileInput, Label } from 'flowbite-react';
+import { RequestStatus } from '@/types';
+import { InfoMessage } from '@/components/InfoMessage';
 
 const uploadFileAndTranscribe = async (file: File, token: string) => {
 	const blob = new Blob([file as BlobPart]);
@@ -46,47 +48,91 @@ const uploadFileAndTranscribe = async (file: File, token: string) => {
 	return true;
 };
 
-enum UploadStatus {
-	Ready = 'Ready',
-	InProgress = 'InProgress',
-	Success = 'Success',
-	Failed = 'Failed',
-}
-
 export const UploadForm = () => {
-	const [status, setStatus] = useState<UploadStatus>(UploadStatus.Ready);
+	const [status, setStatus] = useState<RequestStatus>(RequestStatus.Ready);
+	const [errorMessage, setErrorMessage] = useState<string | undefined>();
 	const { token } = useContext(AuthContext);
 
 	if (!token) {
-		return <div>Not logged in</div>;
+		return (
+			<InfoMessage message={'Login required'} status={RequestStatus.Failed} />
+		);
+	}
+
+	if (status === RequestStatus.InProgress) {
+		return (
+			<InfoMessage
+				message={'Upload in progress...'}
+				status={RequestStatus.InProgress}
+			/>
+		);
+	}
+
+	if (status === RequestStatus.Failed) {
+		return (
+			<>
+				<InfoMessage
+					message={`${errorMessage ?? 'Upload failed'}`}
+					status={RequestStatus.Failed}
+				/>
+				<button
+					onClick={() => setStatus(RequestStatus.Ready)}
+					className="font-medium text-blue-600 underline dark:text-blue-500 hover:no-underline"
+				>
+					Click here
+				</button>{' '}
+				to try again
+			</>
+		);
+	}
+
+	if (status === RequestStatus.Success) {
+		return (
+			<p className="text-gray-500 dark:text-gray-400 pt-3">
+				Upload complete. Transcription in progress - check your email for the
+				completed transcript. The transcription process is typically shorter
+				than the length of the media file.{' '}
+				<button
+					onClick={() => setStatus(RequestStatus.Ready)}
+					className="font-medium text-blue-600 underline dark:text-blue-500 hover:no-underline"
+				>
+					Click here
+				</button>{' '}
+				to transcribe another file
+			</p>
+		);
 	}
 
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
-		setStatus(UploadStatus.InProgress);
+		setStatus(RequestStatus.InProgress);
 
 		const maybeFileInput = document.querySelector(
 			'input[id=files]',
 		) as HTMLInputElement;
-		if (!maybeFileInput || !maybeFileInput.files) {
+		if (
+			!maybeFileInput ||
+			!maybeFileInput.files ||
+			maybeFileInput.files.length === 0
+		) {
+			setErrorMessage(
+				'Invalid file input - did you select a file to transcribe?',
+			);
+			setStatus(RequestStatus.Failed);
 			return;
 		}
 
-		console.log(maybeFileInput.files);
 		for (const file of maybeFileInput.files) {
 			const result = await uploadFileAndTranscribe(file, token);
 			if (!result) {
-				setStatus(UploadStatus.Failed);
+				setStatus(RequestStatus.Failed);
 				return;
 			}
 		}
 
-		setStatus(UploadStatus.Success);
+		setStatus(RequestStatus.Success);
 		maybeFileInput.value = '';
 	};
-
-	const statusString =
-		status === undefined ? '' : status ? 'Success' : 'Failure';
 
 	return (
 		<>
@@ -107,7 +153,6 @@ export const UploadForm = () => {
 					Submit
 				</button>
 			</form>
-			<p id="upload-status">{statusString}</p>
 		</>
 	);
 };

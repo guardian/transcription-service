@@ -7,3 +7,10 @@ export type AuthState = {
 	token?: string;
 	loggedInUser?: LoggedInUser;
 };
+
+export enum RequestStatus {
+	Ready = 'Ready',
+	InProgress = 'InProgress',
+	Success = 'Success',
+	Failed = 'Failed',
+}

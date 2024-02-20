@@ -7,35 +7,9 @@ import { exportTranscript } from '@/services/export';
 import {
 	ArrowTopRightOnSquareIcon,
 	DocumentTextIcon,
-	ExclamationTriangleIcon,
 } from '@heroicons/react/16/solid';
-import { Spinner } from 'flowbite-react';
-
-enum ExportStatus {
-	Ready = 'Ready',
-	Complete = 'Complete',
-	Error = 'Error',
-	InProgress = 'InProgress',
-}
-
-const iconForStatus = (status: ExportStatus) => {
-	switch (status) {
-		case ExportStatus.InProgress:
-			return <Spinner className={'w-6 h-6'} />;
-		case ExportStatus.Error:
-			return <ExclamationTriangleIcon className={'w-6 h-6'} />;
-		default:
-			return null;
-	}
-};
-const messageWithIcon = (message: string, status: ExportStatus) => {
-	return (
-		<div className={'flex space-x-3'}>
-			{iconForStatus(status)}
-			<p className={'mb-3 text-gray-500 dark:text-gray-400'}>{message}</p>
-		</div>
-	);
-};
+import { RequestStatus } from '@/types';
+import { InfoMessage } from '@/components/InfoMessage';
 
 const ExportButton = () => {
 	const { token } = useContext(AuthContext);
@@ -43,28 +17,39 @@ const ExportButton = () => {
 	const [docId, setDocId] = useState<string | undefined>();
 	const [loading, setLoading] = useState(false);
 	const [failureMessage, setFailureMessage] = useState<string>('');
-	const [exportStatus, setExportStatus] = useState<ExportStatus>(
-		ExportStatus.Ready,
+	const [requestStatus, setRequestStatus] = useState<RequestStatus>(
+		RequestStatus.Ready,
 	);
 	// TODO: once we have some CSS/component library, tidy up this messy error handling
 	if (!token) {
-		return messageWithIcon('Not logged in', ExportStatus.Error);
+		return (
+			<InfoMessage message={'not logged in'} status={RequestStatus.Failed} />
+		);
 	}
 	const transcriptId = searchParams.get('transcriptId');
 	if (!transcriptId) {
-		return messageWithIcon(
-			'Cannot export - missing transcript id',
-			ExportStatus.Error,
+		return (
+			<InfoMessage
+				message={'Cannot export - missing transcript id'}
+				status={RequestStatus.Failed}
+			/>
 		);
 	}
-	if (exportStatus === ExportStatus.Error) {
-		return messageWithIcon(
-			`Export failed with error ${failureMessage ?? 'unknown failure'}`,
-			ExportStatus.Error,
+	if (requestStatus === RequestStatus.Failed) {
+		return (
+			<InfoMessage
+				message={`Export failed with error ${failureMessage ?? 'unknown failure'}`}
+				status={RequestStatus.Failed}
+			/>
 		);
 	}
 	if (loading) {
-		return messageWithIcon('Export in progress...', ExportStatus.InProgress);
+		return (
+			<InfoMessage
+				message={'Export in progress...'}
+				status={RequestStatus.InProgress}
+			/>
+		);
 	}
 	if (docId) {
 		return (
@@ -88,25 +73,25 @@ const ExportButton = () => {
 			if (response && response.status !== 200) {
 				const text = await response.text();
 				setFailureMessage(text);
-				setExportStatus(ExportStatus.Error);
+				setRequestStatus(RequestStatus.Failed);
 				return;
 			}
 			const json = await response.json();
 			const parsedResponse = ExportResponse.safeParse(json);
 			if (!parsedResponse.success) {
 				console.error('Failed to parse export response', parsedResponse.error);
-				setExportStatus(ExportStatus.Error);
+				setRequestStatus(RequestStatus.Failed);
 				setFailureMessage(
 					`Export succeeded but failed to get document id - check your google drive`,
 				);
 				return;
 			}
 			setDocId(parsedResponse.data.documentId);
-			setExportStatus(ExportStatus.Complete);
+			setRequestStatus(RequestStatus.Success);
 		} catch (error) {
 			console.error('Export failed', error);
 			setFailureMessage("'Authentication with google failed'");
-			setExportStatus(ExportStatus.Error);
+			setRequestStatus(RequestStatus.Failed);
 		}
 	};
 
