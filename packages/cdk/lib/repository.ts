@@ -1,7 +1,7 @@
 import type { GuStackProps } from '@guardian/cdk/lib/constructs/core';
 import { GuStack, GuStringParameter } from '@guardian/cdk/lib/constructs/core';
 import type { App } from 'aws-cdk-lib';
-import { CfnOutput, RemovalPolicy } from 'aws-cdk-lib';
+import { CfnOutput, Fn, RemovalPolicy } from 'aws-cdk-lib';
 import { Repository, TagMutability } from 'aws-cdk-lib/aws-ecr';
 import {
 	AccountPrincipal,
@@ -41,6 +41,30 @@ export class TranscriptionServiceRepository extends GuStack {
 			removalPolicy: RemovalPolicy.DESTROY,
 			imageScanOnPush: true,
 		});
+		// allow transcription workers read access to the repo
+		repository.addToResourcePolicy(
+			new PolicyStatement({
+				principals: [
+					new ArnPrincipal(
+						Fn.importValue(`transcription-service-CODE-WorkerRoleArn`),
+					),
+					new ArnPrincipal(
+						Fn.importValue(`transcription-service-PROD-WorkerRoleArn`),
+					),
+				],
+				actions: [
+					'ecr:GetAuthorizationToken',
+					'ecr:BatchCheckLayerAvailability',
+					'ecr:GetDownloadUrlForLayer',
+					'ecr:GetRepositoryPolicy',
+					'ecr:ListImages',
+					'ecr:DescribeImages',
+					'ecr:BatchGetImage',
+				],
+				effect: Effect.ALLOW,
+			}),
+		);
+		// allow github actions read/write access to the repo
 		repository.addToResourcePolicy(
 			new PolicyStatement({
 				principals: [new ArnPrincipal(githubActionsIAMRoleArn.valueAsString)],

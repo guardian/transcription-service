@@ -9,7 +9,11 @@ import {
 	GuStringParameter,
 } from '@guardian/cdk/lib/constructs/core';
 import { GuCname } from '@guardian/cdk/lib/constructs/dns';
-import { GuVpc, SubnetType } from '@guardian/cdk/lib/constructs/ec2';
+import {
+	GuSecurityGroup,
+	GuVpc,
+	SubnetType,
+} from '@guardian/cdk/lib/constructs/ec2';
 import {
 	GuAllowPolicy,
 	GuInstanceRole,
@@ -18,7 +22,7 @@ import {
 import { GuLambdaFunction } from '@guardian/cdk/lib/constructs/lambda';
 import { GuS3Bucket } from '@guardian/cdk/lib/constructs/s3';
 import { GuardianAwsAccounts } from '@guardian/private-infrastructure-config';
-import { type App, Duration, Tags } from 'aws-cdk-lib';
+import { type App, CfnOutput, Duration, Fn, Tags } from 'aws-cdk-lib';
 import { EndpointType } from 'aws-cdk-lib/aws-apigateway';
 import {
 	AutoScalingGroup,
@@ -33,6 +37,8 @@ import {
 	InstanceType,
 	LaunchTemplate,
 	MachineImage,
+	Peer,
+	Port,
 	UserData,
 } from 'aws-cdk-lib/aws-ec2';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
@@ -60,6 +66,17 @@ export class TranscriptionService extends GuStack {
 			app: `${APP_NAME}-worker`,
 			description: 'AMI to use for the worker instances',
 		});
+
+		const s3PrefixListId = new GuStringParameter(
+			this,
+			'S3PrefixListIdParameter',
+			{
+				fromSSM: true,
+				default: `/${this.stage}/${this.stack}/${APP_NAME}/s3PrefixListId`,
+				description:
+					'ID of the managed prefix list for the S3 service. See https://docs.aws.amazon.com/systems-manager/latest/userguide/setup-create-vpc.html',
+			},
+		);
 
 		const ssmPrefix = `arn:aws:ssm:${props.env.region}:${GuardianAwsAccounts.Investigations}:parameter`;
 		const ssmPath = `${this.stage}/${this.stack}/${APP_NAME}`;
@@ -263,7 +280,7 @@ export class TranscriptionService extends GuStack {
 			resourceName: loggingStreamName,
 		});
 
-		const role = new GuInstanceRole(this, {
+		const workerRole = new GuInstanceRole(this, {
 			app: workerApp,
 			additionalPolicies: [
 				new GuPolicy(this, 'WorkerGetParameters', {
@@ -293,6 +310,37 @@ export class TranscriptionService extends GuStack {
 				}),
 			],
 		});
+		const vpc = GuVpc.fromIdParameter(
+			this,
+			'InvestigationsInternetEnabledVpc',
+			{
+				availabilityZones: ['eu-west-1a', 'eu-west-1b', 'eu-west-1c'],
+			},
+		);
+
+		const workerSecurityGroup = new GuSecurityGroup(
+			this,
+			`TranscriptionServiceWorkerSG`,
+			{
+				app: workerApp,
+				vpc,
+				allowAllOutbound: false,
+			},
+		);
+
+		const privateEndpointSecurityGroup = Fn.importValue(
+			`internet-enabled-vpc-AWSEndpointSecurityGroup`,
+		);
+
+		workerSecurityGroup.addEgressRule(
+			Peer.securityGroupId(privateEndpointSecurityGroup),
+			Port.tcp(443),
+		);
+
+		workerSecurityGroup.addEgressRule(
+			Peer.prefixList(s3PrefixListId.valueAsString),
+			Port.tcp(443),
+		);
 
 		const launchTemplate = new LaunchTemplate(
 			this,
@@ -315,7 +363,8 @@ export class TranscriptionService extends GuStack {
 					},
 				],
 				userData,
-				role: role,
+				role: workerRole,
+				securityGroup: workerSecurityGroup,
 			},
 		);
 
@@ -339,9 +388,7 @@ export class TranscriptionService extends GuStack {
 				minCapacity: 0,
 				maxCapacity: isProd ? 20 : 4,
 				autoScalingGroupName,
-				vpc: GuVpc.fromIdParameter(this, 'InvestigationsInternetEnabledVpc', {
-					availabilityZones: ['eu-west-1a', 'eu-west-1b', 'eu-west-1c'],
-				}),
+				vpc,
 				vpcSubnets: {
 					subnets: GuVpc.subnetsFromParameter(this, {
 						type: SubnetType.PRIVATE,
@@ -462,5 +509,10 @@ export class TranscriptionService extends GuStack {
 
 		outputHandlerLambda.addToRolePolicy(getParametersPolicy);
 		outputHandlerLambda.addToRolePolicy(putMetricDataPolicy);
+
+		new CfnOutput(this, 'WorkerRoleArn', {
+			exportName: 'WorkerRoleArn',
+			value: workerRole.roleArn,
+		});
 	}
 }
