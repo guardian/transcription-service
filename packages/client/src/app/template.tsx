@@ -23,16 +23,25 @@ export default function Template({ children }: { children: React.ReactNode }) {
 
 	useEffect(() => {
 		const browserHistory = createBrowserHistory();
-		initAuth(setAuth, browserHistory);
+
+		const newAuth = initAuth(browserHistory);
+		console.log('initAuth', newAuth);
+		setAuth(newAuth);
 	}, []);
 
-	if (!auth?.token) {
+	if (!auth.token) {
 		return (
 			<div>
-				<h2>Login Required</h2>
+				<h2 className="text-4xl font-extrabold dark:text-white">
+					Login Required
+				</h2>
 				<AuthRequired></AuthRequired>
 			</div>
 		);
 	}
-	return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
+	return (
+		<>
+			<AuthContext.Provider value={auth}>{children}</AuthContext.Provider>
+		</>
+	);
 }
