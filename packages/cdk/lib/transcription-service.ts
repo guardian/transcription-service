@@ -511,7 +511,7 @@ export class TranscriptionService extends GuStack {
 		outputHandlerLambda.addToRolePolicy(putMetricDataPolicy);
 
 		new CfnOutput(this, 'WorkerRoleArn', {
-			exportName: 'WorkerRoleArn',
+			exportName: `WorkerRoleArn-${props.stage}`,
 			value: workerRole.roleArn,
 		});
 	}
