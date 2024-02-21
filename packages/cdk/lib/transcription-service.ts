@@ -22,7 +22,14 @@ import {
 import { GuLambdaFunction } from '@guardian/cdk/lib/constructs/lambda';
 import { GuS3Bucket } from '@guardian/cdk/lib/constructs/s3';
 import { GuardianAwsAccounts } from '@guardian/private-infrastructure-config';
-import { type App, aws_events_targets, Duration, Fn, Tags } from 'aws-cdk-lib';
+import {
+	type App,
+	aws_events_targets,
+	CfnOutput,
+	Duration,
+	Fn,
+	Tags,
+} from 'aws-cdk-lib';
 import { EndpointType } from 'aws-cdk-lib/aws-apigateway';
 import {
 	AutoScalingGroup,
