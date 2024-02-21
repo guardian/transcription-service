@@ -44,14 +44,10 @@ jobs:
           npm run cdk::build
           npm run cdk::lint
           npm run cdk::synth
-      - name: AWS Auth
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
-          aws-region: eu-west-1
       - name: Upload to riff-raff
-        uses: guardian/actions-riff-raff@v3
+        uses: guardian/actions-riff-raff@v4
         with:
+          roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           configPath: packages/cdk/riff-raff.yaml
           buildNumberOffset: 120
@@ -67,8 +63,9 @@ jobs:
             transcription-service-worker:
               - packages/worker/dist/transcription-service-worker_1.0.0_all.deb
       - name: Upload repository project to riff-raff
-        uses: guardian/actions-riff-raff@v3
+        uses: guardian/actions-riff-raff@v4
         with:
+          roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           configPath: packages/cdk/riff-raff-repository.yaml
           projectName: investigations::transcription-service-repository
