@@ -7,7 +7,7 @@ import {
 import { AuthContext } from '@/app/template';
 import { FileInput, Label } from 'flowbite-react';
 import { RequestStatus } from '@/types';
-import { InfoMessage } from '@/components/InfoMessage';
+import { iconForStatus, InfoMessage } from '@/components/InfoMessage';
 
 const uploadFileAndTranscribe = async (file: File, token: string) => {
 	const blob = new Blob([file as BlobPart]);
@@ -48,10 +48,31 @@ const uploadFileAndTranscribe = async (file: File, token: string) => {
 	return true;
 };
 
+const updateFileStatus = (
+	uploads: Record<string, RequestStatus>,
+	index: number,
+	fileName: string,
+	newStatus: RequestStatus,
+) => {
+	const x = {
+		...uploads,
+		[`${index}-${fileName}`]: newStatus,
+	};
+	console.log('status', uploads, x);
+	return x;
+};
+
 export const UploadForm = () => {
 	const [status, setStatus] = useState<RequestStatus>(RequestStatus.Ready);
 	const [errorMessage, setErrorMessage] = useState<string | undefined>();
+	const [uploads, setUploads] = useState<Record<string, RequestStatus>>({});
 	const { token } = useContext(AuthContext);
+
+	const reset = () => {
+		setStatus(RequestStatus.Ready);
+		setErrorMessage(undefined);
+		setUploads({});
+	};
 
 	if (!token) {
 		return (
@@ -59,53 +80,70 @@ export const UploadForm = () => {
 		);
 	}
 
-	if (status === RequestStatus.InProgress) {
-		return (
-			<InfoMessage
-				message={'Upload in progress...'}
-				status={RequestStatus.InProgress}
-			/>
-		);
-	}
-
-	if (status === RequestStatus.Failed) {
+	if (status !== RequestStatus.Ready) {
+		console.log(uploads);
 		return (
 			<>
-				<InfoMessage
-					message={`${errorMessage ?? 'Upload failed'}`}
-					status={RequestStatus.Failed}
-				/>
-				<button
-					onClick={() => setStatus(RequestStatus.Ready)}
-					className="font-medium text-blue-600 underline dark:text-blue-500 hover:no-underline"
-				>
-					Click here
-				</button>{' '}
-				to try again
-			</>
-		);
-	}
+				{Object.entries(uploads).length > 0 && (
+					<div className={'pb-10'}>
+						<h2 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+							Uploading files:
+						</h2>
 
-	if (status === RequestStatus.Success) {
-		return (
-			<p className="text-gray-500 dark:text-gray-400 pt-3">
-				Upload complete. Transcription in progress - check your email for the
-				completed transcript. The transcription process is typically shorter
-				than the length of the media file.{' '}
-				<button
-					onClick={() => setStatus(RequestStatus.Ready)}
-					className="font-medium text-blue-600 underline dark:text-blue-500 hover:no-underline"
-				>
-					Click here
-				</button>{' '}
-				to transcribe another file
-			</p>
+						<ul className="max-w-md space-y-2 text-gray-500 list-inside dark:text-gray-400">
+							{Object.entries(uploads).map(([key, value]) => (
+								<li className="flex items-center">
+									<span className={'mr-1'}>{iconForStatus(value)}</span>
+									{key}
+								</li>
+							))}
+						</ul>
+					</div>
+				)}
+				{(status === RequestStatus.Failed ||
+					Object.values(uploads).includes(RequestStatus.Failed)) && (
+					<div
+						className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
+						role="alert"
+					>
+						<span className="font-medium">
+							{errorMessage ?? 'One or more uploads failed'}
+						</span>{' '}
+						<button
+							onClick={() => reset()}
+							className="font-medium text-blue-600 underline dark:text-blue-500 hover:no-underline"
+						>
+							Click here
+						</button>{' '}
+						to try again
+					</div>
+				)}
+				{Object.entries(uploads).length > 0 &&
+					Object.values(uploads).filter((s) => s !== RequestStatus.Success)
+						.length === 0 && (
+						<div
+							className="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400"
+							role="alert"
+						>
+							<span className="font-medium">Upload complete. </span>{' '}
+							Transcription in progress - check your email for the completed
+							transcript. The transcription process is typically shorter than
+							the length of the media file.{' '}
+							<button
+								onClick={() => reset()}
+								className="font-medium text-blue-600 underline dark:text-blue-500 hover:no-underline"
+							>
+								Click here
+							</button>{' '}
+							to transcribe another file
+						</div>
+					)}
+			</>
 		);
 	}
 
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
-		setStatus(RequestStatus.InProgress);
 
 		const maybeFileInput = document.querySelector(
 			'input[id=files]',
@@ -121,12 +159,25 @@ export const UploadForm = () => {
 			setStatus(RequestStatus.Failed);
 			return;
 		}
+		setStatus(RequestStatus.InProgress);
+		const fileArray = Array.from(maybeFileInput.files);
+		const fileIds = fileArray.map((f, index) => [
+			`${index}-${f.name}`,
+			RequestStatus.InProgress,
+		]);
+		setUploads(Object.fromEntries(fileIds));
 
-		for (const file of maybeFileInput.files) {
+		for (const [index, file] of fileArray.entries()) {
 			const result = await uploadFileAndTranscribe(file, token);
 			if (!result) {
+				setUploads((prev) =>
+					updateFileStatus(prev, index, file.name, RequestStatus.Failed),
+				);
 				setStatus(RequestStatus.Failed);
-				return;
+			} else {
+				setUploads((prev) =>
+					updateFileStatus(prev, index, file.name, RequestStatus.Success),
+				);
 			}
 		}
 
