@@ -25,7 +25,6 @@ export default function Template({ children }: { children: React.ReactNode }) {
 		const browserHistory = createBrowserHistory();
 
 		const newAuth = initAuth(browserHistory);
-		console.log('initAuth', newAuth);
 		setAuth(newAuth);
 	}, []);
 
@@ -39,9 +38,5 @@ export default function Template({ children }: { children: React.ReactNode }) {
 			</div>
 		);
 	}
-	return (
-		<>
-			<AuthContext.Provider value={auth}>{children}</AuthContext.Provider>
-		</>
-	);
+	return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 }

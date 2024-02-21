@@ -82,7 +82,7 @@ const ExportButton = () => {
 				console.error('Failed to parse export response', parsedResponse.error);
 				setRequestStatus(RequestStatus.Failed);
 				setFailureMessage(
-					`Export succeeded but failed to get document id - check your google drive`,
+					`Export succeeded but failed to get document id - check your Google Drive`,
 				);
 				return;
 			}
@@ -90,7 +90,7 @@ const ExportButton = () => {
 			setRequestStatus(RequestStatus.Success);
 		} catch (error) {
 			console.error('Export failed', error);
-			setFailureMessage("'Authentication with google failed'");
+			setFailureMessage("'Authentication with Google failed'");
 			setRequestStatus(RequestStatus.Failed);
 		}
 	};
@@ -103,7 +103,7 @@ const ExportButton = () => {
 				className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
 				onClick={exportHandler}
 			>
-				Click here to export transcript to google doc
+				Click here to export transcript to Google Doc
 				<DocumentTextIcon className={'w-6 h-6 pl-1'} />
 			</button>
 		</>

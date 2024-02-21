@@ -30,13 +30,10 @@ export const initAuth = (browserHistory: BrowserHistory): AuthState => {
 		maybeParameterToken ?? localStorage.getItem('transcription-auth');
 
 	if (maybeToken) {
-		console.log('Found token');
 		if (isLoginExpired(maybeToken)) {
 			localStorage.removeItem('transcription-auth');
 			return initialState;
 		} else {
-			console.log('setting auth state with token');
-			console.log(jwtDecode(maybeToken));
 			return {
 				loggedInUser: jwtDecode(maybeToken) as LoggedInUser,
 				token: maybeToken,
