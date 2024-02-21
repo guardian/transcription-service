@@ -525,7 +525,7 @@ export class TranscriptionService extends GuStack {
 
 		const workerCapacityManagerLambda = new GuLambdaFunction(
 			this,
-			'transcription-service-worker-capacity-manager-lambda',
+			'transcription-service-worker-capacity-manager',
 			{
 				fileName: 'worker-capacity-manager.zip',
 				handler: 'index.workerCapacityManager',
