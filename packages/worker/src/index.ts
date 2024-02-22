@@ -7,6 +7,7 @@ import {
 	deleteMessage,
 	changeMessageVisibility,
 	getObjectWithPresignedUrl,
+	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
 import {
 	OutputBucketKeys,
@@ -26,11 +27,15 @@ import {
 	MetricsService,
 	FailureMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
+import { SQSClient } from '@aws-sdk/client-sqs';
+import { SNSClient } from '@aws-sdk/client-sns';
+
+const POLLING_INTERVAL_SECONDS = 30;
+// avoid two tasks being processed by a single worker simultaneously
+let transcriptionTaskSemaphoreTaken = false;
 
 const main = async () => {
 	const config = await getConfig();
-	const stage = config.app.stage;
-	const region = config.aws.region;
 
 	const metrics = new MetricsService(
 		config.app.stage,
@@ -38,29 +43,65 @@ const main = async () => {
 		'worker',
 	);
 
+	const sqsClient = getSQSClient(
+		config.aws.region,
+		config.aws.localstackEndpoint,
+	);
+	const snsClient = getSNSClient(
+		config.aws.region,
+		config.aws.localstackEndpoint,
+	);
+
+	let pollCount = 0;
+	pollTranscriptionQueue(pollCount, sqsClient, snsClient, metrics, config);
+	setInterval(() => {
+		pollCount += 1;
+		pollTranscriptionQueue(pollCount, sqsClient, snsClient, metrics, config);
+	}, POLLING_INTERVAL_SECONDS * 1000);
+};
+
+const releaseSemaphoreAndRemoveScaleInProtection = async (
+	region: string,
+	stage: string,
+) => {
+	transcriptionTaskSemaphoreTaken = false;
+	await updateScaleInProtection(region, stage, false);
+};
+
+const pollTranscriptionQueue = async (
+	pollCount: number,
+	sqsClient: SQSClient,
+	snsClient: SNSClient,
+	metrics: MetricsService,
+	config: TranscriptionConfig,
+) => {
+	const stage = config.app.stage;
+	const region = config.aws.region;
 	const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
 
-	const client = getSQSClient(region, config.aws.localstackEndpoint);
-	const message = await getNextMessage(client, config.app.taskQueueUrl);
+	if (transcriptionTaskSemaphoreTaken) {
+		console.log(`transcription task in progress. skipping`);
+		return;
+	}
+	console.log(
+		`worker polling for transcription task. Poll count = ${pollCount}`,
+	);
+
+	const message = await getNextMessage(sqsClient, config.app.taskQueueUrl);
 
 	if (isFailure(message)) {
 		console.error(`Failed to fetch message due to ${message.errorMsg}`);
-		await updateScaleInProtection(region, stage, false);
+		await releaseSemaphoreAndRemoveScaleInProtection(region, stage);
 		return;
 	}
 
 	if (!message.message) {
 		console.log('No messages available');
-		await updateScaleInProtection(region, stage, false);
+		await releaseSemaphoreAndRemoveScaleInProtection(region, stage);
 		return;
 	}
 
 	try {
-		const snsClient = getSNSClient(
-			config.aws.region,
-			config.aws.localstackEndpoint,
-		);
-
 		const job = parseTranscriptJobMessage(message.message);
 
 		if (!job) {
@@ -100,7 +141,7 @@ const main = async () => {
 			// Adding 300 seconds (5 minutes) and the file duration
 			// to allow time to load the whisper model
 			await changeMessageVisibility(
-				client,
+				sqsClient,
 				config.app.taskQueueUrl,
 				message.message.ReceiptHandle,
 				ffmpegResult.duration + 300,
@@ -140,7 +181,7 @@ const main = async () => {
 		if (message.message?.ReceiptHandle) {
 			console.log(`Deleting message ${message.message?.MessageId}`);
 			await deleteMessage(
-				client,
+				sqsClient,
 				config.app.taskQueueUrl,
 				message.message.ReceiptHandle,
 			);
@@ -152,14 +193,14 @@ const main = async () => {
 		if (message.message?.ReceiptHandle) {
 			// Terminate the message visibility timeout
 			await changeMessageVisibility(
-				client,
+				sqsClient,
 				config.app.taskQueueUrl,
 				message.message.ReceiptHandle,
 				0,
 			);
 		}
 	} finally {
-		await updateScaleInProtection(region, stage, false);
+		await releaseSemaphoreAndRemoveScaleInProtection(region, stage);
 	}
 };
 
