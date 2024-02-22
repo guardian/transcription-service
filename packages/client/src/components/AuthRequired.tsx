@@ -8,10 +8,15 @@ const AuthWithReturnPath = () => {
 	params.append('returnPath', pathname || '');
 
 	return (
-		<div>
-			<a href={`/api/auth/google?${params.toString()}`}>Click here</a>
-			to log in with Google
-		</div>
+		<p className="text-gray-500 dark:text-gray-400 pt-3">
+			<a
+				href={`/api/auth/google?${params.toString()}`}
+				className="font-medium text-blue-600 underline dark:text-blue-500 hover:no-underline"
+			>
+				Click here
+			</a>{' '}
+			to login with Google.
+		</p>
 	);
 };
 

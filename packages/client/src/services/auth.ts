@@ -14,10 +14,7 @@ export function isLoginExpired(token: string): boolean {
 	return loggedInUser.exp * 1000 < Date.now();
 }
 
-export const initAuth = (
-	setAuth: React.Dispatch<React.SetStateAction<AuthState>>,
-	browserHistory: BrowserHistory,
-) => {
+export const initAuth = (browserHistory: BrowserHistory): AuthState => {
 	const urlParams = new URLSearchParams(window.location.search);
 	const maybeParameterToken = urlParams.get('auth');
 
@@ -35,15 +32,15 @@ export const initAuth = (
 	if (maybeToken) {
 		if (isLoginExpired(maybeToken)) {
 			localStorage.removeItem('transcription-auth');
-			setAuth(initialState);
+			return initialState;
 		} else {
-			setAuth({
+			return {
 				loggedInUser: jwtDecode(maybeToken) as LoggedInUser,
 				token: maybeToken,
-			});
+			};
 		}
 	} else {
-		setAuth(initialState);
+		return initialState;
 	}
 };
 
