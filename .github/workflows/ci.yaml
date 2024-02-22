@@ -32,6 +32,9 @@ jobs:
       - name: Build output-handler
         run: |
           npm run output-handler::build
+      - name: Build worker-capacity-manager
+        run: |
+          npm run worker-capacity-manager::build
       - name: Package API/Client/Update
         run: |
           npm run package
@@ -64,6 +67,8 @@ jobs:
               - target/api.zip
             transcription-service-output-handler:
               - target/output-handler.zip
+            transcription-service-worker-capacity-manager:
+              - target/worker-capacity-manager.zip
             transcription-service-worker:
               - packages/worker/dist/transcription-service-worker_1.0.0_all.deb
       - name: Upload repository project to riff-raff
