@@ -68,6 +68,14 @@ const releaseSemaphoreAndRemoveScaleInProtection = async (
 	await updateScaleInProtection(region, stage, false);
 };
 
+const takeSemaphoreAndEnableScaleInProtection = async (
+	region: string,
+	stage: string,
+) => {
+	transcriptionTaskSemaphoreTaken = true;
+	await updateScaleInProtection(region, stage, true);
+};
+
 const pollTranscriptionQueue = async (
 	pollCount: number,
 	sqsClient: SQSClient,
@@ -86,6 +94,8 @@ const pollTranscriptionQueue = async (
 	console.log(
 		`worker polling for transcription task. Poll count = ${pollCount}`,
 	);
+
+	await takeSemaphoreAndEnableScaleInProtection(region, stage);
 
 	const message = await getNextMessage(sqsClient, config.app.taskQueueUrl);
 
