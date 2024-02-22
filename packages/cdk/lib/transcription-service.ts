@@ -364,7 +364,7 @@ export class TranscriptionService extends GuStack {
 				],
 				userData,
 				role: workerRole,
-				securityGroup: workerSecurityGroup,
+				// securityGroup: workerSecurityGroup,
 			},
 		);
 
