@@ -561,7 +561,7 @@ export class TranscriptionService extends GuStack {
 			targets: [
 				new aws_events_targets.LambdaFunction(workerCapacityManagerLambda),
 			],
-			schedule: Schedule.rate(Duration.minutes(1)),
+			schedule: Schedule.rate(Duration.seconds(30)),
 		});
 	}
 }
