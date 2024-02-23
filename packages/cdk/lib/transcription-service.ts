@@ -324,7 +324,7 @@ export class TranscriptionService extends GuStack {
 			{
 				app: workerApp,
 				vpc,
-				allowAllOutbound: false,
+				allowAllOutbound: true,
 			},
 		);
 
@@ -364,7 +364,7 @@ export class TranscriptionService extends GuStack {
 				],
 				userData,
 				role: workerRole,
-				// securityGroup: workerSecurityGroup,
+				securityGroup: workerSecurityGroup,
 			},
 		);
 
