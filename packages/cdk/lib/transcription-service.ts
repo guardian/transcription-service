@@ -553,6 +553,8 @@ export class TranscriptionService extends GuStack {
 			}),
 		);
 
+		workerCapacityManagerLambda.addToRolePolicy(getParametersPolicy);
+
 		new Rule(this, 'worker-capacity-manager-rule', {
 			description:
 				'Manages worker capacity by updating the desired capacity of ASG based on queue length',
