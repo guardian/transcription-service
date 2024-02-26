@@ -97,8 +97,16 @@ const pollTranscriptionQueue = async (
 		return;
 	}
 
+	const taskMessage = message.message;
+	const receiptHandle = taskMessage.ReceiptHandle;
+	if (!receiptHandle) {
+		console.log('message missing receipt handle');
+		await updateScaleInProtection(region, stage, false);
+		return;
+	}
+
 	try {
-		const job = parseTranscriptJobMessage(message.message);
+		const job = parseTranscriptJobMessage(taskMessage);
 
 		if (!job) {
 			await metrics.putMetric(FailureMetric);
@@ -109,7 +117,7 @@ const pollTranscriptionQueue = async (
 		const { outputBucketUrls, ...loggableJob } = job;
 
 		console.log(
-			`Fetched transcription job with id ${message.message.MessageId}`,
+			`Fetched transcription job with id ${taskMessage.MessageId}`,
 			loggableJob,
 		);
 
@@ -129,17 +137,13 @@ const pollTranscriptionQueue = async (
 
 		const ffmpegResult = await convertToWav(containerId, fileToTranscribe);
 
-		if (
-			message.message?.ReceiptHandle &&
-			ffmpegResult.duration &&
-			ffmpegResult.duration !== 0
-		) {
+		if (ffmpegResult.duration && ffmpegResult.duration !== 0) {
 			// Adding 300 seconds (5 minutes) and the file duration
 			// to allow time to load the whisper model
 			await changeMessageVisibility(
 				sqsClient,
 				config.app.taskQueueUrl,
-				message.message.ReceiptHandle,
+				receiptHandle,
 				ffmpegResult.duration + 300,
 			);
 		}
@@ -174,27 +178,19 @@ const pollTranscriptionQueue = async (
 			transcriptionOutput,
 		);
 
-		if (message.message?.ReceiptHandle) {
-			console.log(`Deleting message ${message.message?.MessageId}`);
-			await deleteMessage(
-				sqsClient,
-				config.app.taskQueueUrl,
-				message.message.ReceiptHandle,
-			);
-		}
+		console.log(`Deleting message ${taskMessage.MessageId}`);
+		await deleteMessage(sqsClient, config.app.taskQueueUrl, receiptHandle);
 	} catch (error) {
 		const msg = 'Worker failed to complete';
 		console.error(msg, error);
 		await metrics.putMetric(FailureMetric);
-		if (message.message?.ReceiptHandle) {
-			// Terminate the message visibility timeout
-			await changeMessageVisibility(
-				sqsClient,
-				config.app.taskQueueUrl,
-				message.message.ReceiptHandle,
-				0,
-			);
-		}
+		// Terminate the message visibility timeout
+		await changeMessageVisibility(
+			sqsClient,
+			config.app.taskQueueUrl,
+			receiptHandle,
+			0,
+		);
 	} finally {
 		await updateScaleInProtection(region, stage, false);
 	}
