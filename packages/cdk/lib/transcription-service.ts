@@ -436,6 +436,15 @@ export class TranscriptionService extends GuStack {
 			applyToLaunchedInstances: true,
 		});
 
+		const transcriptionDeadLetterQueue = new Queue(
+			this,
+			`${APP_NAME}-task-dead-letter-queue`,
+			{
+				fifo: true,
+				queueName: `${APP_NAME}-task-dead-letter-queue-${this.stage}.fifo`,
+			},
+		);
+
 		// SQS queue for transcription tasks from API lambda to worker EC2 instances
 		const transcriptionTaskQueue = new Queue(this, `${APP_NAME}-task-queue`, {
 			fifo: true,
@@ -448,6 +457,10 @@ export class TranscriptionService extends GuStack {
 			// we might choose to use a hash of the actual file to be transcribed instead (but I can't really think where
 			// that would be particularly helpful)
 			contentBasedDeduplication: true,
+			deadLetterQueue: {
+				queue: transcriptionDeadLetterQueue,
+				maxReceiveCount: 5,
+			},
 		});
 
 		// allow API lambda to write to queue
