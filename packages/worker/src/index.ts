@@ -7,6 +7,7 @@ import {
 	deleteMessage,
 	changeMessageVisibility,
 	getObjectWithPresignedUrl,
+	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
 import {
 	OutputBucketKeys,
@@ -26,11 +27,14 @@ import {
 	MetricsService,
 	FailureMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
+import { SQSClient } from '@aws-sdk/client-sqs';
+import { SNSClient } from '@aws-sdk/client-sns';
+import { setTimeout } from 'timers/promises';
+
+const POLLING_INTERVAL_SECONDS = 30;
 
 const main = async () => {
 	const config = await getConfig();
-	const stage = config.app.stage;
-	const region = config.aws.region;
 
 	const metrics = new MetricsService(
 		config.app.stage,
@@ -38,10 +42,48 @@ const main = async () => {
 		'worker',
 	);
 
+	const sqsClient = getSQSClient(
+		config.aws.region,
+		config.aws.localstackEndpoint,
+	);
+	const snsClient = getSNSClient(
+		config.aws.region,
+		config.aws.localstackEndpoint,
+	);
+
+	let pollCount = 0;
+	// eslint-disable-next-line no-constant-condition
+	while (true) {
+		pollCount += 1;
+		await pollTranscriptionQueue(
+			pollCount,
+			sqsClient,
+			snsClient,
+			metrics,
+			config,
+		);
+		await setTimeout(POLLING_INTERVAL_SECONDS * 1000);
+	}
+};
+
+const pollTranscriptionQueue = async (
+	pollCount: number,
+	sqsClient: SQSClient,
+	snsClient: SNSClient,
+	metrics: MetricsService,
+	config: TranscriptionConfig,
+) => {
+	const stage = config.app.stage;
+	const region = config.aws.region;
 	const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
 
-	const client = getSQSClient(region, config.aws.localstackEndpoint);
-	const message = await getNextMessage(client, config.app.taskQueueUrl);
+	console.log(
+		`worker polling for transcription task. Poll count = ${pollCount}`,
+	);
+
+	await updateScaleInProtection(region, stage, true);
+
+	const message = await getNextMessage(sqsClient, config.app.taskQueueUrl);
 
 	if (isFailure(message)) {
 		console.error(`Failed to fetch message due to ${message.errorMsg}`);
@@ -56,11 +98,6 @@ const main = async () => {
 	}
 
 	try {
-		const snsClient = getSNSClient(
-			config.aws.region,
-			config.aws.localstackEndpoint,
-		);
-
 		const job = parseTranscriptJobMessage(message.message);
 
 		if (!job) {
@@ -72,7 +109,7 @@ const main = async () => {
 		const { outputBucketUrls, ...loggableJob } = job;
 
 		console.log(
-			`Fetched transcription job with id ${message.message.MessageId}}`,
+			`Fetched transcription job with id ${message.message.MessageId}`,
 			loggableJob,
 		);
 
@@ -100,7 +137,7 @@ const main = async () => {
 			// Adding 300 seconds (5 minutes) and the file duration
 			// to allow time to load the whisper model
 			await changeMessageVisibility(
-				client,
+				sqsClient,
 				config.app.taskQueueUrl,
 				message.message.ReceiptHandle,
 				ffmpegResult.duration + 300,
@@ -140,7 +177,7 @@ const main = async () => {
 		if (message.message?.ReceiptHandle) {
 			console.log(`Deleting message ${message.message?.MessageId}`);
 			await deleteMessage(
-				client,
+				sqsClient,
 				config.app.taskQueueUrl,
 				message.message.ReceiptHandle,
 			);
@@ -152,7 +189,7 @@ const main = async () => {
 		if (message.message?.ReceiptHandle) {
 			// Terminate the message visibility timeout
 			await changeMessageVisibility(
-				client,
+				sqsClient,
 				config.app.taskQueueUrl,
 				message.message.ReceiptHandle,
 				0,
