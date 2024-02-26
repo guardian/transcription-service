@@ -14,15 +14,14 @@ export const getSQSQueueLengthIncludingInvisible = async (
 		});
 		const response = await sqsClient.send(command);
 		const attributes = response.Attributes;
-		if (attributes) {
-			return (
-				Number(attributes.ApproximateNumberOfMessages) +
-				Number(attributes.ApproximateNumberOfMessagesNotVisible)
-			);
-		}
+		if (!attributes)
+			throw new Error('unable to retrieve sqs message count attributes');
+		return (
+			Number(attributes.ApproximateNumberOfMessages) +
+			Number(attributes.ApproximateNumberOfMessagesNotVisible)
+		);
 	} catch (error) {
 		console.log("Couldn't get queue length", error);
 		throw error;
 	}
-	throw new Error('unable to retrieve sqs message count attributes');
 };
