@@ -29,7 +29,7 @@ export const updateScaleInProtection = async (
 			);
 		}
 	} catch (error) {
-		console.log(`Could not remove scale-in protection`, error);
+		console.error(`Could not set scale-in protection`, error);
 		throw error;
 	}
 };
