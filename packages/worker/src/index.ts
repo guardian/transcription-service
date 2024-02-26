@@ -29,10 +29,9 @@ import {
 } from '@guardian/transcription-service-backend-common/src/metrics';
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { SNSClient } from '@aws-sdk/client-sns';
+import { setTimeout } from 'timers/promises';
 
 const POLLING_INTERVAL_SECONDS = 30;
-// avoid two tasks being processed by a single worker simultaneously
-let transcriptionTaskSemaphoreTaken = false;
 
 const main = async () => {
 	const config = await getConfig();
@@ -53,27 +52,18 @@ const main = async () => {
 	);
 
 	let pollCount = 0;
-	pollTranscriptionQueue(pollCount, sqsClient, snsClient, metrics, config);
-	setInterval(() => {
+	// eslint-disable-next-line no-constant-condition
+	while (true) {
 		pollCount += 1;
-		pollTranscriptionQueue(pollCount, sqsClient, snsClient, metrics, config);
-	}, POLLING_INTERVAL_SECONDS * 1000);
-};
-
-const releaseSemaphoreAndRemoveScaleInProtection = async (
-	region: string,
-	stage: string,
-) => {
-	transcriptionTaskSemaphoreTaken = false;
-	await updateScaleInProtection(region, stage, false);
-};
-
-const takeSemaphoreAndEnableScaleInProtection = async (
-	region: string,
-	stage: string,
-) => {
-	transcriptionTaskSemaphoreTaken = true;
-	await updateScaleInProtection(region, stage, true);
+		await pollTranscriptionQueue(
+			pollCount,
+			sqsClient,
+			snsClient,
+			metrics,
+			config,
+		);
+		await setTimeout(POLLING_INTERVAL_SECONDS * 1000);
+	}
 };
 
 const pollTranscriptionQueue = async (
@@ -87,27 +77,23 @@ const pollTranscriptionQueue = async (
 	const region = config.aws.region;
 	const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
 
-	if (transcriptionTaskSemaphoreTaken) {
-		console.log(`transcription task in progress. skipping`);
-		return;
-	}
 	console.log(
 		`worker polling for transcription task. Poll count = ${pollCount}`,
 	);
 
-	await takeSemaphoreAndEnableScaleInProtection(region, stage);
+	await updateScaleInProtection(region, stage, true);
 
 	const message = await getNextMessage(sqsClient, config.app.taskQueueUrl);
 
 	if (isFailure(message)) {
 		console.error(`Failed to fetch message due to ${message.errorMsg}`);
-		await releaseSemaphoreAndRemoveScaleInProtection(region, stage);
+		await updateScaleInProtection(region, stage, false);
 		return;
 	}
 
 	if (!message.message) {
 		console.log('No messages available');
-		await releaseSemaphoreAndRemoveScaleInProtection(region, stage);
+		await updateScaleInProtection(region, stage, false);
 		return;
 	}
 
@@ -123,7 +109,7 @@ const pollTranscriptionQueue = async (
 		const { outputBucketUrls, ...loggableJob } = job;
 
 		console.log(
-			`Fetched transcription job with id ${message.message.MessageId}}`,
+			`Fetched transcription job with id ${message.message.MessageId}`,
 			loggableJob,
 		);
 
@@ -210,7 +196,7 @@ const pollTranscriptionQueue = async (
 			);
 		}
 	} finally {
-		await releaseSemaphoreAndRemoveScaleInProtection(region, stage);
+		await updateScaleInProtection(region, stage, false);
 	}
 };
 
