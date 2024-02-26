@@ -15,7 +15,7 @@ export const setDesiredCapacity = async (
 		});
 		await asgClient.send(command);
 	} catch (error) {
-		console.log("Couldn't set desired capacity", error);
+		console.error("Couldn't set desired capacity", error);
 		throw error;
 	}
 };

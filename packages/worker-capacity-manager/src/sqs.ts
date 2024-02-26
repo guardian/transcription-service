@@ -21,7 +21,7 @@ export const getSQSQueueLengthIncludingInvisible = async (
 			Number(attributes.ApproximateNumberOfMessagesNotVisible)
 		);
 	} catch (error) {
-		console.log("Couldn't get queue length", error);
+		console.error("Couldn't get queue length", error);
 		throw error;
 	}
 };
