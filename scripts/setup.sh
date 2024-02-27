@@ -4,9 +4,9 @@ set -e
 SCRIPT_PATH=$( cd $(dirname $0) ; pwd -P )
 APP_NAME="transcription-service"
 
-npm install
+# npm install
 
-dev-nginx setup-app nginx/nginx-mapping.yml
+# dev-nginx setup-app nginx/nginx-mapping.yml
 
 if (! docker stats --no-stream 1>/dev/null 2>&1); then
   echo "Starting docker..."
@@ -23,6 +23,14 @@ fi
 
 # Starting localstack
 docker-compose up -d
+
+# Wait for localstack to be ready
+DEAD_LETTER_OUTPUT=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-task-dead-letter-queue-DEV.fifo --attributes "FifoQueue=true,ContentBasedDeduplication=true")
+echo $DEAD_LETTER_OUTPUT
+DEAD_LETTER_QUEUE_URL=$(echo $DEAD_LETTER_OUTPUT | jq .QueueUrl)
+DEAD_LETTER_QUEUE_URL_LOCALHOST=${QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
+echo "Created queue in localstack, url: ${DEAD_LETTER_QUEUE_URL_LOCALHOST}"
+
 # If the queue already exists this command appears to still work and returns the existing queue url
 QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-task-queue-DEV.fifo --attributes "FifoQueue=true,ContentBasedDeduplication=true" | jq .QueueUrl)
 # We don't install the localstack dns so need to replace the endpoint with localhost
