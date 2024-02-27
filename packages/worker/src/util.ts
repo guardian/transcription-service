@@ -1,3 +1,4 @@
+import { logger } from '@guardian/transcription-service-backend-common/src/logging';
 import { Transcripts } from './transcribe';
 import {
 	uploadToS3,
@@ -33,6 +34,6 @@ export const uploadAllTranscriptsToS3 = async (
 				`Could not upload file: ${fileName} to S3! ${response.errorMsg}`,
 			);
 		}
-		console.log(`Successfully uploaded ${fileName} to S3`);
+		logger.info(`Successfully uploaded ${fileName} to S3`);
 	}
 };

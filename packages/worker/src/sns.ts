@@ -1,4 +1,5 @@
 import { PublishCommand, SNSClient } from '@aws-sdk/client-sns';
+import { logger } from '@guardian/transcription-service-backend-common/src/logging';
 import { TranscriptionOutput } from '@guardian/transcription-service-common';
 
 export const getSNSClient = (region: string, localstackEndpoint?: string) => {
@@ -21,10 +22,10 @@ const publishMessage = async (
 		const resp = await client.send(
 			new PublishCommand({ TopicArn: topicArn, Message: message }),
 		);
-		console.log('message sent', resp);
+		logger.info('message sent', resp);
 		return resp.MessageId;
 	} catch (e) {
-		console.error('Error publishing message', e);
+		logger.error('Error publishing message', e);
 		throw e;
 	}
 };

@@ -79,7 +79,7 @@ const pollTranscriptionQueue = async (
 	const region = config.aws.region;
 	const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
 
-	console.log(
+	logger.info(
 		`worker polling for transcription task. Poll count = ${pollCount}`,
 	);
 
@@ -88,7 +88,7 @@ const pollTranscriptionQueue = async (
 	const message = await getNextMessage(sqsClient, config.app.taskQueueUrl);
 
 	if (isFailure(message)) {
-		console.error(`Failed to fetch message due to ${message.errorMsg}`);
+		logger.error(`Failed to fetch message due to ${message.errorMsg}`);
 		await updateScaleInProtection(region, stage, false);
 		return;
 	}
@@ -108,7 +108,7 @@ const pollTranscriptionQueue = async (
 
 	const receiptHandle = taskMessage.ReceiptHandle;
 	if (!receiptHandle) {
-		console.log('message missing receipt handle');
+		logger.error('message missing receipt handle');
 		await updateScaleInProtection(region, stage, false);
 		return;
 	}
@@ -118,7 +118,7 @@ const pollTranscriptionQueue = async (
 
 		if (!job) {
 			await metrics.putMetric(FailureMetric);
-			console.error('Failed to parse job message', message);
+			logger.error('Failed to parse job message', message);
 			return;
 		}
 
@@ -208,11 +208,11 @@ const pollTranscriptionQueue = async (
 			transcriptionOutput,
 		);
 
-		console.log(`Deleting message ${taskMessage.MessageId}`);
+		logger.info(`Deleting message ${taskMessage.MessageId}`);
 		await deleteMessage(sqsClient, config.app.taskQueueUrl, receiptHandle);
 	} catch (error) {
 		const msg = 'Worker failed to complete';
-		console.error(msg, error);
+		logger.error(msg, error);
 		await metrics.putMetric(FailureMetric);
 		// Terminate the message visibility timeout
 		await changeMessageVisibility(
