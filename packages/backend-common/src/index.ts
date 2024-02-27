@@ -4,3 +4,4 @@ export * from './config';
 export * from './configHelpers';
 export * from './utils';
 export * from './dynamodb';
+export * from './asg';

@@ -93,3 +93,33 @@ deployments:
       - updateLambda
     dependencies:
       - cfn-eu-west-1-investigations-transcription-service
+  lambda-upload-eu-west-1-investigations-transcription-service-worker-capacity-manager:
+    type: aws-lambda
+    stacks:
+      - investigations
+    regions:
+      - eu-west-1
+    app: transcription-service-worker-capacity-manager
+    contentDirectory: transcription-service-worker-capacity-manager
+    parameters:
+      bucketSsmLookup: true
+      lookupByTags: true
+      fileName: worker-capacity-manager.zip
+    actions:
+      - uploadLambda
+  lambda-update-eu-west-1-investigations-transcription-service-worker-capacity-manager:
+    type: aws-lambda
+    stacks:
+      - investigations
+    regions:
+      - eu-west-1
+    app: transcription-service-worker-capacity-manager
+    contentDirectory: transcription-service-worker-capacity-manager
+    parameters:
+      bucketSsmLookup: true
+      lookupByTags: true
+      fileName: worker-capacity-manager.zip
+    actions:
+      - updateLambda
+    dependencies:
+      - cfn-eu-west-1-investigations-transcription-service

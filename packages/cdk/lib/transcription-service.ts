@@ -22,7 +22,14 @@ import {
 import { GuLambdaFunction } from '@guardian/cdk/lib/constructs/lambda';
 import { GuS3Bucket } from '@guardian/cdk/lib/constructs/s3';
 import { GuardianAwsAccounts } from '@guardian/private-infrastructure-config';
-import { type App, CfnOutput, Duration, Fn, Tags } from 'aws-cdk-lib';
+import {
+	type App,
+	aws_events_targets,
+	CfnOutput,
+	Duration,
+	Fn,
+	Tags,
+} from 'aws-cdk-lib';
 import { EndpointType } from 'aws-cdk-lib/aws-apigateway';
 import {
 	AutoScalingGroup,
@@ -41,6 +48,7 @@ import {
 	Port,
 	UserData,
 } from 'aws-cdk-lib/aws-ec2';
+import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
@@ -513,6 +521,47 @@ export class TranscriptionService extends GuStack {
 		new CfnOutput(this, 'WorkerRoleArn', {
 			exportName: `WorkerRoleArn-${props.stage}`,
 			value: workerRole.roleArn,
+		});
+
+		const workerCapacityManagerLambda = new GuLambdaFunction(
+			this,
+			'transcription-service-worker-capacity-manager',
+			{
+				fileName: 'worker-capacity-manager.zip',
+				handler: 'index.workerCapacityManager',
+				runtime: Runtime.NODEJS_20_X,
+				app: `${APP_NAME}-worker-capacity-manager`,
+			},
+		);
+
+		workerCapacityManagerLambda.addToRolePolicy(
+			new PolicyStatement({
+				effect: Effect.ALLOW,
+				actions: [
+					'autoscaling:SetDesiredCapacity',
+					'autoscaling:DescribeAutoScalingInstances',
+				],
+				resources: [transcriptionWorkerASG.autoScalingGroupArn],
+			}),
+		);
+
+		workerCapacityManagerLambda.addToRolePolicy(
+			new PolicyStatement({
+				effect: Effect.ALLOW,
+				actions: ['sqs:GetQueueAttributes'],
+				resources: [transcriptionTaskQueue.queueArn],
+			}),
+		);
+
+		workerCapacityManagerLambda.addToRolePolicy(getParametersPolicy);
+
+		new Rule(this, 'worker-capacity-manager-rule', {
+			description:
+				'Manages worker capacity by updating the desired capacity of ASG based on queue length',
+			targets: [
+				new aws_events_targets.LambdaFunction(workerCapacityManagerLambda),
+			],
+			schedule: Schedule.rate(Duration.minutes(1)),
 		});
 	}
 }
