@@ -227,10 +227,12 @@ export const moveMessageToDeadLetterQueue = async (
 	if (sendResult.status == SQSStatus.Failure) {
 		const errorMessage = 'Failed to send message to dead letter queue.';
 		console.error(errorMessage, sendResult.error, sendResult.errorMsg);
+		// rethrow exception, let another worker retry
 		throw Error(errorMessage);
 	}
 	// if the delete command throws an exception, it will be caught by
-	// deleteMessage and logged
+	// deleteMessage and logged. Another worker will reprocess the message in
+	// the main task queue and we'll have a duplicate in the dead letter queue.
 	await deleteMessage(client, taskQueueUrl, receiptHandle);
 };
 

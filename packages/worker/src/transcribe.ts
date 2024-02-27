@@ -94,7 +94,7 @@ export const getOrCreateContainer = async (
 export const convertToWav = async (
 	containerId: string,
 	file: string,
-): Promise<FfmpegResult> => {
+): Promise<FfmpegResult | void> => {
 	const fileName = path.basename(file);
 	const filePath = `${CONTAINER_FOLDER}/${fileName}`;
 	const wavPath = `${CONTAINER_FOLDER}/${fileName}-converted.wav`;
@@ -127,7 +127,7 @@ export const convertToWav = async (
 		};
 	} catch (error) {
 		console.log('ffmpeg failed error:', error);
-		throw error;
+		return;
 	}
 };
 

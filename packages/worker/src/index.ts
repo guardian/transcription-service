@@ -8,6 +8,7 @@ import {
 	changeMessageVisibility,
 	getObjectWithPresignedUrl,
 	TranscriptionConfig,
+	moveMessageToDeadLetterQueue,
 } from '@guardian/transcription-service-backend-common';
 import {
 	OutputBucketKeys,
@@ -98,6 +99,12 @@ const pollTranscriptionQueue = async (
 	}
 
 	const taskMessage = message.message;
+	if (!taskMessage.Body) {
+		console.log('message missing body');
+		await updateScaleInProtection(region, stage, false);
+		return;
+	}
+
 	const receiptHandle = taskMessage.ReceiptHandle;
 	if (!receiptHandle) {
 		console.log('message missing receipt handle');
@@ -136,6 +143,25 @@ const pollTranscriptionQueue = async (
 		);
 
 		const ffmpegResult = await convertToWav(containerId, fileToTranscribe);
+		if (ffmpegResult === undefined) {
+			// when ffmpeg fails to transcribe, move message to the dead letter
+			// queue
+			if (config.app.stage != 'DEV') {
+				console.log(
+					`moving message with message id ${taskMessage.MessageId} to dead letter queue`,
+				);
+				await moveMessageToDeadLetterQueue(
+					sqsClient,
+					config.app.taskQueueUrl,
+					config.app.deadLetterQueueUrl,
+					taskMessage.Body,
+					receiptHandle,
+				);
+			} else {
+				console.log('skip moving message to dead letter queue in DEV');
+			}
+			return;
+		}
 
 		if (ffmpegResult.duration && ffmpegResult.duration !== 0) {
 			// Adding 300 seconds (5 minutes) and the file duration
