@@ -122,7 +122,7 @@ const pollTranscriptionQueue = async (
 			return;
 		}
 
-		const { outputBucketUrls, ...loggableJob } = job;
+		const { outputBucketUrls, inputSignedUrl, ...loggableJob } = job;
 
 		logger.info(
 			`Fetched transcription job with id ${taskMessage.MessageId}`,
@@ -133,7 +133,7 @@ const pollTranscriptionQueue = async (
 			config.app.stage === 'DEV' ? `${__dirname}/sample` : '/tmp';
 
 		const fileToTranscribe = await getObjectWithPresignedUrl(
-			job.inputSignedUrl,
+			inputSignedUrl,
 			job.id,
 			destinationDirectory,
 		);

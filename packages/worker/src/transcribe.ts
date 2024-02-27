@@ -33,12 +33,10 @@ const runSpawnCommand = (
 		const stdout: string[] = [];
 		const stderr: string[] = [];
 		cp.stdout.on('data', (data) => {
-			logger.info(data.toString());
 			stdout.push(data.toString());
 		});
 
 		cp.stderr.on('data', (data) => {
-			logger.info(data.toString());
 			stderr.push(data.toString());
 		});
 
@@ -52,6 +50,8 @@ const runSpawnCommand = (
 				stderr: stderr.join(''),
 				code: code || undefined,
 			};
+			logger.info(result.stdout);
+			logger.info(result.stderr);
 			if (code === 0) {
 				resolve(result);
 			} else {
@@ -100,8 +100,8 @@ export const convertToWav = async (
 	const filePath = `${CONTAINER_FOLDER}/${fileName}`;
 	const wavPath = `${CONTAINER_FOLDER}/${fileName}-converted.wav`;
 	logger.info(`containerId: ${containerId}`);
-	logger.info('file path: ', filePath);
-	logger.info('wav file path: ', wavPath);
+	logger.info(`file path: ${filePath}`);
+	logger.info(`wav file path: ${wavPath}`);
 
 	try {
 		const res = await runSpawnCommand('docker', [
