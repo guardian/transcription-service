@@ -41,15 +41,6 @@ export const TranscriptionDynamoItem = z.object({
 
 export type TranscriptionDynamoItem = z.infer<typeof TranscriptionDynamoItem>;
 
-export const TranscriptionItem = z.object({
-	id: z.string(),
-	originalFilename: z.string(),
-	transcripts: Transcripts,
-	userEmail: z.string(),
-});
-
-export type TranscriptionItem = z.infer<typeof TranscriptionItem>;
-
 export const writeTranscriptionItem = async (
 	client: DynamoDBDocumentClient,
 	tableName: string,
