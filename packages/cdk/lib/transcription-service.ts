@@ -469,6 +469,9 @@ export class TranscriptionService extends GuStack {
 		// allow worker to receive message from queue
 		transcriptionTaskQueue.grantConsumeMessages(transcriptionWorkerASG);
 
+		// allow worker to write messages to the dead letter queue
+		transcriptionDeadLetterQueue.grantSendMessages(transcriptionWorkerASG);
+
 		const transcriptTable = new Table(this, 'TranscriptTable', {
 			tableName: `${APP_NAME}-${this.stage}`,
 			partitionKey: {
