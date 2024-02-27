@@ -25,6 +25,7 @@ const messageBody = (
 	return `
 		<h1>Transcript for ${originalFilename} ready</h1>
 		<p>Click <a href="${exportUrl}">here</a> to export to a google doc.</p>
+		<p><b>Note:</b> transcripts will expire after 7 days. Export your transcript to a doc now if you want to keep it. </p>
 	`;
 };
 
