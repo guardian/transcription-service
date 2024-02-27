@@ -157,6 +157,9 @@ const pollTranscriptionQueue = async (
 					taskMessage.Body,
 					receiptHandle,
 				);
+				console.log(
+					`moved message with message id ${taskMessage.MessageId} to dead letter queue.`,
+				);
 			} else {
 				console.log('skip moving message to dead letter queue in DEV');
 			}
