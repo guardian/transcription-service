@@ -14,7 +14,7 @@ import {
 	OutputBucketKeys,
 	type TranscriptionOutput,
 } from '@guardian/transcription-service-common';
-import { getSNSClient, publishMessage } from './sns';
+import { getSNSClient, publishTranscriptionOutput } from './sns';
 import {
 	getTranscriptionText,
 	convertToWav,
@@ -202,10 +202,19 @@ const pollTranscriptionQueue = async (
 			outputBucketKeys,
 		};
 
-		await publishMessage(
+		await publishTranscriptionOutput(
 			snsClient,
 			config.app.destinationTopicArns.transcriptionService,
 			transcriptionOutput,
+		);
+
+		logger.info(
+			'Successfully transcribed the file and sent notification to sns',
+			{
+				filename: transcriptionOutput.originalFilename,
+				useEmail: transcriptionOutput.userEmail,
+				fileDuration: ffmpegResult.duration,
+			},
 		);
 
 		logger.info(`Deleting message ${taskMessage.MessageId}`);
