@@ -1,17 +1,10 @@
 import { Handler } from 'aws-lambda';
 import { sendEmail, getSESClient } from './ses';
 import { IncomingSQSEvent } from './sqs-event-types';
-<<<<<<< HEAD
 import {
 	logger,
-	TranscriptionConfig,
 	getConfig,
-	getFileFromS3,
-	readFile,
 } from '@guardian/transcription-service-backend-common';
-=======
-import { getConfig } from '@guardian/transcription-service-backend-common';
->>>>>>> d5d3a65 (Store transcripts in s3 to work round dynamo 400kb limit)
 import {
 	getDynamoClient,
 	TranscriptionDynamoItem,

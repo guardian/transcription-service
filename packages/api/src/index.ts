@@ -16,6 +16,8 @@ import {
 	getSignedDownloadUrl,
 	getObjectMetadata,
 	logger,
+	getObjectText,
+	getS3Client,
 } from '@guardian/transcription-service-backend-common';
 import {
 	ClientConfig,
@@ -31,7 +33,6 @@ import {
 } from '@guardian/transcription-service-backend-common/src/dynamodb';
 import { createTranscriptDocument } from './services/googleDrive';
 import { v4 as uuid4 } from 'uuid';
-import { getTranscriptsText } from './services/s3';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -48,6 +49,8 @@ const getApp = async () => {
 		config.aws.region,
 		config.aws.localstackEndpoint,
 	);
+
+	const s3Client = getS3Client(config.aws.region);
 
 	app.use(bodyParser.json({ limit: '40mb' }));
 	app.use(passport.initialize());
@@ -176,11 +179,12 @@ const getApp = async () => {
 				res.status(500).send(msg);
 				return;
 			}
-			const transcriptsText = await getTranscriptsText(
-				config,
-				parsedItem.data.transcriptKeys,
+			const transcriptText = await getObjectText(
+				s3Client,
+				config.app.transcriptionOutputBucket,
+				parsedItem.data.transcriptKeys.text,
 			);
-			if (!transcriptsText) {
+			if (!transcriptText) {
 				const msg = `Failed to export transcript - it is possible your transcript has expired. Please re-upload the file and try again.`;
 				res.status(500).send(msg);
 				return;
@@ -189,7 +193,7 @@ const getApp = async () => {
 				config,
 				`${parsedItem.data.originalFilename} transcript`,
 				exportRequest.data.oAuthTokenResponse,
-				transcriptsText.text,
+				transcriptText,
 			);
 			if (!exportResult) {
 				const msg = `Failed to create google document for item with id ${parsedItem.data.id}`;

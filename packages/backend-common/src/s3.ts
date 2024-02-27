@@ -59,7 +59,8 @@ export const getSignedDownloadUrl = async (
 		{ expiresIn }, // override default expiration time of 15 minutes
 	);
 
-export const getFile = async (
+// for larger files (such as media files)- stream the file to disk
+export const streamObjectToFile = async (
 	client: S3Client,
 	bucket: string,
 	key: string,
@@ -80,6 +81,31 @@ export const getFile = async (
 	} catch (e) {
 		logger.error(`failed to get S3 file ${key} in bucket ${bucket}`, e);
 		throw e;
+	}
+};
+
+// for smaller files that will fit in memory - parse straight into a string
+export const getObjectText = async (
+	client: S3Client,
+	bucket: string,
+	key: string,
+) => {
+	try {
+		const data = await client.send(
+			new GetObjectCommand({
+				Bucket: bucket,
+				Key: key,
+			}),
+		);
+		const body = ReadableBody.parse(data.Body);
+		const chunks: Uint8Array[] = [];
+		for await (const chunk of body) {
+			chunks.push(chunk);
+		}
+		return Buffer.concat(chunks).toString('utf-8');
+	} catch (error) {
+		console.error(`error getting object ${key} from bucket ${bucket}`, error);
+		return undefined;
 	}
 };
 
@@ -127,7 +153,12 @@ export const getFileFromS3 = async (
 ) => {
 	const s3Client = getS3Client(region);
 
-	const file = await getFile(s3Client, bucket, s3Key, destinationDirectory);
+	const file = await streamObjectToFile(
+		s3Client,
+		bucket,
+		s3Key,
+		destinationDirectory,
+	);
 
 	return file;
 };
