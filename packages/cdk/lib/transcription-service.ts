@@ -442,6 +442,7 @@ export class TranscriptionService extends GuStack {
 			{
 				fifo: true,
 				queueName: `${APP_NAME}-task-dead-letter-queue-${this.stage}.fifo`,
+				contentBasedDeduplication: true,
 			},
 		);
 
