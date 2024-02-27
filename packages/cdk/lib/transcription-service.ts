@@ -459,7 +459,7 @@ export class TranscriptionService extends GuStack {
 			contentBasedDeduplication: true,
 			deadLetterQueue: {
 				queue: transcriptionDeadLetterQueue,
-				maxReceiveCount: 5,
+				maxReceiveCount: 3,
 			},
 		});
 
