@@ -284,7 +284,7 @@ const generateOutputSignedUrls = async (
 		userEmail,
 		expiresIn,
 		false,
-		jsonKey,
+		textKey,
 	);
 	const jsonSignedS3Url = await getSignedUploadUrl(
 		region,
@@ -292,7 +292,7 @@ const generateOutputSignedUrls = async (
 		userEmail,
 		expiresIn,
 		false,
-		textKey,
+		jsonKey,
 	);
 
 	return {
