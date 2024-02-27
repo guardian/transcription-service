@@ -27,10 +27,11 @@ import type { SignedUrlResponseBody } from '@guardian/transcription-service-comm
 import {
 	getDynamoClient,
 	getTranscriptionItem,
-	TranscriptionItem,
+	TranscriptionDynamoItem,
 } from '@guardian/transcription-service-backend-common/src/dynamodb';
 import { createTranscriptDocument } from './services/googleDrive';
 import { v4 as uuid4 } from 'uuid';
+import { getTranscriptsText } from './services/s3';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -168,10 +169,19 @@ const getApp = async () => {
 				res.status(500).send(msg);
 				return;
 			}
-			const parsedItem = TranscriptionItem.safeParse(item);
+			const parsedItem = TranscriptionDynamoItem.safeParse(item);
 			if (!parsedItem.success) {
 				const msg = `Failed to parse item ${exportRequest.data.id} from dynamodb. Error: ${parsedItem.error.message}`;
 				logger.error(msg);
+				res.status(500).send(msg);
+				return;
+			}
+			const transcriptsText = await getTranscriptsText(
+				config,
+				parsedItem.data.transcriptKeys,
+			);
+			if (!transcriptsText) {
+				const msg = `Failed to export transcript - it is possible your transcript has expired. Please re-upload the file and try again.`;
 				res.status(500).send(msg);
 				return;
 			}
@@ -179,7 +189,7 @@ const getApp = async () => {
 				config,
 				`${parsedItem.data.originalFilename} transcript`,
 				exportRequest.data.oAuthTokenResponse,
-				parsedItem.data.transcripts.srt,
+				transcriptsText.text,
 			);
 			if (!exportResult) {
 				const msg = `Failed to create google document for item with id ${parsedItem.data.id}`;

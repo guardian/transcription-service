@@ -202,7 +202,7 @@ export class TranscriptionService extends GuStack {
 				statements: [
 					new PolicyStatement({
 						effect: Effect.ALLOW,
-						actions: ['s3:PutObject'],
+						actions: ['s3:PutObject', 's3:GetObject'],
 						resources: [`${outputBucket.bucketArn}/*`],
 					}),
 				],
