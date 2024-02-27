@@ -114,7 +114,7 @@ const sendMessage = async (
 			errorMsg: 'Missing message ID',
 		};
 	} catch (e) {
-		const msg = `Failed to send job ${messageBody}`;
+		const msg = `Failed to send message ${messageBody}`;
 		console.error(msg, e);
 		return {
 			status: SQSStatus.Failure,
@@ -225,10 +225,8 @@ export const moveMessageToDeadLetterQueue = async (
 	// succeeds but the delete from the task queue fails
 	const sendResult = await sendMessage(client, deadLetterQueueUrl, messageBody);
 	if (sendResult.status == SQSStatus.Failure) {
-		const errorMessage = 'Failed to send message to dead letter queue.';
-		console.error(errorMessage, sendResult.error, sendResult.errorMsg);
 		// rethrow exception, let another worker retry
-		throw Error(errorMessage);
+		throw Error('Failed to send message to dead letter queue');
 	}
 	// if the delete command throws an exception, it will be caught by
 	// deleteMessage and logged. Another worker will reprocess the message in
