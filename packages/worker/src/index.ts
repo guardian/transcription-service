@@ -14,7 +14,7 @@ import {
 	OutputBucketKeys,
 	type TranscriptionOutput,
 } from '@guardian/transcription-service-common';
-import { getSNSClient, publishTranscriptionOutput } from './sns';
+import { getSNSClient, publishMessage } from './sns';
 import {
 	getTranscriptionText,
 	convertToWav,
@@ -202,7 +202,7 @@ const pollTranscriptionQueue = async (
 			outputBucketKeys,
 		};
 
-		await publishTranscriptionOutput(
+		await publishMessage(
 			snsClient,
 			config.app.destinationTopicArns.transcriptionService,
 			transcriptionOutput,

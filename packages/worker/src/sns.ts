@@ -13,16 +13,19 @@ export const getSNSClient = (region: string, localstackEndpoint?: string) => {
 	return new SNSClient(clientConfig);
 };
 
-const publishMessage = async (
+export const publishMessage = async (
 	client: SNSClient,
 	topicArn: string,
-	message: string,
+	output: TranscriptionOutput,
 ): Promise<string | undefined> => {
 	try {
 		const resp = await client.send(
-			new PublishCommand({ TopicArn: topicArn, Message: message }),
+			new PublishCommand({
+				TopicArn: topicArn,
+				Message: JSON.stringify(output),
+			}),
 		);
-		logger.info('message sent', resp);
+		logger.info('message sent', output);
 		return resp.MessageId;
 	} catch (e) {
 		logger.error('Error publishing message', e);
@@ -30,10 +33,10 @@ const publishMessage = async (
 	}
 };
 
-export const publishTranscriptionOutput = async (
-	client: SNSClient,
-	topicArn: string,
-	output: TranscriptionOutput,
-) => {
-	await publishMessage(client, topicArn, JSON.stringify(output));
-};
+// export const publishTranscriptionOutput = async (
+// 	client: SNSClient,
+// 	topicArn: string,
+// 	output: TranscriptionOutput,
+// ) => {
+// 	await publishMessage(client, topicArn, JSON.stringify(output));
+// };
