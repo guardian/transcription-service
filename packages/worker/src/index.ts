@@ -146,7 +146,7 @@ const pollTranscriptionQueue = async (
 		if (ffmpegResult === undefined) {
 			// when ffmpeg fails to transcribe, move message to the dead letter
 			// queue
-			if (config.app.stage != 'DEV') {
+			if (config.app.stage != 'DEV' && config.app.deadLetterQueueUrl) {
 				console.log(
 					`moving message with message id ${taskMessage.MessageId} to dead letter queue`,
 				);
