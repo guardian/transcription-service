@@ -31,6 +31,7 @@ import {
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { SNSClient } from '@aws-sdk/client-sns';
 import { setTimeout } from 'timers/promises';
+import { logger } from '@guardian/transcription-service-backend-common/src/logging';
 
 const POLLING_INTERVAL_SECONDS = 30;
 
@@ -93,7 +94,7 @@ const pollTranscriptionQueue = async (
 	}
 
 	if (!message.message) {
-		console.log('No messages available');
+		logger.info('No messages available');
 		await updateScaleInProtection(region, stage, false);
 		return;
 	}
@@ -123,7 +124,7 @@ const pollTranscriptionQueue = async (
 
 		const { outputBucketUrls, ...loggableJob } = job;
 
-		console.log(
+		logger.info(
 			`Fetched transcription job with id ${taskMessage.MessageId}`,
 			loggableJob,
 		);
