@@ -382,9 +382,6 @@ export class TranscriptionService extends GuStack {
 				userData,
 				role: workerRole,
 				securityGroup: workerSecurityGroup,
-				spotOptions: {
-					interruptionBehavior: SpotInstanceInterruption.TERMINATE,
-				},
 			},
 		);
 
@@ -431,6 +428,9 @@ export class TranscriptionService extends GuStack {
 					launchTemplateOverrides: acceptableInstanceTypes.map(
 						(instanceType) => ({
 							instanceType,
+							spotOptions: {
+								interruptionBehavior: SpotInstanceInterruption.TERMINATE,
+							},
 						}),
 					),
 				},
