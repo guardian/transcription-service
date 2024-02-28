@@ -42,8 +42,6 @@ const POLLING_INTERVAL_SECONDS = 30;
 const main = async () => {
 	const config = await getConfig();
 
-	checkSpotInterrupt();
-
 	const metrics = new MetricsService(
 		config.app.stage,
 		config.aws.region,
@@ -54,6 +52,7 @@ const main = async () => {
 		config.aws.region,
 		config.aws.localstackEndpoint,
 	);
+
 	const snsClient = getSNSClient(
 		config.aws.region,
 		config.aws.localstackEndpoint,
@@ -152,6 +151,8 @@ const pollTranscriptionQueue = async (
 		await updateScaleInProtection(region, stage, false);
 		return;
 	}
+	// start job to regularly check the instance interruption
+	checkSpotInterrupt(sqsClient, config.app.taskQueueUrl, receiptHandle);
 
 	try {
 		// from this point all worker logs will have id & userEmail in their fields
