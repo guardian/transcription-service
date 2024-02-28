@@ -101,7 +101,7 @@ const pollTranscriptionQueue = async (
 
 	const taskMessage = message.message;
 	if (!taskMessage.Body) {
-		console.log('message missing body');
+		logger.error('message missing body');
 		await updateScaleInProtection(region, stage, false);
 		return;
 	}
@@ -148,7 +148,7 @@ const pollTranscriptionQueue = async (
 			// when ffmpeg fails to transcribe, move message to the dead letter
 			// queue
 			if (config.app.stage != 'DEV' && config.app.deadLetterQueueUrl) {
-				console.log(
+				logger.error(
 					`'ffmpeg failed, moving message with message id ${taskMessage.MessageId} to dead letter queue`,
 				);
 				await moveMessageToDeadLetterQueue(
@@ -158,11 +158,11 @@ const pollTranscriptionQueue = async (
 					taskMessage.Body,
 					receiptHandle,
 				);
-				console.log(
+				logger.info(
 					`moved message with message id ${taskMessage.MessageId} to dead letter queue.`,
 				);
 			} else {
-				console.log('skip moving message to dead letter queue in DEV');
+				logger.info('skip moving message to dead letter queue in DEV');
 			}
 			return;
 		}
