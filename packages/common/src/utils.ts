@@ -1,4 +1,3 @@
-import { logger } from '@guardian/transcription-service-backend-common';
 interface UploadSuccess {
 	isSuccess: true;
 }
@@ -38,7 +37,7 @@ export const uploadToS3 = async (
 		};
 	} catch (error) {
 		const errorMsg = `S3 upload failed: ${error}`;
-		logger.error(errorMsg, error);
+		console.error(errorMsg, error);
 		return {
 			isSuccess: false,
 			errorMsg,
