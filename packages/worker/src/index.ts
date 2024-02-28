@@ -122,12 +122,9 @@ const pollTranscriptionQueue = async (
 			return;
 		}
 
-		const { outputBucketUrls, inputSignedUrl, ...loggableJob } = job;
+		const { outputBucketUrls, inputSignedUrl } = job;
 
-		logger.info(
-			`Fetched transcription job with id ${taskMessage.MessageId}`,
-			loggableJob,
-		);
+		logger.info(`Fetched transcription job with id ${taskMessage.MessageId}`);
 
 		const destinationDirectory =
 			config.app.stage === 'DEV' ? `${__dirname}/sample` : '/tmp';
@@ -213,7 +210,7 @@ const pollTranscriptionQueue = async (
 			{
 				filename: transcriptionOutput.originalFilename,
 				useEmail: transcriptionOutput.userEmail,
-				fileDuration: ffmpegResult.duration,
+				fileDuration: ffmpegResult.duration?.toString() || '',
 			},
 		);
 
