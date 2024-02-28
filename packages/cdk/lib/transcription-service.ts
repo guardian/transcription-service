@@ -654,7 +654,7 @@ export class TranscriptionService extends GuStack {
 					threshold: 1,
 					comparisonOperator:
 						ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-					evaluationPeriods: 5 * 12, // 5 hours as metric has period of 5 minutes
+					evaluationPeriods: 2, // testing 5 * 12, // 5 hours as metric has period of 5 minutes
 					actionsEnabled: true,
 					alarmDescription:
 						'There has been more than 1 worker instance running for 5 hours - this will have significant cost implications. Please check that all running workers are doing something useful.',
