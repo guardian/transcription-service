@@ -148,7 +148,7 @@ const pollTranscriptionQueue = async (
 			// queue
 			if (config.app.stage != 'DEV' && config.app.deadLetterQueueUrl) {
 				console.log(
-					`moving message with message id ${taskMessage.MessageId} to dead letter queue`,
+					`'ffmpeg failed, moving message with message id ${taskMessage.MessageId} to dead letter queue`,
 				);
 				await moveMessageToDeadLetterQueue(
 					sqsClient,
