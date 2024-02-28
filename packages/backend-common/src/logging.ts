@@ -14,13 +14,15 @@ interface LogEvent {
 	meta?: Record<string, string>;
 }
 
+const { combine, timestamp, json } = winston.format;
+
 class ServerLogger {
 	underlyingLogger: winston.Logger;
 
 	constructor() {
 		const winstonConfig: winston.LoggerOptions = {
 			level: 'info',
-			format: winston.format.json(),
+			format: combine(timestamp({ alias: '@timestamp' }), json()),
 			transports: [new winston.transports.Console()],
 		};
 
