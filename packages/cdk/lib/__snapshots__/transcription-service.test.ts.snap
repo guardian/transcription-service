@@ -30,6 +30,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuSubnetListParameter",
       "GuLambdaFunction",
       "GuLambdaFunction",
+      "GuStringParameter",
     ],
     "gu:cdk:version": "TEST",
   },
@@ -76,6 +77,10 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
     "DistributionBucketName": {
       "Default": "/account/services/artifact.bucket",
       "Description": "SSM parameter containing the S3 bucket name holding distribution artifacts",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "InvestigationsAlarmTopicArn": {
+      "Default": "/TEST/investigations/alarmTopicArn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "LoggingStreamName": {
@@ -305,6 +310,20 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                 ],
               },
             },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionservicetaskdeadletterqueue8A13A1F1",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -359,7 +378,10 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         "PolicyDocument": {
           "Statement": [
             {
-              "Action": "s3:PutObject",
+              "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+              ],
               "Effect": "Allow",
               "Resource": {
                 "Fn::Join": [
@@ -709,6 +731,11 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         },
         "NewInstancesProtectedFromScaleIn": true,
         "Tags": [
+          {
+            "Key": "App",
+            "PropagateAtLaunch": true,
+            "Value": "transcription-service-worker",
+          },
           {
             "Key": "gu:cdk:version",
             "PropagateAtLaunch": true,
@@ -2092,6 +2119,7 @@ service transcription-service-worker start",
     "transcriptionservicetaskdeadletterqueue8A13A1F1": {
       "DeletionPolicy": "Delete",
       "Properties": {
+        "ContentBasedDeduplication": true,
         "FifoQueue": true,
         "QueueName": "transcription-service-task-dead-letter-queue-TEST.fifo",
         "Tags": [

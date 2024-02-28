@@ -37,6 +37,13 @@ import {
 	GroupMetrics,
 	SpotAllocationStrategy,
 } from 'aws-cdk-lib/aws-autoscaling';
+import {
+	Alarm,
+	ComparisonOperator,
+	Metric,
+	TreatMissingData,
+} from 'aws-cdk-lib/aws-cloudwatch';
+import { SnsAction } from 'aws-cdk-lib/aws-cloudwatch-actions';
 import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
 import {
 	InstanceClass,
@@ -584,5 +591,82 @@ export class TranscriptionService extends GuStack {
 			],
 			schedule: Schedule.rate(Duration.minutes(1)),
 		});
+
+		// alarms
+
+		const alarmTopicArn = new GuStringParameter(
+			this,
+			'InvestigationsAlarmTopicArn',
+			{
+				fromSSM: true,
+				default: `/${props.stage}/investigations/alarmTopicArn`,
+			},
+		).valueAsString;
+		if (isProd) {
+			const alarms = [
+				// alarm when a message is added to the dead letter queue
+				new Alarm(this, 'DeadLetterQueueAlarm', {
+					alarmName: `transcription-service-dead-letter-queue-${props.stage}`,
+					metric:
+						transcriptionDeadLetterQueue.metricApproximateNumberOfMessagesVisible(),
+					threshold: 1,
+					evaluationPeriods: 1,
+					actionsEnabled: true,
+					alarmDescription: `A transcription job has been sent to the dead letter queue. This may be because ffmpeg can't convert the file (maybe it's a JPEG) or because the transcription job has failed multiple times.`,
+					treatMissingData: TreatMissingData.IGNORE,
+					comparisonOperator:
+						ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+				}),
+				// alarm when failure metric is greater than 0
+				new Alarm(this, 'FailureAlarm', {
+					alarmName: `transcription-service-failure-${props.stage}`,
+					//  reference the custom metric created in metrics.ts library
+					metric: new Metric({
+						namespace: 'TranscriptionService',
+						metricName: 'Failure',
+						dimensionsMap: {
+							Stage: props.stage,
+						},
+						statistic: 'sum',
+						period: Duration.minutes(1),
+					}),
+					threshold: 1,
+					comparisonOperator:
+						ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+					evaluationPeriods: 1,
+					actionsEnabled: true,
+					alarmDescription: 'A transcription service failure has occurred',
+					treatMissingData: TreatMissingData.IGNORE,
+				}),
+				// alarm when instances have been running in the worker asg for more than 5 hours
+				new Alarm(this, 'WorkerInstanceAlarm', {
+					alarmName: `transcription-service-worker-instances-${props.stage}`,
+					// this doesn't actually create the metric - just a reference to it
+					metric: new Metric({
+						namespace: 'AWS/AutoScaling',
+						metricName: 'GroupTotalInstances',
+						dimensionsMap: {
+							AutoScalingGroupName: transcriptionWorkerASG.autoScalingGroupName,
+						},
+						statistic: 'min',
+						period: Duration.minutes(5),
+					}),
+					threshold: 1,
+					comparisonOperator:
+						ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+					evaluationPeriods: 5 * 12, // 5 hours as metric has period of 5 minutes
+					actionsEnabled: true,
+					alarmDescription:
+						'There has been more than 1 worker instance running for 5 hours - this will have significant cost implications. Please check that all running workers are doing something useful.',
+					treatMissingData: TreatMissingData.IGNORE,
+				}),
+			];
+			const snsAction = new SnsAction(
+				Topic.fromTopicArn(this, 'TranscriptionAlarmTopic', alarmTopicArn),
+			);
+			alarms.forEach((alarm) => {
+				alarm.addAlarmAction(snsAction);
+			});
+		}
 	}
 }
