@@ -54,7 +54,7 @@ export const getSQSClient = (region: string, localstackEndpoint?: string) => {
 
 	return new SQSClient(clientConfig);
 };
-export const isFailure = (
+export const isSqsFailure = (
 	result: SendResult | ReceiveResult,
 ): result is SQSFailure => result.status === SQSStatus.Failure;
 

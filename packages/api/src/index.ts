@@ -12,7 +12,8 @@ import {
 	getSignedUploadUrl,
 	getSQSClient,
 	generateOutputSignedUrlAndSendMessage,
-	isFailure,
+	isSqsFailure,
+	isS3Failure,
 	getSignedDownloadUrl,
 	getObjectMetadata,
 	logger,
@@ -124,7 +125,7 @@ const getApp = async () => {
 				body.data.fileName,
 				signedUrl,
 			);
-			if (isFailure(sendResult)) {
+			if (isSqsFailure(sendResult)) {
 				res.status(500).send(sendResult.errorMsg);
 				return;
 			}
@@ -192,8 +193,13 @@ const getApp = async () => {
 				config.app.transcriptionOutputBucket,
 				parsedItem.data.transcriptKeys.text,
 			);
-			if (!transcriptText) {
-				const msg = `Failed to export transcript - it is possible your transcript has expired. Please re-upload the file and try again.`;
+			if (isS3Failure(transcriptText)) {
+				if (transcriptText.failureReason === 'NoSuchKey') {
+					const msg = `Failed to export transcript - file has expired. Please re-upload the file and try again.`;
+					res.status(410).send(msg);
+					return;
+				}
+				const msg = `Failed to fetch transcript. Please contact the digital investigations team for support`;
 				res.status(500).send(msg);
 				return;
 			}
@@ -201,7 +207,7 @@ const getApp = async () => {
 				config,
 				`${parsedItem.data.originalFilename} transcript`,
 				exportRequest.data.oAuthTokenResponse,
-				transcriptText,
+				transcriptText.text,
 			);
 			if (!exportResult) {
 				const msg = `Failed to create google document for item with id ${parsedItem.data.id}`;

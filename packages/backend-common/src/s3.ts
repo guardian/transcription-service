@@ -84,12 +84,34 @@ export const streamObjectToFile = async (
 	}
 };
 
+enum S3Status {
+	Success,
+	Failure,
+}
+
+type GetObjectTextSuccess = {
+	status: S3Status.Success;
+	text: string;
+};
+
+type GetObjectTextFailure = {
+	status: S3Status.Failure;
+	statusCode: number;
+	failureReason: 'NoSuchKey' | 'Unknown';
+};
+
+type GetObjectTextResult = GetObjectTextSuccess | GetObjectTextFailure;
+
+export const isS3Failure = (
+	result: GetObjectTextResult,
+): result is GetObjectTextFailure => result.status === S3Status.Failure;
+
 // for smaller files that will fit in memory - parse straight into a string
 export const getObjectText = async (
 	client: S3Client,
 	bucket: string,
 	key: string,
-) => {
+): Promise<GetObjectTextResult> => {
 	try {
 		const data = await client.send(
 			new GetObjectCommand({
@@ -102,10 +124,26 @@ export const getObjectText = async (
 		for await (const chunk of body) {
 			chunks.push(chunk);
 		}
-		return Buffer.concat(chunks).toString('utf-8');
-	} catch (error) {
+		return {
+			status: S3Status.Success,
+			text: Buffer.concat(chunks).toString('utf-8'),
+		};
+	} catch (error: unknown) {
+		if (error instanceof Error) {
+			if (error.name === 'NoSuchKey') {
+				return {
+					status: S3Status.Failure,
+					statusCode: 410,
+					failureReason: 'NoSuchKey',
+				};
+			}
+		}
 		console.error(`error getting object ${key} from bucket ${bucket}`, error);
-		return undefined;
+		return {
+			status: S3Status.Failure,
+			statusCode: 500,
+			failureReason: 'Unknown',
+		};
 	}
 };
 
