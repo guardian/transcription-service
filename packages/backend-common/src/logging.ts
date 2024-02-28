@@ -2,6 +2,7 @@ import winston from 'winston';
 
 export interface LoggerFunctions {
 	setCommonMetadata(id: string, userEmail: string): void;
+	resetCommonMetadata(): void;
 	debug(message: string): void;
 	info(message: string, meta?: Record<string, string>): void;
 	warn(message: string, error?: Error | unknown): void;
@@ -41,6 +42,11 @@ class ServerLogger {
 			userEmail: this.userEmail,
 			...logObject.meta,
 		});
+	}
+
+	resetCommonMetadata(): void {
+		this.userEmail = undefined;
+		this.id = undefined;
 	}
 
 	setCommonMetadata(id: string, userEmail: string): void {

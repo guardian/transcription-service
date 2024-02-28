@@ -232,6 +232,7 @@ const pollTranscriptionQueue = async (
 			0,
 		);
 	} finally {
+		logger.resetCommonMetadata();
 		await updateScaleInProtection(region, stage, false);
 	}
 };
