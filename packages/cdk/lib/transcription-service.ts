@@ -642,7 +642,8 @@ export class TranscriptionService extends GuStack {
 					alarmDescription: 'A transcription service failure has occurred',
 					treatMissingData: TreatMissingData.IGNORE,
 				}),
-				// alarm when instances have been running in the worker asg for more than 5 hours
+				// alarm when at least one instance has been running in the worker asg during every 5 minute period for
+				// more than 5 hours
 				new Alarm(this, 'WorkerInstanceAlarm', {
 					alarmName: `transcription-service-worker-instances-${props.stage}`,
 					// this doesn't actually create the metric - just a reference to it
