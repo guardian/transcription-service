@@ -54,6 +54,7 @@ import {
 	MachineImage,
 	Peer,
 	Port,
+	SpotInstanceInterruption,
 	UserData,
 } from 'aws-cdk-lib/aws-ec2';
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
@@ -381,6 +382,9 @@ export class TranscriptionService extends GuStack {
 				userData,
 				role: workerRole,
 				securityGroup: workerSecurityGroup,
+				spotOptions: {
+					interruptionBehavior: SpotInstanceInterruption.TERMINATE,
+				},
 			},
 		);
 

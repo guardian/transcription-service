@@ -35,11 +35,14 @@ import { SQSClient } from '@aws-sdk/client-sqs';
 import { SNSClient } from '@aws-sdk/client-sns';
 import { setTimeout } from 'timers/promises';
 import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
+import { checkSpotInterrupt } from './spot-termination';
 
 const POLLING_INTERVAL_SECONDS = 30;
 
 const main = async () => {
 	const config = await getConfig();
+
+	checkSpotInterrupt();
 
 	const metrics = new MetricsService(
 		config.app.stage,
