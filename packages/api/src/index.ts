@@ -180,10 +180,11 @@ const getApp = async () => {
 				return;
 			}
 			if (parsedItem.data.userEmail !== req.user?.email) {
-				// users can only export their own transcripts
-				const msg = `User ${req.user?.email} does not have permission to export item with id ${parsedItem.data.id}`;
-				console.error(msg);
-				res.status(403).send(msg);
+				// users can only export their own transcripts. Return a 404 to avoid leaking information about other users' transcripts
+				console.warn(
+					`User ${req.user?.email} attempted to export transcript ${parsedItem.data.id} which does not belong to them.`,
+				);
+				res.status(404).send(`Transcript not found`);
 				return;
 			}
 			const transcriptText = await getObjectText(
