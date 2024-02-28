@@ -1,5 +1,6 @@
 import { changeMessageVisibility } from '@guardian/transcription-service-backend-common';
 import { SQSClient } from '@aws-sdk/client-sqs';
+import { setInterruptionTime } from './index';
 
 const CHECK_FREQUENCY = 10;
 
@@ -14,15 +15,10 @@ export const checkSpotInterrupt = async (
 	if (result.status === 200) {
 		const json = await result.json();
 		if (json.action === 'terminate') {
+			setInterruptionTime(new Date(json.time));
 			console.warn('Spot instance termination detected');
 			// Interrupt warning occurs 2 minutes before termination
-			await changeMessageVisibility(
-				client,
-				queueUrl,
-				receiptHandle,
-				120 - CHECK_FREQUENCY,
-			);
-			return;
+			await changeMessageVisibility(client, queueUrl, receiptHandle, 110);
 		}
 	}
 	setTimeout(
