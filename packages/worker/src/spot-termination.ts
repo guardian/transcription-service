@@ -25,5 +25,8 @@ export const checkSpotInterrupt = async (
 			return;
 		}
 	}
-	setTimeout(checkSpotInterrupt, 1000 * CHECK_FREQUENCY);
+	setTimeout(
+		() => checkSpotInterrupt(client, queueUrl, receiptHandle),
+		1000 * CHECK_FREQUENCY,
+	);
 };
