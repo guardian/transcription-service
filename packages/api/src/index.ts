@@ -124,7 +124,11 @@ const getApp = async () => {
 				res.status(500).send(sendResult.errorMsg);
 				return;
 			}
-			res.send('Message sent');
+			logger.info('API successfully sent the message to SQS', {
+				id: s3Key,
+				filename: body.data.fileName,
+				userEmail,
+			});
 		}),
 	]);
 

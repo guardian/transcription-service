@@ -206,7 +206,7 @@ const pollTranscriptionQueue = async (
 		);
 
 		logger.info(
-			'Successfully transcribed the file and sent notification to sns',
+			'Worker successfully transcribed the file and sent notification to sns',
 			{
 				id: transcriptionOutput.id,
 				filename: transcriptionOutput.originalFilename,

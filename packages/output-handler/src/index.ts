@@ -125,6 +125,12 @@ const processMessage = async (event: unknown) => {
 					config.app.rootUrl,
 				),
 			);
+
+			logger.info('Output handler successfully sent email notification', {
+				id: transcriptionOutput.id,
+				filename: transcriptionOutput.originalFilename,
+				userEmail: transcriptionOutput.userEmail,
+			});
 		} catch (error) {
 			logger.error(
 				'Failed to process sqs message - transcription data may be missing from dynamo or email failed to send',
