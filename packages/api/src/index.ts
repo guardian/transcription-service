@@ -11,7 +11,7 @@ import {
 	getConfig,
 	getSignedUploadUrl,
 	getSQSClient,
-	sendMessage,
+	generateOutputSignedUrlAndSendMessage,
 	isFailure,
 	getSignedDownloadUrl,
 	getObjectMetadata,
@@ -109,7 +109,7 @@ const getApp = async () => {
 				s3Key,
 				3600,
 			);
-			const sendResult = await sendMessage(
+			const sendResult = await generateOutputSignedUrlAndSendMessage(
 				s3Key,
 				sqsClient,
 				config.app.taskQueueUrl,

@@ -28,6 +28,10 @@ interface ReceiveSuccess {
 	message?: Message;
 }
 
+interface DeleteSuccess {
+	status: SQSStatus.Success;
+}
+
 interface SQSFailure {
 	status: SQSStatus.Failure;
 	error?: unknown;
@@ -36,6 +40,7 @@ interface SQSFailure {
 
 type SendResult = SendSuccess | SQSFailure;
 type ReceiveResult = ReceiveSuccess | SQSFailure;
+type DeleteResult = DeleteSuccess | SQSFailure;
 
 export const getSQSClient = (region: string, localstackEndpoint?: string) => {
 	const clientBaseConfig = {
@@ -52,7 +57,7 @@ export const isFailure = (
 	result: SendResult | ReceiveResult,
 ): result is SQSFailure => result.status === SQSStatus.Failure;
 
-export const sendMessage = async (
+export const generateOutputSignedUrlAndSendMessage = async (
 	id: string,
 	client: SQSClient,
 	queueUrl: string,
@@ -81,12 +86,19 @@ export const sendMessage = async (
 		originalFilename,
 		outputBucketUrls: signedUrls,
 	};
+	return await sendMessage(client, queueUrl, JSON.stringify(job));
+};
 
+const sendMessage = async (
+	client: SQSClient,
+	queueUrl: string,
+	messageBody: string,
+): Promise<SendResult> => {
 	try {
 		const result = await client.send(
 			new SendMessageCommand({
 				QueueUrl: queueUrl,
-				MessageBody: JSON.stringify(job),
+				MessageBody: messageBody,
 				MessageGroupId: 'api-transcribe-request',
 			}),
 		);
@@ -102,7 +114,7 @@ export const sendMessage = async (
 			errorMsg: 'Missing message ID',
 		};
 	} catch (e) {
-		const msg = `Failed to send job ${JSON.stringify(job, null, 2)}`;
+		const msg = `Failed to send message ${messageBody}`;
 		console.error(msg, e);
 		return {
 			status: SQSStatus.Failure,
@@ -179,7 +191,7 @@ export const deleteMessage = async (
 	client: SQSClient,
 	queueUrl: string,
 	receiptHandle: string,
-) => {
+): Promise<DeleteResult> => {
 	try {
 		await client.send(
 			new DeleteMessageCommand({
@@ -187,10 +199,39 @@ export const deleteMessage = async (
 				ReceiptHandle: receiptHandle,
 			}),
 		);
+		return {
+			status: SQSStatus.Success,
+		};
 	} catch (error) {
-		console.error(`Failed to delete message ${receiptHandle}`, error);
-		throw error;
+		const errorMsg = `Failed to delete message ${receiptHandle}`;
+		console.error(errorMsg, error);
+		return {
+			status: SQSStatus.Failure,
+			error,
+			errorMsg,
+		};
 	}
+};
+
+export const moveMessageToDeadLetterQueue = async (
+	client: SQSClient,
+	taskQueueUrl: string,
+	deadLetterQueueUrl: string,
+	messageBody: string,
+	receiptHandle: string,
+) => {
+	// SQS doesn't seem to offer an atomic way to move message from one queue to
+	// another. There is a chance that the write to the dead letter queue
+	// succeeds but the delete from the task queue fails
+	const sendResult = await sendMessage(client, deadLetterQueueUrl, messageBody);
+	if (sendResult.status == SQSStatus.Failure) {
+		// rethrow exception, let another worker retry
+		throw Error('Failed to send message to dead letter queue');
+	}
+	// if the delete command throws an exception, it will be caught by
+	// deleteMessage and logged. Another worker will reprocess the message in
+	// the main task queue and we'll have a duplicate in the dead letter queue.
+	await deleteMessage(client, taskQueueUrl, receiptHandle);
 };
 
 export const parseTranscriptJobMessage = (
