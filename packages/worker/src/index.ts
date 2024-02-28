@@ -122,6 +122,9 @@ const pollTranscriptionQueue = async (
 			return;
 		}
 
+		// from this point all worker logs will have id & userEmail in their fields
+		logger.setCommonMetadata(job.id, job.userEmail);
+
 		const { outputBucketUrls, inputSignedUrl } = job;
 
 		logger.info(`Fetched transcription job with id ${taskMessage.MessageId}`);

@@ -129,6 +129,7 @@ const getApp = async () => {
 				filename: body.data.fileName,
 				userEmail,
 			});
+			res.send('Message sent');
 		}),
 	]);
 

@@ -1,6 +1,7 @@
 import winston from 'winston';
 
 export interface LoggerFunctions {
+	setCommonMetadata(id: string, userEmail: string): void;
 	debug(message: string): void;
 	info(message: string, meta?: Record<string, string>): void;
 	warn(message: string, error?: Error | unknown): void;
@@ -18,6 +19,8 @@ const { combine, timestamp, json } = winston.format;
 
 class ServerLogger {
 	underlyingLogger: winston.Logger;
+	id: string | undefined;
+	userEmail: string | undefined;
 
 	constructor() {
 		const winstonConfig: winston.LoggerOptions = {
@@ -31,11 +34,18 @@ class ServerLogger {
 
 	private log(logObject: LogEvent): void {
 		this.underlyingLogger.log({
-			message: logObject.message, //.replace(/(\r\n|\n|\r)/gm, ' '),
+			message: logObject.message,
 			level: logObject.level,
 			stack_trace: logObject.stack_trace,
+			id: this.id,
+			userEmail: this.userEmail,
 			...logObject.meta,
 		});
+	}
+
+	setCommonMetadata(id: string, userEmail: string): void {
+		this.userEmail = userEmail;
+		this.id = id;
 	}
 
 	debug(message: string): void {
