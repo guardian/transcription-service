@@ -4,6 +4,7 @@ import {
 	getASGClient,
 	getConfig,
 	getSQSClient,
+	logger,
 } from '@guardian/transcription-service-backend-common';
 import { setDesiredCapacity } from './asg';
 import { getSQSQueueLengthIncludingInvisible } from './sqs';
@@ -22,7 +23,7 @@ const updateASGCapacity = async () => {
 		config.app.taskQueueUrl,
 	);
 
-	console.log(
+	logger.info(
 		`setting asg desired capacity to total messages in queue: ${totalMessagesInQueue}`,
 	);
 	await setDesiredCapacity(asgClient, asgGroupName, totalMessagesInQueue);

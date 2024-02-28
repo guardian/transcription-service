@@ -6,6 +6,7 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 
 import { z } from 'zod';
+import { logger } from '@guardian/transcription-service-backend-common';
 
 export const getDynamoClient = (
 	region: string,
@@ -52,9 +53,9 @@ export const writeTranscriptionItem = async (
 
 	try {
 		await client.send(command);
-		console.log(`saved to db item ${item.id}`);
+		logger.info(`saved to db item ${item.id}`);
 	} catch (error) {
-		console.error('error writing to db', error);
+		logger.error('error writing to db', error);
 		throw error;
 	}
 };
@@ -74,7 +75,7 @@ export const getTranscriptionItem = async (
 		const result = await client.send(command);
 		return result.Item;
 	} catch (error) {
-		console.error(`Failed to get item ${itemId} from dynamodb`, error);
+		logger.error(`Failed to get item ${itemId} from dynamodb`, error);
 		return undefined;
 	}
 };

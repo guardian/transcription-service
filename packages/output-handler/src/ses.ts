@@ -1,4 +1,6 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
+import { logger } from '@guardian/transcription-service-backend-common';
+
 export const getSESClient = (region: string) => {
 	return new SESClient({ region });
 };
@@ -10,7 +12,7 @@ export const sendEmail = async (
 	originalFilename: string,
 	body: string,
 ) => {
-	console.log(`Sending email from ${fromAddress} to ${recipientEmail}`);
+	logger.info(`Sending email from ${fromAddress} to ${recipientEmail}`);
 	const sendCommand = new SendEmailCommand({
 		Source: fromAddress,
 		Destination: {
@@ -32,7 +34,7 @@ export const sendEmail = async (
 	try {
 		await client.send(sendCommand);
 	} catch (error) {
-		console.error('Error sending email:', error);
+		logger.error('Error sending email:', error);
 		throw error;
 	}
 };

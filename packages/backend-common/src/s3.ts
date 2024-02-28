@@ -10,6 +10,7 @@ import path from 'path';
 import { Readable } from 'stream';
 import { z } from 'zod';
 import axios from 'axios';
+import { logger } from '@guardian/transcription-service-backend-common';
 
 const ReadableBody = z.instanceof(Readable);
 
@@ -77,7 +78,7 @@ export const getFile = async (
 		await downloadS3Data(body, destinationPath, key);
 		return destinationPath;
 	} catch (e) {
-		console.error(e);
+		logger.error(`failed to get S3 file ${key} in bucket ${bucket}`, e);
 		throw e;
 	}
 };
@@ -106,15 +107,15 @@ const downloadS3Data = async (
 	await new Promise<void>((resolve, reject) => {
 		stream
 			.on('finish', () => {
-				console.log(` pipe done `);
+				logger.debug('stream pipe done');
 				resolve();
 			})
 			.on('error', (error) => {
-				console.log(`Failed to write the S3 object ${key} into file`);
+				logger.error(`Failed to write the S3 object ${key} into file`);
 				reject(error);
 			});
 	});
-	console.log('successfully retrieved file from S3 into ', destinationPath);
+	logger.info(`successfully retrieved file from S3 into ${destinationPath}`);
 	return destinationPath;
 };
 

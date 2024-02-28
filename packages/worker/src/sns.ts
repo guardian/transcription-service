@@ -25,7 +25,9 @@ const publishMessage = async (
 				Message: message,
 			}),
 		);
-		logger.info('message sent');
+		logger.info(
+			`message sent with id ${resp.MessageId}, status: ${resp.$metadata.httpStatusCode}`,
+		);
 		return resp.MessageId;
 	} catch (e) {
 		logger.error('Error publishing message', e);

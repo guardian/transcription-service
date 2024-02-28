@@ -61,7 +61,7 @@ class ServerLogger {
 		this.log({
 			level: 'warn',
 			message,
-			stack_trace: error?.stack,
+			stack_trace: error instanceof Error ? error.stack : undefined,
 		});
 	}
 

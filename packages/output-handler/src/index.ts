@@ -2,6 +2,7 @@ import { Handler } from 'aws-lambda';
 import { sendEmail, getSESClient } from './ses';
 import { IncomingSQSEvent } from './sqs-event-types';
 import {
+	logger,
 	TranscriptionConfig,
 	getConfig,
 	getFileFromS3,
@@ -66,7 +67,7 @@ export const getTranscriptsText = async (
 
 		return result;
 	} catch (error) {
-		console.log(`failed to get transcription texts from S3`, error);
+		logger.error(`failed to get transcription texts from S3`, error);
 		throw error;
 	}
 };
@@ -83,7 +84,7 @@ const processMessage = async (event: unknown) => {
 
 	const parsedEvent = IncomingSQSEvent.safeParse(event);
 	if (!parsedEvent.success) {
-		console.error('Failed to parse SQS message', parsedEvent.error.message);
+		logger.error(`Failed to parse SQS message ${parsedEvent.error.message}`);
 		throw new Error('Failed to parse SQS message');
 	}
 
@@ -125,7 +126,7 @@ const processMessage = async (event: unknown) => {
 				),
 			);
 		} catch (error) {
-			console.error(
+			logger.error(
 				'Failed to process sqs message - transcription data may be missing from dynamo or email failed to send',
 				error,
 			);

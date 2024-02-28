@@ -9,6 +9,7 @@ import {
 	getObjectWithPresignedUrl,
 	TranscriptionConfig,
 	moveMessageToDeadLetterQueue,
+	logger,
 } from '@guardian/transcription-service-backend-common';
 import {
 	OutputBucketKeys,
@@ -31,7 +32,6 @@ import {
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { SNSClient } from '@aws-sdk/client-sns';
 import { setTimeout } from 'timers/promises';
-import { logger } from '@guardian/transcription-service-backend-common/src/logging';
 
 const POLLING_INTERVAL_SECONDS = 30;
 
@@ -208,8 +208,9 @@ const pollTranscriptionQueue = async (
 		logger.info(
 			'Successfully transcribed the file and sent notification to sns',
 			{
+				id: transcriptionOutput.id,
 				filename: transcriptionOutput.originalFilename,
-				useEmail: transcriptionOutput.userEmail,
+				userEmail: transcriptionOutput.userEmail,
 				fileDuration: ffmpegResult.duration?.toString() || '',
 			},
 		);

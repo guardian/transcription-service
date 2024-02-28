@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import path from 'path';
 import { readFile } from '@guardian/transcription-service-backend-common';
-import { logger } from '@guardian/transcription-service-backend-common/src/logging';
+import { logger } from '@guardian/transcription-service-backend-common';
 
 interface ProcessResult {
 	code?: number;
@@ -25,6 +25,7 @@ export interface Transcripts {
 const CONTAINER_FOLDER = '/input';
 
 const runSpawnCommand = (
+	processName: string,
 	cmd: string,
 	args: ReadonlyArray<string>,
 ): Promise<ProcessResult> => {
@@ -50,13 +51,13 @@ const runSpawnCommand = (
 				stderr: stderr.join(''),
 				code: code || undefined,
 			};
-			logger.info(result.stdout.replace('\n', ' '));
-			logger.info(result.stderr.replace('\n', ' '));
+			logger.info('Ignoring stdout to avoid logging sensitive data');
+			logger.info(`process ${processName} stderr: ${result.stderr}`);
 			if (code === 0) {
 				resolve(result);
 			} else {
 				logger.error(
-					`failed with code ${result.code} due to: ${result.stderr}`,
+					`process ${processName} failed with code ${result.code} due to: ${result.stderr}`,
 				);
 				reject(result);
 			}
@@ -67,7 +68,7 @@ const runSpawnCommand = (
 export const getOrCreateContainer = async (
 	tempDir: string,
 ): Promise<string> => {
-	const existingContainer = await runSpawnCommand('docker', [
+	const existingContainer = await runSpawnCommand('getContainer', 'docker', [
 		'ps',
 		'--filter',
 		'name=whisper',
@@ -79,7 +80,7 @@ export const getOrCreateContainer = async (
 		return existingContainer.stdout.trim();
 	}
 
-	const newContainer = await runSpawnCommand('docker', [
+	const newContainer = await runSpawnCommand('createNewContainer', 'docker', [
 		'run',
 		'-t',
 		'-d',
@@ -104,7 +105,7 @@ export const convertToWav = async (
 	logger.info(`wav file path: ${wavPath}`);
 
 	try {
-		const res = await runSpawnCommand('docker', [
+		const res = await runSpawnCommand('convertToWav', 'docker', [
 			'exec',
 			containerId,
 			'ffmpeg',
@@ -191,7 +192,7 @@ export const transcribe = async (
 	logger.info(`transcribe outputFile: ${containerOutputFilePath}`);
 
 	try {
-		await runSpawnCommand('docker', [
+		await runSpawnCommand('transcribe', 'docker', [
 			'exec',
 			containerId,
 			'whisper.cpp/main',

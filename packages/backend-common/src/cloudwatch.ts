@@ -3,6 +3,7 @@ import {
 	PutMetricDataCommand,
 	PutMetricDataInput,
 } from '@aws-sdk/client-cloudwatch';
+import { logger } from './logging';
 
 export const getCloudwatchClient = (region: string) => {
 	return new CloudWatchClient({ region });
@@ -15,7 +16,7 @@ export const putMetricData = async (
 	try {
 		await client.send(new PutMetricDataCommand(metricData));
 	} catch (error) {
-		console.error('Error writing to cloudwatch', error);
+		logger.error('Error writing to cloudwatch', error);
 		throw error;
 	}
 };

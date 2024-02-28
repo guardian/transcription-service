@@ -2,6 +2,7 @@ import {
 	AutoScalingClient,
 	SetDesiredCapacityCommand,
 } from '@aws-sdk/client-auto-scaling';
+import { logger } from '@guardian/transcription-service-backend-common';
 
 export const setDesiredCapacity = async (
 	asgClient: AutoScalingClient,
@@ -15,7 +16,7 @@ export const setDesiredCapacity = async (
 		});
 		await asgClient.send(command);
 	} catch (error) {
-		console.error("Couldn't set desired capacity", error);
+		logger.error("Couldn't set desired capacity", error);
 		throw error;
 	}
 };

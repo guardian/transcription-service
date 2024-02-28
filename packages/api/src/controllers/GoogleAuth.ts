@@ -2,7 +2,10 @@ import jwt from 'jsonwebtoken';
 import passport from 'passport';
 import { stringify } from 'qs';
 import { URL } from 'url';
-import { TranscriptionConfig } from '@guardian/transcription-service-backend-common';
+import {
+	logger,
+	TranscriptionConfig,
+} from '@guardian/transcription-service-backend-common';
 import { NextFunction, Request, RequestHandler, Response } from 'express';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -40,7 +43,7 @@ export class GoogleAuth {
 			const email = req.user?.email;
 			const { state } = req.query;
 			const returnUrl = new URL(this.rootUrl);
-			console.log(`user ${email} logged in`);
+			logger.info(`user ${email} logged in`);
 
 			// preserve query string and path from state
 			if (typeof state === 'string') {

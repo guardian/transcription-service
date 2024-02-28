@@ -1,4 +1,4 @@
-import { logger } from '@guardian/transcription-service-backend-common/src/logging';
+import { logger } from '@guardian/transcription-service-backend-common';
 import { Transcripts } from './transcribe';
 import {
 	uploadToS3,

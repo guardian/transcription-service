@@ -1,4 +1,5 @@
 import { GetQueueAttributesCommand, SQSClient } from '@aws-sdk/client-sqs';
+import { logger } from '@guardian/transcription-service-backend-common';
 
 export const getSQSQueueLengthIncludingInvisible = async (
 	sqsClient: SQSClient,
@@ -21,7 +22,7 @@ export const getSQSQueueLengthIncludingInvisible = async (
 			Number(attributes.ApproximateNumberOfMessagesNotVisible)
 		);
 	} catch (error) {
-		console.error("Couldn't get queue length", error);
+		logger.error("Couldn't get queue length", error);
 		throw error;
 	}
 };
