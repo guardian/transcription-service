@@ -99,7 +99,7 @@ const sendMessage = async (
 			new SendMessageCommand({
 				QueueUrl: queueUrl,
 				MessageBody: messageBody,
-				MessageGroupId: id,
+				MessageGroupId: 'api-transcribe-request',
 			}),
 		);
 		console.log(`Message sent. Message id: ${result.MessageId}`);
