@@ -24,18 +24,18 @@ export const getDynamoClient = (
 	return DynamoDBDocumentClient.from(client);
 };
 
-export const Transcripts = z.object({
+export const TranscriptKeys = z.object({
 	srt: z.string(),
 	text: z.string(),
 	json: z.string(),
 });
 
-export type Transcripts = z.infer<typeof Transcripts>;
+export type TranscriptKeys = z.infer<typeof TranscriptKeys>;
 
 export const TranscriptionDynamoItem = z.object({
 	id: z.string(),
 	originalFilename: z.string(),
-	transcriptKeys: Transcripts,
+	transcriptKeys: TranscriptKeys,
 	userEmail: z.string(),
 });
 
