@@ -50,8 +50,8 @@ const runSpawnCommand = (
 				stderr: stderr.join(''),
 				code: code || undefined,
 			};
-			logger.info(result.stdout);
-			logger.info(result.stderr);
+			logger.info(result.stdout.replace('\n', ' '));
+			logger.info(result.stderr.replace('\n', ' '));
 			if (code === 0) {
 				resolve(result);
 			} else {
