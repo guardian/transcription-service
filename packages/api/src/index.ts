@@ -179,6 +179,13 @@ const getApp = async () => {
 				res.status(500).send(msg);
 				return;
 			}
+			if (parsedItem.data.userEmail !== req.user?.email) {
+				// users can only export their own transcripts
+				const msg = `User ${req.user?.email} does not have permission to export item with id ${parsedItem.data.id}`;
+				console.error(msg);
+				res.status(403).send(msg);
+				return;
+			}
 			const transcriptText = await getObjectText(
 				s3Client,
 				config.app.transcriptionOutputBucket,
