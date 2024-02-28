@@ -35,10 +35,10 @@ class ServerLogger {
 
 	private log(logObject: LogEvent): void {
 		this.underlyingLogger.log({
-			message: logObject.message.replace(/(\r\n|\n|\r)/gm, ''),
+			message: logObject.message.replace(/(\r\n|\n|\r)/gm, ' '),
 			level: logObject.level,
 			stack_trace: logObject.stack_trace,
-			meta: logObject.meta,
+			...logObject.meta,
 		});
 	}
 
