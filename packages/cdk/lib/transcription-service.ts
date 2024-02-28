@@ -605,10 +605,14 @@ export class TranscriptionService extends GuStack {
 		if (isProd) {
 			const alarms = [
 				// alarm when a message is added to the dead letter queue
+				// note that queue metrics go to 'sleep' if it is empty for more than 6 hours, so it may take up to 16 minutes
+				// for this alarm to trigger - see https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-monitoring-using-cloudwatch.html
 				new Alarm(this, 'DeadLetterQueueAlarm', {
 					alarmName: `transcription-service-dead-letter-queue-${props.stage}`,
 					metric:
-						transcriptionDeadLetterQueue.metricApproximateNumberOfMessagesVisible(),
+						transcriptionDeadLetterQueue.metricApproximateNumberOfMessagesVisible(
+							{ period: Duration.minutes(1), statistic: 'max' },
+						),
 					threshold: 1,
 					evaluationPeriods: 1,
 					actionsEnabled: true,
@@ -654,7 +658,7 @@ export class TranscriptionService extends GuStack {
 					threshold: 1,
 					comparisonOperator:
 						ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-					evaluationPeriods: 2, // testing 5 * 12, // 5 hours as metric has period of 5 minutes
+					evaluationPeriods: 5 * 12, // 5 hours as metric has period of 5 minutes
 					actionsEnabled: true,
 					alarmDescription:
 						'There has been more than 1 worker instance running for 5 hours - this will have significant cost implications. Please check that all running workers are doing something useful.',
