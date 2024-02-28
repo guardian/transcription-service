@@ -173,7 +173,7 @@ export class TranscriptionService extends GuStack {
 			monitoringConfiguration: {
 				noMonitoring: true,
 			},
-			app: APP_NAME,
+			app: `${APP_NAME}-api`,
 			api: {
 				id: apiId,
 				description: 'API for transcription service frontend',
