@@ -3,19 +3,14 @@ import { sendEmail, getSESClient } from './ses';
 import { IncomingSQSEvent } from './sqs-event-types';
 import {
 	logger,
-	TranscriptionConfig,
 	getConfig,
-	getFileFromS3,
-	readFile,
 } from '@guardian/transcription-service-backend-common';
 import {
 	getDynamoClient,
-	TranscriptionItem,
+	TranscriptionDynamoItem,
 	writeTranscriptionItem,
 } from '@guardian/transcription-service-backend-common/src/dynamodb';
-import type { Transcripts } from '@guardian/transcription-service-backend-common/src/dynamodb';
 import { testMessage } from '../test/testMessage';
-import { type OutputBucketKeys } from '@guardian/transcription-service-common';
 import {
 	MetricsService,
 	FailureMetric,
@@ -30,46 +25,8 @@ const messageBody = (
 	return `
 		<h1>Transcript for ${originalFilename} ready</h1>
 		<p>Click <a href="${exportUrl}">here</a> to export to a google doc.</p>
+		<p><b>Note:</b> transcripts will expire after 7 days. Export your transcript to a doc now if you want to keep it. </p>
 	`;
-};
-
-export const getTranscriptsText = async (
-	config: TranscriptionConfig,
-	outputBucketKeys: OutputBucketKeys,
-): Promise<Transcripts> => {
-	try {
-		const destinationDirectory =
-			config.app.stage === 'DEV' ? `${__dirname}/sample` : '/tmp';
-		const srtFile = await getFileFromS3(
-			config.aws.region,
-			destinationDirectory,
-			config.app.transcriptionOutputBucket,
-			outputBucketKeys.srt,
-		);
-		const jsonFile = await getFileFromS3(
-			config.aws.region,
-			destinationDirectory,
-			config.app.transcriptionOutputBucket,
-			outputBucketKeys.json,
-		);
-		const textFile = await getFileFromS3(
-			config.aws.region,
-			destinationDirectory,
-			config.app.transcriptionOutputBucket,
-			outputBucketKeys.text,
-		);
-
-		const srt = readFile(srtFile);
-		const json = readFile(jsonFile);
-		const text = readFile(textFile);
-
-		const result: Transcripts = { srt, json, text };
-
-		return result;
-	} catch (error) {
-		logger.error(`failed to get transcription texts from S3`, error);
-		throw error;
-	}
 };
 
 const processMessage = async (event: unknown) => {
@@ -91,18 +48,13 @@ const processMessage = async (event: unknown) => {
 	for (const record of parsedEvent.data.Records) {
 		const transcriptionOutput = record.body.Message;
 
-		const transcripts = await getTranscriptsText(
-			config,
-			transcriptionOutput.outputBucketKeys,
-		);
-
-		const dynamoItem: TranscriptionItem = {
+		const dynamoItem: TranscriptionDynamoItem = {
 			id: transcriptionOutput.id,
 			originalFilename: transcriptionOutput.originalFilename,
-			transcripts: {
-				srt: transcripts.srt,
-				text: transcripts.text,
-				json: transcripts.json,
+			transcriptKeys: {
+				srt: transcriptionOutput.outputBucketKeys.srt,
+				text: transcriptionOutput.outputBucketKeys.text,
+				json: transcriptionOutput.outputBucketKeys.json,
 			},
 			userEmail: transcriptionOutput.userEmail,
 		};

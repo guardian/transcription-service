@@ -3,7 +3,7 @@ import {
 	getSQSClient,
 	getNextMessage,
 	parseTranscriptJobMessage,
-	isFailure,
+	isSqsFailure,
 	deleteMessage,
 	changeMessageVisibility,
 	getObjectWithPresignedUrl,
@@ -87,7 +87,7 @@ const pollTranscriptionQueue = async (
 
 	const message = await getNextMessage(sqsClient, config.app.taskQueueUrl);
 
-	if (isFailure(message)) {
+	if (isSqsFailure(message)) {
 		logger.error(`Failed to fetch message due to ${message.errorMsg}`);
 		await updateScaleInProtection(region, stage, false);
 		return;

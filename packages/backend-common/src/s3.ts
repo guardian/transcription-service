@@ -11,6 +11,7 @@ import { Readable } from 'stream';
 import { z } from 'zod';
 import axios from 'axios';
 import { logger } from '@guardian/transcription-service-backend-common';
+import { AWSStatus } from './types';
 
 const ReadableBody = z.instanceof(Readable);
 
@@ -59,27 +60,58 @@ export const getSignedDownloadUrl = async (
 		{ expiresIn }, // override default expiration time of 15 minutes
 	);
 
-export const getFile = async (
+type GetObjectTextSuccess = {
+	status: AWSStatus.Success;
+	text: string;
+};
+
+type GetObjectTextFailure = {
+	status: AWSStatus.Failure;
+	failureReason: 'NoSuchKey' | 'Unknown';
+};
+
+type GetObjectTextResult = GetObjectTextSuccess | GetObjectTextFailure;
+
+export const isS3Failure = (
+	result: GetObjectTextResult,
+): result is GetObjectTextFailure => result.status === AWSStatus.Failure;
+
+// for smaller files that will fit in memory - parse straight into a string
+export const getObjectText = async (
 	client: S3Client,
 	bucket: string,
 	key: string,
-	workingDirectory: string,
-) => {
+): Promise<GetObjectTextResult> => {
 	try {
-		const destinationPath = `${workingDirectory}/${path.basename(key)}`;
 		const data = await client.send(
 			new GetObjectCommand({
 				Bucket: bucket,
 				Key: key,
 			}),
 		);
-
 		const body = ReadableBody.parse(data.Body);
-		await downloadS3Data(body, destinationPath, key);
-		return destinationPath;
-	} catch (e) {
-		logger.error(`failed to get S3 file ${key} in bucket ${bucket}`, e);
-		throw e;
+		const chunks: Uint8Array[] = [];
+		for await (const chunk of body) {
+			chunks.push(chunk);
+		}
+		return {
+			status: AWSStatus.Success,
+			text: Buffer.concat(chunks).toString('utf-8'),
+		};
+	} catch (error: unknown) {
+		if (error instanceof Error) {
+			if (error.name === 'NoSuchKey') {
+				return {
+					status: AWSStatus.Failure,
+					failureReason: 'NoSuchKey',
+				};
+			}
+		}
+		logger.error(`error getting object ${key} from bucket ${bucket}`, error);
+		return {
+			status: AWSStatus.Failure,
+			failureReason: 'Unknown',
+		};
 	}
 };
 
@@ -117,19 +149,6 @@ const downloadS3Data = async (
 	});
 	logger.info(`successfully retrieved file from S3 into ${destinationPath}`);
 	return destinationPath;
-};
-
-export const getFileFromS3 = async (
-	region: string,
-	destinationDirectory: string,
-	bucket: string,
-	s3Key: string,
-) => {
-	const s3Client = getS3Client(region);
-
-	const file = await getFile(s3Client, bucket, s3Key, destinationDirectory);
-
-	return file;
 };
 
 export const getObjectMetadata = async (

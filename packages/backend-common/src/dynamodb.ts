@@ -24,27 +24,27 @@ export const getDynamoClient = (
 	return DynamoDBDocumentClient.from(client);
 };
 
-export const Transcripts = z.object({
+export const TranscriptKeys = z.object({
 	srt: z.string(),
 	text: z.string(),
 	json: z.string(),
 });
 
-export type Transcripts = z.infer<typeof Transcripts>;
+export type TranscriptKeys = z.infer<typeof TranscriptKeys>;
 
-export const TranscriptionItem = z.object({
+export const TranscriptionDynamoItem = z.object({
 	id: z.string(),
 	originalFilename: z.string(),
-	transcripts: Transcripts,
+	transcriptKeys: TranscriptKeys,
 	userEmail: z.string(),
 });
 
-export type TranscriptionItem = z.infer<typeof TranscriptionItem>;
+export type TranscriptionDynamoItem = z.infer<typeof TranscriptionDynamoItem>;
 
 export const writeTranscriptionItem = async (
 	client: DynamoDBDocumentClient,
 	tableName: string,
-	item: TranscriptionItem,
+	item: TranscriptionDynamoItem,
 ) => {
 	const command = new PutCommand({
 		TableName: tableName,

@@ -12,10 +12,13 @@ import {
 	getSignedUploadUrl,
 	getSQSClient,
 	generateOutputSignedUrlAndSendMessage,
-	isFailure,
+	isSqsFailure,
+	isS3Failure,
 	getSignedDownloadUrl,
 	getObjectMetadata,
 	logger,
+	getObjectText,
+	getS3Client,
 } from '@guardian/transcription-service-backend-common';
 import {
 	ClientConfig,
@@ -27,7 +30,7 @@ import type { SignedUrlResponseBody } from '@guardian/transcription-service-comm
 import {
 	getDynamoClient,
 	getTranscriptionItem,
-	TranscriptionItem,
+	TranscriptionDynamoItem,
 } from '@guardian/transcription-service-backend-common/src/dynamodb';
 import { createTranscriptDocument } from './services/googleDrive';
 import { v4 as uuid4 } from 'uuid';
@@ -47,6 +50,8 @@ const getApp = async () => {
 		config.aws.region,
 		config.aws.localstackEndpoint,
 	);
+
+	const s3Client = getS3Client(config.aws.region);
 
 	app.use(bodyParser.json({ limit: '40mb' }));
 	app.use(passport.initialize());
@@ -120,7 +125,7 @@ const getApp = async () => {
 				body.data.fileName,
 				signedUrl,
 			);
-			if (isFailure(sendResult)) {
+			if (isSqsFailure(sendResult)) {
 				res.status(500).send(sendResult.errorMsg);
 				return;
 			}
@@ -168,10 +173,33 @@ const getApp = async () => {
 				res.status(500).send(msg);
 				return;
 			}
-			const parsedItem = TranscriptionItem.safeParse(item);
+			const parsedItem = TranscriptionDynamoItem.safeParse(item);
 			if (!parsedItem.success) {
 				const msg = `Failed to parse item ${exportRequest.data.id} from dynamodb. Error: ${parsedItem.error.message}`;
 				logger.error(msg);
+				res.status(500).send(msg);
+				return;
+			}
+			if (parsedItem.data.userEmail !== req.user?.email) {
+				// users can only export their own transcripts. Return a 404 to avoid leaking information about other users' transcripts
+				logger.warn(
+					`User ${req.user?.email} attempted to export transcript ${parsedItem.data.id} which does not belong to them.`,
+				);
+				res.status(404).send(`Transcript not found`);
+				return;
+			}
+			const transcriptText = await getObjectText(
+				s3Client,
+				config.app.transcriptionOutputBucket,
+				parsedItem.data.transcriptKeys.text,
+			);
+			if (isS3Failure(transcriptText)) {
+				if (transcriptText.failureReason === 'NoSuchKey') {
+					const msg = `Failed to export transcript - file has expired. Please re-upload the file and try again.`;
+					res.status(410).send(msg);
+					return;
+				}
+				const msg = `Failed to fetch transcript. Please contact the digital investigations team for support`;
 				res.status(500).send(msg);
 				return;
 			}
@@ -179,7 +207,7 @@ const getApp = async () => {
 				config,
 				`${parsedItem.data.originalFilename} transcript`,
 				exportRequest.data.oAuthTokenResponse,
-				parsedItem.data.transcripts.srt,
+				transcriptText.text,
 			);
 			if (!exportResult) {
 				const msg = `Failed to create google document for item with id ${parsedItem.data.id}`;
