@@ -3,6 +3,7 @@ import {
 	Parameter,
 	SSM,
 } from '@aws-sdk/client-ssm';
+import { logger } from '@guardian/transcription-service-backend-common';
 
 export const getParameters = async (
 	paramPath: string,
@@ -27,15 +28,13 @@ export const getParameters = async (
 		} while (nextToken);
 
 		if (parameters) {
-			console.log('Fetched parameters from Parameter Store');
+			logger.info('Fetched parameters from Parameter Store');
 			return parameters;
 		} else {
 			throw new Error('No parameters fetched from Parameter Store');
 		}
 	} catch (err) {
-		console.log(
-			`Error fetching parameters from Parameter Store with error: ${err}`,
-		);
+		logger.error('Error fetching parameters from Parameter Store', err);
 		throw err;
 	}
 };

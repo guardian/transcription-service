@@ -1,6 +1,7 @@
 import { spawn } from 'child_process';
 import path from 'path';
 import { readFile } from '@guardian/transcription-service-backend-common';
+import { logger } from '@guardian/transcription-service-backend-common';
 
 interface ProcessResult {
 	code?: number;
@@ -24,6 +25,7 @@ export interface Transcripts {
 const CONTAINER_FOLDER = '/input';
 
 const runSpawnCommand = (
+	processName: string,
 	cmd: string,
 	args: ReadonlyArray<string>,
 ): Promise<ProcessResult> => {
@@ -32,12 +34,10 @@ const runSpawnCommand = (
 		const stdout: string[] = [];
 		const stderr: string[] = [];
 		cp.stdout.on('data', (data) => {
-			console.log(data.toString());
 			stdout.push(data.toString());
 		});
 
 		cp.stderr.on('data', (data) => {
-			console.log(data.toString());
 			stderr.push(data.toString());
 		});
 
@@ -51,11 +51,13 @@ const runSpawnCommand = (
 				stderr: stderr.join(''),
 				code: code || undefined,
 			};
+			logger.info('Ignoring stdout to avoid logging sensitive data');
+			logger.info(`process ${processName} stderr: ${result.stderr}`);
 			if (code === 0) {
 				resolve(result);
 			} else {
-				console.error(
-					`failed with code ${result.code} due to: ${result.stderr}`,
+				logger.error(
+					`process ${processName} failed with code ${result.code} due to: ${result.stderr}`,
 				);
 				reject(result);
 			}
@@ -66,7 +68,7 @@ const runSpawnCommand = (
 export const getOrCreateContainer = async (
 	tempDir: string,
 ): Promise<string> => {
-	const existingContainer = await runSpawnCommand('docker', [
+	const existingContainer = await runSpawnCommand('getContainer', 'docker', [
 		'ps',
 		'--filter',
 		'name=whisper',
@@ -78,7 +80,7 @@ export const getOrCreateContainer = async (
 		return existingContainer.stdout.trim();
 	}
 
-	const newContainer = await runSpawnCommand('docker', [
+	const newContainer = await runSpawnCommand('createNewContainer', 'docker', [
 		'run',
 		'-t',
 		'-d',
@@ -98,12 +100,12 @@ export const convertToWav = async (
 	const fileName = path.basename(file);
 	const filePath = `${CONTAINER_FOLDER}/${fileName}`;
 	const wavPath = `${CONTAINER_FOLDER}/${fileName}-converted.wav`;
-	console.log(`containerId: ${containerId}`);
-	console.log('file path: ', filePath);
-	console.log('wav file path: ', wavPath);
+	logger.info(`containerId: ${containerId}`);
+	logger.info(`file path: ${filePath}`);
+	logger.info(`wav file path: ${wavPath}`);
 
 	try {
-		const res = await runSpawnCommand('docker', [
+		const res = await runSpawnCommand('convertToWav', 'docker', [
 			'exec',
 			containerId,
 			'ffmpeg',
@@ -126,7 +128,7 @@ export const convertToWav = async (
 			duration,
 		};
 	} catch (error) {
-		console.log('ffmpeg failed error:', error);
+		logger.error('ffmpeg failed error:', error);
 		return undefined;
 	}
 };
@@ -136,14 +138,14 @@ const getDuration = (ffmpegOutput: string) => {
 		ffmpegOutput,
 	);
 	if (!reg || reg.length < 4) {
-		console.warn('Could not retrieve duration from the ffmpeg result.');
+		logger.warn('Could not retrieve duration from the ffmpeg result.');
 		return undefined;
 	}
 	const hour = reg[1] ? parseInt(reg[1]) : 0;
 	const minute = reg[2] ? parseInt(reg[2]) : 0;
 	const seconds = reg[3] ? parseInt(reg[3]) : 0;
 	const duration = hour * 3600 + minute * 60 + seconds;
-	console.log(`File duration is ${duration} seconds`);
+	logger.info(`File duration is ${duration} seconds`);
 	return duration;
 };
 
@@ -174,7 +176,7 @@ export const getTranscriptionText = async (
 
 		return res;
 	} catch (error) {
-		console.log(`Could not read the transcripts result`);
+		logger.error(`Could not read the transcripts result`);
 		throw error;
 	}
 };
@@ -187,10 +189,10 @@ export const transcribe = async (
 ) => {
 	const fileName = path.parse(file).name;
 	const containerOutputFilePath = path.resolve(CONTAINER_FOLDER, fileName);
-	console.log(`transcribe outputFile: ${containerOutputFilePath}`);
+	logger.info(`transcribe outputFile: ${containerOutputFilePath}`);
 
 	try {
-		await runSpawnCommand('docker', [
+		await runSpawnCommand('transcribe', 'docker', [
 			'exec',
 			containerId,
 			'whisper.cpp/main',
@@ -208,11 +210,11 @@ export const transcribe = async (
 			'--language',
 			'auto',
 		]);
-		console.log('Transcription finished successfully');
-		console.log(`transcript result: ${fileName}`);
+		logger.info('Transcription finished successfully');
+		logger.info(`transcript result: ${fileName}`);
 		return fileName;
 	} catch (error) {
-		console.log(`Transcription failed due to `, error);
+		logger.error(`Transcription failed due to `, error);
 		throw error;
 	}
 };

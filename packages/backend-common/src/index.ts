@@ -5,3 +5,4 @@ export * from './configHelpers';
 export * from './utils';
 export * from './dynamodb';
 export * from './asg';
+export * from './logging';

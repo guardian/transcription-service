@@ -9,6 +9,7 @@ import {
 	getObjectWithPresignedUrl,
 	TranscriptionConfig,
 	moveMessageToDeadLetterQueue,
+	logger,
 } from '@guardian/transcription-service-backend-common';
 import {
 	OutputBucketKeys,
@@ -78,7 +79,7 @@ const pollTranscriptionQueue = async (
 	const region = config.aws.region;
 	const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
 
-	console.log(
+	logger.info(
 		`worker polling for transcription task. Poll count = ${pollCount}`,
 	);
 
@@ -87,27 +88,27 @@ const pollTranscriptionQueue = async (
 	const message = await getNextMessage(sqsClient, config.app.taskQueueUrl);
 
 	if (isFailure(message)) {
-		console.error(`Failed to fetch message due to ${message.errorMsg}`);
+		logger.error(`Failed to fetch message due to ${message.errorMsg}`);
 		await updateScaleInProtection(region, stage, false);
 		return;
 	}
 
 	if (!message.message) {
-		console.log('No messages available');
+		logger.info('No messages available');
 		await updateScaleInProtection(region, stage, false);
 		return;
 	}
 
 	const taskMessage = message.message;
 	if (!taskMessage.Body) {
-		console.log('message missing body');
+		logger.error('message missing body');
 		await updateScaleInProtection(region, stage, false);
 		return;
 	}
 
 	const receiptHandle = taskMessage.ReceiptHandle;
 	if (!receiptHandle) {
-		console.log('message missing receipt handle');
+		logger.error('message missing receipt handle');
 		await updateScaleInProtection(region, stage, false);
 		return;
 	}
@@ -117,22 +118,22 @@ const pollTranscriptionQueue = async (
 
 		if (!job) {
 			await metrics.putMetric(FailureMetric);
-			console.error('Failed to parse job message', message);
+			logger.error('Failed to parse job message', message);
 			return;
 		}
 
-		const { outputBucketUrls, ...loggableJob } = job;
+		// from this point all worker logs will have id & userEmail in their fields
+		logger.setCommonMetadata(job.id, job.userEmail);
 
-		console.log(
-			`Fetched transcription job with id ${taskMessage.MessageId}`,
-			loggableJob,
-		);
+		const { outputBucketUrls, inputSignedUrl } = job;
+
+		logger.info(`Fetched transcription job with id ${taskMessage.MessageId}`);
 
 		const destinationDirectory =
 			config.app.stage === 'DEV' ? `${__dirname}/sample` : '/tmp';
 
 		const fileToTranscribe = await getObjectWithPresignedUrl(
-			job.inputSignedUrl,
+			inputSignedUrl,
 			job.id,
 			destinationDirectory,
 		);
@@ -147,7 +148,7 @@ const pollTranscriptionQueue = async (
 			// when ffmpeg fails to transcribe, move message to the dead letter
 			// queue
 			if (config.app.stage != 'DEV' && config.app.deadLetterQueueUrl) {
-				console.log(
+				logger.error(
 					`'ffmpeg failed, moving message with message id ${taskMessage.MessageId} to dead letter queue`,
 				);
 				await moveMessageToDeadLetterQueue(
@@ -158,11 +159,11 @@ const pollTranscriptionQueue = async (
 					receiptHandle,
 					job.id,
 				);
-				console.log(
+				logger.info(
 					`moved message with message id ${taskMessage.MessageId} to dead letter queue.`,
 				);
 			} else {
-				console.log('skip moving message to dead letter queue in DEV');
+				logger.info('skip moving message to dead letter queue in DEV');
 			}
 			return;
 		}
@@ -208,11 +209,21 @@ const pollTranscriptionQueue = async (
 			transcriptionOutput,
 		);
 
-		console.log(`Deleting message ${taskMessage.MessageId}`);
+		logger.info(
+			'Worker successfully transcribed the file and sent notification to sns',
+			{
+				id: transcriptionOutput.id,
+				filename: transcriptionOutput.originalFilename,
+				userEmail: transcriptionOutput.userEmail,
+				fileDuration: ffmpegResult.duration?.toString() || '',
+			},
+		);
+
+		logger.info(`Deleting message ${taskMessage.MessageId}`);
 		await deleteMessage(sqsClient, config.app.taskQueueUrl, receiptHandle);
 	} catch (error) {
 		const msg = 'Worker failed to complete';
-		console.error(msg, error);
+		logger.error(msg, error);
 		await metrics.putMetric(FailureMetric);
 		// Terminate the message visibility timeout
 		await changeMessageVisibility(
@@ -222,6 +233,7 @@ const pollTranscriptionQueue = async (
 			0,
 		);
 	} finally {
+		logger.resetCommonMetadata();
 		await updateScaleInProtection(region, stage, false);
 	}
 };

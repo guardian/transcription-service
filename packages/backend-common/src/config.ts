@@ -1,6 +1,7 @@
 import { findParameter, getParameters } from './configHelpers';
 import { Parameter, SSM } from '@aws-sdk/client-ssm';
 import { defaultProvider } from '@aws-sdk/credential-provider-node';
+import { logger } from '@guardian/transcription-service-backend-common';
 export interface TranscriptionConfig {
 	auth: {
 		clientId: string;
@@ -69,7 +70,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		return param.Name;
 	});
 
-	console.log(`Parameters fetched: ${parameterNames.join(', ')}`);
+	logger.info(`Parameters fetched: ${parameterNames.join(', ')}`);
 	const taskQueueUrl = findParameter(parameters, paramPath, 'taskQueueUrl');
 	const deadLetterQueueUrl =
 		stage === 'DEV'

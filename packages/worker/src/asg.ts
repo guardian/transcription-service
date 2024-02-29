@@ -3,6 +3,7 @@ import {
 	readFile,
 	getASGClient,
 } from '@guardian/transcription-service-backend-common';
+import { logger } from '@guardian/transcription-service-backend-common';
 
 export const updateScaleInProtection = async (
 	region: string,
@@ -12,7 +13,7 @@ export const updateScaleInProtection = async (
 	try {
 		if (stage !== 'DEV') {
 			const instanceId = readFile('/var/lib/cloud/data/instance-id');
-			console.log(`instanceId: ${instanceId}`);
+			logger.info(`instanceId retrieved from worker instance: ${instanceId}`);
 			const autoScalingClient = getASGClient(region);
 			const input = {
 				InstanceIds: [instanceId.trim()],
@@ -21,12 +22,12 @@ export const updateScaleInProtection = async (
 			};
 			const command = new SetInstanceProtectionCommand(input);
 			await autoScalingClient.send(command);
-			console.log(
+			logger.info(
 				`Updated scale-in protection to value ${value} for instance ${instanceId}`,
 			);
 		}
 	} catch (error) {
-		console.error(`Could not set scale-in protection`, error);
+		logger.error(`Could not set scale-in protection`, error);
 		throw error;
 	}
 };

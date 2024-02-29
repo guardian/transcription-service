@@ -9,7 +9,8 @@
 		"@aws-sdk/lib-dynamodb": "^3.509.0",
 		"@aws-sdk/client-cloudwatch": "^3.496.0",
 		"@aws-sdk/client-auto-scaling": "^3.514.0",
-		"axios": "^1.6.7"
+		"axios": "^1.6.7",
+		"winston": "^3.11.0"
 	},
 	"private": true,
 	"main": "src/index.ts",

@@ -12,6 +12,7 @@ import {
 	TranscriptionJob,
 } from '@guardian/transcription-service-common';
 import { getSignedUploadUrl } from '@guardian/transcription-service-backend-common';
+import { logger } from '@guardian/transcription-service-backend-common';
 
 enum SQSStatus {
 	Success,
@@ -103,7 +104,7 @@ const sendMessage = async (
 				MessageGroupId: id,
 			}),
 		);
-		console.log(`Message sent. Message id: ${result.MessageId}`);
+		logger.info(`Message sent. Message id: ${result.MessageId}`);
 		if (result.MessageId) {
 			return {
 				status: SQSStatus.Success,
@@ -116,7 +117,7 @@ const sendMessage = async (
 		};
 	} catch (e) {
 		const msg = `Failed to send message ${messageBody}`;
-		console.error(msg, e);
+		logger.error(msg, e);
 		return {
 			status: SQSStatus.Failure,
 			error: e,
@@ -139,12 +140,12 @@ export const changeMessageVisibility = async (
 
 	try {
 		await client.send(command);
-		console.log(
+		logger.info(
 			`Successfully updated the VisibilityTimeout of the message to ${timeoutOverride}`,
 		);
 	} catch (error) {
 		const errorMsg = `Failed to update VisibilityTimeout to ${timeoutOverride} for message`;
-		console.error(errorMsg, error);
+		logger.error(errorMsg, error);
 		throw error;
 	}
 };
@@ -179,7 +180,7 @@ export const getNextMessage = async (
 		};
 	} catch (error) {
 		const errorMsg = 'Failed to receive messages';
-		console.error(errorMsg, error);
+		logger.error(errorMsg, error);
 		return {
 			status: SQSStatus.Failure,
 			error,
@@ -205,7 +206,7 @@ export const deleteMessage = async (
 		};
 	} catch (error) {
 		const errorMsg = `Failed to delete message ${receiptHandle}`;
-		console.error(errorMsg, error);
+		logger.error(errorMsg, error);
 		return {
 			status: SQSStatus.Failure,
 			error,
@@ -251,7 +252,7 @@ export const parseTranscriptJobMessage = (
 	if (job.success) {
 		return job.data;
 	}
-	console.error(
+	logger.error(
 		`Failed to parse message ${message.MessageId}, contents: ${message.Body}`,
 	);
 	return undefined;

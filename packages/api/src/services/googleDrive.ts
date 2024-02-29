@@ -1,6 +1,9 @@
 import { OAuth2Client } from 'google-auth-library/build/src/auth/oauth2client';
 import { google, drive_v3, docs_v1 } from 'googleapis';
-import { TranscriptionConfig } from '@guardian/transcription-service-backend-common';
+import {
+	logger,
+	TranscriptionConfig,
+} from '@guardian/transcription-service-backend-common';
 import { ZTokenResponse } from '@guardian/transcription-service-common';
 
 export const getOrCreateTranscriptFolder = async (
@@ -30,7 +33,7 @@ export const getOrCreateTranscriptFolder = async (
 		});
 		return file.data.id;
 	} catch (err) {
-		console.error('Failed to create folder', err);
+		logger.error('Failed to create folder', err);
 		return null;
 	}
 };
@@ -110,7 +113,7 @@ export const createTranscriptDocument = async (
 		'Guardian Transcribe Tool',
 	);
 	if (!folderId) {
-		console.error('Failed to get or create folder');
+		logger.error('Failed to get or create folder');
 		return undefined;
 	}
 	const docId = await uploadToGoogleDocs(

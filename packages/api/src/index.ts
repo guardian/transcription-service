@@ -15,6 +15,7 @@ import {
 	isFailure,
 	getSignedDownloadUrl,
 	getObjectMetadata,
+	logger,
 } from '@guardian/transcription-service-backend-common';
 import {
 	ClientConfig,
@@ -84,19 +85,19 @@ const getApp = async () => {
 			);
 			if (!objectMetadata) {
 				res.status(404).send('missing s3 object metadata');
-				console.error('missing s3 object metadata');
+				logger.error('missing s3 object metadata');
 				return;
 			}
 			const parsedObjectMetadata =
 				inputBucketObjectMetadata.safeParse(objectMetadata);
 			if (!parsedObjectMetadata.success) {
 				res.status(404).send('missing s3 object metadata');
-				console.error('invalid s3 object metadata');
+				logger.error('invalid s3 object metadata');
 				return;
 			}
 			const uploadedBy = parsedObjectMetadata.data['user-email'];
 			if (uploadedBy != userEmail) {
-				console.error(
+				logger.error(
 					`s3 object uploaded by ${uploadedBy} does not belong to user ${userEmail}`,
 				);
 				res.status(404).send('missing s3 object metadata');
@@ -123,6 +124,11 @@ const getApp = async () => {
 				res.status(500).send(sendResult.errorMsg);
 				return;
 			}
+			logger.info('API successfully sent the message to SQS', {
+				id: s3Key,
+				filename: body.data.fileName,
+				userEmail,
+			});
 			res.send('Message sent');
 		}),
 	]);
@@ -147,7 +153,7 @@ const getApp = async () => {
 			);
 			if (!exportRequest.success) {
 				const msg = `Failed to parse export request ${exportRequest.error.message}`;
-				console.error(msg);
+				logger.error(msg);
 				res.status(400).send(msg);
 				return;
 			}
@@ -158,14 +164,14 @@ const getApp = async () => {
 			);
 			if (!item) {
 				const msg = `Failed to fetch item with id ${exportRequest.data.id} from database.`;
-				console.error(msg);
+				logger.error(msg);
 				res.status(500).send(msg);
 				return;
 			}
 			const parsedItem = TranscriptionItem.safeParse(item);
 			if (!parsedItem.success) {
 				const msg = `Failed to parse item ${exportRequest.data.id} from dynamodb. Error: ${parsedItem.error.message}`;
-				console.error(msg);
+				logger.error(msg);
 				res.status(500).send(msg);
 				return;
 			}
@@ -177,7 +183,7 @@ const getApp = async () => {
 			);
 			if (!exportResult) {
 				const msg = `Failed to create google document for item with id ${parsedItem.data.id}`;
-				console.error(msg);
+				logger.error(msg);
 				res.status(500).send(msg);
 				return;
 			}
@@ -252,7 +258,7 @@ const getApp = async () => {
 
 let api;
 if (runningOnAws) {
-	console.log('Running on lambda');
+	logger.info('Running on lambda');
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let serverlessExpressHandler: any;
@@ -268,12 +274,12 @@ if (runningOnAws) {
 		return serverlessExpressHandler(event, context);
 	};
 } else {
-	console.log('running locally');
+	logger.info('running locally');
 	// Running locally. Start Express ourselves
 	const port = 9103;
 	getApp().then((app) => {
 		app.listen(port, () => {
-			console.log(`Server now listening on port: ${port}`);
+			logger.info(`Server now listening on port: ${port}`);
 		});
 	});
 }
