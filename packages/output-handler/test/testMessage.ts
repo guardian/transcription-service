@@ -2,6 +2,7 @@ export const testMessage = {
 	Records: [
 		{
 			messageId: 'e60db2e5-b671-4832-abd4-c3fd40fe1c92',
+			status: 'SUCCESS',
 			receiptHandle: 'handle123',
 			body:
 				'{\n' +

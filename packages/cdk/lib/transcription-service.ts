@@ -22,6 +22,7 @@ import {
 import { GuLambdaFunction } from '@guardian/cdk/lib/constructs/lambda';
 import { GuS3Bucket } from '@guardian/cdk/lib/constructs/s3';
 import { GuardianAwsAccounts } from '@guardian/private-infrastructure-config';
+import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import {
 	type App,
 	aws_events_targets,
@@ -464,7 +465,7 @@ export class TranscriptionService extends GuStack {
 			contentBasedDeduplication: true,
 			deadLetterQueue: {
 				queue: transcriptionDeadLetterQueue,
-				maxReceiveCount: 3,
+				maxReceiveCount: MAX_RECEIVE_COUNT,
 			},
 		});
 

@@ -13,6 +13,8 @@ import {
 } from '@guardian/transcription-service-backend-common';
 import {
 	OutputBucketKeys,
+	TranscriptionJob,
+	TranscriptionOutputFailure,
 	type TranscriptionOutputSuccess,
 } from '@guardian/transcription-service-common';
 import { getSNSClient, publishTranscriptionOutput } from './sns';
@@ -32,6 +34,7 @@ import {
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { SNSClient } from '@aws-sdk/client-sns';
 import { setTimeout } from 'timers/promises';
+import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 
 const POLLING_INTERVAL_SECONDS = 30;
 
@@ -68,6 +71,26 @@ const main = async () => {
 	}
 };
 
+const publishTranscriptionOutputFailure = async (
+	snsClient: SNSClient,
+	destination: string,
+	job: TranscriptionJob,
+) => {
+	logger.info('publishing transcription output failed');
+	const failureMessage: TranscriptionOutputFailure = {
+		id: job.id,
+		status: 'FAILURE',
+		languageCode: 'en',
+		userEmail: job.userEmail,
+		originalFilename: job.originalFilename,
+	};
+	try {
+		await publishTranscriptionOutput(snsClient, destination, failureMessage);
+	} catch (e) {
+		logger.error('error publishing transcription output failed', e);
+	}
+};
+
 const pollTranscriptionQueue = async (
 	pollCount: number,
 	sqsClient: SQSClient,
@@ -78,6 +101,7 @@ const pollTranscriptionQueue = async (
 	const stage = config.app.stage;
 	const region = config.aws.region;
 	const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
+	const isDev = config.app.stage === 'DEV';
 
 	logger.info(
 		`worker polling for transcription task. Poll count = ${pollCount}`,
@@ -105,6 +129,11 @@ const pollTranscriptionQueue = async (
 		await updateScaleInProtection(region, stage, false);
 		return;
 	}
+	if (!taskMessage.Attributes && !isDev) {
+		logger.error('message missing attributes');
+		await updateScaleInProtection(region, stage, false);
+		return;
+	}
 
 	const receiptHandle = taskMessage.ReceiptHandle;
 	if (!receiptHandle) {
@@ -113,15 +142,15 @@ const pollTranscriptionQueue = async (
 		return;
 	}
 
+	const job = parseTranscriptJobMessage(taskMessage);
+
+	if (!job) {
+		await metrics.putMetric(FailureMetric);
+		logger.error('Failed to parse job message', message);
+		return;
+	}
+
 	try {
-		const job = parseTranscriptJobMessage(taskMessage);
-
-		if (!job) {
-			await metrics.putMetric(FailureMetric);
-			logger.error('Failed to parse job message', message);
-			return;
-		}
-
 		// from this point all worker logs will have id & userEmail in their fields
 		logger.setCommonMetadata(job.id, job.userEmail);
 
@@ -129,8 +158,7 @@ const pollTranscriptionQueue = async (
 
 		logger.info(`Fetched transcription job with id ${taskMessage.MessageId}`);
 
-		const destinationDirectory =
-			config.app.stage === 'DEV' ? `${__dirname}/sample` : '/tmp';
+		const destinationDirectory = isDev ? `${__dirname}/sample` : '/tmp';
 
 		const fileToTranscribe = await getObjectWithPresignedUrl(
 			inputSignedUrl,
@@ -147,7 +175,7 @@ const pollTranscriptionQueue = async (
 		if (ffmpegResult === undefined) {
 			// when ffmpeg fails to transcribe, move message to the dead letter
 			// queue
-			if (config.app.stage != 'DEV' && config.app.deadLetterQueueUrl) {
+			if (!isDev && config.app.deadLetterQueueUrl) {
 				logger.error(
 					`'ffmpeg failed, moving message with message id ${taskMessage.MessageId} to dead letter queue`,
 				);
@@ -165,6 +193,11 @@ const pollTranscriptionQueue = async (
 			} else {
 				logger.info('skip moving message to dead letter queue in DEV');
 			}
+			await publishTranscriptionOutputFailure(
+				snsClient,
+				config.app.destinationTopicArns.transcriptionService,
+				job,
+			);
 			return;
 		}
 
@@ -237,6 +270,22 @@ const pollTranscriptionQueue = async (
 			receiptHandle,
 			0,
 		);
+
+		// the type of ApproximateReceiveCount is string | undefined so need to
+		// handle the case where its missing. use default value
+		// MAX_RECEIVE_COUNT since its probably better to send too many failure
+		// messages than to not send any.
+		const defaultReceiveCount = MAX_RECEIVE_COUNT.toString();
+		const receiveCount = parseInt(
+			taskMessage.Attributes?.ApproximateReceiveCount || defaultReceiveCount,
+		);
+		if (receiveCount >= MAX_RECEIVE_COUNT) {
+			publishTranscriptionOutputFailure(
+				snsClient,
+				config.app.destinationTopicArns.transcriptionService,
+				job,
+			);
+		}
 	} finally {
 		logger.resetCommonMetadata();
 		await updateScaleInProtection(region, stage, false);
