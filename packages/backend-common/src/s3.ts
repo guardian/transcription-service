@@ -107,7 +107,7 @@ export const getObjectText = async (
 				};
 			}
 		}
-		console.error(`error getting object ${key} from bucket ${bucket}`, error);
+		logger.error(`error getting object ${key} from bucket ${bucket}`, error);
 		return {
 			status: AWSStatus.Failure,
 			failureReason: 'Unknown',

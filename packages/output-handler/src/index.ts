@@ -94,7 +94,6 @@ const processMessage = async (event: unknown) => {
 };
 
 const handler: Handler = async (event) => {
-	console.log(event);
 	await processMessage(event);
 	return 'Finished processing Event';
 };

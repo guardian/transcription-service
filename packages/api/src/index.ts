@@ -182,7 +182,7 @@ const getApp = async () => {
 			}
 			if (parsedItem.data.userEmail !== req.user?.email) {
 				// users can only export their own transcripts. Return a 404 to avoid leaking information about other users' transcripts
-				console.warn(
+				logger.warn(
 					`User ${req.user?.email} attempted to export transcript ${parsedItem.data.id} which does not belong to them.`,
 				);
 				res.status(404).send(`Transcript not found`);
