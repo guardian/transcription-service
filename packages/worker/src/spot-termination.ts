@@ -19,6 +19,8 @@ export const checkSpotInterrupt = async (
 			console.warn('Spot instance termination detected');
 			// Interrupt warning occurs 2 minutes before termination
 			await changeMessageVisibility(client, queueUrl, receiptHandle, 110);
+			// once the interrupt warning has happened, we don't need to keep checking
+			return;
 		}
 	}
 	setTimeout(
