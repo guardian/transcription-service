@@ -291,7 +291,7 @@ if (runningOnAws) {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let serverlessExpressHandler: any;
 	const serverlessHandler = getApp().then(
-		(app) => (serverlessExpressHandler = serverlessExpress({ app }).handler),
+		(app) => (serverlessExpressHandler = serverlessExpress({ app })),
 	);
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
