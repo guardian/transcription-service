@@ -58,32 +58,6 @@ export const getSignedDownloadUrl = async (
 		}),
 		{ expiresIn }, // override default expiration time of 15 minutes
 	);
-
-// for larger files (such as media files)- stream the file to disk
-export const streamObjectToFile = async (
-	client: S3Client,
-	bucket: string,
-	key: string,
-	workingDirectory: string,
-) => {
-	try {
-		const destinationPath = `${workingDirectory}/${path.basename(key)}`;
-		const data = await client.send(
-			new GetObjectCommand({
-				Bucket: bucket,
-				Key: key,
-			}),
-		);
-
-		const body = ReadableBody.parse(data.Body);
-		await downloadS3Data(body, destinationPath, key);
-		return destinationPath;
-	} catch (e) {
-		logger.error(`failed to get S3 file ${key} in bucket ${bucket}`, e);
-		throw e;
-	}
-};
-
 enum S3Status {
 	Success,
 	Failure,
@@ -181,24 +155,6 @@ const downloadS3Data = async (
 	});
 	logger.info(`successfully retrieved file from S3 into ${destinationPath}`);
 	return destinationPath;
-};
-
-export const getFileFromS3 = async (
-	region: string,
-	destinationDirectory: string,
-	bucket: string,
-	s3Key: string,
-) => {
-	const s3Client = getS3Client(region);
-
-	const file = await streamObjectToFile(
-		s3Client,
-		bucket,
-		s3Key,
-		destinationDirectory,
-	);
-
-	return file;
 };
 
 export const getObjectMetadata = async (
