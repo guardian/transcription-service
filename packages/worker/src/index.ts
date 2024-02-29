@@ -147,6 +147,7 @@ const pollTranscriptionQueue = async (
 	if (!job) {
 		await metrics.putMetric(FailureMetric);
 		logger.error('Failed to parse job message', message);
+		await updateScaleInProtection(region, stage, false);
 		return;
 	}
 
