@@ -5,11 +5,14 @@ import { AuthRequired } from '@/components/AuthRequired';
 import { initAuth, initialState, logOutIfLoginExpired } from '@/services/auth';
 import { AuthState } from '@/types';
 import { createContext } from 'react';
+import { Spinner } from 'flowbite-react';
 
 export const authExpiryCheckPeriodInSeconds = 30;
 export const AuthContext: React.Context<AuthState> = createContext({});
 
 export default function Template({ children }: { children: React.ReactNode }) {
+	const [authLoading, setAuthLoading] = useState(true);
+	const browserHistory = createBrowserHistory();
 	const [auth, setAuth] = useState<AuthState>(initialState);
 
 	useEffect(() => {
@@ -22,12 +25,19 @@ export default function Template({ children }: { children: React.ReactNode }) {
 	}, [auth]);
 
 	useEffect(() => {
-		const browserHistory = createBrowserHistory();
-
+		setAuthLoading(true);
 		const newAuth = initAuth(browserHistory);
 		setAuth(newAuth);
+		setAuthLoading(false);
 	}, []);
 
+	if (authLoading) {
+		return (
+			<div>
+				<Spinner className={'w-6 h-6'} />
+			</div>
+		);
+	}
 	if (!auth.token) {
 		return (
 			<div>
