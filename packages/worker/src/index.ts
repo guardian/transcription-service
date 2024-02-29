@@ -13,7 +13,7 @@ import {
 } from '@guardian/transcription-service-backend-common';
 import {
 	OutputBucketKeys,
-	type TranscriptionOutput,
+	type TranscriptionOutputSuccess,
 } from '@guardian/transcription-service-common';
 import { getSNSClient, publishTranscriptionOutput } from './sns';
 import {
@@ -198,8 +198,9 @@ const pollTranscriptionQueue = async (
 			text: outputBucketUrls.text.key,
 		};
 
-		const transcriptionOutput: TranscriptionOutput = {
+		const transcriptionOutput: TranscriptionOutputSuccess = {
 			id: job.id,
+			status: 'SUCCESS',
 			languageCode: transcriptResult.metadata.detectedLanguageCode || 'en',
 			userEmail: job.userEmail,
 			originalFilename: job.originalFilename,

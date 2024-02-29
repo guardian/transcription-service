@@ -4,6 +4,7 @@ import { IncomingSQSEvent } from './sqs-event-types';
 import {
 	logger,
 	getConfig,
+	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
 import {
 	getDynamoClient,
@@ -12,11 +13,17 @@ import {
 } from '@guardian/transcription-service-backend-common/src/dynamodb';
 import { testMessage } from '../test/testMessage';
 import {
+	transcriptionOutputIsSuccess,
+	TranscriptionOutputSuccess,
+	TranscriptionOutputFailure,
+} from '@guardian/transcription-service-common';
+import {
 	MetricsService,
 	FailureMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
+import { SESClient } from '@aws-sdk/client-ses';
 
-const messageBody = (
+const successMessageBody = (
 	transcriptId: string,
 	originalFilename: string,
 	rootUrl: string,
@@ -27,6 +34,90 @@ const messageBody = (
 		<p>Click <a href="${exportUrl}">here</a> to export to a google doc.</p>
 		<p><b>Note:</b> transcripts will expire after 7 days. Export your transcript to a doc now if you want to keep it. </p>
 	`;
+};
+
+const failureMessageBody = (originalFilename: string): string => {
+	return `
+		<h1>Transcription for ${originalFilename} has failed 😢</h1>
+		<p>Please make sure that the file is a valid audio or video file.</p>
+		<p>Contact the digital investigations team for support.</p>
+	`;
+};
+
+const handleTranscriptionSuccess = async (
+	config: TranscriptionConfig,
+	transcriptionOutput: TranscriptionOutputSuccess,
+	sesClient: SESClient,
+	metrics: MetricsService,
+) => {
+	const dynamoItem: TranscriptionDynamoItem = {
+		id: transcriptionOutput.id,
+		originalFilename: transcriptionOutput.originalFilename,
+		transcriptKeys: {
+			srt: transcriptionOutput.outputBucketKeys.srt,
+			text: transcriptionOutput.outputBucketKeys.text,
+			json: transcriptionOutput.outputBucketKeys.json,
+		},
+		userEmail: transcriptionOutput.userEmail,
+	};
+
+	try {
+		await writeTranscriptionItem(
+			getDynamoClient(config.aws.region, config.aws.localstackEndpoint),
+			config.app.tableName,
+			dynamoItem,
+		);
+
+		await sendEmail(
+			sesClient,
+			config.app.emailNotificationFromAddress,
+			transcriptionOutput.userEmail,
+			transcriptionOutput.originalFilename,
+			successMessageBody(
+				transcriptionOutput.id,
+				transcriptionOutput.originalFilename,
+				config.app.rootUrl,
+			),
+		);
+
+		logger.info('Output handler successfully sent success email notification', {
+			id: transcriptionOutput.id,
+			filename: transcriptionOutput.originalFilename,
+			userEmail: transcriptionOutput.userEmail,
+		});
+	} catch (error) {
+		logger.error(
+			'Failed to process success sqs message - transcription data may be missing from dynamo or email failed to send',
+			error,
+		);
+		await metrics.putMetric(FailureMetric);
+	}
+};
+
+const handleTranscriptionFailure = async (
+	config: TranscriptionConfig,
+	transcriptionOutput: TranscriptionOutputFailure,
+	sesClient: SESClient,
+	metrics: MetricsService,
+) => {
+	try {
+		await sendEmail(
+			sesClient,
+			config.app.emailNotificationFromAddress,
+			transcriptionOutput.userEmail,
+			transcriptionOutput.originalFilename,
+			failureMessageBody(transcriptionOutput.originalFilename),
+		);
+
+		logger.info('Output handler successfully sent failure email notification', {
+			id: transcriptionOutput.id,
+			filename: transcriptionOutput.originalFilename,
+			userEmail: transcriptionOutput.userEmail,
+		});
+	} catch (error) {
+		logger.error('Failed to process sqs failure message', error);
+		await metrics.putMetric(FailureMetric);
+	}
 };
 
 const processMessage = async (event: unknown) => {
@@ -47,48 +138,20 @@ const processMessage = async (event: unknown) => {
 
 	for (const record of parsedEvent.data.Records) {
 		const transcriptionOutput = record.body.Message;
-
-		const dynamoItem: TranscriptionDynamoItem = {
-			id: transcriptionOutput.id,
-			originalFilename: transcriptionOutput.originalFilename,
-			transcriptKeys: {
-				srt: transcriptionOutput.outputBucketKeys.srt,
-				text: transcriptionOutput.outputBucketKeys.text,
-				json: transcriptionOutput.outputBucketKeys.json,
-			},
-			userEmail: transcriptionOutput.userEmail,
-		};
-
-		try {
-			await writeTranscriptionItem(
-				getDynamoClient(config.aws.region, config.aws.localstackEndpoint),
-				config.app.tableName,
-				dynamoItem,
-			);
-
-			await sendEmail(
+		if (transcriptionOutputIsSuccess(transcriptionOutput)) {
+			await handleTranscriptionSuccess(
+				config,
+				transcriptionOutput,
 				sesClient,
-				config.app.emailNotificationFromAddress,
-				transcriptionOutput.userEmail,
-				transcriptionOutput.originalFilename,
-				messageBody(
-					transcriptionOutput.id,
-					transcriptionOutput.originalFilename,
-					config.app.rootUrl,
-				),
+				metrics,
 			);
-
-			logger.info('Output handler successfully sent email notification', {
-				id: transcriptionOutput.id,
-				filename: transcriptionOutput.originalFilename,
-				userEmail: transcriptionOutput.userEmail,
-			});
-		} catch (error) {
-			logger.error(
-				'Failed to process sqs message - transcription data may be missing from dynamo or email failed to send',
-				error,
+		} else {
+			await handleTranscriptionFailure(
+				config,
+				transcriptionOutput,
+				sesClient,
+				metrics,
 			);
-			await metrics.putMetric(FailureMetric);
 		}
 	}
 };
