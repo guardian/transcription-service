@@ -41,7 +41,9 @@ const POLLING_INTERVAL_SECONDS = 30;
 
 // Mutable variable is needed here to get feedback from checkSpotInterrupt
 let INTERRUPTION_TIME: Date | undefined = undefined;
+let CURRENT_MESSAGE_RECEIPT_HANDLE: string | undefined = undefined;
 export const setInterruptionTime = (time: Date) => (INTERRUPTION_TIME = time);
+export const getCurrentReceiptHandle = () => CURRENT_MESSAGE_RECEIPT_HANDLE;
 
 const main = async () => {
 	const config = await getConfig();
@@ -62,7 +64,11 @@ const main = async () => {
 		config.aws.localstackEndpoint,
 	);
 
+	// start job to regularly check the instance interruption
+	checkSpotInterrupt(sqsClient, config.app.taskQueueUrl);
+
 	let pollCount = 0;
+	// keep polling unless instance is scheduled for termination
 	while (!INTERRUPTION_TIME) {
 		pollCount += 1;
 		await pollTranscriptionQueue(
@@ -145,6 +151,7 @@ const pollTranscriptionQueue = async (
 		await updateScaleInProtection(region, stage, false);
 		return;
 	}
+	CURRENT_MESSAGE_RECEIPT_HANDLE = receiptHandle;
 
 	const job = parseTranscriptJobMessage(taskMessage);
 
@@ -154,8 +161,6 @@ const pollTranscriptionQueue = async (
 		await updateScaleInProtection(region, stage, false);
 		return;
 	}
-	// start job to regularly check the instance interruption
-	checkSpotInterrupt(sqsClient, config.app.taskQueueUrl, receiptHandle);
 
 	try {
 		// from this point all worker logs will have id & userEmail in their fields
@@ -234,7 +239,7 @@ const pollTranscriptionQueue = async (
 			INTERRUPTION_TIME &&
 			INTERRUPTION_TIME.getTime() - new Date().getTime() < 20 * 1000
 		) {
-			console.warn('Spot termination happening soon, abandoning transcription');
+			logger.warn('Spot termination happening soon, abandoning transcription');
 			// exit cleanly to prevent systemd restarting the process
 			process.exit(0);
 		}
