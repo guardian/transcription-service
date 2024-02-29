@@ -159,6 +159,7 @@ export const getNextMessage = async (
 				MaxNumberOfMessages: 1,
 				// Not sure we need to set this here - could just rely on the queue default
 				VisibilityTimeout: timeoutOverride ?? 300,
+				AttributeNames: ['All'],
 			}),
 		);
 		const messages = message.Messages;
