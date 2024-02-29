@@ -9,7 +9,6 @@ export const checkSpotInterrupt = async (
 	queueUrl: string,
 	receiptHandle: string,
 ) => {
-	console.log('Checking for spot interruption');
 	const url = 'http://169.254.169.254/latest/meta-data/spot/instance-action';
 	const result = await fetch(url);
 	if (result.status === 200) {
