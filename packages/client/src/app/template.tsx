@@ -5,7 +5,6 @@ import { AuthRequired } from '@/components/AuthRequired';
 import { initAuth, initialState, logOutIfLoginExpired } from '@/services/auth';
 import { AuthState } from '@/types';
 import { createContext } from 'react';
-import { Spinner } from 'flowbite-react';
 
 export const authExpiryCheckPeriodInSeconds = 30;
 export const AuthContext: React.Context<AuthState> = createContext({});
@@ -33,11 +32,7 @@ export default function Template({ children }: { children: React.ReactNode }) {
 
 	if (!auth.token) {
 		if (authLoading) {
-			return (
-				<div>
-					<Spinner className={'w-6 h-6'} />
-				</div>
-			);
+			return <div>Loading...</div>;
 		}
 		return (
 			<div>
