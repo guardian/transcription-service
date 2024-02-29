@@ -38,7 +38,7 @@ const successMessageBody = (
 
 const failureMessageBody = (originalFilename: string): string => {
 	return `
-		<h1>Transcription for ${originalFilename} has failed 😢</h1>
+		<h1>Transcription for ${originalFilename} has failed.</h1>
 		<p>Please make sure that the file is a valid audio or video file.</p>
 		<p>Contact the digital investigations team for support.</p>
 	`;
