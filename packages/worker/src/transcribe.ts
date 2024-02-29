@@ -197,7 +197,7 @@ const regexExtract = (text: string, regex: RegExp): string | undefined => {
 	return regexResult ? regexResult[1] : undefined;
 };
 
-const extractStdErrInfo = (stderr: string): TranscriptionMetadata => {
+const extractWhisperStderrData = (stderr: string): TranscriptionMetadata => {
 	const languageRegex = /auto-detected\slanguage: ([a-zA-Z]{2})/;
 	const detectedLanguageCode = regexExtract(stderr, languageRegex);
 
@@ -243,7 +243,7 @@ export const transcribe = async (
 			'--language',
 			'auto',
 		]);
-		const metadata = extractStdErrInfo(result.stderr);
+		const metadata = extractWhisperStderrData(result.stderr);
 		logger.info('Transcription finished successfully', metadata);
 		return { fileName, metadata };
 	} catch (error) {
