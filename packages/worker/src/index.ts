@@ -179,7 +179,7 @@ const pollTranscriptionQueue = async (
 			);
 		}
 
-		const transcripts = await getTranscriptionText(
+		const transcriptResult = await getTranscriptionText(
 			containerId,
 			ffmpegResult.wavPath,
 			fileToTranscribe,
@@ -187,7 +187,10 @@ const pollTranscriptionQueue = async (
 			config.app.stage === 'PROD' ? 'medium' : 'tiny',
 		);
 
-		await uploadAllTranscriptsToS3(outputBucketUrls, transcripts);
+		await uploadAllTranscriptsToS3(
+			outputBucketUrls,
+			transcriptResult.transcripts,
+		);
 
 		const outputBucketKeys: OutputBucketKeys = {
 			srt: outputBucketUrls.srt.key,
@@ -197,7 +200,7 @@ const pollTranscriptionQueue = async (
 
 		const transcriptionOutput: TranscriptionOutput = {
 			id: job.id,
-			languageCode: 'en',
+			languageCode: transcriptResult.metadata.detectedLanguageCode || 'en',
 			userEmail: job.userEmail,
 			originalFilename: job.originalFilename,
 			outputBucketKeys,
@@ -216,6 +219,7 @@ const pollTranscriptionQueue = async (
 				filename: transcriptionOutput.originalFilename,
 				userEmail: transcriptionOutput.userEmail,
 				fileDuration: ffmpegResult.duration?.toString() || '',
+				...transcriptResult.metadata,
 			},
 		);
 

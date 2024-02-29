@@ -4,7 +4,7 @@ export interface LoggerFunctions {
 	setCommonMetadata(id: string, userEmail: string): void;
 	resetCommonMetadata(): void;
 	debug(message: string): void;
-	info(message: string, meta?: Record<string, string>): void;
+	info(message: string, meta?: Record<string, string | number>): void;
 	warn(message: string, error?: Error | unknown): void;
 	error(message: string, error?: Error | unknown): void;
 }
@@ -13,7 +13,7 @@ interface LogEvent {
 	level: 'debug' | 'info' | 'warn' | 'error';
 	message: string;
 	stack_trace?: string;
-	meta?: Record<string, string>;
+	meta?: Record<string, string | number>;
 }
 
 const { combine, timestamp, json } = winston.format;

@@ -22,6 +22,17 @@ export interface Transcripts {
 	json: string;
 }
 
+type TranscriptionMetadata = {
+	detectedLanguageCode?: string;
+	loadTimeMs?: number;
+	totalTimeMs?: number;
+};
+
+type TranscriptionResult = {
+	transcripts: Transcripts;
+	metadata: TranscriptionMetadata;
+};
+
 const CONTAINER_FOLDER = '/input';
 
 const runSpawnCommand = (
@@ -155,30 +166,52 @@ export const getTranscriptionText = async (
 	file: string,
 	numberOfThreads: number,
 	model: WhisperModel,
-): Promise<Transcripts> => {
+): Promise<TranscriptionResult> => {
 	try {
-		const resultFile = await transcribe(
+		const { fileName, metadata } = await transcribe(
 			containerId,
 			wavPath,
 			numberOfThreads,
 			model,
 		);
 
-		const srtPath = path.resolve(path.parse(file).dir, `${resultFile}.srt`);
-		const textPath = path.resolve(path.parse(file).dir, `${resultFile}.txt`);
-		const jsonPath = path.resolve(path.parse(file).dir, `${resultFile}.json`);
+		const srtPath = path.resolve(path.parse(file).dir, `${fileName}.srt`);
+		const textPath = path.resolve(path.parse(file).dir, `${fileName}.txt`);
+		const jsonPath = path.resolve(path.parse(file).dir, `${fileName}.json`);
 
-		const res = {
+		const transcripts = {
 			srt: readFile(srtPath),
 			text: readFile(textPath),
 			json: readFile(jsonPath),
 		};
 
-		return res;
+		return { transcripts, metadata };
 	} catch (error) {
 		logger.error(`Could not read the transcripts result`);
 		throw error;
 	}
+};
+
+const regexExtract = (text: string, regex: RegExp): string | undefined => {
+	const regexResult = text.match(regex);
+	return regexResult ? regexResult[1] : undefined;
+};
+
+const extractStdErrInfo = (stderr: string): TranscriptionMetadata => {
+	const languageRegex = /auto-detected\slanguage: ([a-zA-Z]{2})/;
+	const detectedLanguageCode = regexExtract(stderr, languageRegex);
+
+	const totalTimeRegex =
+		/whisper_print_timings:\s+total time =\s+(\d+\.\d+) ms/;
+	const loadTimeRegex = /whisper_print_timings:\s+load time =\s+(\d+\.\d+) ms/;
+	const totalTime = regexExtract(stderr, totalTimeRegex);
+	const loadTime = regexExtract(stderr, loadTimeRegex);
+
+	return {
+		detectedLanguageCode: detectedLanguageCode,
+		loadTimeMs: loadTime ? parseInt(loadTime) : undefined,
+		totalTimeMs: totalTime ? parseInt(totalTime) : undefined,
+	};
 };
 
 export const transcribe = async (
@@ -189,10 +222,10 @@ export const transcribe = async (
 ) => {
 	const fileName = path.parse(file).name;
 	const containerOutputFilePath = path.resolve(CONTAINER_FOLDER, fileName);
-	logger.info(`transcribe outputFile: ${containerOutputFilePath}`);
+	logger.info(`Transcription output file path: ${containerOutputFilePath}`);
 
 	try {
-		await runSpawnCommand('transcribe', 'docker', [
+		const result = await runSpawnCommand('transcribe', 'docker', [
 			'exec',
 			containerId,
 			'whisper.cpp/main',
@@ -210,9 +243,9 @@ export const transcribe = async (
 			'--language',
 			'auto',
 		]);
-		logger.info('Transcription finished successfully');
-		logger.info(`transcript result: ${fileName}`);
-		return fileName;
+		const metadata = extractStdErrInfo(result.stderr);
+		logger.info('Transcription finished successfully', metadata);
+		return { fileName, metadata };
 	} catch (error) {
 		logger.error(`Transcription failed due to `, error);
 		throw error;
