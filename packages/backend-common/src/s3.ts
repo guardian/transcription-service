@@ -11,6 +11,7 @@ import { Readable } from 'stream';
 import { z } from 'zod';
 import axios from 'axios';
 import { logger } from '@guardian/transcription-service-backend-common';
+import { AWSStatus } from './types';
 
 const ReadableBody = z.instanceof(Readable);
 
@@ -58,19 +59,14 @@ export const getSignedDownloadUrl = async (
 		}),
 		{ expiresIn }, // override default expiration time of 15 minutes
 	);
-enum S3Status {
-	Success,
-	Failure,
-}
 
 type GetObjectTextSuccess = {
-	status: S3Status.Success;
+	status: AWSStatus.Success;
 	text: string;
 };
 
 type GetObjectTextFailure = {
-	status: S3Status.Failure;
-	statusCode: number;
+	status: AWSStatus.Failure;
 	failureReason: 'NoSuchKey' | 'Unknown';
 };
 
@@ -78,7 +74,7 @@ type GetObjectTextResult = GetObjectTextSuccess | GetObjectTextFailure;
 
 export const isS3Failure = (
 	result: GetObjectTextResult,
-): result is GetObjectTextFailure => result.status === S3Status.Failure;
+): result is GetObjectTextFailure => result.status === AWSStatus.Failure;
 
 // for smaller files that will fit in memory - parse straight into a string
 export const getObjectText = async (
@@ -99,23 +95,21 @@ export const getObjectText = async (
 			chunks.push(chunk);
 		}
 		return {
-			status: S3Status.Success,
+			status: AWSStatus.Success,
 			text: Buffer.concat(chunks).toString('utf-8'),
 		};
 	} catch (error: unknown) {
 		if (error instanceof Error) {
 			if (error.name === 'NoSuchKey') {
 				return {
-					status: S3Status.Failure,
-					statusCode: 410,
+					status: AWSStatus.Failure,
 					failureReason: 'NoSuchKey',
 				};
 			}
 		}
 		console.error(`error getting object ${key} from bucket ${bucket}`, error);
 		return {
-			status: S3Status.Failure,
-			statusCode: 500,
+			status: AWSStatus.Failure,
 			failureReason: 'Unknown',
 		};
 	}

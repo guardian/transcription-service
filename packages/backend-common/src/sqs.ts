@@ -13,28 +13,24 @@ import {
 } from '@guardian/transcription-service-common';
 import { getSignedUploadUrl } from '@guardian/transcription-service-backend-common';
 import { logger } from '@guardian/transcription-service-backend-common';
-
-enum SQSStatus {
-	Success,
-	Failure,
-}
+import { AWSStatus } from './types';
 
 interface SendSuccess {
-	status: SQSStatus.Success;
+	status: AWSStatus.Success;
 	messageId: string;
 }
 
 interface ReceiveSuccess {
-	status: SQSStatus.Success;
+	status: AWSStatus.Success;
 	message?: Message;
 }
 
 interface DeleteSuccess {
-	status: SQSStatus.Success;
+	status: AWSStatus.Success;
 }
 
 interface SQSFailure {
-	status: SQSStatus.Failure;
+	status: AWSStatus.Failure;
 	error?: unknown;
 	errorMsg?: string;
 }
@@ -56,7 +52,7 @@ export const getSQSClient = (region: string, localstackEndpoint?: string) => {
 };
 export const isSqsFailure = (
 	result: SendResult | ReceiveResult,
-): result is SQSFailure => result.status === SQSStatus.Failure;
+): result is SQSFailure => result.status === AWSStatus.Failure;
 
 export const generateOutputSignedUrlAndSendMessage = async (
 	id: string,
@@ -107,19 +103,19 @@ const sendMessage = async (
 		logger.info(`Message sent. Message id: ${result.MessageId}`);
 		if (result.MessageId) {
 			return {
-				status: SQSStatus.Success,
+				status: AWSStatus.Success,
 				messageId: result.MessageId,
 			};
 		}
 		return {
-			status: SQSStatus.Failure,
+			status: AWSStatus.Failure,
 			errorMsg: 'Missing message ID',
 		};
 	} catch (e) {
 		const msg = `Failed to send message ${messageBody}`;
 		logger.error(msg, e);
 		return {
-			status: SQSStatus.Failure,
+			status: AWSStatus.Failure,
 			error: e,
 			errorMsg: msg,
 		};
@@ -169,20 +165,20 @@ export const getNextMessage = async (
 		if (messages && messages.length > 0) {
 			const message = messages[0];
 			return {
-				status: SQSStatus.Success,
+				status: AWSStatus.Success,
 				message,
 			};
 		}
 		return {
 			// this isn't an error scenario - just means there's no available work
-			status: SQSStatus.Success,
+			status: AWSStatus.Success,
 			message: undefined,
 		};
 	} catch (error) {
 		const errorMsg = 'Failed to receive messages';
 		logger.error(errorMsg, error);
 		return {
-			status: SQSStatus.Failure,
+			status: AWSStatus.Failure,
 			error,
 			errorMsg,
 		};
@@ -202,13 +198,13 @@ export const deleteMessage = async (
 			}),
 		);
 		return {
-			status: SQSStatus.Success,
+			status: AWSStatus.Success,
 		};
 	} catch (error) {
 		const errorMsg = `Failed to delete message ${receiptHandle}`;
 		logger.error(errorMsg, error);
 		return {
-			status: SQSStatus.Failure,
+			status: AWSStatus.Failure,
 			error,
 			errorMsg,
 		};
@@ -232,7 +228,7 @@ export const moveMessageToDeadLetterQueue = async (
 		messageBody,
 		id,
 	);
-	if (sendResult.status == SQSStatus.Failure) {
+	if (sendResult.status == AWSStatus.Failure) {
 		// rethrow exception, let another worker retry
 		throw Error('Failed to send message to dead letter queue');
 	}
