@@ -86,20 +86,21 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		originalFilename,
 		outputBucketUrls: signedUrls,
 	};
-	return await sendMessage(client, queueUrl, JSON.stringify(job));
+	return await sendMessage(client, queueUrl, JSON.stringify(job), id);
 };
 
 const sendMessage = async (
 	client: SQSClient,
 	queueUrl: string,
 	messageBody: string,
+	id: string,
 ): Promise<SendResult> => {
 	try {
 		const result = await client.send(
 			new SendMessageCommand({
 				QueueUrl: queueUrl,
 				MessageBody: messageBody,
-				MessageGroupId: 'api-transcribe-request',
+				MessageGroupId: id,
 			}),
 		);
 		console.log(`Message sent. Message id: ${result.MessageId}`);
@@ -219,11 +220,17 @@ export const moveMessageToDeadLetterQueue = async (
 	deadLetterQueueUrl: string,
 	messageBody: string,
 	receiptHandle: string,
+	id: string,
 ) => {
 	// SQS doesn't seem to offer an atomic way to move message from one queue to
 	// another. There is a chance that the write to the dead letter queue
 	// succeeds but the delete from the task queue fails
-	const sendResult = await sendMessage(client, deadLetterQueueUrl, messageBody);
+	const sendResult = await sendMessage(
+		client,
+		deadLetterQueueUrl,
+		messageBody,
+		id,
+	);
 	if (sendResult.status == SQSStatus.Failure) {
 		// rethrow exception, let another worker retry
 		throw Error('Failed to send message to dead letter queue');

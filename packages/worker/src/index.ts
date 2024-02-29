@@ -156,6 +156,7 @@ const pollTranscriptionQueue = async (
 					config.app.deadLetterQueueUrl,
 					taskMessage.Body,
 					receiptHandle,
+					job.id,
 				);
 				console.log(
 					`moved message with message id ${taskMessage.MessageId} to dead letter queue.`,
