@@ -72,7 +72,7 @@ const handleTranscriptionSuccess = async (
 			sesClient,
 			config.app.emailNotificationFromAddress,
 			transcriptionOutput.userEmail,
-			transcriptionOutput.originalFilename,
+			`Transcription complete for ${transcriptionOutput.originalFilename}`,
 			successMessageBody(
 				transcriptionOutput.id,
 				transcriptionOutput.originalFilename,
@@ -105,7 +105,7 @@ const handleTranscriptionFailure = async (
 			sesClient,
 			config.app.emailNotificationFromAddress,
 			transcriptionOutput.userEmail,
-			transcriptionOutput.originalFilename,
+			`Transcription failed for ${transcriptionOutput.originalFilename}`,
 			failureMessageBody(transcriptionOutput.originalFilename),
 		);
 

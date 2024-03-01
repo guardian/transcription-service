@@ -9,7 +9,7 @@ export const sendEmail = async (
 	client: SESClient,
 	fromAddress: string,
 	recipientEmail: string,
-	originalFilename: string,
+	subject: string,
 	body: string,
 ) => {
 	logger.info(`Sending email from ${fromAddress} to ${recipientEmail}`);
@@ -21,7 +21,7 @@ export const sendEmail = async (
 		Message: {
 			Subject: {
 				Charset: 'UTF-8',
-				Data: `Transcription complete for ${originalFilename}`,
+				Data: subject,
 			},
 			Body: {
 				Html: {
