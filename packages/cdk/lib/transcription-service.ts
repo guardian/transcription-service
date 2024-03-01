@@ -436,6 +436,10 @@ export class TranscriptionService extends GuStack {
 			applyToLaunchedInstances: true,
 		});
 
+		Tags.of(transcriptionWorkerASG).add('App', `transcription-service-worker`, {
+			applyToLaunchedInstances: true,
+		});
+
 		const transcriptionDeadLetterQueue = new Queue(
 			this,
 			`${APP_NAME}-task-dead-letter-queue`,
