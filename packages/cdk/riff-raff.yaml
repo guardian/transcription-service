@@ -8,7 +8,7 @@ deployments:
       - investigations
     regions:
       - eu-west-1
-    app: transcription-service
+    app: transcription-service-api
     contentDirectory: transcription-service-api
     parameters:
       bucketSsmLookup: true
@@ -41,7 +41,7 @@ deployments:
       - investigations
     regions:
       - eu-west-1
-    app: transcription-service
+    app: transcription-service-api
     contentDirectory: transcription-service-api
     parameters:
       bucketSsmLookup: true

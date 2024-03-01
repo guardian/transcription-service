@@ -173,7 +173,7 @@ export class TranscriptionService extends GuStack {
 			monitoringConfiguration: {
 				noMonitoring: true,
 			},
-			app: APP_NAME,
+			app: `${APP_NAME}-api`,
 			api: {
 				id: apiId,
 				description: 'API for transcription service frontend',
@@ -433,6 +433,10 @@ export class TranscriptionService extends GuStack {
 		);
 
 		Tags.of(transcriptionWorkerASG).add('SystemdUnit', `${workerApp}.service`, {
+			applyToLaunchedInstances: true,
+		});
+
+		Tags.of(transcriptionWorkerASG).add('App', `transcription-service-worker`, {
 			applyToLaunchedInstances: true,
 		});
 

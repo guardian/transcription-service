@@ -29,13 +29,14 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuSecurityGroup",
       "GuSubnetListParameter",
       "GuLambdaFunction",
+      "GuLambdaFunction",
     ],
     "gu:cdk:version": "TEST",
   },
   "Outputs": {
     "WorkerRoleArn": {
       "Export": {
-        "Name": "WorkerRoleArn",
+        "Name": "WorkerRoleArn-TEST",
       },
       "Value": {
         "Fn::GetAtt": [
@@ -637,24 +638,9 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         "GroupDescription": "TranscriptionService/TranscriptionServiceWorkerSGTranscriptionserviceworker",
         "SecurityGroupEgress": [
           {
-            "Description": {
-              "Fn::Join": [
-                "",
-                [
-                  "from ",
-                  {
-                    "Fn::ImportValue": "internet-enabled-vpc-AWSEndpointSecurityGroup",
-                  },
-                  ":443",
-                ],
-              ],
-            },
-            "DestinationSecurityGroupId": {
-              "Fn::ImportValue": "internet-enabled-vpc-AWSEndpointSecurityGroup",
-            },
-            "FromPort": 443,
-            "IpProtocol": "tcp",
-            "ToPort": 443,
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
           },
         ],
         "Tags": [
@@ -684,35 +670,6 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         },
       },
       "Type": "AWS::EC2::SecurityGroup",
-    },
-    "TranscriptionServiceWorkerSGTranscriptionserviceworkertoIndirectPeer44380412F57": {
-      "Properties": {
-        "Description": {
-          "Fn::Join": [
-            "",
-            [
-              "to ",
-              {
-                "Ref": "S3PrefixListIdParameter",
-              },
-              ":443",
-            ],
-          ],
-        },
-        "DestinationPrefixListId": {
-          "Ref": "S3PrefixListIdParameter",
-        },
-        "FromPort": 443,
-        "GroupId": {
-          "Fn::GetAtt": [
-            "TranscriptionServiceWorkerSGTranscriptionserviceworker6EE23C91",
-            "GroupId",
-          ],
-        },
-        "IpProtocol": "tcp",
-        "ToPort": 443,
-      },
-      "Type": "AWS::EC2::SecurityGroupEgress",
     },
     "TranscriptionWorkerASGCAE69A98": {
       "Properties": {
@@ -1082,11 +1039,11 @@ service transcription-service-worker start",
           "S3Bucket": {
             "Ref": "DistributionBucketName",
           },
-          "S3Key": "investigations/TEST/transcription-service/api.zip",
+          "S3Key": "investigations/TEST/transcription-service-api/api.zip",
         },
         "Environment": {
           "Variables": {
-            "APP": "transcription-service",
+            "APP": "transcription-service-api",
             "STACK": "investigations",
             "STAGE": "TEST",
           },
@@ -1103,7 +1060,7 @@ service transcription-service-worker start",
         "Tags": [
           {
             "Key": "App",
-            "Value": "transcription-service",
+            "Value": "transcription-service-api",
           },
           {
             "Key": "gu:cdk:version",
@@ -1157,7 +1114,7 @@ service transcription-service-worker start",
         "Tags": [
           {
             "Key": "App",
-            "Value": "transcription-service",
+            "Value": "transcription-service-api",
           },
           {
             "Key": "gu:cdk:version",
@@ -1218,7 +1175,7 @@ service transcription-service-worker start",
                       {
                         "Ref": "DistributionBucketName",
                       },
-                      "/investigations/TEST/transcription-service/api.zip",
+                      "/investigations/TEST/transcription-service-api/api.zip",
                     ],
                   ],
                 },
@@ -1235,7 +1192,7 @@ service transcription-service-worker start",
                     {
                       "Ref": "AWS::AccountId",
                     },
-                    ":parameter/TEST/investigations/transcription-service",
+                    ":parameter/TEST/investigations/transcription-service-api",
                   ],
                 ],
               },
@@ -1254,7 +1211,7 @@ service transcription-service-worker start",
                     {
                       "Ref": "AWS::AccountId",
                     },
-                    ":parameter/TEST/investigations/transcription-service/*",
+                    ":parameter/TEST/investigations/transcription-service-api/*",
                   ],
                 ],
               },
@@ -1483,7 +1440,7 @@ service transcription-service-worker start",
         "Tags": [
           {
             "Key": "App",
-            "Value": "transcription-service",
+            "Value": "transcription-service-api",
           },
           {
             "Key": "gu:cdk:version",
@@ -1520,7 +1477,7 @@ service transcription-service-worker start",
         "Tags": [
           {
             "Key": "App",
-            "Value": "transcription-service",
+            "Value": "transcription-service-api",
           },
           {
             "Key": "gu:cdk:version",
@@ -1563,7 +1520,7 @@ service transcription-service-worker start",
         "Tags": [
           {
             "Key": "App",
-            "Value": "transcription-service",
+            "Value": "transcription-service-api",
           },
           {
             "Key": "gu:cdk:version",
@@ -1585,7 +1542,7 @@ service transcription-service-worker start",
       },
       "Type": "AWS::ApiGateway::RestApi",
     },
-    "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDA239aa57b071d08d4c79426ec1366bceb": {
+    "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDAd2059b6daf8e8b62e9e06f13a0ee9ac8": {
       "DependsOn": [
         "transcriptionserviceapitranscriptionserviceTESTproxyANY65A12BB3",
         "transcriptionserviceapitranscriptionserviceTESTproxy923E1B16",
@@ -1605,7 +1562,7 @@ service transcription-service-worker start",
       ],
       "Properties": {
         "DeploymentId": {
-          "Ref": "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDA239aa57b071d08d4c79426ec1366bceb",
+          "Ref": "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDAd2059b6daf8e8b62e9e06f13a0ee9ac8",
         },
         "RestApiId": {
           "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
@@ -1614,7 +1571,7 @@ service transcription-service-worker start",
         "Tags": [
           {
             "Key": "App",
-            "Value": "transcription-service",
+            "Value": "transcription-service-api",
           },
           {
             "Key": "gu:cdk:version",
@@ -2132,12 +2089,48 @@ service transcription-service-worker start",
       },
       "Type": "AWS::SNS::Subscription",
     },
+    "transcriptionservicetaskdeadletterqueue8A13A1F1": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "FifoQueue": true,
+        "QueueName": "transcription-service-task-dead-letter-queue-TEST.fifo",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
     "transcriptionservicetaskqueue428AC4BA": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "ContentBasedDeduplication": true,
         "FifoQueue": true,
         "QueueName": "transcription-service-task-queue-TEST.fifo",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "transcriptionservicetaskdeadletterqueue8A13A1F1",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
         "Tags": [
           {
             "Key": "gu:cdk:version",
@@ -2160,6 +2153,287 @@ service transcription-service-worker start",
       },
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
+    },
+    "transcriptionserviceworkercapacitymanagerD9692635": {
+      "DependsOn": [
+        "transcriptionserviceworkercapacitymanagerServiceRoleDefaultPolicy0A51A9E2",
+        "transcriptionserviceworkercapacitymanagerServiceRoleC9FEE60D",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DistributionBucketName",
+          },
+          "S3Key": "investigations/TEST/transcription-service-worker-capacity-manager/worker-capacity-manager.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "APP": "transcription-service-worker-capacity-manager",
+            "STACK": "investigations",
+            "STAGE": "TEST",
+          },
+        },
+        "Handler": "index.workerCapacityManager",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "transcriptionserviceworkercapacitymanagerServiceRoleC9FEE60D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service-worker-capacity-manager",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 30,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "transcriptionserviceworkercapacitymanagerServiceRoleC9FEE60D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service-worker-capacity-manager",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "transcriptionserviceworkercapacitymanagerServiceRoleDefaultPolicy0A51A9E2": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                      "/investigations/TEST/transcription-service-worker-capacity-manager/worker-capacity-manager.zip",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "ssm:GetParametersByPath",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service-worker-capacity-manager",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service-worker-capacity-manager/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "autoscaling:SetDesiredCapacity",
+                "autoscaling:DescribeAutoScalingInstances",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":autoscaling:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":autoScalingGroup:*:autoScalingGroupName/",
+                    {
+                      "Ref": "TranscriptionWorkerASGCAE69A98",
+                    },
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "sqs:GetQueueAttributes",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionservicetaskqueue428AC4BA",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:GetParameter",
+                "ssm:GetParametersByPath",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:ssm:test-region:745349931791:parameter/TEST/investigations/transcription-service/*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "transcriptionserviceworkercapacitymanagerServiceRoleDefaultPolicy0A51A9E2",
+        "Roles": [
+          {
+            "Ref": "transcriptionserviceworkercapacitymanagerServiceRoleC9FEE60D",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "workercapacitymanagerrule2FD66075": {
+      "Properties": {
+        "Description": "Manages worker capacity by updating the desired capacity of ASG based on queue length",
+        "ScheduleExpression": "rate(1 minute)",
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "transcriptionserviceworkercapacitymanagerD9692635",
+                "Arn",
+              ],
+            },
+            "Id": "Target0",
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "workercapacitymanagerruleAllowEventRuleTranscriptionServicetranscriptionserviceworkercapacitymanagerD4963EEC4FE29DBC": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "transcriptionserviceworkercapacitymanagerD9692635",
+            "Arn",
+          ],
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "workercapacitymanagerrule2FD66075",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
     },
   },
 }
