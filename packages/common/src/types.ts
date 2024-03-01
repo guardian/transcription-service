@@ -43,12 +43,12 @@ export type TranscriptionJob = z.infer<typeof TranscriptionJob>;
 const TranscriptionOutputBase = z.object({
 	id: z.string(),
 	originalFilename: z.string(),
-	languageCode: z.string(),
 	userEmail: z.string(),
 });
 
 export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
 	status: z.literal('SUCCESS'),
+	languageCode: z.string(),
 	outputBucketKeys: OutputBucketKeys,
 });
 

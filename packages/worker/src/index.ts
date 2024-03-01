@@ -80,7 +80,6 @@ const publishTranscriptionOutputFailure = async (
 	const failureMessage: TranscriptionOutputFailure = {
 		id: job.id,
 		status: 'FAILURE',
-		languageCode: 'en',
 		userEmail: job.userEmail,
 		originalFilename: job.originalFilename,
 	};
