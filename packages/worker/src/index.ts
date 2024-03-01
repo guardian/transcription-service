@@ -228,7 +228,6 @@ const pollTranscriptionQueue = async (
 	} catch (error) {
 		const msg = 'Worker failed to complete';
 		logger.error(msg, error);
-		await metrics.putMetric(FailureMetric);
 		// Terminate the message visibility timeout
 		await changeMessageVisibility(
 			sqsClient,
