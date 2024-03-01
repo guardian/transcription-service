@@ -218,7 +218,7 @@ const pollTranscriptionQueue = async (
 				id: transcriptionOutput.id,
 				filename: transcriptionOutput.originalFilename,
 				userEmail: transcriptionOutput.userEmail,
-				fileDuration: ffmpegResult.duration?.toString() || '',
+				fileDuration: ffmpegResult.duration || 0,
 				...transcriptResult.metadata,
 			},
 		);
