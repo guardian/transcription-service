@@ -10,6 +10,7 @@ export const authExpiryCheckPeriodInSeconds = 30;
 export const AuthContext: React.Context<AuthState> = createContext({});
 
 export default function Template({ children }: { children: React.ReactNode }) {
+	const [authLoading, setAuthLoading] = useState(true);
 	const [auth, setAuth] = useState<AuthState>(initialState);
 
 	useEffect(() => {
@@ -23,12 +24,16 @@ export default function Template({ children }: { children: React.ReactNode }) {
 
 	useEffect(() => {
 		const browserHistory = createBrowserHistory();
-
+		setAuthLoading(true);
 		const newAuth = initAuth(browserHistory);
 		setAuth(newAuth);
+		setAuthLoading(false);
 	}, []);
 
 	if (!auth.token) {
+		if (authLoading) {
+			return <div>Loading...</div>;
+		}
 		return (
 			<div>
 				<h2 className="text-4xl font-extrabold dark:text-white">
