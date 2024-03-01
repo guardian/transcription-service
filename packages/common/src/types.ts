@@ -40,13 +40,38 @@ export const TranscriptionJob = z.object({
 
 export type TranscriptionJob = z.infer<typeof TranscriptionJob>;
 
-export const TranscriptionOutput = z.object({
+const TranscriptionOutputBase = z.object({
 	id: z.string(),
 	originalFilename: z.string(),
-	languageCode: z.string(),
 	userEmail: z.string(),
+});
+
+export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
+	status: z.literal('SUCCESS'),
+	languageCode: z.string(),
 	outputBucketKeys: OutputBucketKeys,
 });
+
+export const TranscriptionOutputFailure = TranscriptionOutputBase.extend({
+	status: z.literal('FAILURE'),
+});
+
+export const TranscriptionOutput = z.union([
+	TranscriptionOutputSuccess,
+	TranscriptionOutputFailure,
+]);
+
+export type TranscriptionOutputSuccess = z.infer<
+	typeof TranscriptionOutputSuccess
+>;
+
+export type TranscriptionOutputFailure = z.infer<
+	typeof TranscriptionOutputFailure
+>;
+
+export const transcriptionOutputIsSuccess = (
+	output: TranscriptionOutput,
+): output is TranscriptionOutputSuccess => output.status === 'SUCCESS';
 
 export type TranscriptionOutput = z.infer<typeof TranscriptionOutput>;
 
