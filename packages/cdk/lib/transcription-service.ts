@@ -54,6 +54,7 @@ import {
 	MachineImage,
 	Peer,
 	Port,
+	SpotInstanceInterruption,
 	UserData,
 } from 'aws-cdk-lib/aws-ec2';
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
@@ -420,13 +421,16 @@ export class TranscriptionService extends GuStack {
 						// 0 is the default, including this here just to make it more obvious what's happening
 						onDemandBaseCapacity: 0,
 						// if this value is set to 100, then we won't use spot instances at all, if it is 0 then we use 100% spot
-						onDemandPercentageAboveBaseCapacity: 100,
+						onDemandPercentageAboveBaseCapacity: 0,
 						spotAllocationStrategy: SpotAllocationStrategy.CAPACITY_OPTIMIZED,
 						spotMaxPrice: '0.6202',
 					},
 					launchTemplateOverrides: acceptableInstanceTypes.map(
 						(instanceType) => ({
 							instanceType,
+							spotOptions: {
+								interruptionBehavior: SpotInstanceInterruption.TERMINATE,
+							},
 						}),
 					),
 				},

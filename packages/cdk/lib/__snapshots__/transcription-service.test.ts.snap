@@ -706,7 +706,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         "MixedInstancesPolicy": {
           "InstancesDistribution": {
             "OnDemandBaseCapacity": 0,
-            "OnDemandPercentageAboveBaseCapacity": 100,
+            "OnDemandPercentageAboveBaseCapacity": 0,
             "SpotAllocationStrategy": "capacity-optimized",
             "SpotMaxPrice": "0.6202",
           },

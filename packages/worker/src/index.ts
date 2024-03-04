@@ -35,8 +35,15 @@ import { SQSClient } from '@aws-sdk/client-sqs';
 import { SNSClient } from '@aws-sdk/client-sns';
 import { setTimeout } from 'timers/promises';
 import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
+import { checkSpotInterrupt } from './spot-termination';
 
 const POLLING_INTERVAL_SECONDS = 30;
+
+// Mutable variable is needed here to get feedback from checkSpotInterrupt
+let INTERRUPTION_TIME: Date | undefined = undefined;
+let CURRENT_MESSAGE_RECEIPT_HANDLE: string | undefined = undefined;
+export const setInterruptionTime = (time: Date) => (INTERRUPTION_TIME = time);
+export const getCurrentReceiptHandle = () => CURRENT_MESSAGE_RECEIPT_HANDLE;
 
 const main = async () => {
 	const config = await getConfig();
@@ -51,14 +58,18 @@ const main = async () => {
 		config.aws.region,
 		config.aws.localstackEndpoint,
 	);
+
 	const snsClient = getSNSClient(
 		config.aws.region,
 		config.aws.localstackEndpoint,
 	);
 
+	// start job to regularly check the instance interruption
+	checkSpotInterrupt(sqsClient, config.app.taskQueueUrl);
+
 	let pollCount = 0;
-	// eslint-disable-next-line no-constant-condition
-	while (true) {
+	// keep polling unless instance is scheduled for termination
+	while (!INTERRUPTION_TIME) {
 		pollCount += 1;
 		await pollTranscriptionQueue(
 			pollCount,
@@ -140,6 +151,7 @@ const pollTranscriptionQueue = async (
 		await updateScaleInProtection(region, stage, false);
 		return;
 	}
+	CURRENT_MESSAGE_RECEIPT_HANDLE = receiptHandle;
 
 	const job = parseTranscriptJobMessage(taskMessage);
 
@@ -219,6 +231,18 @@ const pollTranscriptionQueue = async (
 			numberOfThreads,
 			config.app.stage === 'PROD' ? 'medium' : 'tiny',
 		);
+
+		// if we've received an interrupt signal we don't want to perform a half-finished transcript upload/publish as
+		// this may, for example, result in duplicate emails to the user. Here we assume that we can upload some text
+		// files to s3 and make a single request to SNS and SQS within 20 seconds
+		if (
+			INTERRUPTION_TIME &&
+			INTERRUPTION_TIME.getTime() - new Date().getTime() < 20 * 1000
+		) {
+			logger.warn('Spot termination happening soon, abandoning transcription');
+			// exit cleanly to prevent systemd restarting the process
+			process.exit(0);
+		}
 
 		await uploadAllTranscriptsToS3(
 			outputBucketUrls,
