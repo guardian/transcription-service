@@ -19,7 +19,9 @@ export const checkSpotInterrupt = async (
 			if (json.action === 'terminate') {
 				const interruptionTime = new Date(json.time);
 				setInterruptionTime(interruptionTime);
-				logger.warn('Spot instance termination detected');
+				logger.warn(
+					`Spot instance scheduled for termination at ${interruptionTime.toISOString()}`,
+				);
 				// Interrupt warning occurs 2 minutes before termination
 				const receiptHandle = getCurrentReceiptHandle();
 				if (!receiptHandle) {
