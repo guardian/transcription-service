@@ -9,7 +9,7 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang="en">
-			<link rel="icon" href="favicon.ico" sizes="any" />
+			<link rel="icon" href="favicon.png" sizes="any" />
 			<body>
 				<header className="bg-white shadow">
 					<div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
