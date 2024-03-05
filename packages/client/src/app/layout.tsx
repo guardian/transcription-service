@@ -9,12 +9,23 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang="en">
+			<link rel="icon" href="favicon.ico" sizes="any" />
 			<body>
 				<header className="bg-white shadow">
 					<div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-						<h1 className="text-3xl font-bold tracking-tight text-gray-900">
-							Guardian Transcription Tool
-						</h1>
+						<div className="flex items-center space-x-2">
+							<h1 className="text-3xl font-bold tracking-tight text-gray-900">
+								Guardian Transcription Tool
+							</h1>
+							<span className="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">
+								Beta
+							</span>
+						</div>
+						<p className={'italic pt-1 font-light '}>
+							This a new tool developed by the Digital Investigations and
+							Reporting team. Any feedback would be very welcome -
+							digital.investigations@theguardian.com
+						</p>
 					</div>
 				</header>
 				<main>
