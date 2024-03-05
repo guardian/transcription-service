@@ -120,11 +120,13 @@ export const ExportResponse = z.object({
 
 export type ExportResponse = z.infer<typeof ExportResponse>;
 
-export const sendMessageRequestBody = z.object({
+export const transcribeFileRequestBody = z.object({
 	s3Key: z.string(),
 	fileName: z.string(),
 });
-export type SendMessageRequestBody = z.infer<typeof sendMessageRequestBody>;
+export type TranscribeFileRequestBody = z.infer<
+	typeof transcribeFileRequestBody
+>;
 
 export const inputBucketObjectMetadata = z.object({
 	'user-email': z.string(),
