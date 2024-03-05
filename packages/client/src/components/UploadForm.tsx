@@ -3,13 +3,21 @@ import React, { useContext, useState } from 'react';
 import {
 	SignedUrlResponseBody,
 	uploadToS3,
+	languageCodeToLanguage,
+	type LanguageCode,
+	languageCodes,
 } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
 import { FileInput, Label } from 'flowbite-react';
 import { RequestStatus } from '@/types';
 import { iconForStatus, InfoMessage } from '@/components/InfoMessage';
+import { Dropdown } from 'flowbite-react';
 
-const uploadFileAndTranscribe = async (file: File, token: string) => {
+const uploadFileAndTranscribe = async (
+	file: File,
+	token: string,
+	language?: LanguageCode,
+) => {
 	const blob = new Blob([file as BlobPart]);
 
 	const response = await authFetch(`/api/signed-url`, token);
@@ -38,6 +46,7 @@ const uploadFileAndTranscribe = async (file: File, token: string) => {
 		body: JSON.stringify({
 			s3Key: body.data.s3Key,
 			fileName: file.name,
+			language,
 		}),
 	});
 	const sendMessageSuccess = sendMessageResponse.status === 200;
@@ -66,6 +75,10 @@ export const UploadForm = () => {
 	const [status, setStatus] = useState<RequestStatus>(RequestStatus.Ready);
 	const [errorMessage, setErrorMessage] = useState<string | undefined>();
 	const [uploads, setUploads] = useState<Record<string, RequestStatus>>({});
+	const [mediaFileLanguageCode, setMediaFileLanguageCode] = useState<
+		LanguageCode | undefined
+	>(undefined);
+	console.log('mediaFileLanguageCode is ', mediaFileLanguageCode);
 	const { token } = useContext(AuthContext);
 
 	const reset = () => {
@@ -168,7 +181,11 @@ export const UploadForm = () => {
 		setUploads(Object.fromEntries(fileIds));
 
 		for (const [index, file] of fileArray.entries()) {
-			const result = await uploadFileAndTranscribe(file, token);
+			const result = await uploadFileAndTranscribe(
+				file,
+				token,
+				mediaFileLanguageCode,
+			);
 			if (!result) {
 				setUploads((prev) =>
 					updateFileStatus(prev, index, file.name, RequestStatus.Failed),
@@ -196,6 +213,41 @@ export const UploadForm = () => {
 						/>
 					</div>
 					<FileInput id="files" multiple />
+				</div>
+				<div className="mb-6">
+					<div>
+						<Label htmlFor="language-selector" value="Media file language" />
+					</div>
+					<Dropdown
+						label={
+							mediaFileLanguageCode
+								? languageCodeToLanguage[mediaFileLanguageCode]
+								: 'Detect Language'
+						}
+						dismissOnClick={true}
+					>
+						<Dropdown.Item
+							key={undefined}
+							value={undefined}
+							onClick={() => {
+								setMediaFileLanguageCode(undefined);
+							}}
+						>
+							Detect Language
+						</Dropdown.Item>
+						<Dropdown.Divider />
+						{languageCodes.map((languageCode: LanguageCode) => (
+							<Dropdown.Item
+								key={languageCode}
+								value={languageCode}
+								onClick={() => {
+									setMediaFileLanguageCode(languageCode);
+								}}
+							>
+								{languageCodeToLanguage[languageCode]}
+							</Dropdown.Item>
+						))}
+					</Dropdown>
 				</div>
 				<button
 					type="submit"
