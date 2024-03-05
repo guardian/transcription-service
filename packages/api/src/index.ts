@@ -113,7 +113,7 @@ const getApp = async () => {
 				config.aws.region,
 				config.app.sourceMediaBucket,
 				s3Key,
-				3600,
+				604800, // one week in seconds
 			);
 			const sendResult = await generateOutputSignedUrlAndSendMessage(
 				s3Key,
