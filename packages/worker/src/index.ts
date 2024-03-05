@@ -64,8 +64,10 @@ const main = async () => {
 		config.aws.localstackEndpoint,
 	);
 
-	// start job to regularly check the instance interruption
-	checkSpotInterrupt(sqsClient, config.app.taskQueueUrl);
+	if (config.app.stage !== 'DEV') {
+		// start job to regularly check the instance interruption
+		checkSpotInterrupt(sqsClient, config.app.taskQueueUrl);
+	}
 
 	let pollCount = 0;
 	// keep polling unless instance is scheduled for termination
