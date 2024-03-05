@@ -31,7 +31,6 @@ export const TranscriptionJob = z.object({
 	id: z.string(),
 	originalFilename: z.string(),
 	inputSignedUrl: z.string(),
-	retryCount: z.number(),
 	sentTimestamp: z.string(),
 	userEmail: z.string(),
 	transcriptDestinationService: z.nativeEnum(DestinationService),

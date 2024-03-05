@@ -76,7 +76,6 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	const job: TranscriptionJob = {
 		id, // id of the source file
 		inputSignedUrl,
-		retryCount: 0,
 		sentTimestamp: new Date().toISOString(),
 		userEmail,
 		transcriptDestinationService: DestinationService.TranscriptionService,
