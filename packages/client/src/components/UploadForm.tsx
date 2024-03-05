@@ -202,6 +202,8 @@ export const UploadForm = () => {
 		maybeFileInput.value = '';
 	};
 
+	const detectLanguageLabel = 'Auto detect language';
+
 	return (
 		<>
 			<form id="media-upload-form" onSubmit={handleSubmit}>
@@ -216,15 +218,16 @@ export const UploadForm = () => {
 				</div>
 				<div className="mb-6">
 					<div>
-						<Label htmlFor="language-selector" value="Media file language" />
+						<Label htmlFor="language-selector" value="Audio language" />
 					</div>
 					<Dropdown
 						label={
 							mediaFileLanguageCode
 								? languageCodeToLanguage[mediaFileLanguageCode]
-								: 'Detect Language'
+								: detectLanguageLabel
 						}
 						dismissOnClick={true}
+						color="gray"
 					>
 						<Dropdown.Item
 							key={undefined}
@@ -233,7 +236,7 @@ export const UploadForm = () => {
 								setMediaFileLanguageCode(undefined);
 							}}
 						>
-							Detect Language
+							{detectLanguageLabel}
 						</Dropdown.Item>
 						<Dropdown.Divider />
 						{languageCodes.map((languageCode: LanguageCode) => (
