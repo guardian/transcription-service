@@ -230,6 +230,7 @@ const pollTranscriptionQueue = async (
 			fileToTranscribe,
 			numberOfThreads,
 			config.app.stage === 'PROD' ? 'medium' : 'tiny',
+			job.languageCode,
 		);
 
 		// if we've received an interrupt signal we don't want to perform a half-finished transcript upload/publish as

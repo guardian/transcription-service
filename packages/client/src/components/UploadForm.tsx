@@ -16,7 +16,7 @@ import { Dropdown } from 'flowbite-react';
 const uploadFileAndTranscribe = async (
 	file: File,
 	token: string,
-	language?: LanguageCode,
+	languageCode: LanguageCode | null,
 ) => {
 	const blob = new Blob([file as BlobPart]);
 
@@ -46,7 +46,7 @@ const uploadFileAndTranscribe = async (
 		body: JSON.stringify({
 			s3Key: body.data.s3Key,
 			fileName: file.name,
-			language,
+			languageCode,
 		}),
 	});
 	const sendMessageSuccess = sendMessageResponse.status === 200;
@@ -75,9 +75,8 @@ export const UploadForm = () => {
 	const [status, setStatus] = useState<RequestStatus>(RequestStatus.Ready);
 	const [errorMessage, setErrorMessage] = useState<string | undefined>();
 	const [uploads, setUploads] = useState<Record<string, RequestStatus>>({});
-	const [mediaFileLanguageCode, setMediaFileLanguageCode] = useState<
-		LanguageCode | undefined
-	>(undefined);
+	const [mediaFileLanguageCode, setMediaFileLanguageCode] =
+		useState<LanguageCode | null>(null);
 	console.log('mediaFileLanguageCode is ', mediaFileLanguageCode);
 	const { token } = useContext(AuthContext);
 
@@ -233,7 +232,7 @@ export const UploadForm = () => {
 							key={undefined}
 							value={undefined}
 							onClick={() => {
-								setMediaFileLanguageCode(undefined);
+								setMediaFileLanguageCode(null);
 							}}
 						>
 							{detectLanguageLabel}

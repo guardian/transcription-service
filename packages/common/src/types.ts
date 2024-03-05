@@ -1,4 +1,13 @@
 import { z } from 'zod';
+import { languageCodeToLanguage } from './languages';
+
+// thanks https://github.com/colinhacks/zod/discussions/2125#discussioncomment-7452235
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getKeys<T extends Record<string, any>>(obj: T) {
+	return Object.keys(obj) as [keyof typeof obj];
+}
+
+const zodLanguageCode = z.enum(getKeys(languageCodeToLanguage)).nullable();
 
 export enum DestinationService {
 	TranscriptionService = 'TranscriptionService',
@@ -35,6 +44,7 @@ export const TranscriptionJob = z.object({
 	userEmail: z.string(),
 	transcriptDestinationService: z.nativeEnum(DestinationService),
 	outputBucketUrls: OutputBucketUrls,
+	languageCode: zodLanguageCode,
 });
 
 export type TranscriptionJob = z.infer<typeof TranscriptionJob>;
@@ -122,6 +132,7 @@ export type ExportResponse = z.infer<typeof ExportResponse>;
 export const transcribeFileRequestBody = z.object({
 	s3Key: z.string(),
 	fileName: z.string(),
+	languageCode: zodLanguageCode,
 });
 export type TranscribeFileRequestBody = z.infer<
 	typeof transcribeFileRequestBody

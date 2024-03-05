@@ -124,6 +124,7 @@ const getApp = async () => {
 				userEmail,
 				body.data.fileName,
 				signedUrl,
+				body.data.languageCode,
 			);
 			if (isSqsFailure(sendResult)) {
 				res.status(500).send(sendResult.errorMsg);
