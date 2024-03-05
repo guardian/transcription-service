@@ -21,10 +21,6 @@ export default function RootLayout({
 								Beta
 							</span>
 						</div>
-						<p className={' pt-1 font-light '}>
-							Use the form below to upload your files for transcription. You
-							will receive an email when the transcription process is complete.
-						</p>
 						<p className={'italic pt-1 font-light '}>
 							This a new tool developed by the Digital Investigations and
 							Reporting team. Any feedback would be very welcome -
