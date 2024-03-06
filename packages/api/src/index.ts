@@ -24,7 +24,7 @@ import {
 	ClientConfig,
 	TranscriptExportRequest,
 	inputBucketObjectMetadata,
-	sendMessageRequestBody,
+	transcribeFileRequestBody,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
@@ -75,7 +75,7 @@ const getApp = async () => {
 		checkAuth,
 		asyncHandler(async (req, res) => {
 			const userEmail = req.user?.email;
-			const body = sendMessageRequestBody.safeParse(req.body);
+			const body = transcribeFileRequestBody.safeParse(req.body);
 			if (!body.success || !userEmail) {
 				res.status(422).send('missing request params');
 				return;
@@ -124,6 +124,7 @@ const getApp = async () => {
 				userEmail,
 				body.data.fileName,
 				signedUrl,
+				body.data.languageCode,
 			);
 			if (isSqsFailure(sendResult)) {
 				res.status(500).send(sendResult.errorMsg);

@@ -2,6 +2,7 @@ import { spawn } from 'child_process';
 import path from 'path';
 import { readFile } from '@guardian/transcription-service-backend-common';
 import { logger } from '@guardian/transcription-service-backend-common';
+import { LanguageCode } from '@guardian/transcription-service-common';
 
 interface ProcessResult {
 	code?: number;
@@ -166,6 +167,7 @@ export const getTranscriptionText = async (
 	file: string,
 	numberOfThreads: number,
 	model: WhisperModel,
+	languageCode: LanguageCode | null,
 ): Promise<TranscriptionResult> => {
 	try {
 		const { fileName, metadata } = await transcribe(
@@ -173,6 +175,7 @@ export const getTranscriptionText = async (
 			wavPath,
 			numberOfThreads,
 			model,
+			languageCode,
 		);
 
 		const srtPath = path.resolve(path.parse(file).dir, `${fileName}.srt`);
@@ -219,10 +222,12 @@ export const transcribe = async (
 	file: string,
 	numberOfThreads: number,
 	model: WhisperModel,
+	languageCode: LanguageCode | null,
 ) => {
 	const fileName = path.parse(file).name;
 	const containerOutputFilePath = path.resolve(CONTAINER_FOLDER, fileName);
 	logger.info(`Transcription output file path: ${containerOutputFilePath}`);
+	const language = languageCode ? languageCode : 'auto';
 
 	try {
 		const result = await runSpawnCommand('transcribe', 'docker', [
@@ -241,7 +246,7 @@ export const transcribe = async (
 			'--output-file',
 			containerOutputFilePath,
 			'--language',
-			'auto',
+			language,
 		]);
 		const metadata = extractWhisperStderrData(result.stderr);
 		logger.info('Transcription finished successfully', metadata);

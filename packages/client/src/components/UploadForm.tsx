@@ -3,13 +3,21 @@ import React, { useContext, useState } from 'react';
 import {
 	SignedUrlResponseBody,
 	uploadToS3,
+	languageCodeToLanguage,
+	type LanguageCode,
+	languageCodes,
 } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
 import { FileInput, Label } from 'flowbite-react';
 import { RequestStatus } from '@/types';
 import { iconForStatus, InfoMessage } from '@/components/InfoMessage';
+import { Dropdown } from 'flowbite-react';
 
-const uploadFileAndTranscribe = async (file: File, token: string) => {
+const uploadFileAndTranscribe = async (
+	file: File,
+	token: string,
+	languageCode: LanguageCode | null,
+) => {
 	const blob = new Blob([file as BlobPart]);
 
 	const response = await authFetch(`/api/signed-url`, token);
@@ -38,6 +46,7 @@ const uploadFileAndTranscribe = async (file: File, token: string) => {
 		body: JSON.stringify({
 			s3Key: body.data.s3Key,
 			fileName: file.name,
+			languageCode,
 		}),
 	});
 	const sendMessageSuccess = sendMessageResponse.status === 200;
@@ -66,6 +75,8 @@ export const UploadForm = () => {
 	const [status, setStatus] = useState<RequestStatus>(RequestStatus.Ready);
 	const [errorMessage, setErrorMessage] = useState<string | undefined>();
 	const [uploads, setUploads] = useState<Record<string, RequestStatus>>({});
+	const [mediaFileLanguageCode, setMediaFileLanguageCode] =
+		useState<LanguageCode | null>(null);
 	const { token } = useContext(AuthContext);
 
 	const reset = () => {
@@ -168,7 +179,11 @@ export const UploadForm = () => {
 		setUploads(Object.fromEntries(fileIds));
 
 		for (const [index, file] of fileArray.entries()) {
-			const result = await uploadFileAndTranscribe(file, token);
+			const result = await uploadFileAndTranscribe(
+				file,
+				token,
+				mediaFileLanguageCode,
+			);
 			if (!result) {
 				setUploads((prev) =>
 					updateFileStatus(prev, index, file.name, RequestStatus.Failed),
@@ -185,6 +200,8 @@ export const UploadForm = () => {
 		maybeFileInput.value = '';
 	};
 
+	const detectLanguageLabel = 'Auto detect language';
+
 	return (
 		<>
 			<form id="media-upload-form" onSubmit={handleSubmit}>
@@ -196,6 +213,42 @@ export const UploadForm = () => {
 						/>
 					</div>
 					<FileInput id="files" multiple />
+				</div>
+				<div className="mb-6">
+					<div>
+						<Label htmlFor="language-selector" value="Audio language" />
+					</div>
+					<Dropdown
+						label={
+							mediaFileLanguageCode
+								? languageCodeToLanguage[mediaFileLanguageCode]
+								: detectLanguageLabel
+						}
+						dismissOnClick={true}
+						color="gray"
+					>
+						<Dropdown.Item
+							key={undefined}
+							value={undefined}
+							onClick={() => {
+								setMediaFileLanguageCode(null);
+							}}
+						>
+							{detectLanguageLabel}
+						</Dropdown.Item>
+						<Dropdown.Divider />
+						{languageCodes.map((languageCode: LanguageCode) => (
+							<Dropdown.Item
+								key={languageCode}
+								value={languageCode}
+								onClick={() => {
+									setMediaFileLanguageCode(languageCode);
+								}}
+							>
+								{languageCodeToLanguage[languageCode]}
+							</Dropdown.Item>
+						))}
+					</Dropdown>
 				</div>
 				<button
 					type="submit"

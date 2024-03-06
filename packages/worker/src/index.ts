@@ -64,8 +64,10 @@ const main = async () => {
 		config.aws.localstackEndpoint,
 	);
 
-	// start job to regularly check the instance interruption
-	checkSpotInterrupt(sqsClient, config.app.taskQueueUrl);
+	if (config.app.stage !== 'DEV') {
+		// start job to regularly check the instance interruption
+		checkSpotInterrupt(sqsClient, config.app.taskQueueUrl);
+	}
 
 	let pollCount = 0;
 	// keep polling unless instance is scheduled for termination
@@ -230,6 +232,7 @@ const pollTranscriptionQueue = async (
 			fileToTranscribe,
 			numberOfThreads,
 			config.app.stage === 'PROD' ? 'medium' : 'tiny',
+			job.languageCode,
 		);
 
 		// if we've received an interrupt signal we don't want to perform a half-finished transcript upload/publish as

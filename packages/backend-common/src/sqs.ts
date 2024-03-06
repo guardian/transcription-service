@@ -10,6 +10,7 @@ import {
 	OutputBucketUrls,
 	DestinationService,
 	TranscriptionJob,
+	LanguageCode,
 } from '@guardian/transcription-service-common';
 import { getSignedUploadUrl } from '@guardian/transcription-service-backend-common';
 import { logger } from '@guardian/transcription-service-backend-common';
@@ -63,6 +64,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	userEmail: string,
 	originalFilename: string,
 	inputSignedUrl: string,
+	languageCode: LanguageCode | null,
 ): Promise<SendResult> => {
 	const signedUrls = await generateOutputSignedUrls(
 		id,
@@ -76,12 +78,12 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	const job: TranscriptionJob = {
 		id, // id of the source file
 		inputSignedUrl,
-		retryCount: 0,
 		sentTimestamp: new Date().toISOString(),
 		userEmail,
 		transcriptDestinationService: DestinationService.TranscriptionService,
 		originalFilename,
 		outputBucketUrls: signedUrls,
+		languageCode,
 	};
 	return await sendMessage(client, queueUrl, JSON.stringify(job), id);
 };
