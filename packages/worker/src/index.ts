@@ -216,13 +216,15 @@ const pollTranscriptionQueue = async (
 		}
 
 		if (ffmpegResult.duration && ffmpegResult.duration !== 0) {
-			// Adding 300 seconds (5 minutes) and the file duration
-			// to allow time to load the whisper model
+			// Transcription time is usually slightly longer than file duration.
+			// Update visibility timeout to 25% more than file duration to avoid another
+			// worker picking up the task and to allow this worker to delete the
+			// message when it's finished.
 			await changeMessageVisibility(
 				sqsClient,
 				config.app.taskQueueUrl,
 				receiptHandle,
-				ffmpegResult.duration + 300,
+				ffmpegResult.duration * 1.25,
 			);
 		}
 
