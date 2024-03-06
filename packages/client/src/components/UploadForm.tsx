@@ -77,7 +77,6 @@ export const UploadForm = () => {
 	const [uploads, setUploads] = useState<Record<string, RequestStatus>>({});
 	const [mediaFileLanguageCode, setMediaFileLanguageCode] =
 		useState<LanguageCode | null>(null);
-	console.log('mediaFileLanguageCode is ', mediaFileLanguageCode);
 	const { token } = useContext(AuthContext);
 
 	const reset = () => {
