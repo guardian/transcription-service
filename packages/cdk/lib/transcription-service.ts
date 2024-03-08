@@ -63,10 +63,7 @@ import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
-import {
-	EmailSubscription,
-	SqsSubscription,
-} from 'aws-cdk-lib/aws-sns-subscriptions';
+import { SqsSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 
 export class TranscriptionService extends GuStack {
@@ -253,25 +250,6 @@ export class TranscriptionService extends GuStack {
 				topicName: `transcription-service-destination-topic-${props.stage}`,
 			},
 		);
-
-		// for testing purposes - probably eventually replaced with destination lambda. To avoid endless emails only apply
-		// on PROD - we can manually set up subscriptions to specific developer emails in the console if needs be on CODE
-		if (props.stage === 'PROD') {
-			const destinationSNSTestEmail = new GuStringParameter(
-				this,
-				'DestinationSNSTestEmail',
-				{
-					fromSSM: true,
-					default: `/${this.stage}/${this.stack}/${APP_NAME}/destinationSNSTestEmail`,
-					description:
-						'Email address to send SNS notifications to for testing purposes',
-				},
-			);
-			const emailSubscription = new EmailSubscription(
-				destinationSNSTestEmail.valueAsString,
-			);
-			transcriptDestinationTopic.addSubscription(emailSubscription);
-		}
 
 		// worker autoscaling group
 
