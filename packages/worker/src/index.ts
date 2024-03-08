@@ -10,6 +10,7 @@ import {
 	TranscriptionConfig,
 	moveMessageToDeadLetterQueue,
 	logger,
+	publishTranscriptionOutput,
 } from '@guardian/transcription-service-backend-common';
 import {
 	OutputBucketKeys,
@@ -17,7 +18,6 @@ import {
 	TranscriptionOutputFailure,
 	type TranscriptionOutputSuccess,
 } from '@guardian/transcription-service-common';
-import { getSNSClient, publishTranscriptionOutput } from './sns';
 import {
 	getTranscriptionText,
 	convertToWav,
@@ -32,7 +32,6 @@ import {
 	FailureMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
 import { SQSClient } from '@aws-sdk/client-sqs';
-import { SNSClient } from '@aws-sdk/client-sns';
 import { setTimeout } from 'timers/promises';
 import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import { checkSpotInterrupt } from './spot-termination';
@@ -59,11 +58,6 @@ const main = async () => {
 		config.aws.localstackEndpoint,
 	);
 
-	const snsClient = getSNSClient(
-		config.aws.region,
-		config.aws.localstackEndpoint,
-	);
-
 	if (config.app.stage !== 'DEV') {
 		// start job to regularly check the instance interruption
 		checkSpotInterrupt(sqsClient, config.app.taskQueueUrl);
@@ -73,19 +67,13 @@ const main = async () => {
 	// keep polling unless instance is scheduled for termination
 	while (!INTERRUPTION_TIME) {
 		pollCount += 1;
-		await pollTranscriptionQueue(
-			pollCount,
-			sqsClient,
-			snsClient,
-			metrics,
-			config,
-		);
+		await pollTranscriptionQueue(pollCount, sqsClient, metrics, config);
 		await setTimeout(POLLING_INTERVAL_SECONDS * 1000);
 	}
 };
 
 const publishTranscriptionOutputFailure = async (
-	snsClient: SNSClient,
+	sqsClient: SQSClient,
 	destination: string,
 	job: TranscriptionJob,
 ) => {
@@ -97,7 +85,7 @@ const publishTranscriptionOutputFailure = async (
 		originalFilename: job.originalFilename,
 	};
 	try {
-		await publishTranscriptionOutput(snsClient, destination, failureMessage);
+		await publishTranscriptionOutput(sqsClient, destination, failureMessage);
 	} catch (e) {
 		logger.error('error publishing transcription output failed', e);
 	}
@@ -106,7 +94,6 @@ const publishTranscriptionOutputFailure = async (
 const pollTranscriptionQueue = async (
 	pollCount: number,
 	sqsClient: SQSClient,
-	snsClient: SNSClient,
 	metrics: MetricsService,
 	config: TranscriptionConfig,
 ) => {
@@ -208,7 +195,7 @@ const pollTranscriptionQueue = async (
 				logger.info('skip moving message to dead letter queue in DEV');
 			}
 			await publishTranscriptionOutputFailure(
-				snsClient,
+				sqsClient,
 				config.app.destinationTopicArns.transcriptionService,
 				job,
 			);
@@ -270,7 +257,7 @@ const pollTranscriptionQueue = async (
 		};
 
 		await publishTranscriptionOutput(
-			snsClient,
+			sqsClient,
 			config.app.destinationTopicArns.transcriptionService,
 			transcriptionOutput,
 		);
@@ -309,7 +296,7 @@ const pollTranscriptionQueue = async (
 		);
 		if (receiveCount >= MAX_RECEIVE_COUNT) {
 			publishTranscriptionOutputFailure(
-				snsClient,
+				sqsClient,
 				config.app.destinationTopicArns.transcriptionService,
 				job,
 			);

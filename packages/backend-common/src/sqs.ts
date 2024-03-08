@@ -11,6 +11,7 @@ import {
 	DestinationService,
 	TranscriptionJob,
 	LanguageCode,
+	TranscriptionOutput,
 } from '@guardian/transcription-service-common';
 import { getSignedUploadUrl } from '@guardian/transcription-service-backend-common';
 import { logger } from '@guardian/transcription-service-backend-common';
@@ -94,12 +95,18 @@ const sendMessage = async (
 	messageBody: string,
 	id: string,
 ): Promise<SendResult> => {
+	const fifo = queueUrl.includes('.fifo');
+	const fifoProperties = fifo
+		? {
+				MessageGroupId: id,
+			}
+		: {};
 	try {
 		const result = await client.send(
 			new SendMessageCommand({
 				QueueUrl: queueUrl,
 				MessageBody: messageBody,
-				MessageGroupId: id,
+				...fifoProperties,
 			}),
 		);
 		logger.info(`Message sent. Message id: ${result.MessageId}`);
@@ -122,6 +129,14 @@ const sendMessage = async (
 			errorMsg: msg,
 		};
 	}
+};
+
+export const publishTranscriptionOutput = async (
+	client: SQSClient,
+	queueUrl: string,
+	output: TranscriptionOutput,
+) => {
+	await sendMessage(client, queueUrl, JSON.stringify(output), output.id);
 };
 
 export const changeMessageVisibility = async (
