@@ -341,7 +341,7 @@ export class TranscriptionService extends GuStack {
 			{
 				app: workerApp,
 				vpc,
-				allowAllOutbound: true,
+				allowAllOutbound: false,
 			},
 		);
 

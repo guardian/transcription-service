@@ -660,9 +660,24 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         "GroupDescription": "TranscriptionService/TranscriptionServiceWorkerSGTranscriptionserviceworker",
         "SecurityGroupEgress": [
           {
-            "CidrIp": "0.0.0.0/0",
-            "Description": "Allow all outbound traffic by default",
-            "IpProtocol": "-1",
+            "Description": {
+              "Fn::Join": [
+                "",
+                [
+                  "from ",
+                  {
+                    "Fn::ImportValue": "internet-enabled-vpc-AWSEndpointSecurityGroup",
+                  },
+                  ":443",
+                ],
+              ],
+            },
+            "DestinationSecurityGroupId": {
+              "Fn::ImportValue": "internet-enabled-vpc-AWSEndpointSecurityGroup",
+            },
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
           },
         ],
         "Tags": [
@@ -692,6 +707,35 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         },
       },
       "Type": "AWS::EC2::SecurityGroup",
+    },
+    "TranscriptionServiceWorkerSGTranscriptionserviceworkertoIndirectPeer44380412F57": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "to ",
+              {
+                "Ref": "S3PrefixListIdParameter",
+              },
+              ":443",
+            ],
+          ],
+        },
+        "DestinationPrefixListId": {
+          "Ref": "S3PrefixListIdParameter",
+        },
+        "FromPort": 443,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "TranscriptionServiceWorkerSGTranscriptionserviceworker6EE23C91",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "ToPort": 443,
+      },
+      "Type": "AWS::EC2::SecurityGroupEgress",
     },
     "TranscriptionWorkerASGCAE69A98": {
       "Properties": {
