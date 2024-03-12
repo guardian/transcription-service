@@ -132,7 +132,10 @@ const processMessage = async (event: unknown) => {
 
 	const parsedEvent = IncomingSQSEvent.safeParse(event);
 	if (!parsedEvent.success) {
-		logger.error(`Failed to parse SQS message ${parsedEvent.error.message}`);
+		logger.error(
+			`Failed to parse SQS message ${parsedEvent.error.message}`,
+			event,
+		);
 		throw new Error('Failed to parse SQS message');
 	}
 
