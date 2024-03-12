@@ -59,7 +59,8 @@ const main = async () => {
 	);
 
 	if (config.app.stage !== 'DEV') {
-		// start job to regularly check the instance interruption
+		// start job to regularly check the instance interruption (Note: deliberately not using await here so the job
+		// runs in the background)
 		checkSpotInterrupt(sqsClient, config.app.taskQueueUrl);
 	}
 
@@ -196,7 +197,7 @@ const pollTranscriptionQueue = async (
 			}
 			await publishTranscriptionOutputFailure(
 				sqsClient,
-				config.app.destinationQueueArns.transcriptionService,
+				config.app.destinationQueueUrls.transcriptionService,
 				job,
 			);
 			return;
@@ -258,7 +259,7 @@ const pollTranscriptionQueue = async (
 
 		await publishTranscriptionOutput(
 			sqsClient,
-			config.app.destinationQueueArns.transcriptionService,
+			config.app.destinationQueueUrls.transcriptionService,
 			transcriptionOutput,
 		);
 
@@ -297,7 +298,7 @@ const pollTranscriptionQueue = async (
 		if (receiveCount >= MAX_RECEIVE_COUNT) {
 			await publishTranscriptionOutputFailure(
 				sqsClient,
-				config.app.destinationQueueArns.transcriptionService,
+				config.app.destinationQueueUrls.transcriptionService,
 				job,
 			);
 		}
