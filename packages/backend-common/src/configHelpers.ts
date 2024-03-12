@@ -28,7 +28,6 @@ export const getParameters = async (
 		} while (nextToken);
 
 		if (parameters) {
-			logger.info('Fetched parameters from Parameter Store');
 			return parameters;
 		} else {
 			throw new Error('No parameters fetched from Parameter Store');
