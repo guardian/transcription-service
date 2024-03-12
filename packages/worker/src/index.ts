@@ -196,7 +196,7 @@ const pollTranscriptionQueue = async (
 			}
 			await publishTranscriptionOutputFailure(
 				sqsClient,
-				config.app.destinationTopicArns.transcriptionService,
+				config.app.destinationQueueArns.transcriptionService,
 				job,
 			);
 			return;
@@ -258,7 +258,7 @@ const pollTranscriptionQueue = async (
 
 		await publishTranscriptionOutput(
 			sqsClient,
-			config.app.destinationTopicArns.transcriptionService,
+			config.app.destinationQueueArns.transcriptionService,
 			transcriptionOutput,
 		);
 
@@ -295,9 +295,9 @@ const pollTranscriptionQueue = async (
 			taskMessage.Attributes?.ApproximateReceiveCount || defaultReceiveCount,
 		);
 		if (receiveCount >= MAX_RECEIVE_COUNT) {
-			publishTranscriptionOutputFailure(
+			await publishTranscriptionOutputFailure(
 				sqsClient,
-				config.app.destinationTopicArns.transcriptionService,
+				config.app.destinationQueueArns.transcriptionService,
 				job,
 			);
 		}
