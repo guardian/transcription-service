@@ -140,7 +140,7 @@ const processMessage = async (event: unknown) => {
 	}
 
 	for (const record of parsedEvent.data.Records) {
-		const transcriptionOutput = record.body.Message;
+		const transcriptionOutput = record.body;
 		if (transcriptionOutputIsSuccess(transcriptionOutput)) {
 			await handleTranscriptionSuccess(
 				config,
