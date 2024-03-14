@@ -266,7 +266,7 @@ const generateOutputSignedUrls = async (
 	originalFilename: string,
 	expiresInDays: number,
 ): Promise<OutputBucketUrls> => {
-	const expiresIn = expiresInDays * 24 * 60;
+	const expiresIn = expiresInDays * 24 * 60 * 60;
 	const srtKey = `srt/${id}.srt`;
 	const jsonKey = `json/${id}.json`;
 	const textKey = `text/${id}.txt`;
