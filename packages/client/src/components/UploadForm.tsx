@@ -138,7 +138,8 @@ export const UploadForm = () => {
 						>
 							<span className="font-medium">Upload complete. </span>{' '}
 							Transcription in progress - check your email for the completed
-							transcript. The transcription process is typically shorter than
+							transcript. The service can take a few minutes to start up, but 
+							thereafter the transcription process is typically shorter than
 							the length of the media file.{' '}
 							<button
 								onClick={() => reset()}
