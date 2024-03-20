@@ -3,6 +3,7 @@
 // https://github.com/ggerganov/whisper.cpp/blob/25d313b38b1f562200f915cd5952555613cd0110/whisper.cpp#L251
 // and values transformed to title case
 export const languageCodeToLanguage = Object.freeze({
+	auto: 'Auto Detect Language (best for multi-language files)',
 	en: 'English',
 	zh: 'Chinese',
 	de: 'German',
@@ -106,6 +107,7 @@ export const languageCodeToLanguage = Object.freeze({
 });
 
 type LanguageCodeToLanguage = typeof languageCodeToLanguage;
+
 export type LanguageCode = keyof LanguageCodeToLanguage;
 
 // There doesn't seem to be a way to get the object keys that has a type which

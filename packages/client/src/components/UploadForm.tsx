@@ -8,7 +8,7 @@ import {
 	languageCodes,
 } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
-import { FileInput, Label } from 'flowbite-react';
+import { Alert, FileInput, Label } from 'flowbite-react';
 import { RequestStatus } from '@/types';
 import { iconForStatus, InfoMessage } from '@/components/InfoMessage';
 import { Dropdown } from 'flowbite-react';
@@ -75,8 +75,12 @@ export const UploadForm = () => {
 	const [status, setStatus] = useState<RequestStatus>(RequestStatus.Ready);
 	const [errorMessage, setErrorMessage] = useState<string | undefined>();
 	const [uploads, setUploads] = useState<Record<string, RequestStatus>>({});
-	const [mediaFileLanguageCode, setMediaFileLanguageCode] =
-		useState<LanguageCode | null>(null);
+	const [mediaFileLanguageCode, setMediaFileLanguageCode] = useState<
+		LanguageCode | undefined
+	>(undefined);
+	const [languageCodeValid, setLanguageCodeValid] = useState<
+		boolean | undefined
+	>(undefined);
 	const { token } = useContext(AuthContext);
 
 	const reset = () => {
@@ -138,9 +142,9 @@ export const UploadForm = () => {
 						>
 							<span className="font-medium">Upload complete. </span>{' '}
 							Transcription in progress - check your email for the completed
-							transcript. The service can take a few minutes to start up, but 
-							thereafter the transcription process is typically shorter than
-							the length of the media file.{' '}
+							transcript. The service can take a few minutes to start up, but
+							thereafter the transcription process is typically shorter than the
+							length of the media file.{' '}
 							<button
 								onClick={() => reset()}
 								className="font-medium text-blue-600 underline dark:text-blue-500 hover:no-underline"
@@ -160,6 +164,13 @@ export const UploadForm = () => {
 		const maybeFileInput = document.querySelector(
 			'input[id=files]',
 		) as HTMLInputElement;
+
+		// form validation
+		if (mediaFileLanguageCode === undefined) {
+			setLanguageCodeValid(false);
+			return;
+		}
+
 		if (
 			!maybeFileInput ||
 			!maybeFileInput.files ||
@@ -171,6 +182,7 @@ export const UploadForm = () => {
 			setStatus(RequestStatus.Failed);
 			return;
 		}
+
 		setStatus(RequestStatus.InProgress);
 		const fileArray = Array.from(maybeFileInput.files);
 		const fileIds = fileArray.map((f, index) => [
@@ -201,7 +213,7 @@ export const UploadForm = () => {
 		maybeFileInput.value = '';
 	};
 
-	const detectLanguageLabel = 'Auto detect language';
+	const detectLanguageLabel = 'Choose a transcription language';
 
 	return (
 		<>
@@ -226,24 +238,15 @@ export const UploadForm = () => {
 								: detectLanguageLabel
 						}
 						dismissOnClick={true}
-						color="gray"
+						color={languageCodeValid === false ? 'red' : 'gray'}
 					>
-						<Dropdown.Item
-							key={undefined}
-							value={undefined}
-							onClick={() => {
-								setMediaFileLanguageCode(null);
-							}}
-						>
-							{detectLanguageLabel}
-						</Dropdown.Item>
-						<Dropdown.Divider />
 						{languageCodes.map((languageCode: LanguageCode) => (
 							<Dropdown.Item
 								key={languageCode}
 								value={languageCode}
 								onClick={() => {
 									setMediaFileLanguageCode(languageCode);
+									setLanguageCodeValid(true);
 								}}
 							>
 								{languageCodeToLanguage[languageCode]}
@@ -251,6 +254,15 @@ export const UploadForm = () => {
 						))}
 					</Dropdown>
 				</div>
+				{languageCodeValid === false ? (
+					<div className="mb-6">
+						<Alert color="failure">
+							Please choose the language of the file or 'Auto-detect language'
+						</Alert>
+					</div>
+				) : (
+					<></>
+				)}
 				<button
 					type="submit"
 					className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
