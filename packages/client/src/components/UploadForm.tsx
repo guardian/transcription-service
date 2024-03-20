@@ -6,6 +6,7 @@ import {
 	languageCodeToLanguage,
 	type LanguageCode,
 	languageCodes,
+	TranscribeFileRequestBody,
 } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
 import { Alert, FileInput, Label } from 'flowbite-react';
@@ -16,7 +17,7 @@ import { Dropdown } from 'flowbite-react';
 const uploadFileAndTranscribe = async (
 	file: File,
 	token: string,
-	languageCode: LanguageCode | null,
+	languageCode: LanguageCode,
 ) => {
 	const blob = new Blob([file as BlobPart]);
 
@@ -38,16 +39,18 @@ const uploadFileAndTranscribe = async (
 		return false;
 	}
 
+	const transcribeFileBody: TranscribeFileRequestBody = {
+		s3Key: body.data.s3Key,
+		fileName: file.name,
+		languageCode,
+	};
+
 	const sendMessageResponse = await authFetch('/api/transcribe-file', token, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
 		},
-		body: JSON.stringify({
-			s3Key: body.data.s3Key,
-			fileName: file.name,
-			languageCode,
-		}),
+		body: JSON.stringify(transcribeFileBody),
 	});
 	const sendMessageSuccess = sendMessageResponse.status === 200;
 	if (!sendMessageSuccess) {
