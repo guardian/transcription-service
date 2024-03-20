@@ -231,9 +231,6 @@ export const UploadForm = () => {
 					<FileInput id="files" multiple />
 				</div>
 				<div className="mb-6">
-					<div>
-						<Label htmlFor="language-selector" value="Audio language" />
-					</div>
 					<Dropdown
 						label={
 							mediaFileLanguageCode
