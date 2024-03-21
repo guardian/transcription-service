@@ -38,7 +38,8 @@ const ExportButton = () => {
 	if (requestStatus === RequestStatus.Failed) {
 		return (
 			<InfoMessage
-				message={`Export failed with error ${failureMessage ?? 'unknown failure'}`}
+				message={`Export failed with error ${failureMessage ?? 'unknown failure'}.
+							Make sure that your browser isn't blocking pop-ups so that you can log in to your Google account.`}
 				status={RequestStatus.Failed}
 			/>
 		);
@@ -46,7 +47,9 @@ const ExportButton = () => {
 	if (loading) {
 		return (
 			<InfoMessage
-				message={'Export in progress...'}
+				message={
+					"Export in progress... If nothing happens, make sure that your browser isn't blocking pop-ups."
+				}
 				status={RequestStatus.InProgress}
 			/>
 		);
