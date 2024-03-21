@@ -75,7 +75,6 @@ const updateFileStatus = (
 
 export const UploadForm = () => {
 	const [status, setStatus] = useState<RequestStatus>(RequestStatus.Ready);
-	const [errorMessage, setErrorMessage] = useState<string | undefined>();
 	const [files, setFiles] = useState<FileList | null>(null);
 	const [uploads, setUploads] = useState<Record<string, RequestStatus>>({});
 	const [mediaFileLanguageCode, setMediaFileLanguageCode] = useState<
@@ -88,7 +87,6 @@ export const UploadForm = () => {
 
 	const reset = () => {
 		setStatus(RequestStatus.Ready);
-		setErrorMessage(undefined);
 		setUploads({});
 		setFiles(null);
 		setMediaFileLanguageCode(undefined);
@@ -127,9 +125,7 @@ export const UploadForm = () => {
 						className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
 						role="alert"
 					>
-						<span className="font-medium">
-							{errorMessage ?? 'One or more uploads failed'}
-						</span>{' '}
+						<span className="font-medium">One or more uploads failed</span>{' '}
 						<button
 							onClick={() => reset()}
 							className="font-medium text-blue-600 underline dark:text-blue-500 hover:no-underline"
@@ -175,11 +171,11 @@ export const UploadForm = () => {
 			return;
 		}
 
+		// the required property on the file input should prevent the form from
+		// being submitted without any files selected. Need to confirm this in
+		// order to narrow the type of files
 		if (files === null || files.length === 0) {
-			setErrorMessage(
-				'Invalid file input - did you select a file to transcribe?',
-			);
-			setStatus(RequestStatus.Failed);
+			console.error('form submitted without any files');
 			return;
 		}
 
