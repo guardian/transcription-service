@@ -9,10 +9,9 @@ import {
 	TranscribeFileRequestBody,
 } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
-import { Alert, FileInput, Label } from 'flowbite-react';
+import { FileInput, Label, Select } from 'flowbite-react';
 import { RequestStatus } from '@/types';
 import { iconForStatus, InfoMessage } from '@/components/InfoMessage';
-import { Dropdown } from 'flowbite-react';
 
 const uploadFileAndTranscribe = async (
 	file: File,
@@ -77,6 +76,7 @@ const updateFileStatus = (
 export const UploadForm = () => {
 	const [status, setStatus] = useState<RequestStatus>(RequestStatus.Ready);
 	const [errorMessage, setErrorMessage] = useState<string | undefined>();
+	const [files, setFiles] = useState<FileList | null>(null);
 	const [uploads, setUploads] = useState<Record<string, RequestStatus>>({});
 	const [mediaFileLanguageCode, setMediaFileLanguageCode] = useState<
 		LanguageCode | undefined
@@ -164,21 +164,15 @@ export const UploadForm = () => {
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 
-		const maybeFileInput = document.querySelector(
-			'input[id=files]',
-		) as HTMLInputElement;
-
-		// form validation
+		// The react Select components with a required property don't show any
+		// feedback when the form is submitted without an option having been
+		// chosen. We need to validate that input manually.
 		if (mediaFileLanguageCode === undefined) {
 			setLanguageCodeValid(false);
 			return;
 		}
 
-		if (
-			!maybeFileInput ||
-			!maybeFileInput.files ||
-			maybeFileInput.files.length === 0
-		) {
+		if (files === null || files.length === 0) {
 			setErrorMessage(
 				'Invalid file input - did you select a file to transcribe?',
 			);
@@ -187,7 +181,7 @@ export const UploadForm = () => {
 		}
 
 		setStatus(RequestStatus.InProgress);
-		const fileArray = Array.from(maybeFileInput.files);
+		const fileArray = Array.from(files);
 		const fileIds = fileArray.map((f, index) => [
 			`${index}-${f.name}`,
 			RequestStatus.InProgress,
@@ -213,10 +207,9 @@ export const UploadForm = () => {
 		}
 
 		setStatus(RequestStatus.Success);
-		maybeFileInput.value = '';
 	};
 
-	const detectLanguageLabel = 'Choose a transcription language';
+	const languageSelectColor = languageCodeValid === false ? 'red' : '';
 
 	return (
 		<>
@@ -228,41 +221,40 @@ export const UploadForm = () => {
 							value="File(s) for transcription"
 						/>
 					</div>
-					<FileInput id="files" multiple />
+					<FileInput
+						id="files"
+						required={true}
+						multiple
+						onChange={(e) => {
+							setFiles(e.target.files);
+						}}
+					/>
 				</div>
 				<div className="mb-6">
-					<Dropdown
-						label={
-							mediaFileLanguageCode
-								? languageCodeToLanguage[mediaFileLanguageCode]
-								: detectLanguageLabel
-						}
-						dismissOnClick={true}
-						color={languageCodeValid === false ? 'red' : 'gray'}
-					>
-						{languageCodes.map((languageCode: LanguageCode) => (
-							<Dropdown.Item
-								key={languageCode}
-								value={languageCode}
-								onClick={() => {
-									setMediaFileLanguageCode(languageCode);
-									setLanguageCodeValid(true);
-								}}
-							>
-								{languageCodeToLanguage[languageCode]}
-							</Dropdown.Item>
-						))}
-					</Dropdown>
-				</div>
-				{languageCodeValid === false ? (
-					<div className="mb-6">
-						<Alert color="failure">
-							Please choose the language of the file or 'Auto-detect language'
-						</Alert>
+					<div>
+						<Label htmlFor="language-selector" value="Audio language" />
 					</div>
-				) : (
-					<></>
-				)}
+					<Select
+						id="language-selector"
+						style={{
+							color: languageSelectColor,
+							borderColor: languageSelectColor,
+						}}
+						onChange={(e) => {
+							setMediaFileLanguageCode(e.target.value as LanguageCode);
+							setLanguageCodeValid(true);
+						}}
+					>
+						<option disabled selected>
+							Select a language
+						</option>
+						{languageCodes.map((languageCode: LanguageCode) => (
+							<option key={languageCode} value={languageCode}>
+								{languageCodeToLanguage[languageCode]}
+							</option>
+						))}
+					</Select>
+				</div>
 				<button
 					type="submit"
 					className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
