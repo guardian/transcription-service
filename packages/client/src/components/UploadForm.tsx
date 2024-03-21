@@ -215,6 +215,7 @@ export const UploadForm = () => {
 				<div className="mb-6">
 					<div>
 						<Label
+							className="text-base"
 							htmlFor="multiple-file-upload"
 							value="File(s) for transcription"
 						/>
@@ -230,8 +231,15 @@ export const UploadForm = () => {
 				</div>
 				<div className="mb-6">
 					<div>
-						<Label htmlFor="language-selector" value="Audio language" />
+						<Label
+							className="text-base"
+							htmlFor="language-selector"
+							value="Audio language"
+						/>
 					</div>
+					<p className="font-light">
+						Choosing a specific language may give you more accurate results.
+					</p>
 					<Select
 						id="language-selector"
 						style={{

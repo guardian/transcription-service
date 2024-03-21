@@ -3,7 +3,7 @@
 // https://github.com/ggerganov/whisper.cpp/blob/25d313b38b1f562200f915cd5952555613cd0110/whisper.cpp#L251
 // and values transformed to title case
 export const languageCodeToLanguage = Object.freeze({
-	auto: 'Auto-detect language',
+	auto: 'Auto-detect language (not yet recommended)',
 	en: 'English',
 	zh: 'Chinese',
 	de: 'German',
