@@ -175,7 +175,6 @@ export const UploadForm = () => {
 		// being submitted without any files selected. Need to confirm this in
 		// order to narrow the type of files
 		if (files === null || files.length === 0) {
-			console.error('form submitted without any files');
 			return;
 		}
 
