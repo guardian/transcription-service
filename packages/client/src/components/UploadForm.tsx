@@ -90,6 +90,9 @@ export const UploadForm = () => {
 		setStatus(RequestStatus.Ready);
 		setErrorMessage(undefined);
 		setUploads({});
+		setFiles(null);
+		setMediaFileLanguageCode(undefined);
+		setLanguageCodeValid(undefined);
 	};
 
 	if (!token) {
