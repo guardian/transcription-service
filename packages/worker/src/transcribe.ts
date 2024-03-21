@@ -167,7 +167,7 @@ export const getTranscriptionText = async (
 	file: string,
 	numberOfThreads: number,
 	model: WhisperModel,
-	languageCode: LanguageCode | null,
+	languageCode: LanguageCode,
 ): Promise<TranscriptionResult> => {
 	try {
 		const { fileName, metadata } = await transcribe(
@@ -222,12 +222,11 @@ export const transcribe = async (
 	file: string,
 	numberOfThreads: number,
 	model: WhisperModel,
-	languageCode: LanguageCode | null,
+	languageCode: LanguageCode,
 ) => {
 	const fileName = path.parse(file).name;
 	const containerOutputFilePath = path.resolve(CONTAINER_FOLDER, fileName);
 	logger.info(`Transcription output file path: ${containerOutputFilePath}`);
-	const language = languageCode ? languageCode : 'auto';
 
 	try {
 		const result = await runSpawnCommand('transcribe', 'docker', [
@@ -246,7 +245,7 @@ export const transcribe = async (
 			'--output-file',
 			containerOutputFilePath,
 			'--language',
-			language,
+			languageCode,
 		]);
 		const metadata = extractWhisperStderrData(result.stderr);
 		logger.info('Transcription finished successfully', metadata);

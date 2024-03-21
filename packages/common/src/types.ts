@@ -7,7 +7,7 @@ export function getKeys<T extends Record<string, any>>(obj: T) {
 	return Object.keys(obj) as [keyof typeof obj];
 }
 
-const zodLanguageCode = z.enum(getKeys(languageCodeToLanguage)).nullable();
+const zodLanguageCode = z.enum(getKeys(languageCodeToLanguage));
 
 export enum DestinationService {
 	TranscriptionService = 'TranscriptionService',

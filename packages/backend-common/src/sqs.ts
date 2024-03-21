@@ -64,7 +64,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	userEmail: string,
 	originalFilename: string,
 	inputSignedUrl: string,
-	languageCode: LanguageCode | null,
+	languageCode: LanguageCode,
 ): Promise<SendResult> => {
 	const signedUrls = await generateOutputSignedUrls(
 		id,
