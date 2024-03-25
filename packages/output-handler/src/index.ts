@@ -132,12 +132,15 @@ const processMessage = async (event: unknown) => {
 
 	const parsedEvent = IncomingSQSEvent.safeParse(event);
 	if (!parsedEvent.success) {
-		logger.error(`Failed to parse SQS message ${parsedEvent.error.message}`);
+		logger.error(
+			`Failed to parse SQS message ${parsedEvent.error.message} + ${JSON.stringify(event)}`,
+			event,
+		);
 		throw new Error('Failed to parse SQS message');
 	}
 
 	for (const record of parsedEvent.data.Records) {
-		const transcriptionOutput = record.body.Message;
+		const transcriptionOutput = record.body;
 		if (transcriptionOutputIsSuccess(transcriptionOutput)) {
 			await handleTranscriptionSuccess(
 				config,

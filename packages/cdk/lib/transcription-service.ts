@@ -63,7 +63,6 @@ import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
-import { SqsSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 
 export class TranscriptionService extends GuStack {
@@ -243,11 +242,11 @@ export class TranscriptionService extends GuStack {
 		});
 
 		// worker output infrastructure
-		const transcriptDestinationTopic = new Topic(
+		const transcriptionOutputQueue = new Queue(
 			this,
-			'TranscriptDestinationTopic',
+			`${APP_NAME}-output-queue`,
 			{
-				topicName: `transcription-service-destination-topic-${props.stage}`,
+				queueName: `${APP_NAME}-output-queue-${this.stage}`,
 			},
 		);
 
@@ -282,8 +281,8 @@ export class TranscriptionService extends GuStack {
 					statements: [getParametersPolicy],
 				}),
 				new GuAllowPolicy(this, 'WriteToDestinationTopic', {
-					actions: ['sns:Publish'],
-					resources: [transcriptDestinationTopic.topicArn],
+					actions: ['sqs:SendMessage'],
+					resources: [transcriptionOutputQueue.queueArn],
 				}),
 				new GuAllowPolicy(this, 'WriteToELK', {
 					actions: [
@@ -493,17 +492,6 @@ export class TranscriptionService extends GuStack {
 
 		transcriptTable.grantReadWriteData(outputHandlerLambda);
 		transcriptTable.grantReadWriteData(apiLambda);
-
-		const transcriptionOutputQueue = new Queue(
-			this,
-			`${APP_NAME}-output-queue`,
-			{
-				queueName: `${APP_NAME}-output-queue-${this.stage}`,
-			},
-		);
-		transcriptDestinationTopic.addSubscription(
-			new SqsSubscription(transcriptionOutputQueue),
-		);
 
 		// trigger output-handler lambda from queue
 		outputHandlerLambda.addEventSource(

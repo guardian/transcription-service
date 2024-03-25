@@ -16,7 +16,7 @@ export interface TranscriptionConfig {
 		emailNotificationFromAddress: string;
 		sourceMediaBucket: string;
 		transcriptionOutputBucket: string;
-		destinationTopicArns: {
+		destinationQueueUrls: {
 			transcriptionService: string;
 		};
 		tableName: string;
@@ -79,7 +79,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 	const destinationTopic = findParameter(
 		parameters,
 		paramPath,
-		'destinationTopicArns/transcriptionService',
+		'destinationQueueUrls/transcriptionService',
 	);
 	// AWS clients take an optional 'endpoint' property that is only needed by localstack - on code/prod you don't need
 	// to set it. Here we inder the endpoint (http://localhost:4566) from the sqs url
@@ -131,7 +131,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			stage,
 			sourceMediaBucket,
 			emailNotificationFromAddress,
-			destinationTopicArns: {
+			destinationQueueUrls: {
 				transcriptionService: destinationTopic,
 			},
 			tableName,

@@ -2,7 +2,7 @@
 set -e
 
 SCRIPT_PATH=$( cd $(dirname $0) ; pwd -P )
-APP_NAME="transcription-service"
+
 
 npm install
 
@@ -23,6 +23,7 @@ fi
 
 # Starting localstack
 docker-compose up -d
+APP_NAME="transcription-service"
 # If the queue already exists this command appears to still work and returns the existing queue url
 QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-task-queue-DEV.fifo --attributes "FifoQueue=true,ContentBasedDeduplication=true" | jq .QueueUrl)
 # We don't install the localstack dns so need to replace the endpoint with localhost
@@ -30,9 +31,11 @@ QUEUE_URL_LOCALHOST=${QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localho
 
 echo "Created queue in localstack, url: ${QUEUE_URL_LOCALHOST}"
 
-TOPIC_ARN=$(aws --endpoint-url=http://localhost:4566 sns create-topic --name $APP_NAME-destination-topic-DEV | jq .TopicArn)
+OUTPUT_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-output-queue-DEV | jq .QueueUrl)
+# We don't install the localstack dns so need to replace the endpoint with localhost
+OUTPUT_QUEUE_URL_LOCALHOST=${OUTPUT_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
 
-echo "Created topic in localstack, arn: ${TOPIC_ARN}"
+echo "Created queue in localstack, url: ${OUTPUT_QUEUE_URL_LOCALHOST}"
 
 DYNAMODB_ARN=$(aws --endpoint-url=http://localhost:4566 dynamodb create-table \
                                          --table-name ${APP_NAME}-DEV \
