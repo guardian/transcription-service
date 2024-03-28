@@ -1,6 +1,7 @@
 import {
 	ClientConfig,
 	TranscriptExportRequest,
+	TranscriptFormat,
 } from '@guardian/transcription-service-common';
 import { authFetch } from '@/helpers';
 
@@ -48,6 +49,7 @@ const promiseInitTokenClient = (
 export const exportTranscript = async (
 	authToken: string,
 	transcriptId: string,
+	transcriptFormat: TranscriptFormat,
 ): Promise<Response> => {
 	const config = await getClientConfig(authToken);
 
@@ -62,6 +64,7 @@ export const exportTranscript = async (
 		id: transcriptId,
 		// @ts-expect-error (return object from google isn't actually a TokenResponse, our zod type is more accurate)
 		oAuthTokenResponse: tokenResponse,
+		transcriptFormat,
 	};
 
 	const exportResponse = await authFetch('/api/export', authToken, {

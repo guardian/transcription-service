@@ -189,10 +189,14 @@ const getApp = async () => {
 				res.status(404).send(`Transcript not found`);
 				return;
 			}
+
+			const transcriptS3Key =
+				parsedItem.data.transcriptKeys[exportRequest.data.transcriptFormat];
+			console.log(`transcriptS3Key: ${transcriptS3Key}`);
 			const transcriptText = await getObjectText(
 				s3Client,
 				config.app.transcriptionOutputBucket,
-				parsedItem.data.transcriptKeys.text,
+				transcriptS3Key,
 			);
 			if (isS3Failure(transcriptText)) {
 				if (transcriptText.failureReason === 'NoSuchKey') {
