@@ -13,7 +13,7 @@ import {
 } from '@heroicons/react/16/solid';
 import { RequestStatus } from '@/types';
 import { InfoMessage } from '@/components/InfoMessage';
-import { Dropdown } from 'flowbite-react';
+import { Alert, CustomFlowbiteTheme, Dropdown, Flowbite } from 'flowbite-react';
 
 const ExportButton = () => {
 	const { token } = useContext(AuthContext);
@@ -123,12 +123,20 @@ const ExportButton = () => {
 		}
 	};
 
+	const customTheme: CustomFlowbiteTheme = {
+		alert: {
+			color: {
+				red: 'bg-red-100 text-red-900',
+			},
+		},
+	};
+
 	return (
 		<>
 			<Script src="https://accounts.google.com/gsi/client" async></Script>
-			<div className="flex flex-col space-y-2 mb-8 ">
+			<div className="flex flex-col space-y-2 mb-8">
 				<Dropdown
-					color={transcriptFormatValid === false ? 'red' : 'gray'}
+					color="gray"
 					label={
 						transcriptFormat === null
 							? 'Choose transcript format'
@@ -155,11 +163,13 @@ const ExportButton = () => {
 						{transcriptFormatDescription[TranscriptFormat.SRT]}
 					</Dropdown.Item>
 				</Dropdown>
-				{transcriptFormatValid === false ? (
-					<span className="font-light text-sm align-middle" color="red">
-						A transcript format must be chosen!
-					</span>
-				) : null}
+				<Flowbite theme={{ theme: customTheme }}>
+					{transcriptFormatValid === false ? (
+						<Alert className="font-light text-sm align-middle" color="red">
+							A transcript format must be chosen!
+						</Alert>
+					) : null}
+				</Flowbite>
 			</div>
 
 			<button
