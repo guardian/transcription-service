@@ -37,9 +37,9 @@ const ExportButton = () => {
 	}
 
 	const transcriptFormatDescription: Record<TranscriptFormat, string> = {
-		srt: 'SRT format (Time Coded)',
-		text: 'TEXT format',
-		json: 'JSON format',
+		srt: 'Srt (with time code)',
+		text: 'Text',
+		json: 'Json',
 	};
 
 	const transcriptId = searchParams.get('transcriptId');
@@ -86,7 +86,6 @@ const ExportButton = () => {
 
 	const exportHandler = async () => {
 		if (!transcriptFormat) {
-			console.log(`transcript format value is ${transcriptFormat}`);
 			setTranscriptFormatValid(false);
 			return;
 		}

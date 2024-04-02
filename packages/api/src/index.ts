@@ -192,7 +192,6 @@ const getApp = async () => {
 
 			const transcriptS3Key =
 				parsedItem.data.transcriptKeys[exportRequest.data.transcriptFormat];
-			console.log(`transcriptS3Key: ${transcriptS3Key}`);
 			const transcriptText = await getObjectText(
 				s3Client,
 				config.app.transcriptionOutputBucket,
