@@ -116,9 +116,16 @@ export const ZTokenResponse = z.object({
 
 export type ZTokenResponse = z.infer<typeof ZTokenResponse>;
 
+export enum TranscriptFormat {
+	SRT = 'srt',
+	TEXT = 'text',
+	JSON = 'json',
+}
+
 export const TranscriptExportRequest = z.object({
 	id: z.string(),
 	oAuthTokenResponse: ZTokenResponse,
+	transcriptFormat: z.nativeEnum(TranscriptFormat),
 });
 
 export type TranscriptExportRequest = z.infer<typeof TranscriptExportRequest>;

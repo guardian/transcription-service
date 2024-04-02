@@ -1,5 +1,8 @@
 import React, { useContext, useState } from 'react';
-import { ExportResponse } from '@guardian/transcription-service-common';
+import {
+	ExportResponse,
+	TranscriptFormat,
+} from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
 import Script from 'next/script';
 import { useSearchParams } from 'next/navigation';
@@ -10,6 +13,7 @@ import {
 } from '@heroicons/react/16/solid';
 import { RequestStatus } from '@/types';
 import { InfoMessage } from '@/components/InfoMessage';
+import { Alert, CustomFlowbiteTheme, Dropdown, Flowbite } from 'flowbite-react';
 
 const ExportButton = () => {
 	const { token } = useContext(AuthContext);
@@ -17,6 +21,11 @@ const ExportButton = () => {
 	const [docId, setDocId] = useState<string | undefined>();
 	const [loading, setLoading] = useState(false);
 	const [failureMessage, setFailureMessage] = useState<string>('');
+	const [transcriptFormat, setTranscriptFormat] =
+		useState<TranscriptFormat | null>(null);
+	const [transcriptFormatValid, setTranscriptFormatValid] = useState<
+		boolean | undefined
+	>(undefined);
 	const [requestStatus, setRequestStatus] = useState<RequestStatus>(
 		RequestStatus.Ready,
 	);
@@ -26,6 +35,13 @@ const ExportButton = () => {
 			<InfoMessage message={'not logged in'} status={RequestStatus.Failed} />
 		);
 	}
+
+	const transcriptFormatDescription: Record<TranscriptFormat, string> = {
+		srt: 'Srt (with time code)',
+		text: 'Text',
+		json: 'Json',
+	};
+
 	const transcriptId = searchParams.get('transcriptId');
 	if (!transcriptId) {
 		return (
@@ -69,9 +85,17 @@ const ExportButton = () => {
 	}
 
 	const exportHandler = async () => {
+		if (!transcriptFormat) {
+			setTranscriptFormatValid(false);
+			return;
+		}
 		setLoading(true);
 		try {
-			const response = await exportTranscript(token, transcriptId);
+			const response = await exportTranscript(
+				token,
+				transcriptId,
+				transcriptFormat,
+			);
 			setLoading(false);
 			if (response && response.status !== 200) {
 				const text = await response.text();
@@ -98,9 +122,55 @@ const ExportButton = () => {
 		}
 	};
 
+	const customTheme: CustomFlowbiteTheme = {
+		alert: {
+			color: {
+				red: 'bg-red-100 text-red-900',
+			},
+		},
+	};
+
 	return (
 		<>
 			<Script src="https://accounts.google.com/gsi/client" async></Script>
+			<div className="flex flex-col space-y-2 mb-8">
+				<Dropdown
+					color="gray"
+					label={
+						transcriptFormat === null
+							? 'Choose transcript format'
+							: transcriptFormatDescription[transcriptFormat]
+					}
+				>
+					<Dropdown.Item
+						value={TranscriptFormat.TEXT}
+						onClick={() => {
+							setTranscriptFormat(TranscriptFormat.TEXT);
+							setTranscriptFormatValid(true);
+						}}
+					>
+						{transcriptFormatDescription[TranscriptFormat.TEXT]}
+					</Dropdown.Item>
+					<Dropdown.Divider />
+					<Dropdown.Item
+						value={TranscriptFormat.SRT}
+						onClick={() => {
+							setTranscriptFormat(TranscriptFormat.SRT);
+							setTranscriptFormatValid(true);
+						}}
+					>
+						{transcriptFormatDescription[TranscriptFormat.SRT]}
+					</Dropdown.Item>
+				</Dropdown>
+				<Flowbite theme={{ theme: customTheme }}>
+					{transcriptFormatValid === false ? (
+						<Alert className="font-light text-sm align-middle" color="red">
+							A transcript format must be chosen!
+						</Alert>
+					) : null}
+				</Flowbite>
+			</div>
+
 			<button
 				type="button"
 				className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
