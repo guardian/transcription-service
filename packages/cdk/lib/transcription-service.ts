@@ -389,9 +389,6 @@ export class TranscriptionService extends GuStack {
 						app: workerApp,
 					}),
 				},
-				// we might want to set this to true once we are actually doing transcriptions to protect the instance from
-				// being terminated before it has a chance to complete a transcription job.
-				newInstancesProtectedFromScaleIn: true,
 				mixedInstancesPolicy: {
 					launchTemplate,
 					instancesDistribution: {
