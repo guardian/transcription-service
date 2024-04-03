@@ -186,7 +186,7 @@ const pollTranscriptionQueue = async (
 
 		const { outputBucketUrls, inputSignedUrl } = job;
 
-		logger.info(`Fetched transcription job with id ${taskMessage.MessageId}`);
+		logger.info(`Fetched transcription job with id ${job.id}`);
 
 		const destinationDirectory = isDev ? `${__dirname}/sample` : '/tmp';
 
