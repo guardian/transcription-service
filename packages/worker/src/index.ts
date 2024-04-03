@@ -49,7 +49,10 @@ export const getCurrentReceiptHandle = () => CURRENT_MESSAGE_RECEIPT_HANDLE;
 
 const main = async () => {
 	const config = await getConfig();
-	const instanceId = readFile('/var/lib/cloud/data/instance-id');
+	const instanceId =
+		config.app.stage === 'DEV'
+			? ''
+			: readFile('/var/lib/cloud/data/instance-id').trim();
 
 	const metrics = new MetricsService(
 		config.app.stage,

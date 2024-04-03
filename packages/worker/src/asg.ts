@@ -16,7 +16,7 @@ export const updateScaleInProtection = async (
 			logger.info(`instanceId retrieved from worker instance: ${instanceId}`);
 
 			const input = {
-				InstanceIds: [instanceId.trim()],
+				InstanceIds: [instanceId],
 				AutoScalingGroupName: `transcription-service-workers-${stage}`,
 				ProtectedFromScaleIn: value,
 			};
@@ -40,7 +40,7 @@ export const getInstanceLifecycleState = async (
 	try {
 		if (stage !== 'DEV') {
 			const input = {
-				InstanceIds: [instanceId.trim()],
+				InstanceIds: [instanceId],
 			};
 			const command = new DescribeAutoScalingInstancesCommand(input);
 			const result = await autoScalingClient.send(command);
