@@ -47,8 +47,9 @@ export const getInstanceLifecycleState = async (
 			const lifecycleState = result.AutoScalingInstances?.find(
 				(i) => i.InstanceId === instanceId,
 			)?.LifecycleState;
-			if (lifecycleState === undefined)
+			if (lifecycleState === undefined) {
 				throw new Error('Could not find instance lifecycle state!');
+			}
 
 			logger.info(`lifecycleState ${lifecycleState}`);
 			return lifecycleState;
