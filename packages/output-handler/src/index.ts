@@ -59,7 +59,7 @@ const handleTranscriptionSuccess = async (
 			json: transcriptionOutput.outputBucketKeys.json,
 		},
 		userEmail: transcriptionOutput.userEmail,
-		completedAt: new Date(),
+		completedAt: new Date().toISOString(),
 	};
 
 	try {
