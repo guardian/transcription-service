@@ -34,10 +34,7 @@ export default function RootLayout({
 						{children}
 					</div>
 				</main>
-				<Footer
-					container
-					className="fixed bottom-0 sm:justify-end md:justify-end"
-				>
+				<Footer container className="fixed bottom-0 md:justify-end">
 					<Footer.LinkGroup>
 						<Footer.Link
 							target="_blank"
