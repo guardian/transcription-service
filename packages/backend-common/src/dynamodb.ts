@@ -37,6 +37,7 @@ export const TranscriptionDynamoItem = z.object({
 	originalFilename: z.string(),
 	transcriptKeys: TranscriptKeys,
 	userEmail: z.string(),
+	completedAt: z.date(),
 });
 
 export type TranscriptionDynamoItem = z.infer<typeof TranscriptionDynamoItem>;
