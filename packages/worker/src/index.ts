@@ -11,6 +11,8 @@ import {
 	moveMessageToDeadLetterQueue,
 	logger,
 	publishTranscriptionOutput,
+	readFile,
+	getASGClient,
 } from '@guardian/transcription-service-backend-common';
 import {
 	OutputBucketKeys,
@@ -25,7 +27,7 @@ import {
 } from './transcribe';
 import path from 'path';
 
-import { updateScaleInProtection } from './asg';
+import { getInstanceLifecycleState, updateScaleInProtection } from './asg';
 import { uploadAllTranscriptsToS3 } from './util';
 import {
 	MetricsService,
@@ -35,6 +37,7 @@ import { SQSClient } from '@aws-sdk/client-sqs';
 import { setTimeout } from 'timers/promises';
 import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import { checkSpotInterrupt } from './spot-termination';
+import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
 
 const POLLING_INTERVAL_SECONDS = 30;
 
@@ -46,6 +49,10 @@ export const getCurrentReceiptHandle = () => CURRENT_MESSAGE_RECEIPT_HANDLE;
 
 const main = async () => {
 	const config = await getConfig();
+	const instanceId =
+		config.app.stage === 'DEV'
+			? ''
+			: readFile('/var/lib/cloud/data/instance-id').trim();
 
 	const metrics = new MetricsService(
 		config.app.stage,
@@ -58,6 +65,8 @@ const main = async () => {
 		config.aws.localstackEndpoint,
 	);
 
+	const autoScalingClient = getASGClient(config.aws.region);
+
 	if (config.app.stage !== 'DEV') {
 		// start job to regularly check the instance interruption (Note: deliberately not using await here so the job
 		// runs in the background)
@@ -68,7 +77,25 @@ const main = async () => {
 	// keep polling unless instance is scheduled for termination
 	while (!INTERRUPTION_TIME) {
 		pollCount += 1;
-		await pollTranscriptionQueue(pollCount, sqsClient, metrics, config);
+		const lifecycleState = await getInstanceLifecycleState(
+			autoScalingClient,
+			config.app.stage,
+			instanceId,
+		);
+		if (config.app.stage === 'DEV' || lifecycleState === 'InService') {
+			await pollTranscriptionQueue(
+				pollCount,
+				sqsClient,
+				autoScalingClient,
+				metrics,
+				config,
+				instanceId,
+			);
+		} else {
+			logger.warn(
+				`instance in state ${lifecycleState} - waiting until it goes to InService.`,
+			);
+		}
 		await setTimeout(POLLING_INTERVAL_SECONDS * 1000);
 	}
 };
@@ -95,11 +122,12 @@ const publishTranscriptionOutputFailure = async (
 const pollTranscriptionQueue = async (
 	pollCount: number,
 	sqsClient: SQSClient,
+	autoScalingClient: AutoScalingClient,
 	metrics: MetricsService,
 	config: TranscriptionConfig,
+	instanceId: string,
 ) => {
 	const stage = config.app.stage;
-	const region = config.aws.region;
 	const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
 	const isDev = config.app.stage === 'DEV';
 
@@ -107,38 +135,38 @@ const pollTranscriptionQueue = async (
 		`worker polling for transcription task. Poll count = ${pollCount}`,
 	);
 
-	await updateScaleInProtection(region, stage, true);
+	await updateScaleInProtection(autoScalingClient, stage, true, instanceId);
 
 	const message = await getNextMessage(sqsClient, config.app.taskQueueUrl);
 
 	if (isSqsFailure(message)) {
 		logger.error(`Failed to fetch message due to ${message.errorMsg}`);
-		await updateScaleInProtection(region, stage, false);
+		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
 		return;
 	}
 
 	if (!message.message) {
 		logger.info('No messages available');
-		await updateScaleInProtection(region, stage, false);
+		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
 		return;
 	}
 
 	const taskMessage = message.message;
 	if (!taskMessage.Body) {
 		logger.error('message missing body');
-		await updateScaleInProtection(region, stage, false);
+		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
 		return;
 	}
 	if (!taskMessage.Attributes && !isDev) {
 		logger.error('message missing attributes');
-		await updateScaleInProtection(region, stage, false);
+		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
 		return;
 	}
 
 	const receiptHandle = taskMessage.ReceiptHandle;
 	if (!receiptHandle) {
 		logger.error('message missing receipt handle');
-		await updateScaleInProtection(region, stage, false);
+		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
 		return;
 	}
 	CURRENT_MESSAGE_RECEIPT_HANDLE = receiptHandle;
@@ -148,7 +176,7 @@ const pollTranscriptionQueue = async (
 	if (!job) {
 		await metrics.putMetric(FailureMetric);
 		logger.error('Failed to parse job message', message);
-		await updateScaleInProtection(region, stage, false);
+		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
 		return;
 	}
 
@@ -158,7 +186,7 @@ const pollTranscriptionQueue = async (
 
 		const { outputBucketUrls, inputSignedUrl } = job;
 
-		logger.info(`Fetched transcription job with id ${taskMessage.MessageId}`);
+		logger.info(`Fetched transcription job with id ${job.id}`);
 
 		const destinationDirectory = isDev ? `${__dirname}/sample` : '/tmp';
 
@@ -304,7 +332,7 @@ const pollTranscriptionQueue = async (
 		}
 	} finally {
 		logger.resetCommonMetadata();
-		await updateScaleInProtection(region, stage, false);
+		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
 	}
 };
 
