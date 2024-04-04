@@ -1,3 +1,4 @@
+import { Footer } from 'flowbite-react';
 import './globals.css';
 import React from 'react';
 export default function RootLayout({
@@ -33,6 +34,16 @@ export default function RootLayout({
 						{children}
 					</div>
 				</main>
+				<Footer container className="fixed bottom-0 md:justify-end">
+					<Footer.LinkGroup>
+						<Footer.Link
+							target="_blank"
+							href="https://docs.google.com/document/d/1e224Fe5tJJNeLBNvYLVJ4FWd_O-1nwrJcqKyEXI03lA"
+						>
+							About this tool
+						</Footer.Link>
+					</Footer.LinkGroup>
+				</Footer>
 			</body>
 		</html>
 	);
