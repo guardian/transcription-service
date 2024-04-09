@@ -279,7 +279,10 @@ const pollTranscriptionQueue = async (
 		const transcriptionOutput: TranscriptionOutputSuccess = {
 			id: job.id,
 			status: 'SUCCESS',
-			languageCode: transcriptResult.metadata.detectedLanguageCode || 'en',
+			languageCode:
+				job.languageCode === 'auto'
+					? transcriptResult.metadata.detectedLanguageCode || 'UNKNOWN'
+					: job.languageCode,
 			userEmail: job.userEmail,
 			originalFilename: job.originalFilename,
 			outputBucketKeys,
@@ -298,6 +301,7 @@ const pollTranscriptionQueue = async (
 				filename: transcriptionOutput.originalFilename,
 				userEmail: transcriptionOutput.userEmail,
 				mediaDurationSeconds: ffmpegResult.duration || 0,
+				specifiedLanguageCode: job.languageCode,
 				...transcriptResult.metadata,
 			},
 		);

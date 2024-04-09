@@ -60,6 +60,7 @@ const handleTranscriptionSuccess = async (
 			json: transcriptionOutput.outputBucketKeys.json,
 		},
 		userEmail: transcriptionOutput.userEmail,
+		completedAt: new Date().toISOString(),
 	};
 
 	try {
@@ -146,6 +147,7 @@ const processMessage = async (event: unknown) => {
 	for (const record of parsedEvent.data.Records) {
 		const transcriptionOutput = record.body;
 		if (transcriptionOutputIsSuccess(transcriptionOutput)) {
+			logger.info('handling transcription success');
 			await handleTranscriptionSuccess(
 				config,
 				transcriptionOutput,
@@ -153,6 +155,7 @@ const processMessage = async (event: unknown) => {
 				metrics,
 			);
 		} else {
+			logger.info('handling transcription failure');
 			await handleTranscriptionFailure(
 				config,
 				transcriptionOutput,
