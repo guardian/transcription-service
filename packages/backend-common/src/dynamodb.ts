@@ -37,7 +37,8 @@ export const TranscriptionDynamoItem = z.object({
 	originalFilename: z.string(),
 	transcriptKeys: TranscriptKeys,
 	userEmail: z.string(),
-	completedAt: z.string(), // dynamodb can't handle dates so we need to use an ISO date
+	// must be optional to support items created before this key was introduced
+	completedAt: z.string().optional(), // dynamodb can't handle dates so we need to use an ISO date
 });
 
 export type TranscriptionDynamoItem = z.infer<typeof TranscriptionDynamoItem>;
