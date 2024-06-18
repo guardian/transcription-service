@@ -21,7 +21,6 @@ import {
 } from '@guardian/cdk/lib/constructs/iam';
 import { GuLambdaFunction } from '@guardian/cdk/lib/constructs/lambda';
 import { GuS3Bucket } from '@guardian/cdk/lib/constructs/s3';
-import { GuardianAwsAccounts } from '@guardian/private-infrastructure-config';
 import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import {
 	type App,
@@ -91,7 +90,7 @@ export class TranscriptionService extends GuStack {
 			},
 		);
 
-		const ssmPrefix = `arn:aws:ssm:${props.env.region}:${GuardianAwsAccounts.Investigations}:parameter`;
+		const ssmPrefix = `arn:aws:ssm:${props.env.region}:${this.account}:parameter`;
 		const ssmPath = `${this.stage}/${this.stack}/${APP_NAME}`;
 		const domainName =
 			this.stage === 'PROD'
@@ -295,7 +294,7 @@ export class TranscriptionService extends GuStack {
 				new GuAllowPolicy(this, 'SetInstanceProtection', {
 					actions: ['autoscaling:SetInstanceProtection'],
 					resources: [
-						`arn:aws:autoscaling:${props.env.region}:${GuardianAwsAccounts.Investigations}:autoScalingGroup:*:autoScalingGroupName/${autoScalingGroupName}`,
+						`arn:aws:autoscaling:${props.env.region}:${this.account}:autoScalingGroup:*:autoScalingGroupName/${autoScalingGroupName}`,
 					],
 				}),
 				new GuAllowPolicy(this, 'WriteCloudwatch', {
