@@ -482,30 +482,6 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
-    "TranscriptDestinationTopic831E3125": {
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "TEST",
-          },
-        ],
-        "TopicName": "transcription-service-destination-topic-TEST",
-      },
-      "Type": "AWS::SNS::Topic",
-    },
     "TranscriptTableA6F8B506": {
       "DeletionPolicy": "Retain",
       "Properties": {
@@ -750,7 +726,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         "MixedInstancesPolicy": {
           "InstancesDistribution": {
             "OnDemandBaseCapacity": 0,
-            "OnDemandPercentageAboveBaseCapacity": 0,
+            "OnDemandPercentageAboveBaseCapacity": 50,
             "SpotAllocationStrategy": "capacity-optimized",
             "SpotMaxPrice": "0.6202",
           },
@@ -773,7 +749,6 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             ],
           },
         },
-        "NewInstancesProtectedFromScaleIn": true,
         "Tags": [
           {
             "Key": "App",
@@ -1022,10 +997,13 @@ service transcription-service-worker start",
         "PolicyDocument": {
           "Statement": [
             {
-              "Action": "sns:Publish",
+              "Action": "sqs:SendMessage",
               "Effect": "Allow",
               "Resource": {
-                "Ref": "TranscriptDestinationTopic831E3125",
+                "Fn::GetAtt": [
+                  "transcriptionserviceoutputqueue2A0B1C70",
+                  "Arn",
+                ],
               },
             },
           ],
@@ -2106,59 +2084,6 @@ service transcription-service-worker start",
       },
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
-    },
-    "transcriptionserviceoutputqueuePolicyF172243A": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sqs:SendMessage",
-              "Condition": {
-                "ArnEquals": {
-                  "aws:SourceArn": {
-                    "Ref": "TranscriptDestinationTopic831E3125",
-                  },
-                },
-              },
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "sns.amazonaws.com",
-              },
-              "Resource": {
-                "Fn::GetAtt": [
-                  "transcriptionserviceoutputqueue2A0B1C70",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Queues": [
-          {
-            "Ref": "transcriptionserviceoutputqueue2A0B1C70",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::QueuePolicy",
-    },
-    "transcriptionserviceoutputqueueTranscriptionServiceTranscriptDestinationTopicB4E201A61D45605F": {
-      "DependsOn": [
-        "transcriptionserviceoutputqueuePolicyF172243A",
-      ],
-      "Properties": {
-        "Endpoint": {
-          "Fn::GetAtt": [
-            "transcriptionserviceoutputqueue2A0B1C70",
-            "Arn",
-          ],
-        },
-        "Protocol": "sqs",
-        "TopicArn": {
-          "Ref": "TranscriptDestinationTopic831E3125",
-        },
-      },
-      "Type": "AWS::SNS::Subscription",
     },
     "transcriptionservicetaskdeadletterqueue8A13A1F1": {
       "DeletionPolicy": "Delete",

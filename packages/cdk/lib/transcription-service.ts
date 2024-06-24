@@ -610,7 +610,7 @@ export class TranscriptionService extends GuStack {
 					treatMissingData: TreatMissingData.IGNORE,
 				}),
 				// alarm when at least one instance has been running in the worker asg during every 5 minute period for
-				// more than 5 hours
+				// more than 12 hours
 				new Alarm(this, 'WorkerInstanceAlarm', {
 					alarmName: `transcription-service-worker-instances-${props.stage}`,
 					// this doesn't actually create the metric - just a reference to it
@@ -626,10 +626,11 @@ export class TranscriptionService extends GuStack {
 					threshold: 1,
 					comparisonOperator:
 						ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-					evaluationPeriods: 5 * 12, // 5 hours as metric has period of 5 minutes
+					evaluationPeriods: 12 * 12, // 12 hours as metric has period of 5 minutes
 					actionsEnabled: true,
-					alarmDescription:
-						'There has been more than 1 worker instance running for 5 hours - this will have significant cost implications. Please check that all running workers are doing something useful.',
+					alarmDescription: `There has been at least 1 worker instance running for 12 hours.
+						This could mean that a worker is failing to be scaled in, which could have significant cost implications.
+						Please check that all running workers are doing something useful.`,
 					treatMissingData: TreatMissingData.IGNORE,
 				}),
 			];
