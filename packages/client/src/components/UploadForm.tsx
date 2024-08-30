@@ -149,16 +149,22 @@ export const UploadForm = () => {
 							<span className="font-medium">Upload complete. </span>{' '}
 							<p>
 								Transcription in progress - check your email for the completed
-								transcript. The service can take a few minutes to start up, but
-								thereafter the transcription process is typically shorter than
-								the length of the media file.{' '}
+								transcript.{' '}
 							</p>
-							<p>
-								If you have requested a translation, you will receive 2 emails -
-								one for the transcription in the original language, another for
-								the english translation. The emails will arrive at different
-								times
-							</p>
+							<div className="font-medium">
+								<p>
+									{' '}
+									The service can take a few minutes to start up, but thereafter
+									the transcription process is typically shorter than the length
+									of the media file.{' '}
+								</p>
+								<p>
+									If you have requested a translation, you will receive 2 emails
+									- one for the transcription in the original language, another
+									for the english translation. The emails will arrive at
+									different times
+								</p>
+							</div>
 							<button
 								onClick={() => reset()}
 								className="font-medium text-blue-600 underline dark:text-blue-500 hover:no-underline"

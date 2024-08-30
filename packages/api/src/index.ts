@@ -125,11 +125,34 @@ const getApp = async () => {
 				body.data.fileName,
 				signedUrl,
 				body.data.languageCode,
-				body.data.translationRequested,
+				false,
 			);
 			if (isSqsFailure(sendResult)) {
 				res.status(500).send(sendResult.errorMsg);
 				return;
+			}
+			if (body.data.translationRequested) {
+				const translationSendResult =
+					await generateOutputSignedUrlAndSendMessage(
+						s3Key,
+						sqsClient,
+						config.app.taskQueueUrl,
+						config.app.transcriptionOutputBucket,
+						config.aws.region,
+						userEmail,
+						body.data.fileName,
+						signedUrl,
+						body.data.languageCode,
+						true,
+					);
+				if (isSqsFailure(translationSendResult)) {
+					res
+						.status(500)
+						.send(
+							`Translation request failed: ${translationSendResult.errorMsg}`,
+						);
+					return;
+				}
 			}
 			logger.info('API successfully sent the message to SQS', {
 				id: s3Key,
