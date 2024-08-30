@@ -168,6 +168,7 @@ export const getTranscriptionText = async (
 	numberOfThreads: number,
 	model: WhisperModel,
 	languageCode: LanguageCode,
+	translate: boolean,
 ): Promise<TranscriptionResult> => {
 	try {
 		const { fileName, metadata } = await transcribe(
@@ -176,6 +177,7 @@ export const getTranscriptionText = async (
 			numberOfThreads,
 			model,
 			languageCode,
+			translate,
 		);
 
 		const srtPath = path.resolve(path.parse(file).dir, `${fileName}.srt`);
@@ -223,6 +225,7 @@ export const transcribe = async (
 	numberOfThreads: number,
 	model: WhisperModel,
 	languageCode: LanguageCode,
+	translate: boolean,
 ) => {
 	const fileName = path.parse(file).name;
 	const containerOutputFilePath = path.resolve(CONTAINER_FOLDER, fileName);
@@ -246,10 +249,14 @@ export const transcribe = async (
 			containerOutputFilePath,
 			'--language',
 			languageCode,
+			`${translate ? '--translate' : ''}`,
 		]);
 		const metadata = extractWhisperStderrData(result.stderr);
 		logger.info('Transcription finished successfully', metadata);
-		return { fileName, metadata };
+		return {
+			fileName: `${fileName}${translate ? '-translation' : ''}`,
+			metadata,
+		};
 	} catch (error) {
 		logger.error(`Transcription failed due to `, error);
 		throw error;

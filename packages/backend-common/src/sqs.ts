@@ -57,7 +57,7 @@ export const isSqsFailure = (
 ): result is SQSFailure => result.status === AWSStatus.Failure;
 
 export const generateOutputSignedUrlAndSendMessage = async (
-	id: string,
+	s3Key: string,
 	client: SQSClient,
 	queueUrl: string,
 	outputBucket: string,
@@ -66,9 +66,10 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	originalFilename: string,
 	inputSignedUrl: string,
 	languageCode: LanguageCode,
+	translate: boolean,
 ): Promise<SendResult> => {
 	const signedUrls = await generateOutputSignedUrls(
-		id,
+		s3Key,
 		region,
 		outputBucket,
 		userEmail,
@@ -76,8 +77,9 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		7,
 	);
 
+	const jobId = translate ? `${s3Key}-translation` : s3Key;
 	const job: TranscriptionJob = {
-		id, // id of the source file
+		id: jobId, // id of the source file
 		inputSignedUrl,
 		sentTimestamp: new Date().toISOString(),
 		userEmail,
@@ -85,8 +87,9 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		originalFilename,
 		outputBucketUrls: signedUrls,
 		languageCode,
+		translate,
 	};
-	return await sendMessage(client, queueUrl, JSON.stringify(job), id);
+	return await sendMessage(client, queueUrl, JSON.stringify(job), s3Key);
 };
 
 const sendMessage = async (

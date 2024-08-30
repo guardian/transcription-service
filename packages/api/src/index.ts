@@ -125,6 +125,7 @@ const getApp = async () => {
 				body.data.fileName,
 				signedUrl,
 				body.data.languageCode,
+				body.data.translationRequested,
 			);
 			if (isSqsFailure(sendResult)) {
 				res.status(500).send(sendResult.errorMsg);

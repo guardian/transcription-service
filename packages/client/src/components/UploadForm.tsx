@@ -9,7 +9,7 @@ import {
 	TranscribeFileRequestBody,
 } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
-import { FileInput, Label, Select } from 'flowbite-react';
+import { Checkbox, FileInput, Label, Select } from 'flowbite-react';
 import { RequestStatus } from '@/types';
 import { iconForStatus, InfoMessage } from '@/components/InfoMessage';
 
@@ -17,6 +17,7 @@ const uploadFileAndTranscribe = async (
 	file: File,
 	token: string,
 	languageCode: LanguageCode,
+	translationRequested: boolean,
 ) => {
 	const blob = new Blob([file as BlobPart]);
 
@@ -42,6 +43,7 @@ const uploadFileAndTranscribe = async (
 		s3Key: body.data.s3Key,
 		fileName: file.name,
 		languageCode,
+		translationRequested,
 	};
 
 	const sendMessageResponse = await authFetch('/api/transcribe-file', token, {
@@ -83,6 +85,8 @@ export const UploadForm = () => {
 	const [languageCodeValid, setLanguageCodeValid] = useState<
 		boolean | undefined
 	>(undefined);
+	const [translationRequested, setTranslationRequested] =
+		useState<boolean>(false);
 	const { token } = useContext(AuthContext);
 
 	const reset = () => {
@@ -143,10 +147,18 @@ export const UploadForm = () => {
 							role="alert"
 						>
 							<span className="font-medium">Upload complete. </span>{' '}
-							Transcription in progress - check your email for the completed
-							transcript. The service can take a few minutes to start up, but
-							thereafter the transcription process is typically shorter than the
-							length of the media file.{' '}
+							<p>
+								Transcription in progress - check your email for the completed
+								transcript. The service can take a few minutes to start up, but
+								thereafter the transcription process is typically shorter than
+								the length of the media file.{' '}
+							</p>
+							<p>
+								If you have requested a translation, you will receive 2 emails -
+								one for the transcription in the original language, another for
+								the english translation. The emails will arrive at different
+								times
+							</p>
 							<button
 								onClick={() => reset()}
 								className="font-medium text-blue-600 underline dark:text-blue-500 hover:no-underline"
@@ -191,6 +203,7 @@ export const UploadForm = () => {
 				file,
 				token,
 				mediaFileLanguageCode,
+				translationRequested,
 			);
 			if (!result) {
 				setUploads((prev) =>
@@ -261,6 +274,30 @@ export const UploadForm = () => {
 						))}
 					</Select>
 				</div>
+				{mediaFileLanguageCode !== 'en' && (
+					<div className="mb-6">
+						<div className="flex gap-2">
+							<div className="flex h-5 items-center">
+								<Checkbox
+									id="translation"
+									checked={translationRequested}
+									onChange={() =>
+										setTranslationRequested(!translationRequested)
+									}
+								/>
+							</div>
+							<div className="flex flex-col">
+								<Label htmlFor="shipping">Request English translation</Label>
+								<div className="text-gray-500 dark:text-gray-300">
+									<span className="text-xs font-normal">
+										You will receive two documents - a transcript in the
+										original language and a translation in English.
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				)}
 				<button
 					type="submit"
 					className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
