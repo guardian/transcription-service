@@ -192,7 +192,7 @@ export const getTranscriptionText = async (
 
 		return { transcripts, metadata };
 	} catch (error) {
-		logger.error(`Could not read the transcripts result`);
+		logger.error(`Could not read the transcript result`);
 		throw error;
 	}
 };
@@ -254,7 +254,7 @@ export const transcribe = async (
 		const metadata = extractWhisperStderrData(result.stderr);
 		logger.info('Transcription finished successfully', metadata);
 		return {
-			fileName: `${fileName}${translate ? '-translation' : ''}`,
+			fileName: `${fileName}`,
 			metadata,
 		};
 	} catch (error) {
