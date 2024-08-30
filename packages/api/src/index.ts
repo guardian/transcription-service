@@ -233,7 +233,7 @@ const getApp = async () => {
 			}
 			const exportResult = await createTranscriptDocument(
 				config,
-				`${parsedItem.data.originalFilename} transcript${parsedItem.data.isTranslation ? ' English translation' : ''}`,
+				`${parsedItem.data.originalFilename} transcript${parsedItem.data.isTranslation ? ' (English translation)' : ''}`,
 				exportRequest.data.oAuthTokenResponse,
 				transcriptText.text,
 			);
