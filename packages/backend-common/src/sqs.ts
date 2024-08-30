@@ -73,8 +73,8 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		region,
 		outputBucket,
 		userEmail,
-		originalFilename,
 		7,
+		translate,
 	);
 
 	const jobId = translate ? `${s3Key}-translation` : s3Key;
@@ -281,13 +281,14 @@ const generateOutputSignedUrls = async (
 	region: string,
 	outputBucket: string,
 	userEmail: string,
-	originalFilename: string,
 	expiresInDays: number,
+	translate: boolean,
 ): Promise<OutputBucketUrls> => {
+	const fileName = `${id}${translate ? '-translation' : ''}`;
 	const expiresIn = expiresInDays * 24 * 60 * 60;
-	const srtKey = `srt/${id}.srt`;
-	const jsonKey = `json/${id}.json`;
-	const textKey = `text/${id}.txt`;
+	const srtKey = `srt/${fileName}.srt`;
+	const jsonKey = `json/${fileName}.json`;
+	const textKey = `text/${fileName}.txt`;
 	const srtSignedS3Url = await getSignedUploadUrl(
 		region,
 		outputBucket,
