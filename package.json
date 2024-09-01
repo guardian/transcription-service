@@ -46,7 +46,7 @@
 		"esbuild": "^0.19.11",
 		"eslint": "^8.56.0",
 		"husky": "^8.0.0",
-		"lint-staged": "^15.2.0",
+		"lint-staged": "^15.2.9",
 		"prettier": "^3.2.4",
 		"ts-node": "^10.9.2",
 		"typescript": "^5.3.3"
