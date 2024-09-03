@@ -38,6 +38,7 @@ export const TranscriptionDynamoItem = z.object({
 	transcriptKeys: TranscriptKeys,
 	userEmail: z.string(),
 	completedAt: z.optional(z.string()), // dynamodb can't handle dates so we need to use an ISO date
+	isTranslation: z.boolean(),
 });
 
 export type TranscriptionDynamoItem = z.infer<typeof TranscriptionDynamoItem>;

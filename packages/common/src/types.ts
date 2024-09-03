@@ -45,6 +45,7 @@ export const TranscriptionJob = z.object({
 	transcriptDestinationService: z.nativeEnum(DestinationService),
 	outputBucketUrls: OutputBucketUrls,
 	languageCode: zodLanguageCode,
+	translate: z.boolean(),
 });
 
 export type TranscriptionJob = z.infer<typeof TranscriptionJob>;
@@ -53,6 +54,7 @@ const TranscriptionOutputBase = z.object({
 	id: z.string(),
 	originalFilename: z.string(),
 	userEmail: z.string(),
+	isTranslation: z.boolean(),
 });
 
 export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
@@ -140,6 +142,7 @@ export const transcribeFileRequestBody = z.object({
 	s3Key: z.string(),
 	fileName: z.string(),
 	languageCode: zodLanguageCode,
+	translationRequested: z.boolean(),
 });
 export type TranscribeFileRequestBody = z.infer<
 	typeof transcribeFileRequestBody

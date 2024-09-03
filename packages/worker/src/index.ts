@@ -111,6 +111,7 @@ const publishTranscriptionOutputFailure = async (
 		status: 'FAILURE',
 		userEmail: job.userEmail,
 		originalFilename: job.originalFilename,
+		isTranslation: job.translate,
 	};
 	try {
 		await publishTranscriptionOutput(sqsClient, destination, failureMessage);
@@ -251,6 +252,7 @@ const pollTranscriptionQueue = async (
 			numberOfThreads,
 			config.app.stage === 'PROD' ? 'medium' : 'tiny',
 			job.languageCode,
+			job.translate,
 		);
 
 		// if we've received an interrupt signal we don't want to perform a half-finished transcript upload/publish as
@@ -286,6 +288,7 @@ const pollTranscriptionQueue = async (
 			userEmail: job.userEmail,
 			originalFilename: job.originalFilename,
 			outputBucketKeys,
+			isTranslation: job.translate,
 		};
 
 		await publishTranscriptionOutput(
