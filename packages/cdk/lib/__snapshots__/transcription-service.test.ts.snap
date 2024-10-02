@@ -468,7 +468,18 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             {
               "Action": "autoscaling:SetInstanceProtection",
               "Effect": "Allow",
-              "Resource": "arn:aws:autoscaling:test-region:745349931791:autoScalingGroup:*:autoScalingGroupName/transcription-service-workers-TEST",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:autoscaling:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":autoScalingGroup:*:autoScalingGroupName/transcription-service-workers-TEST",
+                  ],
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -726,7 +737,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         "MixedInstancesPolicy": {
           "InstancesDistribution": {
             "OnDemandBaseCapacity": 0,
-            "OnDemandPercentageAboveBaseCapacity": 50,
+            "OnDemandPercentageAboveBaseCapacity": 10,
             "SpotAllocationStrategy": "capacity-optimized",
             "SpotMaxPrice": "0.6202",
           },
@@ -957,7 +968,18 @@ service transcription-service-worker start",
                 "ssm:GetParametersByPath",
               ],
               "Effect": "Allow",
-              "Resource": "arn:aws:ssm:test-region:745349931791:parameter/TEST/investigations/transcription-service/*",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service/*",
+                  ],
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -1271,7 +1293,18 @@ service transcription-service-worker start",
                 "ssm:GetParametersByPath",
               ],
               "Effect": "Allow",
-              "Resource": "arn:aws:ssm:test-region:745349931791:parameter/TEST/investigations/transcription-service/*",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service/*",
+                  ],
+                ],
+              },
             },
             {
               "Action": "cloudwatch:PutMetricData",
@@ -1288,6 +1321,20 @@ service transcription-service-worker start",
               "Resource": {
                 "Fn::GetAtt": [
                   "transcriptionservicetaskqueue428AC4BA",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionservicemediadownloadtaskqueue26AAF7A2",
                   "Arn",
                 ],
               },
@@ -1763,6 +1810,44 @@ service transcription-service-worker start",
       },
       "Type": "AWS::Lambda::Permission",
     },
+    "transcriptionservicemediadownloadtaskqueue26AAF7A2": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ContentBasedDeduplication": true,
+        "FifoQueue": true,
+        "QueueName": "transcription-service-media-download-task-queue-TEST.fifo",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "transcriptionservicetaskdeadletterqueue8A13A1F1",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "VisibilityTimeout": 30,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
     "transcriptionserviceoutputhandler5AC33606": {
       "DependsOn": [
         "transcriptionserviceoutputhandlerServiceRoleDefaultPolicy926F9B97",
@@ -1973,7 +2058,18 @@ service transcription-service-worker start",
                 "ssm:GetParametersByPath",
               ],
               "Effect": "Allow",
-              "Resource": "arn:aws:ssm:test-region:745349931791:parameter/TEST/investigations/transcription-service/*",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service/*",
+                  ],
+                ],
+              },
             },
             {
               "Action": "cloudwatch:PutMetricData",
@@ -2380,7 +2476,18 @@ service transcription-service-worker start",
                 "ssm:GetParametersByPath",
               ],
               "Effect": "Allow",
-              "Resource": "arn:aws:ssm:test-region:745349931791:parameter/TEST/investigations/transcription-service/*",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service/*",
+                  ],
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
