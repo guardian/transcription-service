@@ -25,7 +25,7 @@ export const downloadMedia = async (
 	id: string,
 ) => {
 	const output =
-		await $`yt-dlp --write-info-json --no-clean-info-json -o "${destinationDirectoryPath}/${id}" ${url}`;
+		await $`yt-dlp --write-info-json --no-clean-info-json --newline -o "${destinationDirectoryPath}/${id}" ${url}`;
 	console.log(output);
 	const metadata = extractInfoJson(
 		`${destinationDirectoryPath}/${id}.info.json`,
