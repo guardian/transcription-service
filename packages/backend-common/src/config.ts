@@ -86,7 +86,6 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		stage === 'DEV'
 			? undefined
 			: findParameter(parameters, paramPath, 'deadLetterQueueUrl');
-
 	const destinationQueue = findParameter(
 		parameters,
 		paramPath,
