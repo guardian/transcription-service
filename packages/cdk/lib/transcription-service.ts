@@ -90,6 +90,15 @@ export class TranscriptionService extends GuStack {
 			},
 		);
 
+		const giantTranscriptionOutputQueueArn = new GuStringParameter(
+			this,
+			'GiantTranscriptionOutputQueueArn',
+			{
+				fromSSM: true,
+				default: `/${props.stage}/investigations/GiantTranscriptionOutputQueueArn`,
+			},
+		).valueAsString;
+
 		const ssmPrefix = `arn:aws:ssm:${props.env.region}:${this.account}:parameter`;
 		const ssmPath = `${this.stage}/${this.stack}/${APP_NAME}`;
 		const domainName =
@@ -281,7 +290,10 @@ export class TranscriptionService extends GuStack {
 				}),
 				new GuAllowPolicy(this, 'WriteToDestinationTopic', {
 					actions: ['sqs:SendMessage'],
-					resources: [transcriptionOutputQueue.queueArn],
+					resources: [
+						transcriptionOutputQueue.queueArn,
+						giantTranscriptionOutputQueueArn,
+					],
 				}),
 				new GuAllowPolicy(this, 'WriteToELK', {
 					actions: [

@@ -11,6 +11,7 @@ const zodLanguageCode = z.enum(getKeys(languageCodeToLanguage));
 
 export enum DestinationService {
 	TranscriptionService = 'TranscriptionService',
+	Giant = 'Giant',
 }
 
 const SignedUrl = z.object({
