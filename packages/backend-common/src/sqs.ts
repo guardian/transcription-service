@@ -92,7 +92,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	return await sendMessage(client, queueUrl, JSON.stringify(job), s3Key);
 };
 
-const sendMessage = async (
+export const sendMessage = async (
 	client: SQSClient,
 	queueUrl: string,
 	messageBody: string,

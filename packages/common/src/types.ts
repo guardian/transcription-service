@@ -37,6 +37,16 @@ const OutputBucketKeys = z.object({
 
 export type OutputBucketKeys = z.infer<typeof OutputBucketKeys>;
 
+export const MediaDownloadJob = z.object({
+	id: z.string(),
+	url: z.string(),
+	userEmail: z.string(),
+	languageCode: zodLanguageCode,
+	translationRequested: z.boolean(),
+});
+
+export type MediaDownloadJob = z.infer<typeof MediaDownloadJob>;
+
 export const TranscriptionJob = z.object({
 	id: z.string(),
 	originalFilename: z.string(),
@@ -142,6 +152,14 @@ export const ExportResponse = z.object({
 });
 
 export type ExportResponse = z.infer<typeof ExportResponse>;
+
+export const transcribeUrlRequestBody = z.object({
+	url: z.string(),
+	languageCode: zodLanguageCode,
+	translationRequested: z.boolean(),
+});
+
+export type TranscribeUrlRequestBody = z.infer<typeof transcribeUrlRequestBody>;
 
 export const transcribeFileRequestBody = z.object({
 	s3Key: z.string(),
