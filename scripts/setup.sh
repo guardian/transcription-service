@@ -45,7 +45,7 @@ echo "Created queue in localstack, url: ${OUTPUT_QUEUE_URL_LOCALHOST}"
 # Since creating multiple localstack containers could add complication, and localstack is
 # only needed for local running, the giant output queue is created in the localstack created for transcription service.
 # ###########
-OUTPUT_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=giant-output-queue-DEV | jq .QueueUrl)
+OUTPUT_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=giant-output-queue-DEV.fifo --attributes "FifoQueue=true,ContentBasedDeduplication=true" | jq .QueueUrl)
 # We don't install the localstack dns so need to replace the endpoint with localhost
 OUTPUT_QUEUE_URL_LOCALHOST=${OUTPUT_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
 
