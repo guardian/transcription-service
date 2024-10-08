@@ -315,11 +315,12 @@ const pollTranscriptionQueue = async (
 			userEmail: job.userEmail,
 			originalFilename: job.originalFilename,
 			outputBucketKeys,
-			translationOutputBucketKeys: job.translationOutputBucketUrls && {
-				srt: job.translationOutputBucketUrls.srt.key,
-				json: job.translationOutputBucketUrls.json.key,
-				text: job.translationOutputBucketUrls.text.key,
-			},
+			translationOutputBucketKeys: job.translationOutputBucketUrls &&
+				transcriptResult.transcriptTranslations && {
+					srt: job.translationOutputBucketUrls.srt.key,
+					json: job.translationOutputBucketUrls.json.key,
+					text: job.translationOutputBucketUrls.text.key,
+				},
 			isTranslation: job.translate,
 		};
 
@@ -330,7 +331,7 @@ const pollTranscriptionQueue = async (
 		);
 
 		logger.info(
-			'Worker successfully transcribed the file and sent notification to sns',
+			`Worker successfully transcribed the file and sent notification to ${job.transcriptDestinationService} output queue`,
 			{
 				id: transcriptionOutput.id,
 				filename: transcriptionOutput.originalFilename,

@@ -222,12 +222,14 @@ const transcribeAndTranslate = async (
 		const dlParams = whisperParams(true, whisperBaseParams.wavPath);
 		const { metadata } = await runWhisper(whisperBaseParams, dlParams);
 		const languageCode =
-			languageCodes.find((c) => c === metadata.detectedLanguageCode) || 'en';
+			languageCodes.find((c) => c === metadata.detectedLanguageCode) || 'auto';
 		const transcription = await runTranscription(
 			whisperBaseParams,
 			languageCode,
 			false,
 		);
+
+		transcription.metadata.detectedLanguageCode = metadata.detectedLanguageCode;
 		const translation =
 			languageCode === 'en'
 				? null
