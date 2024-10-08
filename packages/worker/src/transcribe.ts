@@ -2,7 +2,10 @@ import { spawn } from 'child_process';
 import path from 'path';
 import { readFile } from '@guardian/transcription-service-backend-common';
 import { logger } from '@guardian/transcription-service-backend-common';
-import { LanguageCode } from '@guardian/transcription-service-common';
+import {
+	LanguageCode,
+	languageCodes,
+} from '@guardian/transcription-service-common';
 
 interface ProcessResult {
 	code?: number;
@@ -31,7 +34,16 @@ type TranscriptionMetadata = {
 
 type TranscriptionResult = {
 	transcripts: Transcripts;
+	transcriptTranslations?: Transcripts;
 	metadata: TranscriptionMetadata;
+};
+
+export type WhisperBaseParams = {
+	containerId: string;
+	wavPath: string;
+	file: string;
+	numberOfThreads: number;
+	model: WhisperModel;
 };
 
 const CONTAINER_FOLDER = '/input';
@@ -161,28 +173,32 @@ const getDuration = (ffmpegOutput: string) => {
 	return duration;
 };
 
-export const getTranscriptionText = async (
-	containerId: string,
-	wavPath: string,
-	file: string,
-	numberOfThreads: number,
-	model: WhisperModel,
+const runTranscription = async (
+	whisperBaseParams: WhisperBaseParams,
 	languageCode: LanguageCode,
 	translate: boolean,
-): Promise<TranscriptionResult> => {
+) => {
 	try {
-		const { fileName, metadata } = await transcribe(
-			containerId,
-			wavPath,
-			numberOfThreads,
-			model,
+		const params = whisperParams(
+			false,
+			whisperBaseParams.wavPath,
 			languageCode,
 			translate,
 		);
+		const { fileName, metadata } = await runWhisper(whisperBaseParams, params);
 
-		const srtPath = path.resolve(path.parse(file).dir, `${fileName}.srt`);
-		const textPath = path.resolve(path.parse(file).dir, `${fileName}.txt`);
-		const jsonPath = path.resolve(path.parse(file).dir, `${fileName}.json`);
+		const srtPath = path.resolve(
+			path.parse(whisperBaseParams.file).dir,
+			`${fileName}.srt`,
+		);
+		const textPath = path.resolve(
+			path.parse(whisperBaseParams.file).dir,
+			`${fileName}.txt`,
+		);
+		const jsonPath = path.resolve(
+			path.parse(whisperBaseParams.file).dir,
+			`${fileName}.json`,
+		);
 
 		const transcripts = {
 			srt: readFile(srtPath),
@@ -192,9 +208,55 @@ export const getTranscriptionText = async (
 
 		return { transcripts, metadata };
 	} catch (error) {
-		logger.error(`Could not read the transcript result`);
+		logger.error(
+			`Could not read the transcript result. Params: ${JSON.stringify(whisperBaseParams)}`,
+		);
 		throw error;
 	}
+};
+
+const transcribeAndTranslate = async (
+	whisperBaseParams: WhisperBaseParams,
+): Promise<TranscriptionResult> => {
+	try {
+		const dlParams = whisperParams(true, whisperBaseParams.wavPath);
+		const { metadata } = await runWhisper(whisperBaseParams, dlParams);
+		const languageCode =
+			languageCodes.find((c) => c === metadata.detectedLanguageCode) || 'en';
+		const transcription = await runTranscription(
+			whisperBaseParams,
+			languageCode,
+			false,
+		);
+		const translation =
+			languageCode === 'en'
+				? null
+				: await runTranscription(whisperBaseParams, languageCode, true);
+		return {
+			transcripts: transcription.transcripts,
+			transcriptTranslations: translation?.transcripts,
+			// we only return one metadata field here even though we might have two (one from the translation) - a
+			// bit messy but I can't think of much use for the translation metadata at the moment
+			metadata: transcription.metadata,
+		};
+	} catch (error) {
+		logger.error(
+			`Failed during combined detect language/transcribe/translate process result`,
+		);
+		throw error;
+	}
+};
+
+export const getTranscriptionText = async (
+	whisperBaseParams: WhisperBaseParams,
+	languageCode: LanguageCode,
+	translate: boolean,
+	combineTranscribeAndTranslate: boolean,
+): Promise<TranscriptionResult> => {
+	if (combineTranscribeAndTranslate) {
+		return transcribeAndTranslate(whisperBaseParams);
+	}
+	return runTranscription(whisperBaseParams, languageCode, translate);
 };
 
 const regexExtract = (text: string, regex: RegExp): string | undefined => {
@@ -219,17 +281,37 @@ const extractWhisperStderrData = (stderr: string): TranscriptionMetadata => {
 	};
 };
 
-export const transcribe = async (
-	containerId: string,
+const whisperParams = (
+	detectLanguageOnly: boolean,
 	file: string,
-	numberOfThreads: number,
-	model: WhisperModel,
-	languageCode: LanguageCode,
-	translate: boolean,
+	languageCode: LanguageCode = 'auto',
+	translate: boolean = false,
 ) => {
-	const fileName = path.parse(file).name;
-	const containerOutputFilePath = path.resolve(CONTAINER_FOLDER, fileName);
-	logger.info(`Transcription output file path: ${containerOutputFilePath}`);
+	if (detectLanguageOnly) {
+		return ['--detect-language'];
+	} else {
+		const fileName = path.parse(file).name;
+		const containerOutputFilePath = path.resolve(CONTAINER_FOLDER, fileName);
+		logger.info(`Transcription output file path: ${containerOutputFilePath}`);
+		return [
+			'--output-srt',
+			'--output-txt',
+			'--output-json',
+			'--output-file',
+			containerOutputFilePath,
+			'--language',
+			languageCode,
+			`${translate ? '--translate' : ''}`,
+		];
+	}
+};
+
+export const runWhisper = async (
+	whisperBaseParams: WhisperBaseParams,
+	whisperParams: string[],
+) => {
+	const { containerId, numberOfThreads, model, wavPath } = whisperBaseParams;
+	const fileName = path.parse(wavPath).name;
 
 	try {
 		const result = await runSpawnCommand('transcribe', 'docker', [
@@ -241,24 +323,17 @@ export const transcribe = async (
 			'--threads',
 			numberOfThreads.toString(),
 			'--file',
-			file,
-			'--output-srt',
-			'--output-txt',
-			'--output-json',
-			'--output-file',
-			containerOutputFilePath,
-			'--language',
-			languageCode,
-			`${translate ? '--translate' : ''}`,
+			wavPath,
+			...whisperParams,
 		]);
 		const metadata = extractWhisperStderrData(result.stderr);
-		logger.info('Transcription finished successfully', metadata);
+		logger.info('Whisper finished successfully', metadata);
 		return {
 			fileName: `${fileName}`,
 			metadata,
 		};
 	} catch (error) {
-		logger.error(`Transcription failed due to `, error);
+		logger.error(`Whisper failed due to `, error);
 		throw error;
 	}
 };

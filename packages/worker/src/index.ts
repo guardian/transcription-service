@@ -15,6 +15,7 @@ import {
 	getASGClient,
 } from '@guardian/transcription-service-backend-common';
 import {
+	DestinationService,
 	OutputBucketKeys,
 	TranscriptionJob,
 	TranscriptionOutputFailure,
@@ -24,6 +25,7 @@ import {
 	getTranscriptionText,
 	convertToWav,
 	getOrCreateContainer,
+	WhisperBaseParams,
 } from './transcribe';
 import path from 'path';
 
@@ -232,6 +234,15 @@ const pollTranscriptionQueue = async (
 			return;
 		}
 
+		// Giant doesn't know the language of files uploaded to it, so for Giant files we first run language detection
+		// then based on the output, either run transcription or run transcription and translation, and return the output
+		// of both to the user. This is different from the transcription-service, where transcription and translation are
+		// two separate jobs
+		const combineTranscribeAndTranslate =
+			job.transcriptDestinationService === DestinationService.Giant &&
+			job.translate;
+		const extraTranslationTimMultiplier = combineTranscribeAndTranslate ? 2 : 1;
+
 		if (ffmpegResult.duration && ffmpegResult.duration !== 0) {
 			// Transcription time is usually slightly longer than file duration.
 			// Update visibility timeout to 2x the file duration plus 10 minutes for the model to load.
@@ -241,18 +252,23 @@ const pollTranscriptionQueue = async (
 				sqsClient,
 				config.app.taskQueueUrl,
 				receiptHandle,
-				ffmpegResult.duration * 2 + 600,
+				(ffmpegResult.duration * 2 + 600) * extraTranslationTimMultiplier,
 			);
 		}
 
-		const transcriptResult = await getTranscriptionText(
+		const whisperBaseParams: WhisperBaseParams = {
 			containerId,
-			ffmpegResult.wavPath,
-			fileToTranscribe,
+			wavPath: ffmpegResult.wavPath,
+			file: fileToTranscribe,
 			numberOfThreads,
-			config.app.stage === 'PROD' ? 'medium' : 'tiny',
+			model: config.app.stage === 'PROD' ? 'medium' : 'tiny',
+		};
+
+		const transcriptResult = await getTranscriptionText(
+			whisperBaseParams,
 			job.languageCode,
 			job.translate,
+			combineTranscribeAndTranslate,
 		);
 
 		// if we've received an interrupt signal we don't want to perform a half-finished transcript upload/publish as
@@ -272,6 +288,17 @@ const pollTranscriptionQueue = async (
 			transcriptResult.transcripts,
 		);
 
+		if (
+			combineTranscribeAndTranslate &&
+			transcriptResult.transcriptTranslations &&
+			job.translationOutputBucketUrls
+		) {
+			await uploadAllTranscriptsToS3(
+				job.translationOutputBucketUrls,
+				transcriptResult.transcriptTranslations,
+			);
+		}
+
 		const outputBucketKeys: OutputBucketKeys = {
 			srt: outputBucketUrls.srt.key,
 			json: outputBucketUrls.json.key,
@@ -288,6 +315,11 @@ const pollTranscriptionQueue = async (
 			userEmail: job.userEmail,
 			originalFilename: job.originalFilename,
 			outputBucketKeys,
+			translationOutputBucketKeys: job.translationOutputBucketUrls && {
+				srt: job.translationOutputBucketUrls.srt.key,
+				json: job.translationOutputBucketUrls.json.key,
+				text: job.translationOutputBucketUrls.text.key,
+			},
 			isTranslation: job.translate,
 		};
 
