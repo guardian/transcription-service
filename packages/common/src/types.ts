@@ -11,6 +11,7 @@ const zodLanguageCode = z.enum(getKeys(languageCodeToLanguage));
 
 export enum DestinationService {
 	TranscriptionService = 'TranscriptionService',
+	Giant = 'Giant',
 }
 
 const SignedUrl = z.object({
@@ -46,6 +47,8 @@ export const TranscriptionJob = z.object({
 	outputBucketUrls: OutputBucketUrls,
 	languageCode: zodLanguageCode,
 	translate: z.boolean(),
+	// we can get rid of this when we switch to using a zip
+	translationOutputBucketUrls: z.optional(OutputBucketUrls),
 });
 
 export type TranscriptionJob = z.infer<typeof TranscriptionJob>;
@@ -61,6 +64,8 @@ export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
 	status: z.literal('SUCCESS'),
 	languageCode: z.string(),
 	outputBucketKeys: OutputBucketKeys,
+	// we can get rid of this when we switch to using a zip
+	translationOutputBucketKeys: z.optional(OutputBucketKeys),
 });
 
 export const TranscriptionOutputFailure = TranscriptionOutputBase.extend({

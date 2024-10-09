@@ -2,6 +2,7 @@ import { findParameter, getParameters } from './configHelpers';
 import { Parameter, SSM } from '@aws-sdk/client-ssm';
 import { defaultProvider } from '@aws-sdk/credential-provider-node';
 import { logger } from '@guardian/transcription-service-backend-common';
+import { DestinationService } from '@guardian/transcription-service-common';
 export interface TranscriptionConfig {
 	auth: {
 		clientId: string;
@@ -16,9 +17,7 @@ export interface TranscriptionConfig {
 		emailNotificationFromAddress: string;
 		sourceMediaBucket: string;
 		transcriptionOutputBucket: string;
-		destinationQueueUrls: {
-			transcriptionService: string;
-		};
+		destinationQueueUrls: DestinationQueueUrls;
 		tableName: string;
 	};
 	aws: {
@@ -26,6 +25,11 @@ export interface TranscriptionConfig {
 		localstackEndpoint?: string;
 	};
 }
+
+type DestinationQueueUrls = {
+	[DestinationService.TranscriptionService]: string;
+	[DestinationService.Giant]: string;
+};
 
 const credentialProvider = (onAws: boolean) =>
 	onAws ? undefined : defaultProvider({ profile: 'investigations' });
@@ -76,10 +80,17 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		stage === 'DEV'
 			? undefined
 			: findParameter(parameters, paramPath, 'deadLetterQueueUrl');
-	const destinationTopic = findParameter(
+
+	const destinationQueue = findParameter(
 		parameters,
 		paramPath,
 		'destinationQueueUrls/transcriptionService',
+	);
+
+	const giantDestinationQueue = findParameter(
+		parameters,
+		paramPath,
+		'destinationQueueUrls/giant',
 	);
 	// AWS clients take an optional 'endpoint' property that is only needed by localstack - on code/prod you don't need
 	// to set it. Here we inder the endpoint (http://localhost:4566) from the sqs url
@@ -132,7 +143,8 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			sourceMediaBucket,
 			emailNotificationFromAddress,
 			destinationQueueUrls: {
-				transcriptionService: destinationTopic,
+				[DestinationService.TranscriptionService]: destinationQueue,
+				[DestinationService.Giant]: giantDestinationQueue,
 			},
 			tableName,
 			transcriptionOutputBucket,
