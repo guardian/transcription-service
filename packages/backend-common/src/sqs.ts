@@ -95,6 +95,12 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		JSON.stringify(job),
 		s3Key,
 	);
+	if (isSqsFailure(messageResult) && translationRequested) {
+		logger.info(
+			`Failed to send message, error message: ${messageResult.errorMsg}`,
+		);
+		return messageResult;
+	}
 	if (!isSqsFailure(messageResult) && translationRequested) {
 		return await sendMessage(
 			client,
