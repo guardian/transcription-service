@@ -22,6 +22,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuAllowPolicy",
       "GuAllowPolicy",
       "GuInstanceRole",
+      "GuSsmSshPolicy",
       "GuDescribeEC2Policy",
       "GuLogShippingPolicy",
       "GuGetDistributablePolicy",
@@ -255,20 +256,6 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/AmazonSSMManagedInstanceCore",
-              ],
-            ],
-          },
-        ],
         "Path": "/",
         "Tags": [
           {
@@ -490,6 +477,42 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
           "Version": "2012-10-17",
         },
         "PolicyName": "SetInstanceProtection5DD5610F",
+        "Roles": [
+          {
+            "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "SsmSshPolicy4CFC977E": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ec2messages:AcknowledgeMessage",
+                "ec2messages:DeleteMessage",
+                "ec2messages:FailMessage",
+                "ec2messages:GetEndpoint",
+                "ec2messages:GetMessages",
+                "ec2messages:SendReply",
+                "ssm:UpdateInstanceInformation",
+                "ssm:ListInstanceAssociations",
+                "ssm:DescribeInstanceProperties",
+                "ssm:DescribeDocumentParameters",
+                "ssmmessages:CreateControlChannel",
+                "ssmmessages:CreateDataChannel",
+                "ssmmessages:OpenControlChannel",
+                "ssmmessages:OpenDataChannel",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ssm-ssh-policy",
         "Roles": [
           {
             "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
@@ -1130,6 +1153,9 @@ service transcription-service-worker start",
           },
         },
         "Handler": "index.api",
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -1906,6 +1932,9 @@ service transcription-service-worker start",
           },
         },
         "Handler": "index.outputHandler",
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -2305,6 +2334,9 @@ service transcription-service-worker start",
           },
         },
         "Handler": "index.workerCapacityManager",
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
