@@ -17,7 +17,7 @@
 		"@codegenie/serverless-express": "^4.13.0",
 		"@guardian/transcription-service-backend-common": "1.0.0",
 		"aws-lambda": "^1.0.7",
-		"express": "^4.19.2",
+		"express": "^4.21.1",
 		"express-async-handler": "^1.2.0",
 		"googleapis": "^133.0.0",
 		"jwt-decode": "^4.0.0",
