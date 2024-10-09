@@ -75,6 +75,7 @@ const requestTranscription = async (
 };
 
 const main = async () => {
+	console.log('Starting media download service');
 	const config = await getConfig();
 
 	const s3Client = new S3Client({ region: config.aws.region });

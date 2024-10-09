@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { $ } from 'zx';
+import { runSpawnCommand } from '@guardian/transcription-service-backend-common/src/process';
 
 export type MediaMetadata = {
 	title: string;
@@ -24,8 +24,14 @@ export const downloadMedia = async (
 	destinationDirectoryPath: string,
 	id: string,
 ) => {
-	const output =
-		await $`yt-dlp --write-info-json --no-clean-info-json --newline -o "${destinationDirectoryPath}/${id}" ${url}`;
+	const output = await runSpawnCommand('downloadMedia', 'yt-dlp', [
+		'--write-info-json',
+		'--no-clean-info-json',
+		'--newline',
+		'-o',
+		`${destinationDirectoryPath}/${id}`,
+		url,
+	]);
 	console.log(output);
 	const metadata = extractInfoJson(
 		`${destinationDirectoryPath}/${id}.info.json`,
