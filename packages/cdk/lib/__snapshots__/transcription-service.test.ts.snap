@@ -6,6 +6,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
     "gu:cdk:constructs": [
       "GuAmiParameter",
       "GuStringParameter",
+      "GuStringParameter",
       "GuCertificate",
       "GuS3Bucket",
       "GuS3Bucket",
@@ -77,6 +78,10 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
     "DistributionBucketName": {
       "Default": "/account/services/artifact.bucket",
       "Description": "SSM parameter containing the S3 bucket name holding distribution artifacts",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "GiantTranscriptionOutputQueueArn": {
+      "Default": "/TEST/investigations/GiantTranscriptionOutputQueueArn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "InvestigationsAlarmTopicArn": {
@@ -1021,12 +1026,17 @@ service transcription-service-worker start",
             {
               "Action": "sqs:SendMessage",
               "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "transcriptionserviceoutputqueue2A0B1C70",
-                  "Arn",
-                ],
-              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "transcriptionserviceoutputqueue2A0B1C70",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Ref": "GiantTranscriptionOutputQueueArn",
+                },
+              ],
             },
           ],
           "Version": "2012-10-17",
@@ -1810,6 +1820,34 @@ service transcription-service-worker start",
       },
       "Type": "AWS::Lambda::Permission",
     },
+    "transcriptionservicemediadownloaddeadletterqueueE0C3D72F": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ContentBasedDeduplication": true,
+        "FifoQueue": true,
+        "QueueName": "transcription-service-media-download-dead-letter-queue-TEST.fifo",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
     "transcriptionservicemediadownloadtaskqueue26AAF7A2": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -1819,7 +1857,7 @@ service transcription-service-worker start",
         "RedrivePolicy": {
           "deadLetterTargetArn": {
             "Fn::GetAtt": [
-              "transcriptionservicetaskdeadletterqueue8A13A1F1",
+              "transcriptionservicemediadownloaddeadletterqueueE0C3D72F",
               "Arn",
             ],
           },
