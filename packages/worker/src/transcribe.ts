@@ -45,28 +45,32 @@ const CONTAINER_FOLDER = '/input';
 export const getOrCreateContainer = async (
 	tempDir: string,
 ): Promise<string> => {
-	const existingContainer = await runSpawnCommand('getContainer', 'docker', [
-		'ps',
-		'--filter',
-		'name=whisper',
-		'--format',
-		'{{.ID}}',
-	]);
+	const existingContainer = await runSpawnCommand(
+		'getContainer',
+		'docker',
+		['ps', '--filter', 'name=whisper', '--format', '{{.ID}}'],
+		true,
+	);
 
 	if (existingContainer.stdout) {
 		return existingContainer.stdout.trim();
 	}
 
-	const newContainer = await runSpawnCommand('createNewContainer', 'docker', [
-		'run',
-		'-t',
-		'-d',
-		'--name',
-		'whisper',
-		'-v',
-		`${tempDir}:${CONTAINER_FOLDER}`,
-		'ghcr.io/guardian/transcription-service',
-	]);
+	const newContainer = await runSpawnCommand(
+		'createNewContainer',
+		'docker',
+		[
+			'run',
+			'-t',
+			'-d',
+			'--name',
+			'whisper',
+			'-v',
+			`${tempDir}:${CONTAINER_FOLDER}`,
+			'ghcr.io/guardian/transcription-service',
+		],
+		false,
+	);
 	return newContainer.stdout.trim();
 };
 
@@ -82,21 +86,26 @@ export const convertToWav = async (
 	logger.info(`wav file path: ${wavPath}`);
 
 	try {
-		const res = await runSpawnCommand('convertToWav', 'docker', [
-			'exec',
-			containerId,
-			'ffmpeg',
-			'-y',
-			'-i',
-			filePath,
-			'-ar',
-			'16000',
-			'-ac',
-			'1',
-			'-c:a',
-			'pcm_s16le',
-			wavPath,
-		]);
+		const res = await runSpawnCommand(
+			'convertToWav',
+			'docker',
+			[
+				'exec',
+				containerId,
+				'ffmpeg',
+				'-y',
+				'-i',
+				filePath,
+				'-ar',
+				'16000',
+				'-ac',
+				'1',
+				'-c:a',
+				'pcm_s16le',
+				wavPath,
+			],
+			true,
+		);
 
 		const duration = getDuration(res.stderr);
 
@@ -271,18 +280,23 @@ export const runWhisper = async (
 	const fileName = path.parse(wavPath).name;
 
 	try {
-		const result = await runSpawnCommand('transcribe', 'docker', [
-			'exec',
-			containerId,
-			'whisper.cpp/main',
-			'--model',
-			`whisper.cpp/models/ggml-${model}.bin`,
-			'--threads',
-			numberOfThreads.toString(),
-			'--file',
-			wavPath,
-			...whisperParams,
-		]);
+		const result = await runSpawnCommand(
+			'transcribe',
+			'docker',
+			[
+				'exec',
+				containerId,
+				'whisper.cpp/main',
+				'--model',
+				`whisper.cpp/models/ggml-${model}.bin`,
+				'--threads',
+				numberOfThreads.toString(),
+				'--file',
+				wavPath,
+				...whisperParams,
+			],
+			false,
+		);
 		const metadata = extractWhisperStderrData(result.stderr);
 		logger.info('Whisper finished successfully', metadata);
 		return {

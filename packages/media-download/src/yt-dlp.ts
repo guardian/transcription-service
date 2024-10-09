@@ -31,6 +31,7 @@ export const downloadMedia = async (
 		'-o',
 		`${destinationDirectoryPath}/${id}`,
 		url,
+		false,
 	]);
 	console.log(output);
 	const metadata = extractInfoJson(

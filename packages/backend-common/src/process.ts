@@ -10,6 +10,7 @@ export const runSpawnCommand = (
 	processName: string,
 	cmd: string,
 	args: ReadonlyArray<string>,
+	logStdout: boolean,
 ): Promise<ProcessResult> => {
 	return new Promise((resolve, reject) => {
 		const cp = spawn(cmd, args);
@@ -33,8 +34,14 @@ export const runSpawnCommand = (
 				stderr: stderr.join(''),
 				code: code || undefined,
 			};
-			logger.info('Ignoring stdout to avoid logging sensitive data');
-			logger.info(`process ${processName} stderr: ${result.stderr}`);
+			if (logStdout) {
+				logger.info(
+					`process ${processName} stdout: ${result.stdout} stderr: ${result.stderr}`,
+				);
+			} else {
+				logger.info('Logging stderr only');
+				logger.info(`process ${processName} stderr: ${result.stderr}`);
+			}
 			if (code === 0) {
 				resolve(result);
 			} else {
