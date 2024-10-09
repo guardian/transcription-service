@@ -13,6 +13,7 @@ export interface TranscriptionConfig {
 		rootUrl: string;
 		taskQueueUrl: string;
 		deadLetterQueueUrl?: string;
+		mediaDownloadQueueUrl: string;
 		stage: string;
 		emailNotificationFromAddress: string;
 		sourceMediaBucket: string;
@@ -76,6 +77,11 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 
 	logger.info(`Parameters fetched: ${parameterNames.join(', ')}`);
 	const taskQueueUrl = findParameter(parameters, paramPath, 'taskQueueUrl');
+	const mediaDownloadQueueUrl = findParameter(
+		parameters,
+		paramPath,
+		'mediaDownloadQueueUrl',
+	);
 	const deadLetterQueueUrl =
 		stage === 'DEV'
 			? undefined
@@ -139,6 +145,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			secret: appSecret,
 			taskQueueUrl,
 			deadLetterQueueUrl,
+			mediaDownloadQueueUrl,
 			stage,
 			sourceMediaBucket,
 			emailNotificationFromAddress,

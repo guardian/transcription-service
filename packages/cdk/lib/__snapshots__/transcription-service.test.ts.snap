@@ -6,6 +6,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
     "gu:cdk:constructs": [
       "GuAmiParameter",
       "GuStringParameter",
+      "GuStringParameter",
       "GuCertificate",
       "GuS3Bucket",
       "GuS3Bucket",
@@ -21,6 +22,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuAllowPolicy",
       "GuAllowPolicy",
       "GuInstanceRole",
+      "GuSsmSshPolicy",
       "GuDescribeEC2Policy",
       "GuLogShippingPolicy",
       "GuGetDistributablePolicy",
@@ -77,6 +79,10 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
     "DistributionBucketName": {
       "Default": "/account/services/artifact.bucket",
       "Description": "SSM parameter containing the S3 bucket name holding distribution artifacts",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "GiantTranscriptionOutputQueueArn": {
+      "Default": "/TEST/investigations/GiantTranscriptionOutputQueueArn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "InvestigationsAlarmTopicArn": {
@@ -250,20 +256,6 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/AmazonSSMManagedInstanceCore",
-              ],
-            ],
-          },
-        ],
         "Path": "/",
         "Tags": [
           {
@@ -468,12 +460,59 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             {
               "Action": "autoscaling:SetInstanceProtection",
               "Effect": "Allow",
-              "Resource": "arn:aws:autoscaling:test-region:745349931791:autoScalingGroup:*:autoScalingGroupName/transcription-service-workers-TEST",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:autoscaling:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":autoScalingGroup:*:autoScalingGroupName/transcription-service-workers-TEST",
+                  ],
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
         },
         "PolicyName": "SetInstanceProtection5DD5610F",
+        "Roles": [
+          {
+            "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "SsmSshPolicy4CFC977E": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ec2messages:AcknowledgeMessage",
+                "ec2messages:DeleteMessage",
+                "ec2messages:FailMessage",
+                "ec2messages:GetEndpoint",
+                "ec2messages:GetMessages",
+                "ec2messages:SendReply",
+                "ssm:UpdateInstanceInformation",
+                "ssm:ListInstanceAssociations",
+                "ssm:DescribeInstanceProperties",
+                "ssm:DescribeDocumentParameters",
+                "ssmmessages:CreateControlChannel",
+                "ssmmessages:CreateDataChannel",
+                "ssmmessages:OpenControlChannel",
+                "ssmmessages:OpenDataChannel",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ssm-ssh-policy",
         "Roles": [
           {
             "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
@@ -726,7 +765,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         "MixedInstancesPolicy": {
           "InstancesDistribution": {
             "OnDemandBaseCapacity": 0,
-            "OnDemandPercentageAboveBaseCapacity": 50,
+            "OnDemandPercentageAboveBaseCapacity": 10,
             "SpotAllocationStrategy": "capacity-optimized",
             "SpotMaxPrice": "0.6202",
           },
@@ -957,7 +996,18 @@ service transcription-service-worker start",
                 "ssm:GetParametersByPath",
               ],
               "Effect": "Allow",
-              "Resource": "arn:aws:ssm:test-region:745349931791:parameter/TEST/investigations/transcription-service/*",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service/*",
+                  ],
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -999,12 +1049,17 @@ service transcription-service-worker start",
             {
               "Action": "sqs:SendMessage",
               "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "transcriptionserviceoutputqueue2A0B1C70",
-                  "Arn",
-                ],
-              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "transcriptionserviceoutputqueue2A0B1C70",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Ref": "GiantTranscriptionOutputQueueArn",
+                },
+              ],
             },
           ],
           "Version": "2012-10-17",
@@ -1098,6 +1153,9 @@ service transcription-service-worker start",
           },
         },
         "Handler": "index.api",
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -1271,7 +1329,18 @@ service transcription-service-worker start",
                 "ssm:GetParametersByPath",
               ],
               "Effect": "Allow",
-              "Resource": "arn:aws:ssm:test-region:745349931791:parameter/TEST/investigations/transcription-service/*",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service/*",
+                  ],
+                ],
+              },
             },
             {
               "Action": "cloudwatch:PutMetricData",
@@ -1288,6 +1357,20 @@ service transcription-service-worker start",
               "Resource": {
                 "Fn::GetAtt": [
                   "transcriptionservicetaskqueue428AC4BA",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionservicemediadownloadtaskqueue26AAF7A2",
                   "Arn",
                 ],
               },
@@ -1763,6 +1846,72 @@ service transcription-service-worker start",
       },
       "Type": "AWS::Lambda::Permission",
     },
+    "transcriptionservicemediadownloaddeadletterqueueE0C3D72F": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ContentBasedDeduplication": true,
+        "FifoQueue": true,
+        "QueueName": "transcription-service-media-download-dead-letter-queue-TEST.fifo",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "transcriptionservicemediadownloadtaskqueue26AAF7A2": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ContentBasedDeduplication": true,
+        "FifoQueue": true,
+        "QueueName": "transcription-service-media-download-task-queue-TEST.fifo",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "transcriptionservicemediadownloaddeadletterqueueE0C3D72F",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "VisibilityTimeout": 30,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
     "transcriptionserviceoutputhandler5AC33606": {
       "DependsOn": [
         "transcriptionserviceoutputhandlerServiceRoleDefaultPolicy926F9B97",
@@ -1783,6 +1932,9 @@ service transcription-service-worker start",
           },
         },
         "Handler": "index.outputHandler",
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -1973,7 +2125,18 @@ service transcription-service-worker start",
                 "ssm:GetParametersByPath",
               ],
               "Effect": "Allow",
-              "Resource": "arn:aws:ssm:test-region:745349931791:parameter/TEST/investigations/transcription-service/*",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service/*",
+                  ],
+                ],
+              },
             },
             {
               "Action": "cloudwatch:PutMetricData",
@@ -2171,6 +2334,9 @@ service transcription-service-worker start",
           },
         },
         "Handler": "index.workerCapacityManager",
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -2380,7 +2546,18 @@ service transcription-service-worker start",
                 "ssm:GetParametersByPath",
               ],
               "Effect": "Allow",
-              "Resource": "arn:aws:ssm:test-region:745349931791:parameter/TEST/investigations/transcription-service/*",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service/*",
+                  ],
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",

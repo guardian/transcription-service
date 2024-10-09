@@ -66,7 +66,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	originalFilename: string,
 	inputSignedUrl: string,
 	languageCode: LanguageCode,
-	translate: boolean,
+	translationRequested: boolean,
 ): Promise<SendResult> => {
 	const signedUrls = await generateOutputSignedUrls(
 		s3Key,
@@ -74,10 +74,10 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		outputBucket,
 		userEmail,
 		7,
-		translate,
+		translationRequested,
 	);
 
-	const jobId = translate ? `${s3Key}-translation` : s3Key;
+	const jobId = translationRequested ? `${s3Key}-translation` : s3Key;
 	const job: TranscriptionJob = {
 		id: jobId, // id of the source file
 		inputSignedUrl,
@@ -87,12 +87,32 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		originalFilename,
 		outputBucketUrls: signedUrls,
 		languageCode,
-		translate,
+		translate: false,
 	};
-	return await sendMessage(client, queueUrl, JSON.stringify(job), s3Key);
+	const messageResult = await sendMessage(
+		client,
+		queueUrl,
+		JSON.stringify(job),
+		s3Key,
+	);
+	if (isSqsFailure(messageResult) && translationRequested) {
+		logger.info(
+			`Failed to send message, error message: ${messageResult.errorMsg}`,
+		);
+		return messageResult;
+	}
+	if (!isSqsFailure(messageResult) && translationRequested) {
+		return await sendMessage(
+			client,
+			queueUrl,
+			JSON.stringify({ ...job, translate: true }),
+			s3Key,
+		);
+	}
+	return messageResult;
 };
 
-const sendMessage = async (
+export const sendMessage = async (
 	client: SQSClient,
 	queueUrl: string,
 	messageBody: string,

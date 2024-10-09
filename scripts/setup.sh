@@ -23,6 +23,7 @@ fi
 
 # Starting localstack
 docker-compose up -d
+export AWS_REGION=eu-west-1
 APP_NAME="transcription-service"
 # If the queue already exists this command appears to still work and returns the existing queue url
 
@@ -47,7 +48,7 @@ QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-na
 # We don't install the localstack dns so need to replace the endpoint with localhost
 QUEUE_URL_LOCALHOST=${QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
 
-echo "Created queue in localstack, url: ${QUEUE_URL_LOCALHOST}"
+echo "Created task queue in localstack, url: ${QUEUE_URL_LOCALHOST}"
 
 #########
 ##### output queue
@@ -56,7 +57,13 @@ OUTPUT_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --q
 # We don't install the localstack dns so need to replace the endpoint with localhost
 OUTPUT_QUEUE_URL_LOCALHOST=${OUTPUT_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
 
-echo "Created queue in localstack, url: ${OUTPUT_QUEUE_URL_LOCALHOST}"
+echo "Created output queue in localstack, url: ${OUTPUT_QUEUE_URL_LOCALHOST}"
+
+MEDIA_DOWNLOAD_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-media-download-queue-DEV | jq .QueueUrl)
+# We don't install the localstack dns so need to replace the endpoint with localhost
+MEDIA_DOWNLOAD_QUEUE_URL_LOCALHOST=${MEDIA_DOWNLOAD_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
+
+echo "Created media download queue in localstack, url: ${MEDIA_DOWNLOAD_QUEUE_URL_LOCALHOST}"
 
 # ###########
 # Creating output queue for Giant:
@@ -99,8 +106,3 @@ DYNAMODB_ARN=$(aws --endpoint-url=http://localhost:4566 dynamodb create-table \
                                          --key-schema AttributeName=id,KeyType=HASH | jq .TableDescription.TableArn)
 
 echo "Created table, arn: ${DYNAMODB_ARN}"
-
-
-
-
-

@@ -19,12 +19,15 @@ import {
 	logger,
 	getObjectText,
 	getS3Client,
+	sendMessage,
 } from '@guardian/transcription-service-backend-common';
 import {
 	ClientConfig,
 	TranscriptExportRequest,
 	inputBucketObjectMetadata,
 	transcribeFileRequestBody,
+	transcribeUrlRequestBody,
+	MediaDownloadJob,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
@@ -68,6 +71,43 @@ const getApp = async () => {
 		checkAuth,
 		asyncHandler(async (req, res) => {
 			res.send('It lives!');
+		}),
+	]);
+
+	apiRouter.post('/transcribe-url', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			const userEmail = req.user?.email;
+			const body = transcribeUrlRequestBody.safeParse(req.body);
+			const id = uuid4();
+			if (!body.success || !userEmail) {
+				res.status(422).send('missing request params');
+				return;
+			}
+			const downloadJob: MediaDownloadJob = {
+				id,
+				url: body.data.url,
+				languageCode: body.data.languageCode,
+				translationRequested: body.data.translationRequested,
+				userEmail,
+			};
+
+			const sendResult = await sendMessage(
+				sqsClient,
+				config.app.mediaDownloadQueueUrl,
+				JSON.stringify(downloadJob),
+				id,
+			);
+			if (isSqsFailure(sendResult)) {
+				res.status(500).send(sendResult.errorMsg);
+				return;
+			}
+			logger.info('API successfully sent the message to SQS', {
+				id,
+				url: body.data.url,
+				userEmail,
+			});
+			res.send('Message sent');
 		}),
 	]);
 
@@ -125,34 +165,11 @@ const getApp = async () => {
 				body.data.fileName,
 				signedUrl,
 				body.data.languageCode,
-				false,
+				body.data.translationRequested,
 			);
 			if (isSqsFailure(sendResult)) {
 				res.status(500).send(sendResult.errorMsg);
 				return;
-			}
-			if (body.data.translationRequested) {
-				const translationSendResult =
-					await generateOutputSignedUrlAndSendMessage(
-						s3Key,
-						sqsClient,
-						config.app.taskQueueUrl,
-						config.app.transcriptionOutputBucket,
-						config.aws.region,
-						userEmail,
-						body.data.fileName,
-						signedUrl,
-						body.data.languageCode,
-						true,
-					);
-				if (isSqsFailure(translationSendResult)) {
-					res
-						.status(500)
-						.send(
-							`Translation request failed: ${translationSendResult.errorMsg}`,
-						);
-					return;
-				}
 			}
 			logger.info('API successfully sent the message to SQS', {
 				id: s3Key,

@@ -474,6 +474,34 @@ export class TranscriptionService extends GuStack {
 		// allow worker to write messages to the dead letter queue
 		transcriptionDeadLetterQueue.grantSendMessages(transcriptionWorkerASG);
 
+		const mediaDownloadDeadLetterQueue = new Queue(
+			this,
+			`${APP_NAME}-media-download-dead-letter-queue`,
+			{
+				fifo: true,
+				queueName: `${APP_NAME}-media-download-dead-letter-queue-${this.stage}.fifo`,
+				contentBasedDeduplication: true,
+			},
+		);
+
+		// SQS queue for media download tasks from API lambda to media-downloader service
+		const mediaDownloadTaskQueue = new Queue(
+			this,
+			`${APP_NAME}-media-download-task-queue`,
+			{
+				fifo: true,
+				queueName: `${APP_NAME}-media-download-task-queue-${this.stage}.fifo`,
+				visibilityTimeout: Duration.seconds(30),
+				contentBasedDeduplication: true,
+				deadLetterQueue: {
+					queue: mediaDownloadDeadLetterQueue,
+					maxReceiveCount: MAX_RECEIVE_COUNT,
+				},
+			},
+		);
+
+		mediaDownloadTaskQueue.grantSendMessages(apiLambda);
+
 		const transcriptTable = new Table(this, 'TranscriptTable', {
 			tableName: `${APP_NAME}-${this.stage}`,
 			partitionKey: {

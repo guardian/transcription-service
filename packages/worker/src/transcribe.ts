@@ -1,4 +1,3 @@
-import { spawn } from 'child_process';
 import path from 'path';
 import { readFile } from '@guardian/transcription-service-backend-common';
 import { logger } from '@guardian/transcription-service-backend-common';
@@ -6,12 +5,7 @@ import {
 	LanguageCode,
 	languageCodes,
 } from '@guardian/transcription-service-common';
-
-interface ProcessResult {
-	code?: number;
-	stdout: string;
-	stderr: string;
-}
+import { runSpawnCommand } from '@guardian/transcription-service-backend-common/src/process';
 
 interface FfmpegResult {
 	wavPath: string;
@@ -48,72 +42,35 @@ export type WhisperBaseParams = {
 
 const CONTAINER_FOLDER = '/input';
 
-const runSpawnCommand = (
-	processName: string,
-	cmd: string,
-	args: ReadonlyArray<string>,
-): Promise<ProcessResult> => {
-	return new Promise((resolve, reject) => {
-		const cp = spawn(cmd, args);
-		const stdout: string[] = [];
-		const stderr: string[] = [];
-		cp.stdout.on('data', (data) => {
-			stdout.push(data.toString());
-		});
-
-		cp.stderr.on('data', (data) => {
-			stderr.push(data.toString());
-		});
-
-		cp.on('error', (e) => {
-			stderr.push(e.toString());
-		});
-
-		cp.on('close', (code) => {
-			const result = {
-				stdout: stdout.join(''),
-				stderr: stderr.join(''),
-				code: code || undefined,
-			};
-			logger.info('Ignoring stdout to avoid logging sensitive data');
-			logger.info(`process ${processName} stderr: ${result.stderr}`);
-			if (code === 0) {
-				resolve(result);
-			} else {
-				logger.error(
-					`process ${processName} failed with code ${result.code} due to: ${result.stderr}`,
-				);
-				reject(result);
-			}
-		});
-	});
-};
-
 export const getOrCreateContainer = async (
 	tempDir: string,
 ): Promise<string> => {
-	const existingContainer = await runSpawnCommand('getContainer', 'docker', [
-		'ps',
-		'--filter',
-		'name=whisper',
-		'--format',
-		'{{.ID}}',
-	]);
+	const existingContainer = await runSpawnCommand(
+		'getContainer',
+		'docker',
+		['ps', '--filter', 'name=whisper', '--format', '{{.ID}}'],
+		true,
+	);
 
 	if (existingContainer.stdout) {
 		return existingContainer.stdout.trim();
 	}
 
-	const newContainer = await runSpawnCommand('createNewContainer', 'docker', [
-		'run',
-		'-t',
-		'-d',
-		'--name',
-		'whisper',
-		'-v',
-		`${tempDir}:${CONTAINER_FOLDER}`,
-		'ghcr.io/guardian/transcription-service',
-	]);
+	const newContainer = await runSpawnCommand(
+		'createNewContainer',
+		'docker',
+		[
+			'run',
+			'-t',
+			'-d',
+			'--name',
+			'whisper',
+			'-v',
+			`${tempDir}:${CONTAINER_FOLDER}`,
+			'ghcr.io/guardian/transcription-service',
+		],
+		false,
+	);
 	return newContainer.stdout.trim();
 };
 
@@ -129,21 +86,26 @@ export const convertToWav = async (
 	logger.info(`wav file path: ${wavPath}`);
 
 	try {
-		const res = await runSpawnCommand('convertToWav', 'docker', [
-			'exec',
-			containerId,
-			'ffmpeg',
-			'-y',
-			'-i',
-			filePath,
-			'-ar',
-			'16000',
-			'-ac',
-			'1',
-			'-c:a',
-			'pcm_s16le',
-			wavPath,
-		]);
+		const res = await runSpawnCommand(
+			'convertToWav',
+			'docker',
+			[
+				'exec',
+				containerId,
+				'ffmpeg',
+				'-y',
+				'-i',
+				filePath,
+				'-ar',
+				'16000',
+				'-ac',
+				'1',
+				'-c:a',
+				'pcm_s16le',
+				wavPath,
+			],
+			true,
+		);
 
 		const duration = getDuration(res.stderr);
 
@@ -318,18 +280,23 @@ export const runWhisper = async (
 	const fileName = path.parse(wavPath).name;
 
 	try {
-		const result = await runSpawnCommand('transcribe', 'docker', [
-			'exec',
-			containerId,
-			'whisper.cpp/main',
-			'--model',
-			`whisper.cpp/models/ggml-${model}.bin`,
-			'--threads',
-			numberOfThreads.toString(),
-			'--file',
-			wavPath,
-			...whisperParams,
-		]);
+		const result = await runSpawnCommand(
+			'transcribe',
+			'docker',
+			[
+				'exec',
+				containerId,
+				'whisper.cpp/main',
+				'--model',
+				`whisper.cpp/models/ggml-${model}.bin`,
+				'--threads',
+				numberOfThreads.toString(),
+				'--file',
+				wavPath,
+				...whisperParams,
+			],
+			false,
+		);
 		const metadata = extractWhisperStderrData(result.stderr);
 		logger.info('Whisper finished successfully', metadata);
 		return {
