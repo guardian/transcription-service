@@ -229,6 +229,8 @@ const transcribeAndTranslate = async (
 			false,
 		);
 
+		// we only run language detection once,
+		// so need to override the detected language of future whisper runs
 		transcription.metadata.detectedLanguageCode = metadata.detectedLanguageCode;
 		const translation =
 			languageCode === 'en'
