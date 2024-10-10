@@ -16,7 +16,7 @@
 		"@guardian/transcription-service-common": "1.0.0"
 	},
 	"devDependencies": {
-		"@guardian/cdk": "59.5.2",
+		"@guardian/cdk": "guardian/cdk#pm-ecs-task-gusubnets",
 		"@guardian/eslint-config-typescript": "8.0.0",
 		"@guardian/eslint-config": "7.0.1",
 		"@guardian/prettier": "5.0.0",
