@@ -593,7 +593,7 @@ export class TranscriptionService extends GuStack {
 			environmentOverrides: [
 				{
 					name: 'MESSAGE_BODY',
-					value: JsonPath.stringAt('$.body'),
+					value: JsonPath.stringAt('$[0].body'),
 				},
 			],
 		});
