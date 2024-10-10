@@ -30,61 +30,76 @@ export class TranscriptionServiceRepository extends GuStack {
 					'Deploy tools account id - needed to give AMIgo access to this repository',
 			},
 		);
-		const repository = new Repository(this, 'TranscriptionServiceRepository', {
-			repositoryName: `transcription-service`,
-			lifecycleRules: [
-				{
-					maxImageCount: 5,
-				},
-			],
-			imageTagMutability: TagMutability.MUTABLE,
-			removalPolicy: RemovalPolicy.DESTROY,
-			imageScanOnPush: true,
-		});
+		const transcriptionRepository = new Repository(
+			this,
+			'TranscriptionServiceRepository',
+			{
+				repositoryName: `transcription-service`,
+				lifecycleRules: [
+					{
+						maxImageCount: 5,
+					},
+				],
+				imageTagMutability: TagMutability.MUTABLE,
+				removalPolicy: RemovalPolicy.DESTROY,
+				imageScanOnPush: true,
+			},
+		);
+
+		const mediaDownloadRepository = new Repository(
+			this,
+			'MediaDownloadRepository',
+			{
+				repositoryName: `transcription-service-media-download`,
+				lifecycleRules: [
+					{
+						maxImageCount: 5,
+					},
+				],
+				imageTagMutability: TagMutability.MUTABLE,
+				removalPolicy: RemovalPolicy.DESTROY,
+				imageScanOnPush: true,
+			},
+		);
 		// allow transcription workers read access to the repo
-		repository.addToResourcePolicy(
-			new PolicyStatement({
-				principals: [
-					new ArnPrincipal(
-						Fn.importValue(`transcription-service-CODE-WorkerRoleArn`),
-					),
-					new ArnPrincipal(
-						Fn.importValue(`transcription-service-PROD-WorkerRoleArn`),
-					),
-				],
-				actions: [
-					'ecr:GetAuthorizationToken',
-					'ecr:BatchCheckLayerAvailability',
-					'ecr:GetDownloadUrlForLayer',
-					'ecr:GetRepositoryPolicy',
-					'ecr:ListImages',
-					'ecr:DescribeImages',
-					'ecr:BatchGetImage',
-				],
-				effect: Effect.ALLOW,
-			}),
-		);
+		const workerReadPolicyStatement = new PolicyStatement({
+			principals: [
+				new ArnPrincipal(Fn.importValue(`WorkerRoleArn-CODE`)),
+				new ArnPrincipal(Fn.importValue(`WorkerRoleArn-PROD`)),
+			],
+			actions: [
+				'ecr:GetAuthorizationToken',
+				'ecr:BatchCheckLayerAvailability',
+				'ecr:GetDownloadUrlForLayer',
+				'ecr:GetRepositoryPolicy',
+				'ecr:ListImages',
+				'ecr:DescribeImages',
+				'ecr:BatchGetImage',
+			],
+			effect: Effect.ALLOW,
+		});
+		transcriptionRepository.addToResourcePolicy(workerReadPolicyStatement);
 		// allow github actions read/write access to the repo
-		repository.addToResourcePolicy(
-			new PolicyStatement({
-				principals: [new ArnPrincipal(githubActionsIAMRoleArn.valueAsString)],
-				actions: [
-					'ecr:GetAuthorizationToken',
-					'ecr:BatchCheckLayerAvailability',
-					'ecr:GetDownloadUrlForLayer',
-					'ecr:GetRepositoryPolicy',
-					'ecr:DescribeRepositories',
-					'ecr:ListImages',
-					'ecr:DescribeImages',
-					'ecr:BatchGetImage',
-					'ecr:InitiateLayerUpload',
-					'ecr:UploadLayerPart',
-					'ecr:CompleteLayerUpload',
-					'ecr:PutImage',
-				],
-				effect: Effect.ALLOW,
-			}),
-		);
+		const githubReadWritePolicyStatement = new PolicyStatement({
+			principals: [new ArnPrincipal(githubActionsIAMRoleArn.valueAsString)],
+			actions: [
+				'ecr:GetAuthorizationToken',
+				'ecr:BatchCheckLayerAvailability',
+				'ecr:GetDownloadUrlForLayer',
+				'ecr:GetRepositoryPolicy',
+				'ecr:DescribeRepositories',
+				'ecr:ListImages',
+				'ecr:DescribeImages',
+				'ecr:BatchGetImage',
+				'ecr:InitiateLayerUpload',
+				'ecr:UploadLayerPart',
+				'ecr:CompleteLayerUpload',
+				'ecr:PutImage',
+			],
+			effect: Effect.ALLOW,
+		});
+		transcriptionRepository.addToResourcePolicy(githubReadWritePolicyStatement);
+		mediaDownloadRepository.addToResourcePolicy(githubReadWritePolicyStatement);
 
 		const repoAccessRole = new Role(this, 'RepoAccessRole', {
 			roleName: 'TranscriptionServiceRepoAccessRole',
@@ -106,7 +121,10 @@ export class TranscriptionServiceRepository extends GuStack {
 								'ecr:ListImages',
 								'ecr:GetDownloadUrlForLayer',
 							],
-							resources: [repository.repositoryArn],
+							resources: [
+								transcriptionRepository.repositoryArn,
+								mediaDownloadRepository.repositoryArn,
+							],
 							effect: Effect.ALLOW,
 						}),
 					],
