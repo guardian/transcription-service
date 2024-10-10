@@ -9,9 +9,41 @@ import {
 	TranscribeFileRequestBody,
 } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
-import { Checkbox, FileInput, Label, Select } from 'flowbite-react';
+import {
+	Checkbox,
+	FileInput,
+	Label,
+	Select,
+	Textarea,
+	Radio,
+} from 'flowbite-react';
 import { RequestStatus } from '@/types';
 import { iconForStatus, InfoMessage } from '@/components/InfoMessage';
+
+const submitMediaUrl = async (
+	url: string,
+	token: string,
+	languageCode: LanguageCode,
+	translationRequested: boolean,
+) => {
+	const response = await authFetch('/api/transcribe-url', token, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({
+			url,
+			languageCode,
+			translationRequested,
+		}),
+	});
+	const success = response.status === 200;
+	if (!success) {
+		console.error('Failed to submit urls for transcription');
+		return false;
+	}
+	return true;
+};
 
 const uploadFileAndTranscribe = async (
 	file: File,
@@ -87,6 +119,8 @@ export const UploadForm = () => {
 	>(undefined);
 	const [translationRequested, setTranslationRequested] =
 		useState<boolean>(false);
+	const [mediaSource, setMediaSource] = useState<'file' | 'url'>('file');
+	const [mediaUrlText, setMediaUrlText] = useState<string>('');
 	const { token } = useContext(AuthContext);
 
 	const reset = () => {
@@ -189,6 +223,25 @@ export const UploadForm = () => {
 			return;
 		}
 
+		setStatus(RequestStatus.InProgress);
+
+		if (mediaSource === 'url') {
+			const urls = mediaUrlText.split('\n').filter((url) => url !== '');
+			if (urls.length === 0) {
+				return;
+			}
+			for (const url of urls) {
+				await submitMediaUrl(
+					url,
+					token,
+					mediaFileLanguageCode,
+					translationRequested,
+				);
+			}
+			setStatus(RequestStatus.Success);
+			return;
+		}
+
 		// the required property on the file input should prevent the form from
 		// being submitted without any files selected. Need to confirm this in
 		// order to narrow the type of files
@@ -196,7 +249,6 @@ export const UploadForm = () => {
 			return;
 		}
 
-		setStatus(RequestStatus.InProgress);
 		const fileArray = Array.from(files);
 		const fileIds = fileArray.map((f, index) => [
 			`${index}-${f.name}`,
@@ -231,23 +283,63 @@ export const UploadForm = () => {
 	return (
 		<>
 			<form id="media-upload-form" onSubmit={handleSubmit}>
-				<div className="mb-6">
-					<div>
-						<Label
-							className="text-base"
-							htmlFor="multiple-file-upload"
-							value="File(s) for transcription"
+				<div className="flex items-center gap-2">
+					I want to transcribe a...
+					<Radio
+						id="file-radio"
+						name="media-type"
+						value="file"
+						defaultChecked
+						onClick={() => setMediaSource('file')}
+					/>
+					<Label htmlFor="file-radio">File</Label>
+					<Radio
+						id="url-radio"
+						name="media-type"
+						value="url"
+						onClick={() => setMediaSource('url')}
+					/>
+					<Label htmlFor="url-radio">Url</Label>
+				</div>
+				{mediaSource === 'url' && (
+					<div className="mb-6">
+						<div>
+							<Label
+								className="text-base"
+								htmlFor="media-url"
+								value="Url(s) for transcription (one per line)"
+							/>
+						</div>
+						<Textarea
+							id="media-url"
+							placeholder="e.g. https://www.youtube.com?v=abc123"
+							required
+							rows={4}
+							onChange={(e) => {
+								setMediaUrlText(e.target.value);
+							}}
 						/>
 					</div>
-					<FileInput
-						id="files"
-						required={true}
-						multiple
-						onChange={(e) => {
-							setFiles(e.target.files);
-						}}
-					/>
-				</div>
+				)}
+				{mediaSource === 'file' && (
+					<div className="mb-6">
+						<div>
+							<Label
+								className="text-base"
+								htmlFor="multiple-file-upload"
+								value="File(s) for transcription"
+							/>
+						</div>
+						<FileInput
+							id="files"
+							required={true}
+							multiple
+							onChange={(e) => {
+								setFiles(e.target.files);
+							}}
+						/>
+					</div>
+				)}
 				<div className="mb-6">
 					<div>
 						<Label
