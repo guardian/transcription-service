@@ -1,5 +1,4 @@
 import {
-	deleteMessage,
 	generateOutputSignedUrlAndSendMessage,
 	getConfig,
 	getSignedDownloadUrl,
@@ -12,7 +11,6 @@ import {
 import { Upload } from '@aws-sdk/lib-storage';
 import { S3Client } from '@aws-sdk/client-s3';
 import { createReadStream } from 'node:fs';
-import { getNextJob } from './sqs';
 import { downloadMedia, MediaMetadata } from './yt-dlp';
 import { SQSClient } from '@aws-sdk/client-sqs';
 import {
@@ -104,8 +102,22 @@ const requestTranscription = async (
 };
 
 const main = async () => {
-	console.log('Starting media download service');
-	console.log(`INPUT: ${process.env.MESSAGE_BODY}`);
+	logger.info('Starting media download service');
+	const input = process.env.MESSAGE_BODY;
+	if (!input) {
+		logger.error('MESSAGE_BODY not set - exiting');
+		return;
+	}
+
+	const parsedJob = MediaDownloadJob.safeParse(JSON.parse(input));
+	if (!parsedJob.success) {
+		logger.error(
+			`MESSAGE_BODY is not a valid MediaDownloadJob - exiting. MESSAGE_BODY: ${input} Errors: ${parsedJob.error.errors.map((e) => e.message).join(', ')}`,
+		);
+		return;
+	}
+	const job = parsedJob.data;
+
 	const config = await getConfig();
 
 	const s3Client = new S3Client({ region: config.aws.region });
@@ -113,34 +125,19 @@ const main = async () => {
 		config.aws.region,
 		config.aws.localstackEndpoint,
 	);
-	const jobResult = await getNextJob(
-		sqsClient,
-		config.app.mediaDownloadQueueUrl,
-		config.app.stage === 'DEV',
-	);
-	if (jobResult && jobResult.job) {
-		const { job, receiptHandle } = jobResult;
-		const metadata = await downloadMedia(job.url, '/tmp', job.id);
-		if (!metadata) {
-			await reportDownloadFailure(config, sqsClient, job);
-		} else {
-			const key = await uploadToS3(
-				s3Client,
-				metadata,
-				config.app.sourceMediaBucket,
-				job.id,
-			);
-			await requestTranscription(config, key, sqsClient, job, metadata);
-		}
-		if (receiptHandle) {
-			await deleteMessage(
-				sqsClient,
-				config.app.mediaDownloadQueueUrl,
-				receiptHandle,
-			);
-		}
+
+	const metadata = await downloadMedia(job.url, '/tmp', job.id);
+	if (!metadata) {
+		await reportDownloadFailure(config, sqsClient, job);
+	} else {
+		const key = await uploadToS3(
+			s3Client,
+			metadata,
+			config.app.sourceMediaBucket,
+			job.id,
+		);
+		await requestTranscription(config, key, sqsClient, job, metadata);
 	}
-	setTimeout(main, 1000);
 };
 
 main();
