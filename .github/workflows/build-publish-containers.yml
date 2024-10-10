@@ -1,5 +1,5 @@
 #
-name: Build and publish whisper docker image
+name: Build and publish docker images
 
 # Configures this workflow to run every time a change is pushed to the branch called `release`.
 on:
