@@ -595,6 +595,14 @@ export class TranscriptionService extends GuStack {
 					name: 'MESSAGE_BODY',
 					value: JsonPath.stringAt('$[0].body'),
 				},
+				{
+					name: 'AWS_REGION',
+					value: this.region,
+				},
+				{
+					name: 'STAGE',
+					value: this.stage,
+				},
 			],
 		});
 
