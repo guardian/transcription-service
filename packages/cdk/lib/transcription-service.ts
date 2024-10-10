@@ -587,6 +587,7 @@ export class TranscriptionService extends GuStack {
 					actions: ['sqs:SendMessage'],
 					resources: [transcriptionTaskQueue.queueArn],
 				}),
+				getParametersPolicy,
 			],
 			storage: 50,
 			enableDistributablePolicy: false,

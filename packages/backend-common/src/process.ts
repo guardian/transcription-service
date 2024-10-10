@@ -11,6 +11,7 @@ export const runSpawnCommand = (
 	cmd: string,
 	args: ReadonlyArray<string>,
 	logStdout: boolean,
+	logImmediately: boolean = false,
 ): Promise<ProcessResult> => {
 	return new Promise((resolve, reject) => {
 		const cp = spawn(cmd, args);
@@ -18,14 +19,23 @@ export const runSpawnCommand = (
 		const stderr: string[] = [];
 		cp.stdout.on('data', (data) => {
 			stdout.push(data.toString());
+			if (logImmediately) {
+				logger.info(data.toString());
+			}
 		});
 
 		cp.stderr.on('data', (data) => {
 			stderr.push(data.toString());
+			if (logImmediately) {
+				logger.error(data.toString());
+			}
 		});
 
 		cp.on('error', (e) => {
 			stderr.push(e.toString());
+			if (logImmediately) {
+				logger.error(data.toString());
+			}
 		});
 
 		cp.on('close', (code) => {

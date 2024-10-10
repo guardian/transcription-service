@@ -38,6 +38,7 @@ export const downloadMedia = async (
 				url,
 			],
 			true,
+			true,
 		);
 		const metadata = extractInfoJson(
 			`${destinationDirectoryPath}/${id}.info.json`,
