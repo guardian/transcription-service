@@ -48,5 +48,8 @@ export const getNextJob = async (
 		logger.error('message missing attributes');
 		return;
 	}
-	return parseMediaJobMessage(taskMessage);
+	return {
+		receiptHandle: taskMessage.ReceiptHandle,
+		job: parseMediaJobMessage(taskMessage),
+	};
 };

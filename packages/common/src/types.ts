@@ -78,6 +78,14 @@ export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
 	translationOutputBucketKeys: z.optional(OutputBucketKeys),
 });
 
+export const MediaDownloadFailure = z.object({
+	id: z.string(),
+	status: z.literal('FAILURE'),
+	url: z.string(),
+});
+
+export type MediaDownloadFailure = z.infer<typeof MediaDownloadFailure>;
+
 export const TranscriptionOutputFailure = TranscriptionOutputBase.extend({
 	status: z.literal('FAILURE'),
 });
@@ -85,6 +93,7 @@ export const TranscriptionOutputFailure = TranscriptionOutputBase.extend({
 export const TranscriptionOutput = z.union([
 	TranscriptionOutputSuccess,
 	TranscriptionOutputFailure,
+	MediaDownloadFailure,
 ]);
 
 export type TranscriptionOutputSuccess = z.infer<

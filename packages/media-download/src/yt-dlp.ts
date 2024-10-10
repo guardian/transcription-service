@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import { runSpawnCommand } from '@guardian/transcription-service-backend-common/src/process';
+import { logger } from '@guardian/transcription-service-backend-common';
 
 export type MediaMetadata = {
 	title: string;
@@ -24,19 +25,27 @@ export const downloadMedia = async (
 	destinationDirectoryPath: string,
 	id: string,
 ) => {
-	const output = await runSpawnCommand('downloadMedia', 'yt-dlp', [
-		'--write-info-json',
-		'--no-clean-info-json',
-		'--newline',
-		'-o',
-		`${destinationDirectoryPath}/${id}`,
-		url,
-		false,
-	]);
-	console.log(output);
-	const metadata = extractInfoJson(
-		`${destinationDirectoryPath}/${id}.info.json`,
-	);
+	try {
+		await runSpawnCommand(
+			'downloadMedia',
+			'yt-dlp',
+			[
+				'--write-info-json',
+				'--no-clean-info-json',
+				'--newline',
+				'-o',
+				`${destinationDirectoryPath}/${id}`,
+				url,
+			],
+			true,
+		);
+		const metadata = extractInfoJson(
+			`${destinationDirectoryPath}/${id}.info.json`,
+		);
 
-	return metadata;
+		return metadata;
+	} catch (error) {
+		logger.error(`Failed to download ${url}`, error);
+		return null;
+	}
 };
