@@ -56,7 +56,7 @@ const reportDownloadFailure = async (
 ) => {
 	const mediaDownloadFailure: MediaDownloadFailure = {
 		id: job.id,
-		status: 'FAILURE',
+		status: 'MEDIA_DOWNLOAD_FAILURE',
 		url: job.url,
 	};
 	const result = await sendMessage(
