@@ -32,6 +32,10 @@ jobs:
       - name: Build worker-capacity-manager
         run: |
           npm run worker-capacity-manager::build
+      - name: Build media-download
+        run: |
+          npm run media-download::build
+
       - name: Package API/Client/Update
         run: |
           npm run package
