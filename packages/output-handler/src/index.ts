@@ -5,6 +5,7 @@ import {
 	logger,
 	getConfig,
 	TranscriptionConfig,
+	getSignedDownloadUrl,
 } from '@guardian/transcription-service-backend-common';
 import {
 	getDynamoClient,
@@ -16,6 +17,7 @@ import {
 	transcriptionOutputIsSuccess,
 	TranscriptionOutputSuccess,
 	TranscriptionOutputFailure,
+	transcriptionOutputIsTranscriptionFailure,
 } from '@guardian/transcription-service-common';
 import {
 	MetricsService,
@@ -28,11 +30,13 @@ const successMessageBody = (
 	originalFilename: string,
 	rootUrl: string,
 	isTranslation: boolean,
+	sourceMediaDownloadUrl: string,
 ): string => {
 	const exportUrl = `${rootUrl}/export?transcriptId=${transcriptId}`;
 	return `
 		<h1>${isTranslation ? 'English translation ' : 'Transcription'} for ${originalFilename} ready</h1>
 		<p>Click <a href="${exportUrl}">here</a> to export to a Google doc.</p>
+		<p>Click <a href="${sourceMediaDownloadUrl}"> to download the input media.</p>
 		<p><b>Note:</b> transcripts will be deleted from this service after 7 days. Export your transcript to a Google doc now if you want to keep it. </p>
 	`;
 };
@@ -41,10 +45,12 @@ const failureMessageBody = (
 	originalFilename: string,
 	id: string,
 	isTranslation: boolean,
+	sourceMediaDownloadUrl: string,
 ): string => {
 	return `
 		<h1>${isTranslation ? 'English translation ' : 'Transcription'}for ${originalFilename} has failed.</h1>
 		<p>Please make sure that the file is a valid audio or video file.</p>
+		<p>Click <a href="${sourceMediaDownloadUrl}"> to download the input media.</p>
 		<p>Contact digital.investigations@guardian.co.uk for support.</p>
 		<p>Transcription ID: ${id}</p>
 	`;
@@ -55,6 +61,7 @@ const handleTranscriptionSuccess = async (
 	transcriptionOutput: TranscriptionOutputSuccess,
 	sesClient: SESClient,
 	metrics: MetricsService,
+	sourceMediaDownloadUrl: string,
 ) => {
 	const dynamoItem: TranscriptionDynamoItem = {
 		id: transcriptionOutput.id,
@@ -86,6 +93,7 @@ const handleTranscriptionSuccess = async (
 				transcriptionOutput.originalFilename,
 				config.app.rootUrl,
 				transcriptionOutput.isTranslation,
+				sourceMediaDownloadUrl,
 			),
 		);
 
@@ -108,6 +116,7 @@ const handleTranscriptionFailure = async (
 	transcriptionOutput: TranscriptionOutputFailure,
 	sesClient: SESClient,
 	metrics: MetricsService,
+	sourceMediaDownloadUrl: string,
 ) => {
 	try {
 		await sendEmail(
@@ -119,6 +128,7 @@ const handleTranscriptionFailure = async (
 				transcriptionOutput.originalFilename,
 				transcriptionOutput.id,
 				transcriptionOutput.isTranslation,
+				sourceMediaDownloadUrl,
 			),
 		);
 
@@ -154,6 +164,12 @@ const processMessage = async (event: unknown) => {
 
 	for (const record of parsedEvent.data.Records) {
 		const transcriptionOutput = record.body;
+		const sourceMediaDownloadUrl = await getSignedDownloadUrl(
+			config.aws.region,
+			config.app.sourceMediaBucket,
+			transcriptionOutput.id,
+			7 * 24 * 60 * 60,
+		);
 		if (transcriptionOutputIsSuccess(transcriptionOutput)) {
 			logger.info('handling transcription success');
 			await handleTranscriptionSuccess(
@@ -161,14 +177,16 @@ const processMessage = async (event: unknown) => {
 				transcriptionOutput,
 				sesClient,
 				metrics,
+				sourceMediaDownloadUrl,
 			);
-		} else {
+		} else if (transcriptionOutputIsTranscriptionFailure(transcriptionOutput)) {
 			logger.info('handling transcription failure');
 			await handleTranscriptionFailure(
 				config,
 				transcriptionOutput,
 				sesClient,
 				metrics,
+				sourceMediaDownloadUrl,
 			);
 		}
 	}
