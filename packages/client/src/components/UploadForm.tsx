@@ -155,14 +155,14 @@ export const UploadForm = () => {
 								<p>
 									{' '}
 									The service can take a few minutes to start up, but thereafter
-									the transcription process is typically shorter than the length
+									the transcription process is typically shorter than the duration
 									of the media file.{' '}
 								</p>
 								<p>
-									If you have requested a translation, you will receive 2 emails
-									- one for the transcription in the original language, another
+									If you have requested a translation, you will receive 2 emails: 
+									one for the transcription in the original language, another
 									for the english translation. The emails will arrive at
-									different times
+									different times.
 								</p>
 							</div>
 							<button
@@ -296,7 +296,7 @@ export const UploadForm = () => {
 								<Label htmlFor="shipping">Request English translation</Label>
 								<div className="text-gray-500 dark:text-gray-300">
 									<span className="text-xs font-normal">
-										You will receive two documents - a transcript in the
+										You will receive two documents: a transcript in the
 										original language and a translation in English.
 									</span>
 								</div>
