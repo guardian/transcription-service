@@ -32,8 +32,8 @@ const successMessageBody = (
 	const exportUrl = `${rootUrl}/export?transcriptId=${transcriptId}`;
 	return `
 		<h1>${isTranslation ? 'English translation ' : 'Transcription'} for ${originalFilename} ready</h1>
-		<p>Click <a href="${exportUrl}">here</a> to export to a google doc.</p>
-		<p><b>Note:</b> transcripts will expire after 7 days. Export your transcript to a doc now if you want to keep it. </p>
+		<p>Click <a href="${exportUrl}">here</a> to export to a Google doc.</p>
+		<p><b>Note:</b> transcripts will be deleted from this service after 7 days. Export your transcript to a Google doc now if you want to keep it. </p>
 	`;
 };
 
@@ -45,7 +45,7 @@ const failureMessageBody = (
 	return `
 		<h1>${isTranslation ? 'English translation ' : 'Transcription'}for ${originalFilename} has failed.</h1>
 		<p>Please make sure that the file is a valid audio or video file.</p>
-		<p>Contact the digital investigations team for support.</p>
+		<p>Contact digital.investigations@guardian.co.uk for support.</p>
 		<p>Transcription ID: ${id}</p>
 	`;
 };
