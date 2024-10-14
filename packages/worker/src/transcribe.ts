@@ -278,6 +278,9 @@ export const runWhisper = async (
 ) => {
 	const { containerId, numberOfThreads, model, wavPath } = whisperBaseParams;
 	const fileName = path.parse(wavPath).name;
+	console.log(
+		`Runnning whisper with params ${whisperParams}, base params: ${JSON.stringify(whisperBaseParams, null, 2)}`,
+	);
 
 	try {
 		const result = await runSpawnCommand(
