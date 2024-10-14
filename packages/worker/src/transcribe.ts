@@ -259,6 +259,7 @@ const whisperParams = (
 		const fileName = path.parse(file).name;
 		const containerOutputFilePath = path.resolve(CONTAINER_FOLDER, fileName);
 		logger.info(`Transcription output file path: ${containerOutputFilePath}`);
+		const translateParam: string[] = translate ? ['--translate'] : [];
 		return [
 			'--output-srt',
 			'--output-txt',
@@ -267,8 +268,7 @@ const whisperParams = (
 			containerOutputFilePath,
 			'--language',
 			languageCode,
-			`${translate ? '--translate' : ''}`,
-		];
+		].concat(translateParam);
 	}
 };
 
@@ -278,7 +278,7 @@ export const runWhisper = async (
 ) => {
 	const { containerId, numberOfThreads, model, wavPath } = whisperBaseParams;
 	const fileName = path.parse(wavPath).name;
-	console.log(
+	logger.info(
 		`Runnning whisper with params ${whisperParams}, base params: ${JSON.stringify(whisperBaseParams, null, 2)}`,
 	);
 
