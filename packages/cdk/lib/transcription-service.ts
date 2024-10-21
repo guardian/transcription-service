@@ -27,7 +27,6 @@ import {
 	type App,
 	aws_events_targets,
 	CfnOutput,
-	CfnParameter,
 	Duration,
 	Fn,
 	RemovalPolicy,
@@ -57,7 +56,6 @@ import {
 	Peer,
 	Port,
 	SpotInstanceInterruption,
-	Subnet,
 	UserData,
 } from 'aws-cdk-lib/aws-ec2';
 import { Repository } from 'aws-cdk-lib/aws-ecr';
@@ -74,6 +72,7 @@ import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { LogGroup } from 'aws-cdk-lib/aws-logs';
 import { CfnPipe } from 'aws-cdk-lib/aws-pipes';
 import { HttpMethods } from 'aws-cdk-lib/aws-s3';
+import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { JsonPath } from 'aws-cdk-lib/aws-stepfunctions';
@@ -399,6 +398,10 @@ export class TranscriptionService extends GuStack {
 				]
 			: [InstanceType.of(InstanceClass.T4G, InstanceSize.MEDIUM)];
 
+		const guSubnets = GuVpc.subnetsFromParameter(this, {
+			type: SubnetType.PRIVATE,
+			app: workerApp,
+		});
 		// unfortunately GuAutoscalingGroup doesn't support having a mixedInstancesPolicy so using the basic ASG here
 		const transcriptionWorkerASG = new AutoScalingGroup(
 			this,
@@ -409,10 +412,7 @@ export class TranscriptionService extends GuStack {
 				autoScalingGroupName,
 				vpc,
 				vpcSubnets: {
-					subnets: GuVpc.subnetsFromParameter(this, {
-						type: SubnetType.PRIVATE,
-						app: workerApp,
-					}),
+					subnets: guSubnets,
 				},
 				mixedInstancesPolicy: {
 					launchTemplate,
@@ -515,46 +515,24 @@ export class TranscriptionService extends GuStack {
 		);
 
 		mediaDownloadTaskQueue.grantSendMessages(apiLambda);
-		//
 
-		// const slParam = new GuStringParameter(this, 'subnet-parameter', {
-		// 	fromSSM: true,
-		// 	default: '/account/vpc/primary/subnets/private',
-		// });
-
-		const subnetListParameter = new CfnParameter(this, 'subnet-manual-param', {
-			type: 'AWS::SSM::Parameter::Value<List<String>>',
-			default: '/account/vpc/primary/subnets/private',
-		});
-
-		// const slParam = new GuSubnetListParameter(this, 'subnet-parameter', {
-		// 	fromSSM: true,
-		// 	default: '/account/vpc/primary/subnets/private',
-		// });
-
-		const subnets = [
-			Subnet.fromSubnetId(
-				this,
-				`private-subnet-0`,
-				Fn.select(0, subnetListParameter.valueAsList),
-			),
-			Subnet.fromSubnetId(
-				this,
-				`private-subnet-1`,
-				Fn.select(1, subnetListParameter.valueAsList),
-			),
-			Subnet.fromSubnetId(
-				this,
-				`private-subnet-2`,
-				Fn.select(2, subnetListParameter.valueAsList),
-			),
-		];
 		const mediaDownloadApp = 'media-download';
+
+		const sshKeySecret = new Secret(this, 'media-download-ssh-key', {
+			secretName: `media-download-ssh-key-${this.stage}`,
+		});
 
 		const mediaDownloadTask = new GuEcsTask(this, 'media-download-task', {
 			app: mediaDownloadApp,
 			vpc,
-			subnets: subnets,
+			subnets: GuVpc.subnetsFromParameterFixedNumber(
+				this,
+				{
+					type: SubnetType.PRIVATE,
+					app: mediaDownloadApp,
+				},
+				3,
+			),
 			containerConfiguration: {
 				repository: Repository.fromRepositoryName(
 					this,
@@ -562,7 +540,7 @@ export class TranscriptionService extends GuStack {
 					`transcription-service-${mediaDownloadApp}`,
 				),
 				type: 'repository',
-				version: 'pm-media-download-infra',
+				version: 'DEV',
 			},
 			taskTimeoutInMinutes: 120,
 			monitoringConfiguration: {
@@ -586,6 +564,21 @@ export class TranscriptionService extends GuStack {
 					effect: Effect.ALLOW,
 					actions: ['sqs:SendMessage'],
 					resources: [transcriptionTaskQueue.queueArn],
+				}),
+				new PolicyStatement({
+					effect: Effect.ALLOW,
+					actions: ['secretsmanager:GetSecretValue'],
+					resources: [sshKeySecret.secretArn],
+				}),
+				new PolicyStatement({
+					effect: Effect.ALLOW,
+					actions: ['s3:PutObject'],
+					resources: [`${outputBucket.bucketArn}/*`],
+				}),
+				new PolicyStatement({
+					effect: Effect.ALLOW,
+					actions: ['s3:PutObject', 's3:GetObject'],
+					resources: [`${sourceMediaBucket.bucketArn}/downloaded-media/*`],
 				}),
 				getParametersPolicy,
 			],
