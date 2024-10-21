@@ -130,8 +130,9 @@ const main = async () => {
 		config.app.stage !== 'DEV' || process.env['USE_PROXY'] === 'true';
 
 	if (useProxy) {
+		const sshKey = await config.app.mediaDownloadProxySSHKey();
 		const tunnelSuccess = await startProxyTunnel(
-			config.app.mediaDownloadProxySSHKey,
+			sshKey,
 			config.app.mediaDownloadProxyIpAddress,
 		);
 

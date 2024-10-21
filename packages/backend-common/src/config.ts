@@ -21,7 +21,7 @@ export interface TranscriptionConfig {
 		transcriptionOutputBucket: string;
 		destinationQueueUrls: DestinationQueueUrls;
 		tableName: string;
-		mediaDownloadProxySSHKey: string;
+		mediaDownloadProxySSHKey: () => Promise<string>;
 		mediaDownloadProxyIpAddress: string;
 	};
 	aws: {
@@ -143,10 +143,8 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		'media-download/proxy-ssh-key-secret-arn',
 	);
 	const secretsManagerClient = new SecretsManager();
-	const mediaDownloadProxySSHKey = await getSecret(
-		mediaDownloadProxySSHKeySecretArn,
-		secretsManagerClient,
-	);
+	const mediaDownloadProxySSHKey = () =>
+		getSecret(mediaDownloadProxySSHKeySecretArn, secretsManagerClient);
 
 	const mediaDownloadProxyIpAddress = findParameter(
 		parameters,
