@@ -11,7 +11,7 @@ import {
 import { Upload } from '@aws-sdk/lib-storage';
 import { S3Client } from '@aws-sdk/client-s3';
 import { createReadStream } from 'node:fs';
-import { downloadMedia, MediaMetadata } from './yt-dlp';
+import { downloadMedia, MediaMetadata, startProxyTunnel } from './yt-dlp';
 import { SQSClient } from '@aws-sdk/client-sqs';
 import {
 	DestinationService,
@@ -26,13 +26,13 @@ const uploadToS3 = async (
 	id: string,
 ) => {
 	const fileStream = createReadStream(`${metadata.mediaPath}`);
-	const key = `downloaded-media/${id}.${metadata.extension}`;
+	const key = `downloaded-media/${id}`;
 	try {
 		const upload = new Upload({
 			client: s3Client,
 			params: {
 				Bucket: bucket,
-				Key: `downloaded-media/${metadata.title}.${metadata.extension}`,
+				Key: key,
 				Body: fileStream,
 			},
 		});
@@ -126,7 +126,22 @@ const main = async () => {
 		config.aws.localstackEndpoint,
 	);
 
-	const metadata = await downloadMedia(job.url, '/tmp', job.id);
+	const useProxy =
+		config.app.stage !== 'DEV' || process.env['USE_PROXY'] === 'true';
+
+	if (useProxy) {
+		const tunnelSuccess = await startProxyTunnel(
+			config.app.mediaDownloadProxySSHKey,
+			config.app.mediaDownloadProxyIpAddress,
+		);
+
+		if (!tunnelSuccess) {
+			logger.error('Failed to start proxy tunnel');
+			return;
+		}
+	}
+
+	const metadata = await downloadMedia(job.url, '/tmp', job.id, useProxy);
 	if (!metadata) {
 		await reportDownloadFailure(config, sqsClient, job);
 	} else {

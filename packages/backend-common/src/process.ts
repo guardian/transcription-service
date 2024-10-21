@@ -34,7 +34,7 @@ export const runSpawnCommand = (
 		cp.on('error', (e) => {
 			stderr.push(e.toString());
 			if (logImmediately) {
-				logger.error(data.toString());
+				logger.error(e.toString());
 			}
 		});
 

@@ -1,8 +1,9 @@
-import { findParameter, getParameters } from './configHelpers';
+import { findParameter, getParameters, getSecret } from './configHelpers';
 import { Parameter, SSM } from '@aws-sdk/client-ssm';
 import { defaultProvider } from '@aws-sdk/credential-provider-node';
 import { logger } from '@guardian/transcription-service-backend-common';
 import { DestinationService } from '@guardian/transcription-service-common';
+import { SecretsManager } from '@aws-sdk/client-secrets-manager';
 export interface TranscriptionConfig {
 	auth: {
 		clientId: string;
@@ -20,6 +21,8 @@ export interface TranscriptionConfig {
 		transcriptionOutputBucket: string;
 		destinationQueueUrls: DestinationQueueUrls;
 		tableName: string;
+		mediaDownloadProxySSHKey: string;
+		mediaDownloadProxyIpAddress: string;
 	};
 	aws: {
 		region: string;
@@ -134,6 +137,23 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		'app/transcriptionOutputBucket',
 	);
 
+	const mediaDownloadProxySSHKeySecretArn = findParameter(
+		parameters,
+		paramPath,
+		'media-download/proxy-ssh-key-secret-arn',
+	);
+	const secretsManagerClient = new SecretsManager();
+	const mediaDownloadProxySSHKey = await getSecret(
+		mediaDownloadProxySSHKeySecretArn,
+		secretsManagerClient,
+	);
+
+	const mediaDownloadProxyIpAddress = findParameter(
+		parameters,
+		paramPath,
+		'media-download/proxy-ip-address',
+	);
+
 	return {
 		auth: {
 			clientId: authClientId,
@@ -154,6 +174,8 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			},
 			tableName,
 			transcriptionOutputBucket,
+			mediaDownloadProxySSHKey,
+			mediaDownloadProxyIpAddress,
 		},
 		aws: {
 			region,
