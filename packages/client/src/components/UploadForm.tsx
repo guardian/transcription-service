@@ -16,6 +16,7 @@ import {
 	Select,
 	Textarea,
 	Radio,
+	Alert,
 } from 'flowbite-react';
 import { RequestStatus } from '@/types';
 import { iconForStatus, InfoMessage } from '@/components/InfoMessage';
@@ -302,24 +303,34 @@ export const UploadForm = () => {
 					<Label htmlFor="url-radio">Url</Label>
 				</div>
 				{mediaSource === 'url' && (
-					<div className="mb-6">
-						<div>
-							<Label
-								className="text-base"
-								htmlFor="media-url"
-								value="Url(s) for transcription (one per line)"
+					<>
+						<div className="mb-6"></div>
+
+						<div className="mb-6">
+							<div>
+								<Label
+									className="text-base"
+									htmlFor="media-url"
+									value="Url(s) for transcription (one per line)"
+								/>
+							</div>
+							<Textarea
+								id="media-url"
+								placeholder="e.g. https://www.youtube.com?v=abc123"
+								required
+								rows={4}
+								onChange={(e) => {
+									setMediaUrlText(e.target.value);
+								}}
 							/>
 						</div>
-						<Textarea
-							id="media-url"
-							placeholder="e.g. https://www.youtube.com?v=abc123"
-							required
-							rows={4}
-							onChange={(e) => {
-								setMediaUrlText(e.target.value);
-							}}
-						/>
-					</div>
+						<div className={'mb-6'}>
+							<Alert color="info">
+								Transcription/storage of copyrighted material should only be
+								done for journalistic purposes
+							</Alert>
+						</div>
+					</>
 				)}
 				{mediaSource === 'file' && (
 					<div className="mb-6">
