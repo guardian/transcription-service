@@ -105,7 +105,9 @@ const main = async () => {
 	logger.info('Starting media download service');
 	const input = process.env.MESSAGE_BODY;
 	if (!input) {
-		logger.error('MESSAGE_BODY not set - exiting');
+		logger.error(
+			'MESSAGE_BODY not set - exiting. If running locally you can use the ./scripts/trigger-media-download-service.sh script to set MESSAGE_BODY',
+		);
 		return;
 	}
 
