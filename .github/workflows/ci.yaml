@@ -11,6 +11,8 @@ jobs:
       id-token: write
       contents: read
       pull-requests: write
+      packages: write
+
     runs-on: 2core-ubuntu-latest-arm
     steps:
       - name: Checkout
