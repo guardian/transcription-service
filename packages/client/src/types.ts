@@ -11,6 +11,7 @@ export type AuthState = {
 export enum RequestStatus {
 	Ready = 'Ready',
 	InProgress = 'InProgress',
+	Invalid = 'Invalid',
 	Success = 'Success',
 	Failed = 'Failed',
 }
