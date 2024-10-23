@@ -297,8 +297,9 @@ export const UploadForm = () => {
 						</div>
 						<div className={'mb-6'}>
 							<Alert color="info">
-								Transcription/storage of copyrighted material should only be
-								done for journalistic purposes
+								Material on YouTube belongs to the copyright holder. Please only
+								use this service to get a download of a video for legitimate
+								journalistic purposes
 							</Alert>
 						</div>
 					</>
