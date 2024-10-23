@@ -1,12 +1,9 @@
 {
-  "extends": "@guardian/tsconfig/tsconfig.json",
-  "compilerOptions": {
-    "module": "CommonJS"
-  },
-  "include": ["lib/**/*", "bin/**/*"],
-  "exclude": [
-    "node_modules",
-    "cdk.out",
-    "lib/**/__snapshots__/**"
-  ]
+	"extends": "@guardian/tsconfig/tsconfig.json",
+	"compilerOptions": {
+		"module": "CommonJS",
+		"noUnusedLocals": false
+	},
+	"include": ["lib/**/*", "bin/**/*"],
+	"exclude": ["node_modules", "cdk.out", "lib/**/__snapshots__/**"]
 }

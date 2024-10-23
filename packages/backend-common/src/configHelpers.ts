@@ -4,6 +4,7 @@ import {
 	SSM,
 } from '@aws-sdk/client-ssm';
 import { logger } from '@guardian/transcription-service-backend-common';
+import { SecretsManager } from '@aws-sdk/client-secrets-manager';
 
 export const getParameters = async (
 	paramPath: string,
@@ -34,6 +35,23 @@ export const getParameters = async (
 		}
 	} catch (err) {
 		logger.error('Error fetching parameters from Parameter Store', err);
+		throw err;
+	}
+};
+
+export const getSecret = async (
+	secretName: string,
+	smClient: SecretsManager,
+) => {
+	try {
+		const data = await smClient.getSecretValue({ SecretId: secretName });
+		if (data.SecretString) {
+			return data.SecretString;
+		} else {
+			throw new Error('No secret fetched from Secrets Manager');
+		}
+	} catch (err) {
+		logger.error('Error fetching secret from Secrets Manager', err);
 		throw err;
 	}
 };

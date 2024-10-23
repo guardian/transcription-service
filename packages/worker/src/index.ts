@@ -110,7 +110,7 @@ const publishTranscriptionOutputFailure = async (
 	logger.info('publishing transcription output failed');
 	const failureMessage: TranscriptionOutputFailure = {
 		id: job.id,
-		status: 'FAILURE',
+		status: 'TRANSCRIPTION_FAILURE',
 		userEmail: job.userEmail,
 		originalFilename: job.originalFilename,
 		isTranslation: job.translate,

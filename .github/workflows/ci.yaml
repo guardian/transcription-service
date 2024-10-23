@@ -3,6 +3,47 @@ on:
   workflow_dispatch:
   push:
 jobs:
+  media-download-ci:
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    runs-on: 2core-ubuntu-latest-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm install
+      - name: Build media-download
+        run: npm run media-download::build
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - uses: aws-actions/configure-aws-credentials@v4
+        name: Configure AWS credentials for pushing to ECR
+        with:
+          role-to-assume: ${{ secrets.INVESTIGATIONS_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: eu-west-1
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Build and push media-download Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: containers/media-download.Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: ${{ secrets.MEDIA_DOWNLOAD_ECR_URI }}:${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            node_version=20.11.0
   ci:
     permissions:
       id-token: write
@@ -32,6 +73,10 @@ jobs:
       - name: Build worker-capacity-manager
         run: |
           npm run worker-capacity-manager::build
+      - name: Build media-download
+        run: |
+          npm run media-download::build
+
       - name: Package API/Client/Update
         run: |
           npm run package
