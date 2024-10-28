@@ -1,6 +1,6 @@
 FROM python:3.12-bookworm
 WORKDIR /opt
-LABEL com.theguardian.transcription-service.media-download-container="Media download container with yt-dlp, associated dependnencies and media download app"
+LABEL com.theguardian.transcription-service.media-download-container="Media download container with yt-dlp, associated dependencies and media download app"
 
 ARG node_version
 
