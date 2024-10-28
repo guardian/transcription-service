@@ -498,7 +498,7 @@ export class TranscriptionService extends GuStack {
 			},
 		);
 
-		// SQS queue for media download tasks from API lambda to media-downloader service
+		// SQS queue for media download tasks from API lambda to media-download service
 		const mediaDownloadTaskQueue = new Queue(
 			this,
 			`${APP_NAME}-media-download-task-queue`,
