@@ -1,8 +1,7 @@
 {
 	"extends": "@guardian/tsconfig/tsconfig.json",
 	"compilerOptions": {
-		"module": "CommonJS",
-		"noUnusedLocals": false
+		"module": "CommonJS"
 	},
 	"include": ["lib/**/*", "bin/**/*"],
 	"exclude": ["node_modules", "cdk.out", "lib/**/__snapshots__/**"]
