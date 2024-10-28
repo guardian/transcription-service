@@ -23,6 +23,7 @@ export interface TranscriptionConfig {
 		tableName: string;
 		mediaDownloadProxySSHKey: () => Promise<string>;
 		mediaDownloadProxyIpAddress: string;
+		mediaDownloadProxyPort: number;
 	};
 	aws: {
 		region: string;
@@ -174,6 +175,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			transcriptionOutputBucket,
 			mediaDownloadProxySSHKey,
 			mediaDownloadProxyIpAddress,
+			mediaDownloadProxyPort: 1337,
 		},
 		aws: {
 			region,

@@ -131,20 +131,15 @@ const main = async () => {
 	const useProxy =
 		config.app.stage !== 'DEV' || process.env['USE_PROXY'] === 'true';
 
-	if (useProxy) {
-		const sshKey = await config.app.mediaDownloadProxySSHKey();
-		const tunnelSuccess = await startProxyTunnel(
-			sshKey,
-			config.app.mediaDownloadProxyIpAddress,
-		);
+	const proxyUrl = useProxy
+		? await startProxyTunnel(
+				await config.app.mediaDownloadProxySSHKey(),
+				config.app.mediaDownloadProxyIpAddress,
+				config.app.mediaDownloadProxyPort,
+			)
+		: undefined;
 
-		if (!tunnelSuccess) {
-			logger.error('Failed to start proxy tunnel');
-			return;
-		}
-	}
-
-	const metadata = await downloadMedia(job.url, '/tmp', job.id, useProxy);
+	const metadata = await downloadMedia(job.url, '/tmp', job.id, proxyUrl);
 	if (!metadata) {
 		await reportDownloadFailure(config, sqsClient, job);
 	} else {

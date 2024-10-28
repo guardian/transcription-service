@@ -20,7 +20,11 @@ const extractInfoJson = (infoJsonPath: string): MediaMetadata => {
 	};
 };
 
-export const startProxyTunnel = async (key: string, ip: string) => {
+export const startProxyTunnel = async (
+	key: string,
+	ip: string,
+	port: number,
+): Promise<string> => {
 	try {
 		fs.writeFileSync('/tmp/media_download', key + '\n', { mode: 0o600 });
 		const result = await runSpawnCommand(
@@ -32,7 +36,7 @@ export const startProxyTunnel = async (key: string, ip: string) => {
 				'-o',
 				'StrictHostKeyChecking=no',
 				'-D',
-				'1337',
+				port.toString(),
 				// '-q',
 				'-C',
 				'-N',
@@ -45,7 +49,7 @@ export const startProxyTunnel = async (key: string, ip: string) => {
 			true,
 		);
 		console.log('Proxy result code: ', result.code);
-		return true;
+		return `socks5h://localhost:${port}`;
 	} catch (error) {
 		logger.error('Failed to start proxy tunnel', error);
 		throw error;
@@ -56,9 +60,9 @@ export const downloadMedia = async (
 	url: string,
 	destinationDirectoryPath: string,
 	id: string,
-	useProxy: boolean,
+	proxyUrl?: string,
 ) => {
-	const proxyParams = useProxy ? ['--proxy', 'socks5h://localhost:1337'] : [];
+	const proxyParams = proxyUrl ? ['--proxy', proxyUrl] : [];
 	try {
 		await runSpawnCommand(
 			'downloadMedia',
