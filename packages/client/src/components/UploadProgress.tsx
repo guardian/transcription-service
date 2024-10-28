@@ -1,13 +1,14 @@
 import { iconForStatus } from '@/components/InfoMessage';
 import React from 'react';
 import { RequestStatus } from '@/types';
+import { MediaSourceType } from '@guardian/transcription-service-common';
 
 export const UploadProgress = ({
 	uploads,
 	mediaSource,
 }: {
 	uploads: Record<string, RequestStatus>;
-	mediaSource: 'file' | 'url';
+	mediaSource: MediaSourceType;
 }) => {
 	const text =
 		mediaSource === 'file' ? 'Uploading files:' : 'Processing media urls:';

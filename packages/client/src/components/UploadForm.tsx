@@ -7,6 +7,7 @@ import {
 	type LanguageCode,
 	languageCodes,
 	TranscribeFileRequestBody,
+	MediaSourceType,
 } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
 import {
@@ -128,7 +129,7 @@ export const UploadForm = () => {
 	>(undefined);
 	const [translationRequested, setTranslationRequested] =
 		useState<boolean>(false);
-	const [mediaSource, setMediaSource] = useState<'file' | 'url'>('file');
+	const [mediaSource, setMediaSource] = useState<MediaSourceType>('file');
 	const [mediaUrlText, setMediaUrlText] = useState<string>('');
 	const [mediaUrls, setMediaUrls] = useState<Record<string, RequestStatus>>({});
 	const { token } = useContext(AuthContext);

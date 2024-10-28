@@ -1,11 +1,12 @@
 import React from 'react';
+import { MediaSourceType } from '@guardian/transcription-service-common';
 
 export const UploadFailure = ({
 	reset,
 	mediaSource,
 }: {
 	reset: () => void;
-	mediaSource: 'file' | 'url';
+	mediaSource: MediaSourceType;
 }) => {
 	const text = mediaSource === 'file' ? 'uploads failed' : 'media urls invalid';
 	return (

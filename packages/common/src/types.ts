@@ -191,3 +191,5 @@ export const inputBucketObjectMetadata = z.object({
 export type InputBucketObjectMetadata = z.infer<
 	typeof inputBucketObjectMetadata
 >;
+
+export type MediaSourceType = 'file' | 'url';

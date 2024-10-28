@@ -3,6 +3,7 @@ import { UploadProgress } from '@/components/UploadProgress';
 import { UploadFailure } from '@/components/UploadFailure';
 import { UploadSuccess } from '@/components/UploadSuccess';
 import React from 'react';
+import { MediaSourceType } from '@guardian/transcription-service-common';
 
 export const SubmitResult = ({
 	mediaSource,
@@ -10,7 +11,7 @@ export const SubmitResult = ({
 	mediaWithStatus,
 	reset,
 }: {
-	mediaSource: 'file' | 'url';
+	mediaSource: MediaSourceType;
 	formStatus: RequestStatus;
 	mediaWithStatus: Record<string, RequestStatus>;
 	reset: () => void;

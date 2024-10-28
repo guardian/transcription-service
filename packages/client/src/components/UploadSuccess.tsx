@@ -1,11 +1,12 @@
 import React from 'react';
+import { MediaSourceType } from '@guardian/transcription-service-common';
 
 export const UploadSuccess = ({
 	reset,
 	mediaSource,
 }: {
 	reset: () => void;
-	mediaSource: 'file' | 'url';
+	mediaSource: MediaSourceType;
 }) => {
 	const mediaDownloadText = mediaSource === 'url' && (
 		<p>
