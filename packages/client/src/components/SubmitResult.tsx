@@ -19,7 +19,8 @@ export const SubmitResult = ({
 	const uploadsInProgress = Object.entries(mediaWithStatus).length > 0;
 	const oneOrMoreUploadsFailed =
 		formStatus === RequestStatus.Failed ||
-		Object.values(mediaWithStatus).includes(RequestStatus.Failed);
+		Object.values(mediaWithStatus).includes(RequestStatus.Failed) ||
+		Object.values(mediaWithStatus).includes(RequestStatus.Invalid);
 	const allUploadsSucceeded =
 		Object.entries(mediaWithStatus).length > 0 &&
 		Object.values(mediaWithStatus).filter((s) => s !== RequestStatus.Success)
