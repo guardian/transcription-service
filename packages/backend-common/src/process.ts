@@ -6,20 +6,30 @@ export interface ProcessResult {
 	stderr: string;
 }
 
+export type ProcessName =
+	| 'transcribe'
+	| 'convertToWav'
+	| 'startProxyTunnel'
+	| 'downloadMedia'
+	| 'getContainer'
+	| 'createNewContainer';
+
+const processesWithHiddenStdout: ProcessName[] = ['transcribe'];
+
 export const runSpawnCommand = (
-	processName: string,
+	processName: ProcessName,
 	cmd: string,
 	args: ReadonlyArray<string>,
-	logStdout: boolean,
 	logImmediately: boolean = false,
 ): Promise<ProcessResult> => {
+	const logStdout = !processesWithHiddenStdout.includes(processName);
 	return new Promise((resolve, reject) => {
 		const cp = spawn(cmd, args);
 		const stdout: string[] = [];
 		const stderr: string[] = [];
 		cp.stdout.on('data', (data) => {
 			stdout.push(data.toString());
-			if (logImmediately) {
+			if (logImmediately && logStdout) {
 				logger.info(data.toString());
 			}
 		});

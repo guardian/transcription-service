@@ -56,21 +56,16 @@ export const getOrCreateContainer = async (
 		return existingContainer.stdout.trim();
 	}
 
-	const newContainer = await runSpawnCommand(
-		'createNewContainer',
-		'docker',
-		[
-			'run',
-			'-t',
-			'-d',
-			'--name',
-			'whisper',
-			'-v',
-			`${tempDir}:${CONTAINER_FOLDER}`,
-			'ghcr.io/guardian/transcription-service',
-		],
-		false,
-	);
+	const newContainer = await runSpawnCommand('createNewContainer', 'docker', [
+		'run',
+		'-t',
+		'-d',
+		'--name',
+		'whisper',
+		'-v',
+		`${tempDir}:${CONTAINER_FOLDER}`,
+		'ghcr.io/guardian/transcription-service',
+	]);
 	return newContainer.stdout.trim();
 };
 
@@ -283,23 +278,18 @@ export const runWhisper = async (
 	);
 
 	try {
-		const result = await runSpawnCommand(
-			'transcribe',
-			'docker',
-			[
-				'exec',
-				containerId,
-				'whisper.cpp/main',
-				'--model',
-				`whisper.cpp/models/ggml-${model}.bin`,
-				'--threads',
-				numberOfThreads.toString(),
-				'--file',
-				wavPath,
-				...whisperParams,
-			],
-			false,
-		);
+		const result = await runSpawnCommand('transcribe', 'docker', [
+			'exec',
+			containerId,
+			'whisper.cpp/main',
+			'--model',
+			`whisper.cpp/models/ggml-${model}.bin`,
+			'--threads',
+			numberOfThreads.toString(),
+			'--file',
+			wavPath,
+			...whisperParams,
+		]);
 		const metadata = extractWhisperStderrData(result.stderr);
 		logger.info('Whisper finished successfully', metadata);
 		return {

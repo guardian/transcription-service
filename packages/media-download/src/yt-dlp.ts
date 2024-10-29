@@ -46,7 +46,6 @@ export const startProxyTunnel = async (
 				`media_download@${ip}`,
 			],
 			true,
-			true,
 		);
 		console.log('Proxy result code: ', result.code);
 		return `socks5h://localhost:${port}`;
@@ -76,7 +75,6 @@ export const downloadMedia = async (
 				...proxyParams,
 				url,
 			],
-			true,
 			true,
 		);
 		const metadata = extractInfoJson(
