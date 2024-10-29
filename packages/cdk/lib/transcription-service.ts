@@ -522,6 +522,15 @@ export class TranscriptionService extends GuStack {
 			secretName: `media-download-ssh-key-${this.stage}`,
 		});
 
+		const alarmTopicArn = new GuStringParameter(
+			this,
+			'InvestigationsAlarmTopicArn',
+			{
+				fromSSM: true,
+				default: `/${props.stage}/investigations/alarmTopicArn`,
+			},
+		).valueAsString;
+
 		const mediaDownloadTask = new GuEcsTask(this, 'media-download-task', {
 			app: mediaDownloadApp,
 			vpc,
@@ -543,9 +552,13 @@ export class TranscriptionService extends GuStack {
 				version: 'pm-media-download-infra', // should be 'main' once we merge to main!
 			},
 			taskTimeoutInMinutes: 120,
-			monitoringConfiguration: {
-				noMonitoring: true,
-			},
+			monitoringConfiguration:
+				this.stage === 'PROD'
+					? {
+							noMonitoring: false,
+							snsTopicArn: alarmTopicArn,
+						}
+					: { noMonitoring: true },
 			cpuArchitecture: CpuArchitecture.ARM64,
 			securityGroups: [
 				new GuSecurityGroup(this, 'media-download-sg', {
@@ -752,14 +765,6 @@ export class TranscriptionService extends GuStack {
 
 		// alarms
 
-		const alarmTopicArn = new GuStringParameter(
-			this,
-			'InvestigationsAlarmTopicArn',
-			{
-				fromSSM: true,
-				default: `/${props.stage}/investigations/alarmTopicArn`,
-			},
-		).valueAsString;
 		if (isProd) {
 			const alarms = [
 				// alarm when a message is added to the dead letter queue
