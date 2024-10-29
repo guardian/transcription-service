@@ -3,6 +3,7 @@ import { RequestStatus } from '@/types';
 import { Spinner } from 'flowbite-react';
 import {
 	CheckCircleIcon,
+	ExclamationCircleIcon,
 	ExclamationTriangleIcon,
 } from '@heroicons/react/16/solid';
 
@@ -10,6 +11,8 @@ export const iconForStatus = (status: RequestStatus) => {
 	switch (status) {
 		case RequestStatus.InProgress:
 			return <Spinner className={'w-6 h-6'} />;
+		case RequestStatus.Invalid:
+			return <ExclamationCircleIcon className={'w-6 h-6 text-red-500'} />;
 		case RequestStatus.Failed:
 			return <ExclamationTriangleIcon className={'w-6 h-6 text-red-500'} />;
 		case RequestStatus.Success:

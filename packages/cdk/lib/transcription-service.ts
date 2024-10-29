@@ -14,6 +14,7 @@ import {
 	GuVpc,
 	SubnetType,
 } from '@guardian/cdk/lib/constructs/ec2';
+import { GuEcsTask } from '@guardian/cdk/lib/constructs/ecs';
 import {
 	GuAllowPolicy,
 	GuInstanceRole,
@@ -28,6 +29,7 @@ import {
 	CfnOutput,
 	Duration,
 	Fn,
+	RemovalPolicy,
 	Tags,
 } from 'aws-cdk-lib';
 import { EndpointType } from 'aws-cdk-lib/aws-apigateway';
@@ -56,13 +58,24 @@ import {
 	SpotInstanceInterruption,
 	UserData,
 } from 'aws-cdk-lib/aws-ec2';
+import { Repository } from 'aws-cdk-lib/aws-ecr';
+import { CpuArchitecture } from 'aws-cdk-lib/aws-ecs';
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
-import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import {
+	Effect,
+	PolicyStatement,
+	Role,
+	ServicePrincipal,
+} from 'aws-cdk-lib/aws-iam';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
+import { LogGroup } from 'aws-cdk-lib/aws-logs';
+import { CfnPipe } from 'aws-cdk-lib/aws-pipes';
 import { HttpMethods } from 'aws-cdk-lib/aws-s3';
+import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
+import { JsonPath } from 'aws-cdk-lib/aws-stepfunctions';
 
 export class TranscriptionService extends GuStack {
 	constructor(scope: App, id: string, props: GuStackProps) {
@@ -385,6 +398,10 @@ export class TranscriptionService extends GuStack {
 				]
 			: [InstanceType.of(InstanceClass.T4G, InstanceSize.MEDIUM)];
 
+		const guSubnets = GuVpc.subnetsFromParameter(this, {
+			type: SubnetType.PRIVATE,
+			app: workerApp,
+		});
 		// unfortunately GuAutoscalingGroup doesn't support having a mixedInstancesPolicy so using the basic ASG here
 		const transcriptionWorkerASG = new AutoScalingGroup(
 			this,
@@ -395,10 +412,7 @@ export class TranscriptionService extends GuStack {
 				autoScalingGroupName,
 				vpc,
 				vpcSubnets: {
-					subnets: GuVpc.subnetsFromParameter(this, {
-						type: SubnetType.PRIVATE,
-						app: workerApp,
-					}),
+					subnets: guSubnets,
 				},
 				mixedInstancesPolicy: {
 					launchTemplate,
@@ -484,7 +498,7 @@ export class TranscriptionService extends GuStack {
 			},
 		);
 
-		// SQS queue for media download tasks from API lambda to media-downloader service
+		// SQS queue for media download tasks from API lambda to media-download service
 		const mediaDownloadTaskQueue = new Queue(
 			this,
 			`${APP_NAME}-media-download-task-queue`,
@@ -501,6 +515,140 @@ export class TranscriptionService extends GuStack {
 		);
 
 		mediaDownloadTaskQueue.grantSendMessages(apiLambda);
+
+		const mediaDownloadApp = 'media-download';
+
+		const sshKeySecret = new Secret(this, 'media-download-ssh-key', {
+			secretName: `media-download-ssh-key-${this.stage}`,
+		});
+
+		const mediaDownloadTask = new GuEcsTask(this, 'media-download-task', {
+			app: mediaDownloadApp,
+			vpc,
+			subnets: GuVpc.subnetsFromParameterFixedNumber(
+				this,
+				{
+					type: SubnetType.PRIVATE,
+					app: mediaDownloadApp,
+				},
+				3,
+			),
+			containerConfiguration: {
+				repository: Repository.fromRepositoryName(
+					this,
+					'MediaDownloadRepository',
+					`transcription-service-${mediaDownloadApp}`,
+				),
+				type: 'repository',
+				version: 'pm-media-download-infra', // should be 'main' once we merge to main!
+			},
+			taskTimeoutInMinutes: 120,
+			monitoringConfiguration: {
+				noMonitoring: true,
+			},
+			cpuArchitecture: CpuArchitecture.ARM64,
+			securityGroups: [
+				new GuSecurityGroup(this, 'media-download-sg', {
+					vpc,
+					allowAllOutbound: true,
+					app: mediaDownloadApp,
+				}),
+			],
+			customTaskPolicies: [
+				new PolicyStatement({
+					effect: Effect.ALLOW,
+					actions: ['sqs:ReceiveMessage'],
+					resources: [mediaDownloadTaskQueue.queueArn],
+				}),
+				new PolicyStatement({
+					effect: Effect.ALLOW,
+					actions: ['sqs:SendMessage'],
+					resources: [transcriptionTaskQueue.queueArn],
+				}),
+				new PolicyStatement({
+					effect: Effect.ALLOW,
+					actions: ['secretsmanager:GetSecretValue'],
+					resources: [sshKeySecret.secretArn],
+				}),
+				new PolicyStatement({
+					effect: Effect.ALLOW,
+					actions: ['s3:PutObject'],
+					resources: [`${outputBucket.bucketArn}/*`],
+				}),
+				new PolicyStatement({
+					effect: Effect.ALLOW,
+					actions: ['s3:PutObject', 's3:GetObject'],
+					resources: [`${sourceMediaBucket.bucketArn}/downloaded-media/*`],
+				}),
+				getParametersPolicy,
+			],
+			storage: 50,
+			enableDistributablePolicy: false,
+			environmentOverrides: [
+				{
+					name: 'MESSAGE_BODY',
+					value: JsonPath.stringAt('$[0].body'),
+				},
+				{
+					name: 'AWS_REGION',
+					value: this.region,
+				},
+				{
+					name: 'STAGE',
+					value: this.stage,
+				},
+			],
+		});
+
+		const pipeRole = new Role(this, 'eventbridge-pipe-role', {
+			assumedBy: new ServicePrincipal('pipes.amazonaws.com'),
+		});
+
+		new GuAllowPolicy(this, 'sqs-read', {
+			actions: [
+				'sqs:ReceiveMessage',
+				'sqs:DeleteMessage',
+				'sqs:GetQueueAttributes',
+			],
+			resources: [mediaDownloadTaskQueue.queueArn],
+			roles: [pipeRole],
+		});
+		new GuAllowPolicy(this, 'sfn-start', {
+			actions: ['states:StartExecution'],
+			resources: [mediaDownloadTask.stateMachine.stateMachineArn],
+			roles: [pipeRole],
+		});
+		const logGroup = new LogGroup(this, 'media-download-queue-sfn-pipe-log', {
+			logGroupName: `/aws/pipes/${this.stage}/media-download-queue-sfn-pipe`,
+			retention: 7,
+			removalPolicy: RemovalPolicy.SNAPSHOT,
+		});
+
+		new CfnPipe(this, 'media-download-sqs-sfn', {
+			source: mediaDownloadTaskQueue.queueArn,
+			target: mediaDownloadTask.stateMachine.stateMachineArn,
+			targetParameters: {
+				stepFunctionStateMachineParameters: {
+					invocationType: 'FIRE_AND_FORGET',
+				},
+			},
+			roleArn: pipeRole.roleArn,
+			name: `media-download-queue-sfn-pipe-${this.stage}`,
+			desiredState: 'RUNNING',
+			logConfiguration: {
+				cloudwatchLogsLogDestination: {
+					logGroupArn: logGroup.logGroupArn,
+				},
+				level: 'INFO',
+			},
+			sourceParameters: {
+				sqsQueueParameters: {
+					batchSize: 1,
+				},
+			},
+			description:
+				'Pipe to trigger the media download service from the associated SQS queue.',
+		});
 
 		const transcriptTable = new Table(this, 'TranscriptTable', {
 			tableName: `${APP_NAME}-${this.stage}`,
@@ -546,7 +694,10 @@ export class TranscriptionService extends GuStack {
 			new PolicyStatement({
 				effect: Effect.ALLOW,
 				actions: ['s3:GetObject'],
-				resources: [`${outputBucket.bucketArn}/*`],
+				resources: [
+					`${outputBucket.bucketArn}/*`,
+					`${sourceMediaBucket.bucketArn}/*`,
+				],
 			}),
 		);
 

@@ -78,13 +78,22 @@ export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
 	translationOutputBucketKeys: z.optional(OutputBucketKeys),
 });
 
+export const MediaDownloadFailure = z.object({
+	id: z.string(),
+	status: z.literal('MEDIA_DOWNLOAD_FAILURE'),
+	url: z.string(),
+});
+
+export type MediaDownloadFailure = z.infer<typeof MediaDownloadFailure>;
+
 export const TranscriptionOutputFailure = TranscriptionOutputBase.extend({
-	status: z.literal('FAILURE'),
+	status: z.literal('TRANSCRIPTION_FAILURE'),
 });
 
 export const TranscriptionOutput = z.union([
 	TranscriptionOutputSuccess,
 	TranscriptionOutputFailure,
+	MediaDownloadFailure,
 ]);
 
 export type TranscriptionOutputSuccess = z.infer<
@@ -98,6 +107,11 @@ export type TranscriptionOutputFailure = z.infer<
 export const transcriptionOutputIsSuccess = (
 	output: TranscriptionOutput,
 ): output is TranscriptionOutputSuccess => output.status === 'SUCCESS';
+
+export const transcriptionOutputIsTranscriptionFailure = (
+	output: TranscriptionOutput,
+): output is TranscriptionOutputSuccess =>
+	output.status === 'TRANSCRIPTION_FAILURE';
 
 export type TranscriptionOutput = z.infer<typeof TranscriptionOutput>;
 
@@ -177,3 +191,5 @@ export const inputBucketObjectMetadata = z.object({
 export type InputBucketObjectMetadata = z.infer<
 	typeof inputBucketObjectMetadata
 >;
+
+export type MediaSourceType = 'file' | 'url';

@@ -56,21 +56,16 @@ export const getOrCreateContainer = async (
 		return existingContainer.stdout.trim();
 	}
 
-	const newContainer = await runSpawnCommand(
-		'createNewContainer',
-		'docker',
-		[
-			'run',
-			'-t',
-			'-d',
-			'--name',
-			'whisper',
-			'-v',
-			`${tempDir}:${CONTAINER_FOLDER}`,
-			'ghcr.io/guardian/transcription-service',
-		],
-		false,
-	);
+	const newContainer = await runSpawnCommand('createNewContainer', 'docker', [
+		'run',
+		'-t',
+		'-d',
+		'--name',
+		'whisper',
+		'-v',
+		`${tempDir}:${CONTAINER_FOLDER}`,
+		'ghcr.io/guardian/transcription-service',
+	]);
 	return newContainer.stdout.trim();
 };
 
@@ -259,6 +254,7 @@ const whisperParams = (
 		const fileName = path.parse(file).name;
 		const containerOutputFilePath = path.resolve(CONTAINER_FOLDER, fileName);
 		logger.info(`Transcription output file path: ${containerOutputFilePath}`);
+		const translateParam: string[] = translate ? ['--translate'] : [];
 		return [
 			'--output-srt',
 			'--output-txt',
@@ -267,8 +263,7 @@ const whisperParams = (
 			containerOutputFilePath,
 			'--language',
 			languageCode,
-			`${translate ? '--translate' : ''}`,
-		];
+		].concat(translateParam);
 	}
 };
 
@@ -278,25 +273,23 @@ export const runWhisper = async (
 ) => {
 	const { containerId, numberOfThreads, model, wavPath } = whisperBaseParams;
 	const fileName = path.parse(wavPath).name;
+	logger.info(
+		`Runnning whisper with params ${whisperParams}, base params: ${JSON.stringify(whisperBaseParams, null, 2)}`,
+	);
 
 	try {
-		const result = await runSpawnCommand(
-			'transcribe',
-			'docker',
-			[
-				'exec',
-				containerId,
-				'whisper.cpp/main',
-				'--model',
-				`whisper.cpp/models/ggml-${model}.bin`,
-				'--threads',
-				numberOfThreads.toString(),
-				'--file',
-				wavPath,
-				...whisperParams,
-			],
-			false,
-		);
+		const result = await runSpawnCommand('transcribe', 'docker', [
+			'exec',
+			containerId,
+			'whisper.cpp/main',
+			'--model',
+			`whisper.cpp/models/ggml-${model}.bin`,
+			'--threads',
+			numberOfThreads.toString(),
+			'--file',
+			wavPath,
+			...whisperParams,
+		]);
 		const metadata = extractWhisperStderrData(result.stderr);
 		logger.info('Whisper finished successfully', metadata);
 		return {

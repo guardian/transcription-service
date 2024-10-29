@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import { runSpawnCommand } from '@guardian/transcription-service-backend-common/src/process';
+import { logger } from '@guardian/transcription-service-backend-common';
 
 export type MediaMetadata = {
 	title: string;
@@ -19,24 +20,70 @@ const extractInfoJson = (infoJsonPath: string): MediaMetadata => {
 	};
 };
 
+export const startProxyTunnel = async (
+	key: string,
+	ip: string,
+	port: number,
+): Promise<string> => {
+	try {
+		fs.writeFileSync('/tmp/media_download', key + '\n', { mode: 0o600 });
+		const result = await runSpawnCommand(
+			'startProxyTunnel',
+			'ssh',
+			[
+				'-o',
+				'IdentitiesOnly=yes',
+				'-o',
+				'StrictHostKeyChecking=no',
+				'-D',
+				port.toString(),
+				// '-q',
+				'-C',
+				'-N',
+				'-f',
+				'-i',
+				'/tmp/media_download',
+				`media_download@${ip}`,
+			],
+			true,
+		);
+		console.log('Proxy result code: ', result.code);
+		return `socks5h://localhost:${port}`;
+	} catch (error) {
+		logger.error('Failed to start proxy tunnel', error);
+		throw error;
+	}
+};
+
 export const downloadMedia = async (
 	url: string,
 	destinationDirectoryPath: string,
 	id: string,
+	proxyUrl?: string,
 ) => {
-	const output = await runSpawnCommand('downloadMedia', 'yt-dlp', [
-		'--write-info-json',
-		'--no-clean-info-json',
-		'--newline',
-		'-o',
-		`${destinationDirectoryPath}/${id}`,
-		url,
-		false,
-	]);
-	console.log(output);
-	const metadata = extractInfoJson(
-		`${destinationDirectoryPath}/${id}.info.json`,
-	);
+	const proxyParams = proxyUrl ? ['--proxy', proxyUrl] : [];
+	try {
+		await runSpawnCommand(
+			'downloadMedia',
+			'yt-dlp',
+			[
+				'--write-info-json',
+				'--no-clean-info-json',
+				'--newline',
+				'-o',
+				`${destinationDirectoryPath}/${id}`,
+				...proxyParams,
+				url,
+			],
+			true,
+		);
+		const metadata = extractInfoJson(
+			`${destinationDirectoryPath}/${id}.info.json`,
+		);
 
-	return metadata;
+		return metadata;
+	} catch (error) {
+		logger.error(`Failed to download ${url}`, error);
+		return null;
+	}
 };

@@ -4,15 +4,20 @@ import {
 	getSignedDownloadUrl,
 	getSQSClient,
 	isSqsFailure,
+	logger,
+	sendMessage,
 	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
 import { Upload } from '@aws-sdk/lib-storage';
 import { S3Client } from '@aws-sdk/client-s3';
 import { createReadStream } from 'node:fs';
-import { getNextJob } from './sqs';
-import { downloadMedia, MediaMetadata } from './yt-dlp';
+import { downloadMedia, MediaMetadata, startProxyTunnel } from './yt-dlp';
 import { SQSClient } from '@aws-sdk/client-sqs';
-import { MediaDownloadJob } from '@guardian/transcription-service-common';
+import {
+	DestinationService,
+	MediaDownloadFailure,
+	MediaDownloadJob,
+} from '@guardian/transcription-service-common';
 
 const uploadToS3 = async (
 	s3Client: S3Client,
@@ -21,13 +26,13 @@ const uploadToS3 = async (
 	id: string,
 ) => {
 	const fileStream = createReadStream(`${metadata.mediaPath}`);
-	const key = `downloaded-media/${id}.${metadata.extension}`;
+	const key = `downloaded-media/${id}`;
 	try {
 		const upload = new Upload({
 			client: s3Client,
 			params: {
 				Bucket: bucket,
-				Key: `downloaded-media/${metadata.title}.${metadata.extension}`,
+				Key: key,
 				Body: fileStream,
 			},
 		});
@@ -41,6 +46,28 @@ const uploadToS3 = async (
 	} catch (e) {
 		console.error(e);
 		throw e;
+	}
+};
+
+const reportDownloadFailure = async (
+	config: TranscriptionConfig,
+	sqsClient: SQSClient,
+	job: MediaDownloadJob,
+) => {
+	const mediaDownloadFailure: MediaDownloadFailure = {
+		id: job.id,
+		status: 'MEDIA_DOWNLOAD_FAILURE',
+		url: job.url,
+	};
+	const result = await sendMessage(
+		sqsClient,
+		config.app.destinationQueueUrls[DestinationService.TranscriptionService],
+		JSON.stringify(mediaDownloadFailure),
+		job.id,
+	);
+	if (isSqsFailure(result)) {
+		logger.error('Failed to send download failure message', result.error);
+		throw new Error('Failed to send failure message');
 	}
 };
 
@@ -75,7 +102,24 @@ const requestTranscription = async (
 };
 
 const main = async () => {
-	console.log('Starting media download service');
+	logger.info('Starting media download service');
+	const input = process.env.MESSAGE_BODY;
+	if (!input) {
+		logger.error(
+			'MESSAGE_BODY not set - exiting. If running locally you can use the ./scripts/trigger-media-download-service.sh script to set MESSAGE_BODY',
+		);
+		return;
+	}
+
+	const parsedJob = MediaDownloadJob.safeParse(JSON.parse(input));
+	if (!parsedJob.success) {
+		logger.error(
+			`MESSAGE_BODY is not a valid MediaDownloadJob - exiting. MESSAGE_BODY: ${input} Errors: ${parsedJob.error.errors.map((e) => e.message).join(', ')}`,
+		);
+		return;
+	}
+	const job = parsedJob.data;
+
 	const config = await getConfig();
 
 	const s3Client = new S3Client({ region: config.aws.region });
@@ -83,13 +127,22 @@ const main = async () => {
 		config.aws.region,
 		config.aws.localstackEndpoint,
 	);
-	const job = await getNextJob(
-		sqsClient,
-		config.app.mediaDownloadQueueUrl,
-		config.app.stage === 'DEV',
-	);
-	if (job) {
-		const metadata = await downloadMedia(job.url, '/tmp', job.id);
+
+	const useProxy =
+		config.app.stage !== 'DEV' || process.env['USE_PROXY'] === 'true';
+
+	const proxyUrl = useProxy
+		? await startProxyTunnel(
+				await config.app.mediaDownloadProxySSHKey(),
+				config.app.mediaDownloadProxyIpAddress,
+				config.app.mediaDownloadProxyPort,
+			)
+		: undefined;
+
+	const metadata = await downloadMedia(job.url, '/tmp', job.id, proxyUrl);
+	if (!metadata) {
+		await reportDownloadFailure(config, sqsClient, job);
+	} else {
 		const key = await uploadToS3(
 			s3Client,
 			metadata,
@@ -98,7 +151,6 @@ const main = async () => {
 		);
 		await requestTranscription(config, key, sqsClient, job, metadata);
 	}
-	setTimeout(main, 1000);
 };
 
 main();

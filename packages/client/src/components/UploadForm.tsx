@@ -7,11 +7,46 @@ import {
 	type LanguageCode,
 	languageCodes,
 	TranscribeFileRequestBody,
+	MediaSourceType,
 } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
-import { Checkbox, FileInput, Label, Select } from 'flowbite-react';
+import {
+	Checkbox,
+	FileInput,
+	Label,
+	Select,
+	Textarea,
+	Radio,
+	Alert,
+} from 'flowbite-react';
 import { RequestStatus } from '@/types';
-import { iconForStatus, InfoMessage } from '@/components/InfoMessage';
+import { InfoMessage } from '@/components/InfoMessage';
+import { SubmitResult } from '@/components/SubmitResult';
+
+const submitMediaUrl = async (
+	url: string,
+	token: string,
+	languageCode: LanguageCode,
+	translationRequested: boolean,
+) => {
+	const response = await authFetch('/api/transcribe-url', token, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({
+			url,
+			languageCode,
+			translationRequested,
+		}),
+	});
+	const success = response.status === 200;
+	if (!success) {
+		console.error('Failed to submit urls for transcription');
+		return false;
+	}
+	return true;
+};
 
 const uploadFileAndTranscribe = async (
 	file: File,
@@ -67,12 +102,19 @@ const updateFileStatus = (
 	fileName: string,
 	newStatus: RequestStatus,
 ) => {
-	const x = {
+	return {
 		...uploads,
 		[`${index}-${fileName}`]: newStatus,
 	};
-	console.log('status', uploads, x);
-	return x;
+};
+
+const checkUrlValid = (url: string) => {
+	try {
+		new URL(url);
+		return true;
+	} catch {
+		return false;
+	}
 };
 
 export const UploadForm = () => {
@@ -87,6 +129,9 @@ export const UploadForm = () => {
 	>(undefined);
 	const [translationRequested, setTranslationRequested] =
 		useState<boolean>(false);
+	const [mediaSource, setMediaSource] = useState<MediaSourceType>('file');
+	const [mediaUrlText, setMediaUrlText] = useState<string>('');
+	const [mediaUrls, setMediaUrls] = useState<Record<string, RequestStatus>>({});
 	const { token } = useContext(AuthContext);
 
 	const reset = () => {
@@ -104,77 +149,15 @@ export const UploadForm = () => {
 	}
 
 	if (status !== RequestStatus.Ready) {
-		console.log(uploads);
+		const progressList = mediaSource === 'url' ? mediaUrls : uploads;
+		console.log(progressList);
 		return (
-			<>
-				{Object.entries(uploads).length > 0 && (
-					<div className={'pb-10'}>
-						<h2 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-							Uploading files:
-						</h2>
-
-						<ul className="max-w-md space-y-2 text-gray-500 list-inside dark:text-gray-400">
-							{Object.entries(uploads).map(([key, value]) => (
-								<li className="flex items-center">
-									<span className={'mr-1'}>{iconForStatus(value)}</span>
-									{key}
-								</li>
-							))}
-						</ul>
-					</div>
-				)}
-				{(status === RequestStatus.Failed ||
-					Object.values(uploads).includes(RequestStatus.Failed)) && (
-					<div
-						className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
-						role="alert"
-					>
-						<span className="font-medium">One or more uploads failed</span>{' '}
-						<button
-							onClick={() => reset()}
-							className="font-medium text-blue-600 underline dark:text-blue-500 hover:no-underline"
-						>
-							Click here
-						</button>{' '}
-						to try again
-					</div>
-				)}
-				{Object.entries(uploads).length > 0 &&
-					Object.values(uploads).filter((s) => s !== RequestStatus.Success)
-						.length === 0 && (
-						<div
-							className="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400"
-							role="alert"
-						>
-							<span className="font-medium">Upload complete. </span>{' '}
-							<p>
-								Transcription in progress - check your email for the completed
-								transcript.{' '}
-							</p>
-							<div className="font-medium">
-								<p>
-									{' '}
-									The service can take a few minutes to start up, but thereafter
-									the transcription process is typically shorter than the duration
-									of the media file.{' '}
-								</p>
-								<p>
-									If you have requested a translation, you will receive 2 emails: 
-									one for the transcription in the original language, another
-									for the english translation. The emails will arrive at
-									different times.
-								</p>
-							</div>
-							<button
-								onClick={() => reset()}
-								className="font-medium text-blue-600 underline dark:text-blue-500 hover:no-underline"
-							>
-								Click here
-							</button>{' '}
-							to transcribe another file
-						</div>
-					)}
-			</>
+			<SubmitResult
+				mediaSource={mediaSource}
+				formStatus={status}
+				mediaWithStatus={progressList}
+				reset={reset}
+			/>
 		);
 	}
 
@@ -189,6 +172,45 @@ export const UploadForm = () => {
 			return;
 		}
 
+		setStatus(RequestStatus.InProgress);
+
+		if (mediaSource === 'url') {
+			const urls = mediaUrlText.split('\n').filter((url) => url !== '');
+			if (urls.length === 0) {
+				return;
+			}
+			const urlsWithStatus = Object.fromEntries(
+				urls.map((url) => [
+					url,
+					checkUrlValid(url) ? RequestStatus.InProgress : RequestStatus.Invalid,
+				]),
+			);
+			const validUrls = urls.filter(checkUrlValid);
+			setMediaUrls(urlsWithStatus);
+			for (const url of validUrls) {
+				const success = await submitMediaUrl(
+					url,
+					token,
+					mediaFileLanguageCode,
+					translationRequested,
+				);
+				if (success) {
+					setMediaUrls((prev) => ({
+						...prev,
+						[url]: RequestStatus.Success,
+					}));
+				} else {
+					setMediaUrls((prev) => ({
+						...prev,
+						[url]: RequestStatus.Failed,
+					}));
+					setStatus(RequestStatus.Failed);
+				}
+			}
+			setStatus(RequestStatus.Success);
+			return;
+		}
+
 		// the required property on the file input should prevent the form from
 		// being submitted without any files selected. Need to confirm this in
 		// order to narrow the type of files
@@ -196,7 +218,6 @@ export const UploadForm = () => {
 			return;
 		}
 
-		setStatus(RequestStatus.InProgress);
 		const fileArray = Array.from(files);
 		const fileIds = fileArray.map((f, index) => [
 			`${index}-${f.name}`,
@@ -230,24 +251,79 @@ export const UploadForm = () => {
 
 	return (
 		<>
+			<p className={' pb-3 font-light'}>
+				Use the form below to upload audio or video files. You will receive an
+				email when the transcription is ready.
+			</p>
 			<form id="media-upload-form" onSubmit={handleSubmit}>
-				<div className="mb-6">
-					<div>
-						<Label
-							className="text-base"
-							htmlFor="multiple-file-upload"
-							value="File(s) for transcription"
+				<div className="flex items-center gap-2">
+					I want to transcribe a...
+					<Radio
+						id="file-radio"
+						name="media-type"
+						value="file"
+						defaultChecked
+						onClick={() => setMediaSource('file')}
+					/>
+					<Label htmlFor="file-radio">File</Label>
+					<Radio
+						id="url-radio"
+						name="media-type"
+						value="url"
+						onClick={() => setMediaSource('url')}
+					/>
+					<Label htmlFor="url-radio">Url</Label>
+				</div>
+				{mediaSource === 'url' && (
+					<>
+						<div className="mb-6"></div>
+
+						<div className="mb-6">
+							<div>
+								<Label
+									className="text-base"
+									htmlFor="media-url"
+									value="Url(s) for transcription (one per line)"
+								/>
+							</div>
+							<Textarea
+								id="media-url"
+								placeholder="e.g. https://www.youtube.com?v=abc123"
+								required
+								rows={4}
+								onChange={(e) => {
+									setMediaUrlText(e.target.value);
+								}}
+							/>
+						</div>
+						<div className={'mb-6'}>
+							<Alert color="info">
+								Material on YouTube belongs to the copyright holder. Please only
+								use this service to get a download of a video for legitimate
+								journalistic purposes
+							</Alert>
+						</div>
+					</>
+				)}
+				{mediaSource === 'file' && (
+					<div className="mb-6">
+						<div>
+							<Label
+								className="text-base"
+								htmlFor="multiple-file-upload"
+								value="File(s) for transcription"
+							/>
+						</div>
+						<FileInput
+							id="files"
+							required={true}
+							multiple
+							onChange={(e) => {
+								setFiles(e.target.files);
+							}}
 						/>
 					</div>
-					<FileInput
-						id="files"
-						required={true}
-						multiple
-						onChange={(e) => {
-							setFiles(e.target.files);
-						}}
-					/>
-				</div>
+				)}
 				<div className="mb-6">
 					<div>
 						<Label
@@ -296,8 +372,8 @@ export const UploadForm = () => {
 								<Label htmlFor="shipping">Request English translation</Label>
 								<div className="text-gray-500 dark:text-gray-300">
 									<span className="text-xs font-normal">
-										You will receive two documents: a transcript in the
-										original language and a translation in English.
+										You will receive two documents: a transcript in the original
+										language and a translation in English.
 									</span>
 								</div>
 							</div>
