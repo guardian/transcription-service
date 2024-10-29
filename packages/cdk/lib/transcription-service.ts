@@ -540,7 +540,7 @@ export class TranscriptionService extends GuStack {
 					`transcription-service-${mediaDownloadApp}`,
 				),
 				type: 'repository',
-				version: 'pm-media-download-infra', // should be 'main' once we merge to main!
+				version: 'main',
 			},
 			taskTimeoutInMinutes: 120,
 			monitoringConfiguration: {
