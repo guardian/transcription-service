@@ -272,7 +272,7 @@ export const UploadForm = () => {
 						value="url"
 						onClick={() => setMediaSource('url')}
 					/>
-					<Label htmlFor="url-radio">Url</Label>
+					<Label htmlFor="url-radio">URL</Label>
 				</div>
 				{mediaSource === 'url' && (
 					<>

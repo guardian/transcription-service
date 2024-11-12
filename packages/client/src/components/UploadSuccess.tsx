@@ -10,7 +10,7 @@ export const UploadSuccess = ({
 }) => {
 	const mediaDownloadText = mediaSource === 'url' && (
 		<p>
-			The media at the url you submitted will first be downloaded, then
+			The media at the URL you submitted will first be downloaded, then
 			transcribed. The download will take 5 minutes for a 1 hour video
 		</p>
 	);
