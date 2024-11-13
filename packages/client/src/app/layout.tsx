@@ -18,14 +18,11 @@ export default function RootLayout({
 							<h1 className="text-3xl font-bold tracking-tight text-gray-900">
 								Guardian transcription tool
 							</h1>
-							<span className="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">
-								Beta
-							</span>
 						</div>
 						<p className={'italic pt-1 font-light '}>
-							This is a tool developed for GNM by the Investigations 
-							and Reporting engineering team. Please email feedback / bug reports 
-							to digital.investigations@theguardian.com
+							This is a tool developed for GNM by the Investigations and
+							Reporting engineering team. Please email feedback / bug reports to
+							digital.investigations@theguardian.com
 						</p>
 					</div>
 				</header>
