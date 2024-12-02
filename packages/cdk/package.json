@@ -9,7 +9,7 @@
 		"format": "prettier --write \"{lib,bin}/**/*.ts\"",
 		"lint": "eslint lib/** bin/** --ext .ts --no-error-on-unmatched-pattern",
 		"lint-fix": "eslint --fix lib/** bin/** --ext .ts --no-error-on-unmatched-pattern",
-		"synth": "cdk synth --path-metadata false --version-reporting false",
+		"synth": "CONTAINER_VERSION=${CONTAINER_VERSION:-$(git rev-parse --abbrev-ref HEAD)} cdk synth --path-metadata false --version-reporting false",
 		"diff": "cdk diff --path-metadata false --version-reporting false"
 	},
 	"dependencies": {
