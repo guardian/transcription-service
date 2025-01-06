@@ -611,6 +611,16 @@ export class TranscriptionService extends GuStack {
 			],
 		});
 
+		const volume = {
+			name: `${mediaDownloadApp}-volume`,
+		};
+		mediaDownloadTask.taskDefinition.addVolume(volume);
+		mediaDownloadTask.containerDefinition.addMountPoints({
+			sourceVolume: volume.name,
+			containerPath: '/opt', // needs to match WORKDIR in media-download Dockerfile
+			readOnly: false,
+		});
+
 		const pipeRole = new Role(this, 'eventbridge-pipe-role', {
 			assumedBy: new ServicePrincipal('pipes.amazonaws.com'),
 		});
