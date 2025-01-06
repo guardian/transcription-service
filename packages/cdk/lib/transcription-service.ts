@@ -59,7 +59,6 @@ import {
 	UserData,
 } from 'aws-cdk-lib/aws-ec2';
 import { Repository } from 'aws-cdk-lib/aws-ecr';
-import { CpuArchitecture } from 'aws-cdk-lib/aws-ecs';
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import {
 	Effect,
@@ -559,7 +558,6 @@ export class TranscriptionService extends GuStack {
 							snsTopicArn: alarmTopicArn,
 						}
 					: { noMonitoring: true },
-			cpuArchitecture: CpuArchitecture.ARM64,
 			securityGroups: [
 				new GuSecurityGroup(this, 'media-download-sg', {
 					vpc,
