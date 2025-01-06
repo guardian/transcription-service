@@ -617,7 +617,7 @@ export class TranscriptionService extends GuStack {
 		mediaDownloadTask.taskDefinition.addVolume(volume);
 		mediaDownloadTask.containerDefinition.addMountPoints({
 			sourceVolume: volume.name,
-			containerPath: '/opt', // needs to match WORKDIR in media-download Dockerfile
+			containerPath: '/media-download', // needs to match DOWNLOAD_DIRECTORY in media-download index.ts
 			readOnly: false,
 		});
 

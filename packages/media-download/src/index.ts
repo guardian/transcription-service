@@ -19,6 +19,8 @@ import {
 	MediaDownloadJob,
 } from '@guardian/transcription-service-common';
 
+const DOWNLOAD_DIRECTORY = '/media-download';
+
 const uploadToS3 = async (
 	s3Client: S3Client,
 	metadata: MediaMetadata,
@@ -139,7 +141,12 @@ const main = async () => {
 			)
 		: undefined;
 
-	const metadata = await downloadMedia(job.url, '/tmp', job.id, proxyUrl);
+	const metadata = await downloadMedia(
+		job.url,
+		DOWNLOAD_DIRECTORY,
+		job.id,
+		proxyUrl,
+	);
 	if (!metadata) {
 		await reportDownloadFailure(config, sqsClient, job);
 	} else {
