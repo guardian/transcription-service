@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { runSpawnCommand } from '@guardian/transcription-service-backend-common/src/process';
 import { logger } from '@guardian/transcription-service-backend-common';
+import { MEDIA_DOWNLOAD_WORKING_DIRECTORY } from './index';
 
 export type MediaMetadata = {
 	title: string;
@@ -26,7 +27,11 @@ export const startProxyTunnel = async (
 	port: number,
 ): Promise<string> => {
 	try {
-		fs.writeFileSync('/tmp/media_download', key + '\n', { mode: 0o600 });
+		fs.writeFileSync(
+			`${MEDIA_DOWNLOAD_WORKING_DIRECTORY}/media_download`,
+			key + '\n',
+			{ mode: 0o600 },
+		);
 		const result = await runSpawnCommand(
 			'startProxyTunnel',
 			'ssh',
@@ -42,7 +47,7 @@ export const startProxyTunnel = async (
 				'-N',
 				'-f',
 				'-i',
-				'/tmp/media_download',
+				`${MEDIA_DOWNLOAD_WORKING_DIRECTORY}/media_download`,
 				`media_download@${ip}`,
 			],
 			true,
