@@ -36,6 +36,9 @@ const uploadToS3 = async (
 				Bucket: bucket,
 				Key: key,
 				Body: fileStream,
+				Metadata: {
+					extension: metadata.extension,
+				},
 			},
 		});
 
