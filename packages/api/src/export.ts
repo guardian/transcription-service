@@ -47,8 +47,15 @@ export const exportMediaToDrive = async (
 
 	const mimeType = 'application/octet-stream';
 
+	// default to mp4 on the assumption that most media exported will be video
+	const extensionOrMp4 = extension || 'mp4';
+
+	const fileName = item.originalFilename.endsWith(`.${extensionOrMp4}`)
+		? item.originalFilename
+		: `${item.originalFilename}.${extensionOrMp4 || 'mp4'}`;
+
 	const id = await uploadFileToGoogleDrive(
-		`${item.originalFilename}.${extension || 'mp4'}`,
+		fileName,
 		oAuthTokenResponse,
 		filePath,
 		mimeType,
@@ -93,7 +100,7 @@ export const exportTranscriptToDoc = async (
 		drive,
 		docs,
 		folderId,
-		`${item.originalFilename} transcript${item.isTranslation ? ' (English translation)' : ''}`,
+		`${item.originalFilename} transcript${format === 'srt' ? ' with timecodes' : ''} ${item.isTranslation ? ' (English translation)' : ''}`,
 		transcriptText.text,
 	);
 	if (!exportResult) {
