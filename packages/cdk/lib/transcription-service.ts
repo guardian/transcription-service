@@ -30,6 +30,7 @@ import {
 	Duration,
 	Fn,
 	RemovalPolicy,
+	Size,
 	Tags,
 } from 'aws-cdk-lib';
 import { EndpointType } from 'aws-cdk-lib/aws-apigateway';
@@ -199,6 +200,8 @@ export class TranscriptionService extends GuStack {
 				noMonitoring: true,
 			},
 			app: `${APP_NAME}-api`,
+			ephemeralStorageSize: Size.mebibytes(10240),
+			memorySize: 512,
 			api: {
 				id: apiId,
 				description: 'API for transcription service frontend',
