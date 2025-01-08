@@ -129,6 +129,28 @@ export const getObjectWithPresignedUrl = async (
 	return destinationPath;
 };
 
+export const downloadObject = async (
+	client: S3Client,
+	bucket: string,
+	key: string,
+	destinationPath: string,
+) => {
+	const data = await client.send(
+		new GetObjectCommand({
+			Bucket: bucket,
+			Key: key,
+		}),
+	);
+	if (!data.Body) {
+		throw new Error(`Failed to retrieve object ${key} from bucket ${bucket}`);
+	}
+	await downloadS3Data(data.Body as Readable, destinationPath, key);
+	return {
+		destinationPath,
+		extension: data.Metadata?.['extension'],
+	};
+};
+
 const downloadS3Data = async (
 	data: Readable,
 	destinationPath: string,
@@ -168,4 +190,20 @@ export const getObjectMetadata = async (
 	} catch (e) {
 		return;
 	}
+};
+
+export const mediaKey = (id: string) => `downloaded-media/${id}`;
+
+export const getObjectSize = async (
+	client: S3Client,
+	bucket: string,
+	key: string,
+) => {
+	const data = await client.send(
+		new HeadObjectCommand({
+			Bucket: bucket,
+			Key: key,
+		}),
+	);
+	return data.ContentLength;
 };

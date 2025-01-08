@@ -147,22 +147,34 @@ export const ZTokenResponse = z.object({
 
 export type ZTokenResponse = z.infer<typeof ZTokenResponse>;
 
-export enum TranscriptFormat {
-	SRT = 'srt',
-	TEXT = 'text',
-	JSON = 'json',
-}
+export const ExportItems = z.object({
+	transcriptText: z.boolean(),
+	transcriptSrt: z.boolean(),
+	sourceMedia: z.boolean(),
+});
+
+export type ExportItems = z.infer<typeof ExportItems>;
 
 export const TranscriptExportRequest = z.object({
 	id: z.string(),
 	oAuthTokenResponse: ZTokenResponse,
-	transcriptFormat: z.nativeEnum(TranscriptFormat),
+	items: ExportItems,
+	folderId: z.string(),
 });
 
 export type TranscriptExportRequest = z.infer<typeof TranscriptExportRequest>;
 
+export const CreateFolderRequest = z.object({
+	transcriptId: z.string(),
+	oAuthTokenResponse: ZTokenResponse,
+});
+
+export type CreateFolderRequest = z.infer<typeof CreateFolderRequest>;
+
 export const ExportResponse = z.object({
-	documentId: z.string(),
+	textDocumentId: z.optional(z.string()),
+	srtDocumentId: z.optional(z.string()),
+	sourceMediaFileId: z.optional(z.string()),
 });
 
 export type ExportResponse = z.infer<typeof ExportResponse>;

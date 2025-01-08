@@ -1,9 +1,11 @@
 import {
 	ClientConfig,
+	CreateFolderRequest,
+	ExportItems,
 	TranscriptExportRequest,
-	TranscriptFormat,
 } from '@guardian/transcription-service-common';
 import { authFetch } from '@/helpers';
+import TokenResponse = google.accounts.oauth2.TokenResponse;
 
 const getClientConfig = async (authToken: string): Promise<ClientConfig> => {
 	const configResp = await authFetch('/api/client-config', authToken);
@@ -46,11 +48,9 @@ const promiseInitTokenClient = (
 	});
 };
 
-export const exportTranscript = async (
+export const getOAuthToken = async (
 	authToken: string,
-	transcriptId: string,
-	transcriptFormat: TranscriptFormat,
-): Promise<Response> => {
+): Promise<TokenResponse> => {
 	const config = await getClientConfig(authToken);
 
 	const driveFileScope = 'https://www.googleapis.com/auth/drive.file';
@@ -59,20 +59,57 @@ export const exportTranscript = async (
 		config.googleClientId,
 		driveFileScope,
 	);
+	return tokenResponse;
+};
 
+export const createExportFolder = async (
+	authToken: string,
+	tokenResponse: TokenResponse,
+	transcriptId: string,
+) => {
+	const createFolderRequest: CreateFolderRequest = {
+		transcriptId: transcriptId,
+		// @ts-expect-error (return object from google isn't actually a TokenResponse, our zod type is more accurate)
+		oAuthTokenResponse: tokenResponse,
+	};
+
+	const createFolderResponse = await authFetch(
+		'/api/export/create-folder',
+		authToken,
+		{
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(createFolderRequest),
+		},
+	);
+
+	return createFolderResponse;
+};
+
+export const exportTranscript = async (
+	authToken: string,
+	tokenResponse: TokenResponse,
+	transcriptId: string,
+	items: ExportItems,
+	folderId: string,
+): Promise<Response> => {
 	const exportRequest: TranscriptExportRequest = {
 		id: transcriptId,
 		// @ts-expect-error (return object from google isn't actually a TokenResponse, our zod type is more accurate)
 		oAuthTokenResponse: tokenResponse,
-		transcriptFormat,
+		items,
+		folderId,
 	};
 
-	const exportResponse = await authFetch('/api/export', authToken, {
+	// we don't await here so that the caller (JSX component) can carry on updating the UI
+	const exportPromise = authFetch('/api/export/export', authToken, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
 		},
 		body: JSON.stringify(exportRequest),
 	});
-	return exportResponse;
+	return exportPromise;
 };

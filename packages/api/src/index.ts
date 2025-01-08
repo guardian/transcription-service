@@ -13,11 +13,9 @@ import {
 	getSQSClient,
 	generateOutputSignedUrlAndSendMessage,
 	isSqsFailure,
-	isS3Failure,
 	getSignedDownloadUrl,
 	getObjectMetadata,
 	logger,
-	getObjectText,
 	getS3Client,
 	sendMessage,
 } from '@guardian/transcription-service-backend-common';
@@ -28,15 +26,17 @@ import {
 	transcribeFileRequestBody,
 	transcribeUrlRequestBody,
 	MediaDownloadJob,
+	CreateFolderRequest,
+	ExportResponse,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
 	getDynamoClient,
 	getTranscriptionItem,
-	TranscriptionDynamoItem,
 } from '@guardian/transcription-service-backend-common/src/dynamodb';
-import { createTranscriptDocument } from './services/googleDrive';
+import { createExportFolder, getDriveClients } from './services/googleDrive';
 import { v4 as uuid4 } from 'uuid';
+import { exportMediaToDrive, exportTranscriptToDoc } from './export';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -55,6 +55,10 @@ const getApp = async () => {
 	);
 
 	const s3Client = getS3Client(config.aws.region);
+	const dynamoClient = getDynamoClient(
+		config.aws.region,
+		config.aws.localstackEndpoint,
+	);
 
 	app.use(bodyParser.json({ limit: '40mb' }));
 	app.use(passport.initialize());
@@ -190,79 +194,125 @@ const getApp = async () => {
 		}),
 	]);
 
-	apiRouter.post('/export', [
+	apiRouter.post('/export/create-folder', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			const createRequest = CreateFolderRequest.safeParse(req.body);
+			if (!createRequest.success) {
+				const msg = `Failed to parse create folder request ${createRequest.error.message}`;
+				logger.error(msg);
+				res.status(400).send(msg);
+				return;
+			}
+			const { item, errorMessage } = await getTranscriptionItem(
+				dynamoClient,
+				'transcription-service-CODE',
+				createRequest.data.transcriptId,
+			);
+			if (!item) {
+				res.status(500).send(errorMessage);
+				return;
+			}
+			const driveClients = await getDriveClients(
+				config,
+				createRequest.data.oAuthTokenResponse,
+			);
+			const folderId = await createExportFolder(
+				driveClients.drive,
+				item.originalFilename,
+			);
+			if (!folderId) {
+				res.status(500).send('Failed to create folder');
+				return;
+			}
+			res.send(folderId);
+		}),
+	]);
+
+	apiRouter.post('/export/export', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
 			const exportRequest = TranscriptExportRequest.safeParse(req.body);
-			const dynamoClient = getDynamoClient(
-				config.aws.region,
-				config.aws.localstackEndpoint,
-			);
 			if (!exportRequest.success) {
 				const msg = `Failed to parse export request ${exportRequest.error.message}`;
 				logger.error(msg);
 				res.status(400).send(msg);
 				return;
 			}
-			const item = await getTranscriptionItem(
+			const { item, errorMessage } = await getTranscriptionItem(
 				dynamoClient,
-				config.app.tableName,
+				'transcription-service-CODE',
 				exportRequest.data.id,
 			);
 			if (!item) {
-				const msg = `Failed to fetch item with id ${exportRequest.data.id} from database.`;
-				logger.error(msg);
-				res.status(500).send(msg);
+				res.status(500).send(errorMessage);
 				return;
 			}
-			const parsedItem = TranscriptionDynamoItem.safeParse(item);
-			if (!parsedItem.success) {
-				const msg = `Failed to parse item ${exportRequest.data.id} from dynamodb. Error: ${parsedItem.error.message}`;
-				logger.error(msg);
-				res.status(500).send(msg);
-				return;
-			}
-			if (parsedItem.data.userEmail !== req.user?.email) {
+			if (item.userEmail !== req.user?.email) {
 				// users can only export their own transcripts. Return a 404 to avoid leaking information about other users' transcripts
 				logger.warn(
-					`User ${req.user?.email} attempted to export transcript ${parsedItem.data.id} which does not belong to them.`,
+					`User ${req.user?.email} attempted to export transcript ${item.id} which does not belong to them.`,
 				);
 				res.status(404).send(`Transcript not found`);
 				return;
 			}
-
-			const transcriptS3Key =
-				parsedItem.data.transcriptKeys[exportRequest.data.transcriptFormat];
-			const transcriptText = await getObjectText(
-				s3Client,
-				config.app.transcriptionOutputBucket,
-				transcriptS3Key,
+			const driveClients = await getDriveClients(
+				config,
+				exportRequest.data.oAuthTokenResponse,
 			);
-			if (isS3Failure(transcriptText)) {
-				if (transcriptText.failureReason === 'NoSuchKey') {
-					const msg = `Failed to export transcript - file has expired. Please re-upload the file and try again.`;
-					res.status(410).send(msg);
+			const exportResult: ExportResponse = {
+				textDocumentId: undefined,
+				srtDocumentId: undefined,
+				sourceMediaFileId: undefined,
+			};
+			if (exportRequest.data.items.transcriptText) {
+				const textResult = await exportTranscriptToDoc(
+					config,
+					s3Client,
+					item,
+					'text',
+					exportRequest.data.folderId,
+					driveClients.drive,
+					driveClients.docs,
+				);
+				if (textResult.statusCode !== 200) {
+					res.status(textResult.statusCode).send(textResult.message);
 					return;
 				}
-				const msg = `Failed to fetch transcript. Please contact the digital investigations team for support`;
-				res.status(500).send(msg);
-				return;
+				exportResult.textDocumentId = textResult.documentId;
 			}
-			const exportResult = await createTranscriptDocument(
-				config,
-				`${parsedItem.data.originalFilename} transcript${parsedItem.data.isTranslation ? ' (English translation)' : ''}`,
-				exportRequest.data.oAuthTokenResponse,
-				transcriptText.text,
-			);
-			if (!exportResult) {
-				const msg = `Failed to create google document for item with id ${parsedItem.data.id}`;
-				logger.error(msg);
-				res.status(500).send(msg);
-				return;
+			if (exportRequest.data.items.transcriptSrt) {
+				const srtResult = await exportTranscriptToDoc(
+					config,
+					s3Client,
+					item,
+					'srt',
+					exportRequest.data.folderId,
+					driveClients.drive,
+					driveClients.docs,
+				);
+				if (srtResult.statusCode !== 200) {
+					res.status(srtResult.statusCode).send(srtResult.message);
+					return;
+				}
+				exportResult.srtDocumentId = srtResult.documentId;
 			}
-			res.send({
-				documentId: exportResult,
-			});
+			if (exportRequest.data.items.sourceMedia) {
+				const mediaResult = await exportMediaToDrive(
+					config,
+					s3Client,
+					item,
+					exportRequest.data.oAuthTokenResponse,
+					exportRequest.data.folderId,
+				);
+				if (mediaResult.statusCode !== 200) {
+					logger.error('Failed to export media to google drive');
+					res.status(mediaResult.statusCode).send(mediaResult.message);
+					return;
+				}
+				exportResult.sourceMediaFileId = mediaResult.fileId;
+			}
+			res.send(JSON.stringify(exportResult));
 			return;
 		}),
 	]);

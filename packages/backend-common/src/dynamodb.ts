@@ -62,7 +62,7 @@ export const writeTranscriptionItem = async (
 	}
 };
 
-export const getTranscriptionItem = async (
+export const getItem = async (
 	client: DynamoDBDocumentClient,
 	tableName: string,
 	itemId: string,
@@ -80,4 +80,24 @@ export const getTranscriptionItem = async (
 		logger.error(`Failed to get item ${itemId} from dynamodb`, error);
 		return undefined;
 	}
+};
+
+export const getTranscriptionItem = async (
+	client: DynamoDBDocumentClient,
+	tableName: string,
+	itemId: string,
+): Promise<{ item?: TranscriptionDynamoItem; errorMessage?: string }> => {
+	const item = await getItem(client, tableName, itemId);
+	if (!item) {
+		const msg = `Failed to fetch item with id ${itemId} from database.`;
+		logger.error(msg);
+		return { errorMessage: msg };
+	}
+	const parsedItem = TranscriptionDynamoItem.safeParse(item);
+	if (!parsedItem.success) {
+		const msg = `Failed to parse item ${itemId} from dynamodb. Error: ${parsedItem.error.message}`;
+		logger.error(msg);
+		return { errorMessage: msg };
+	}
+	return { item: parsedItem.data };
 };

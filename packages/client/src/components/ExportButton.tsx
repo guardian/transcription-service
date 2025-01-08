@@ -1,46 +1,43 @@
 import React, { useContext, useState } from 'react';
-import {
-	ExportResponse,
-	TranscriptFormat,
-} from '@guardian/transcription-service-common';
+import { ExportResponse } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
 import Script from 'next/script';
 import { useSearchParams } from 'next/navigation';
-import { exportTranscript } from '@/services/export';
 import {
-	ArrowTopRightOnSquareIcon,
-	DocumentTextIcon,
-} from '@heroicons/react/16/solid';
+	createExportFolder,
+	exportTranscript,
+	getOAuthToken,
+} from '@/services/export';
+import { ArrowTopRightOnSquareIcon } from '@heroicons/react/16/solid';
 import { RequestStatus } from '@/types';
 import { InfoMessage } from '@/components/InfoMessage';
-import { Alert, CustomFlowbiteTheme, Dropdown, Flowbite } from 'flowbite-react';
+import {
+	Alert,
+	Checkbox,
+	CustomFlowbiteTheme,
+	Flowbite,
+	Label,
+} from 'flowbite-react';
 
 const ExportButton = () => {
 	const { token } = useContext(AuthContext);
 	const searchParams = useSearchParams();
-	const [docId, setDocId] = useState<string | undefined>();
-	const [loading, setLoading] = useState(false);
+	const [folderId, setFolderId] = useState<string | undefined>();
+	const [creatingFolder, setCreatingFolder] = useState(false);
+	const [exporting, setExporting] = useState(false);
 	const [failureMessage, setFailureMessage] = useState<string>('');
-	const [transcriptFormat, setTranscriptFormat] =
-		useState<TranscriptFormat | null>(null);
-	const [transcriptFormatValid, setTranscriptFormatValid] = useState<
-		boolean | undefined
-	>(undefined);
 	const [requestStatus, setRequestStatus] = useState<RequestStatus>(
 		RequestStatus.Ready,
 	);
+	const [exportText, setExportText] = useState<boolean>(true);
+	const [exportSrt, setExportSrt] = useState<boolean>(false);
+	const [exportMedia, setExportMedia] = useState<boolean>(false);
 	// TODO: once we have some CSS/component library, tidy up this messy error handling
 	if (!token) {
 		return (
 			<InfoMessage message={'not logged in'} status={RequestStatus.Failed} />
 		);
 	}
-
-	const transcriptFormatDescription: Record<TranscriptFormat, string> = {
-		srt: 'Srt (with time code)',
-		text: 'Text',
-		json: 'Json',
-	};
 
 	const transcriptId = searchParams.get('transcriptId');
 	if (!transcriptId) {
@@ -60,7 +57,7 @@ const ExportButton = () => {
 			/>
 		);
 	}
-	if (loading) {
+	if (creatingFolder) {
 		return (
 			<InfoMessage
 				message={
@@ -70,40 +67,70 @@ const ExportButton = () => {
 			/>
 		);
 	}
-	if (docId) {
+	if (folderId) {
 		return (
-			<a href={`https://docs.google.com/document/d/${docId}`} target={'_blank'}>
-				<button
-					type="button"
-					className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+			<>
+				{exporting && (
+					<InfoMessage
+						message={
+							'Export in progress. Your transcript text should be available immediately, source media may take a few minutes. Use the button below to check the folder where exported items will end up'
+						}
+						status={RequestStatus.InProgress}
+					/>
+				)}
+				<a
+					href={`https://drive.google.com/drive/folders/${folderId}`}
+					target={'_blank'}
 				>
-					View transcript document
-					<ArrowTopRightOnSquareIcon className={'w-6 h-6 pl-1'} />
-				</button>
-			</a>
+					<button
+						type="button"
+						className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+					>
+						Go to export folder
+						<ArrowTopRightOnSquareIcon className={'w-6 h-6 pl-1'} />
+					</button>
+				</a>
+			</>
 		);
 	}
 
 	const exportHandler = async () => {
-		if (!transcriptFormat) {
-			setTranscriptFormatValid(false);
-			return;
-		}
-		setLoading(true);
+		setCreatingFolder(true);
+		setExporting(true);
 		try {
-			const response = await exportTranscript(
+			const tokenResponse = await getOAuthToken(token);
+			const createFolderResponse = await createExportFolder(
 				token,
+				tokenResponse,
 				transcriptId,
-				transcriptFormat,
 			);
-			setLoading(false);
-			if (response && response.status !== 200) {
-				const text = await response.text();
+			if (createFolderResponse.status !== 200) {
+				const text = await createFolderResponse.text();
 				setFailureMessage(text);
 				setRequestStatus(RequestStatus.Failed);
 				return;
 			}
-			const json = await response.json();
+			const folderId = await createFolderResponse.text();
+			setCreatingFolder(false);
+			setFolderId(folderId);
+			const exportResponse = await exportTranscript(
+				token,
+				tokenResponse,
+				transcriptId,
+				{
+					transcriptText: exportText,
+					transcriptSrt: exportSrt,
+					sourceMedia: exportMedia,
+				},
+				folderId,
+			);
+			if (exportResponse.status !== 200) {
+				const text = await exportResponse.text();
+				setFailureMessage(text);
+				setRequestStatus(RequestStatus.Failed);
+				return;
+			}
+			const json = await exportResponse.json();
 			const parsedResponse = ExportResponse.safeParse(json);
 			if (!parsedResponse.success) {
 				console.error('Failed to parse export response', parsedResponse.error);
@@ -113,7 +140,7 @@ const ExportButton = () => {
 				);
 				return;
 			}
-			setDocId(parsedResponse.data.documentId);
+			setExporting(false);
 			setRequestStatus(RequestStatus.Success);
 		} catch (error) {
 			console.error('Export failed', error);
@@ -130,42 +157,63 @@ const ExportButton = () => {
 		},
 	};
 
+	const atLeastOneExport = () => exportText || exportSrt || exportMedia;
+
 	return (
 		<>
 			<Script src="https://accounts.google.com/gsi/client" async></Script>
 			<div className="flex flex-col space-y-2 mb-8">
-				<Dropdown
-					color="gray"
-					label={
-						transcriptFormat === null
-							? 'Choose transcript format'
-							: transcriptFormatDescription[transcriptFormat]
-					}
-				>
-					<Dropdown.Item
-						value={TranscriptFormat.TEXT}
-						onClick={() => {
-							setTranscriptFormat(TranscriptFormat.TEXT);
-							setTranscriptFormatValid(true);
-						}}
-					>
-						{transcriptFormatDescription[TranscriptFormat.TEXT]}
-					</Dropdown.Item>
-					<Dropdown.Divider />
-					<Dropdown.Item
-						value={TranscriptFormat.SRT}
-						onClick={() => {
-							setTranscriptFormat(TranscriptFormat.SRT);
-							setTranscriptFormatValid(true);
-						}}
-					>
-						{transcriptFormatDescription[TranscriptFormat.SRT]}
-					</Dropdown.Item>
-				</Dropdown>
+				<div>
+					<Label
+						className="text-base"
+						htmlFor="language-selector"
+						value="What do you want to export?"
+					/>
+				</div>
+				<p className="font-light">
+					Exported items will be saved in the same folder in google drive
+				</p>
+
+				<div className="flex items-center gap-2">
+					<Checkbox
+						id="transcript-text"
+						checked={exportText}
+						onChange={() => setExportText(!exportText)}
+					/>
+					<Label htmlFor="transcript-text">Transcript text</Label>
+				</div>
+				<div className="flex items-center gap-2">
+					<Checkbox
+						id="transcript-srt"
+						checked={exportSrt}
+						onChange={() => setExportSrt(!exportSrt)}
+					/>
+					<Label htmlFor="transcript-srt">
+						Transcript text with timecodes (SRT)
+					</Label>
+				</div>
+				<div className="flex gap-2">
+					<div className="flex h-5 items-center">
+						<Checkbox
+							id="source-media"
+							checked={exportMedia}
+							onChange={() => setExportMedia(!exportMedia)}
+						/>
+					</div>
+					<div className="flex flex-col">
+						<Label htmlFor="source-media">Original source media</Label>
+						<div className="text-gray-500 dark:text-gray-300">
+							<span className="text-xs font-normal">
+								Max 10GB, roughly 3 hours of video
+							</span>
+						</div>
+					</div>
+				</div>
+
 				<Flowbite theme={{ theme: customTheme }}>
-					{transcriptFormatValid === false ? (
+					{!atLeastOneExport() ? (
 						<Alert className="font-light text-sm align-middle" color="red">
-							A transcript format must be chosen!
+							Please select at least one item for export
 						</Alert>
 					) : null}
 				</Flowbite>
@@ -173,11 +221,15 @@ const ExportButton = () => {
 
 			<button
 				type="button"
-				className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+				className={`text-white px-5 py-2.5 text-center rounded-lg text-sm font-medium ${
+					atLeastOneExport()
+						? 'bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'
+						: 'bg-blue-400 dark:bg-blue-500 cursor-not-allowed'
+				}`}
 				onClick={exportHandler}
+				disabled={!atLeastOneExport()}
 			>
-				Click here to export transcript to Google Doc
-				<DocumentTextIcon className={'w-6 h-6 pl-1'} />
+				Export to Google Drive
 			</button>
 		</>
 	);

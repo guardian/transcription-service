@@ -5,6 +5,7 @@ import {
 	getSQSClient,
 	isSqsFailure,
 	logger,
+	mediaKey,
 	sendMessage,
 	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
@@ -28,7 +29,7 @@ const uploadToS3 = async (
 	id: string,
 ) => {
 	const fileStream = createReadStream(`${metadata.mediaPath}`);
-	const key = `downloaded-media/${id}`;
+	const key = mediaKey(id);
 	try {
 		const upload = new Upload({
 			client: s3Client,
