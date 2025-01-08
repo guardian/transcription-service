@@ -220,7 +220,7 @@ const getApp = async () => {
 			);
 			const folderId = await createExportFolder(
 				driveClients.drive,
-				item.originalFilename,
+				`${item.originalFilename} ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`,
 			);
 			if (!folderId) {
 				res.status(500).send('Failed to create folder');
