@@ -197,6 +197,12 @@ export type TranscribeFileRequestBody = z.infer<
 	typeof transcribeFileRequestBody
 >;
 
+export const signedUrlRequestBody = z.object({
+	fileName: z.string(),
+});
+
+export type SignedUrlRequestBody = z.infer<typeof signedUrlRequestBody>;
+
 export const inputBucketObjectMetadata = z.object({
 	'user-email': z.string(),
 });

@@ -31,19 +31,29 @@ export const getSignedUploadUrl = (
 	userEmail: string,
 	expiresIn: number,
 	useAccelerateEndpoint: boolean,
-	id?: string,
-) =>
-	getSignedUrlSdk(
+	id: string,
+	fileName?: string,
+) => {
+	const metadata = {
+		'user-email': userEmail,
+	};
+	const metadataWithFilename = fileName
+		? {
+				...metadata,
+				originalFilename: fileName,
+				extension: path.extname(fileName),
+			}
+		: metadata;
+	return getSignedUrlSdk(
 		getS3Client(region, useAccelerateEndpoint),
 		new PutObjectCommand({
 			Bucket: bucket,
 			Key: id,
-			Metadata: {
-				'user-email': userEmail,
-			},
+			Metadata: metadataWithFilename,
 		}),
 		{ expiresIn }, // override default expiration time of 15 minutes
 	);
+};
 
 export const getSignedDownloadUrl = async (
 	region: string,

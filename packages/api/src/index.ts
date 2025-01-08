@@ -28,6 +28,7 @@ import {
 	MediaDownloadJob,
 	CreateFolderRequest,
 	ExportResponse,
+	signedUrlRequestBody,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
@@ -317,9 +318,15 @@ const getApp = async () => {
 		}),
 	]);
 
-	apiRouter.get('/signed-url', [
+	apiRouter.post('/signed-url', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
+			const parsedRequest = signedUrlRequestBody.safeParse(req.body);
+			if (!parsedRequest.success) {
+				res.status(400).send('Invalid request');
+				return;
+			}
+
 			const s3Key = uuid4();
 			const presignedS3Url = await getSignedUploadUrl(
 				config.aws.region,
@@ -328,6 +335,7 @@ const getApp = async () => {
 				60,
 				true,
 				s3Key,
+				parsedRequest.data.fileName,
 			);
 
 			res.set('Cache-Control', 'no-cache');
