@@ -1,11 +1,11 @@
 'use client';
 import React from 'react';
-import ExportButton from '@/components/ExportButton';
+import ExportForm from '@/components/ExportForm';
 
 const Export = () => {
 	return (
 		<div>
-			<ExportButton />
+			<ExportForm />
 		</div>
 	);
 };

@@ -51,7 +51,7 @@ const makeFileLinks = (
 	return links;
 };
 
-const ExportButton = () => {
+const ExportForm = () => {
 	const { token } = useContext(AuthContext);
 	const searchParams = useSearchParams();
 	const [folderId, setFolderId] = useState<string | undefined>();
@@ -296,4 +296,4 @@ const ExportButton = () => {
 	);
 };
 
-export default ExportButton;
+export default ExportForm;
