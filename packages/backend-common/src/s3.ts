@@ -41,7 +41,7 @@ export const getSignedUploadUrl = (
 		? {
 				...metadata,
 				originalFilename: fileName,
-				extension: path.extname(fileName),
+				extension: path.extname(fileName).replace('.', ''),
 			}
 		: metadata;
 	return getSignedUrlSdk(
