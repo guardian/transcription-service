@@ -17,7 +17,39 @@ import {
 	CustomFlowbiteTheme,
 	Flowbite,
 	Label,
+	List,
 } from 'flowbite-react';
+
+const getDriveLink = (id: string, docType: 'document' | 'file') => {
+	return docType === 'document'
+		? `https://docs.google.com/document/d/${id}`
+		: `https://drive.google.com/file/d/${id}`;
+};
+
+const makeFileLinks = (
+	exportResponse: ExportResponse,
+): { url: string; text: string }[] => {
+	const links = [];
+	if (exportResponse.textDocumentId) {
+		links.push({
+			url: getDriveLink(exportResponse.textDocumentId, 'document'),
+			text: 'Transcript text',
+		});
+	}
+	if (exportResponse.srtDocumentId) {
+		links.push({
+			url: getDriveLink(exportResponse.srtDocumentId, 'document'),
+			text: 'Transcript text with timecodes (SRT)',
+		});
+	}
+	if (exportResponse.sourceMediaFileId) {
+		links.push({
+			url: getDriveLink(exportResponse.sourceMediaFileId, 'file'),
+			text: 'Original source media',
+		});
+	}
+	return links;
+};
 
 const ExportButton = () => {
 	const { token } = useContext(AuthContext);
@@ -32,6 +64,8 @@ const ExportButton = () => {
 	const [exportText, setExportText] = useState<boolean>(true);
 	const [exportSrt, setExportSrt] = useState<boolean>(false);
 	const [exportMedia, setExportMedia] = useState<boolean>(false);
+	const [exportResponse, setExportResponse] = useState<ExportResponse>({});
+
 	// TODO: once we have some CSS/component library, tidy up this messy error handling
 	if (!token) {
 		return (
@@ -51,7 +85,7 @@ const ExportButton = () => {
 	if (requestStatus === RequestStatus.Failed) {
 		return (
 			<InfoMessage
-				message={`Export failed with error ${failureMessage ?? 'unknown failure'}.
+				message={`Export failed with error ${failureMessage ?? 'unknown failure.'}
 							Make sure that your browser isn't blocking pop-ups so that you can log in to your Google account.`}
 				status={RequestStatus.Failed}
 			/>
@@ -70,13 +104,39 @@ const ExportButton = () => {
 	if (folderId) {
 		return (
 			<>
-				{exporting && (
+				{exporting ? (
 					<InfoMessage
 						message={
 							'Export in progress. Your transcript text should be available immediately, source media may take a few minutes. Use the button below to check the folder where exported items will end up'
 						}
 						status={RequestStatus.InProgress}
 					/>
+				) : (
+					<div className="mb-6">
+						<InfoMessage
+							message={`Export complete, see below for links to your files`}
+							status={RequestStatus.Success}
+						/>
+						<div className={'ml-10'}>
+							<List>
+								{makeFileLinks(exportResponse).map(
+									({ url, text }: { url: string; text: string }) => (
+										<List.Item icon={ArrowTopRightOnSquareIcon}>
+											<a
+												href={url}
+												target={'_blank'}
+												className={
+													'underline text-blue-700 hover:text-blue-800 visited:text-purple-600'
+												}
+											>
+												{text}
+											</a>
+										</List.Item>
+									),
+								)}
+							</List>
+						</div>
+					</div>
 				)}
 				<a
 					href={`https://drive.google.com/drive/folders/${folderId}`}
@@ -141,6 +201,7 @@ const ExportButton = () => {
 				return;
 			}
 			setExporting(false);
+			setExportResponse(parsedResponse.data);
 			setRequestStatus(RequestStatus.Success);
 		} catch (error) {
 			console.error('Export failed', error);
