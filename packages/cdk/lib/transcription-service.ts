@@ -202,6 +202,7 @@ export class TranscriptionService extends GuStack {
 			app: `${APP_NAME}-api`,
 			ephemeralStorageSize: Size.mebibytes(10240),
 			memorySize: 512,
+			timeout: Duration.seconds(900),
 			api: {
 				id: apiId,
 				description: 'API for transcription service frontend',
