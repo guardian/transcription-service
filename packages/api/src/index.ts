@@ -207,7 +207,7 @@ const getApp = async () => {
 			}
 			const { item, errorMessage } = await getTranscriptionItem(
 				dynamoClient,
-				'transcription-service-CODE',
+				config.app.tableName,
 				createRequest.data.transcriptId,
 			);
 			if (!item) {
@@ -242,7 +242,7 @@ const getApp = async () => {
 			}
 			const { item, errorMessage } = await getTranscriptionItem(
 				dynamoClient,
-				'transcription-service-CODE',
+				config.app.tableName,
 				exportRequest.data.id,
 			);
 			if (!item) {
