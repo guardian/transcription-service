@@ -45,8 +45,8 @@ export const exportMediaToDrive = async (
 			message: msg,
 		};
 	}
-	const filePath = `/tmp/${item.id.split('/')[1]}`;
-	const { extension } = await downloadObject(
+	const filePath = `/tmp/${item.id.replace('/', '_')}`;
+	const extension = await downloadObject(
 		s3Client,
 		config.app.sourceMediaBucket,
 		item.id,
