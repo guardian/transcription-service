@@ -256,8 +256,10 @@ export const UploadForm = () => {
 				email when the transcription is ready.
 			</p>
 			<form id="media-upload-form" onSubmit={handleSubmit}>
-				<div className="flex items-center gap-2">
-					I want to transcribe a...
+				<div className={'mb-1'}>
+					<Label className="text-base">I want to transcribe a...</Label>
+				</div>
+				<div className="flex items-center gap-2 mb-3 ml-3">
 					<Radio
 						id="file-radio"
 						name="media-type"
@@ -276,27 +278,29 @@ export const UploadForm = () => {
 				</div>
 				{mediaSource === 'url' && (
 					<>
-						<div className="mb-6"></div>
+						<div className="mb-4"></div>
 
-						<div className="mb-6">
-							<div>
+						<div className="mb-4">
+							<div className={'mb-1'}>
 								<Label
 									className="text-base"
 									htmlFor="media-url"
 									value="Url(s) for transcription (one per line)"
 								/>
 							</div>
-							<Textarea
-								id="media-url"
-								placeholder="e.g. https://www.youtube.com?v=abc123"
-								required
-								rows={4}
-								onChange={(e) => {
-									setMediaUrlText(e.target.value);
-								}}
-							/>
+							<div className={'ml-3'}>
+								<Textarea
+									id="media-url"
+									placeholder="e.g. https://www.youtube.com?v=abc123"
+									required
+									rows={4}
+									onChange={(e) => {
+										setMediaUrlText(e.target.value);
+									}}
+								/>
+							</div>
 						</div>
-						<div className={'mb-6'}>
+						<div className={'mb-4'}>
 							<Alert color="info">
 								Material on YouTube belongs to the copyright holder. Please only
 								use this service to get a download of a video for legitimate
@@ -306,60 +310,76 @@ export const UploadForm = () => {
 					</>
 				)}
 				{mediaSource === 'file' && (
-					<div className="mb-6">
-						<div>
+					<div className="mb-4">
+						<div className={'mb-1'}>
 							<Label
 								className="text-base"
 								htmlFor="multiple-file-upload"
 								value="File(s) for transcription"
 							/>
 						</div>
-						<FileInput
-							id="files"
-							required={true}
-							multiple
-							onChange={(e) => {
-								setFiles(e.target.files);
-							}}
-						/>
+						<div className={'ml-3'}>
+							<FileInput
+								id="files"
+								required={true}
+								multiple
+								onChange={(e) => {
+									setFiles(e.target.files);
+								}}
+							/>
+						</div>
 					</div>
 				)}
-				<div className="mb-6">
-					<div>
+				<div className="mb-4">
+					<div className={'mb-1'}>
 						<Label
 							className="text-base"
 							htmlFor="language-selector"
 							value="Audio language"
 						/>
+						<p className="font-light">
+							Choosing a specific language may give you more accurate results.
+						</p>
 					</div>
-					<p className="font-light">
-						Choosing a specific language may give you more accurate results.
-					</p>
-					<Select
-						id="language-selector"
-						style={{
-							color: languageSelectColor,
-							borderColor: languageSelectColor,
-						}}
-						onChange={(e) => {
-							setMediaFileLanguageCode(e.target.value as LanguageCode);
-							setLanguageCodeValid(true);
-						}}
-					>
-						<option disabled selected>
-							Select a language
-						</option>
-						{languageCodes.map((languageCode: LanguageCode) => (
-							<option key={languageCode} value={languageCode}>
-								{languageCodeToLanguage[languageCode]}
+					<div className={'ml-3'}>
+						<Select
+							id="language-selector"
+							style={{
+								color: languageSelectColor,
+								borderColor: languageSelectColor,
+							}}
+							onChange={(e) => {
+								setMediaFileLanguageCode(e.target.value as LanguageCode);
+								setLanguageCodeValid(true);
+							}}
+						>
+							<option disabled selected>
+								Select a language
 							</option>
-						))}
-					</Select>
+							{languageCodes.map((languageCode: LanguageCode) => (
+								<option key={languageCode} value={languageCode}>
+									{languageCodeToLanguage[languageCode]}
+								</option>
+							))}
+						</Select>
+					</div>
 				</div>
 				{mediaFileLanguageCode !== 'en' && (
-					<div className="mb-6">
-						<div className="flex gap-2">
-							<div className="flex h-5 items-center">
+					<div className="mb-4">
+						<div className={'mb-1'}>
+							<Label
+								className="text-base"
+								htmlFor="translation-checkbox"
+								value="English translation"
+							/>
+							<p className="font-light">
+								If you request a translation, you will receive two emails - one
+								with the transcript in the original language, and another with
+								the translation into English. Translation quality varies.
+							</p>
+						</div>
+						<div className={'ml-3'}>
+							<div className="flex h-5 items-center gap-2">
 								<Checkbox
 									id="translation"
 									checked={translationRequested}
@@ -367,14 +387,10 @@ export const UploadForm = () => {
 										setTranslationRequested(!translationRequested)
 									}
 								/>
-							</div>
-							<div className="flex flex-col">
-								<Label htmlFor="shipping">Request English translation</Label>
-								<div className="text-gray-500 dark:text-gray-300">
-									<span className="text-xs font-normal">
-										You will receive two documents: a transcript in the original
-										language and a translation in English.
-									</span>
+								<div className="flex flex-col">
+									<Label htmlFor="translation" className="font-light text-base">
+										Request translation
+									</Label>
 								</div>
 							</div>
 						</div>
