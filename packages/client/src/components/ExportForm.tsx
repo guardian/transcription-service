@@ -33,7 +33,7 @@ const getDriveLink = (id: string, exportType: ExportType) => {
 const getExportTypeText = (exportType: ExportType) => {
 	switch (exportType) {
 		case 'source-media':
-			return 'Original source media';
+			return 'Input media';
 		case 'text':
 			return 'Transcript text';
 		case 'srt':
@@ -66,7 +66,7 @@ const statusToMessage = (status: RequestStatus): string => {
 		case RequestStatus.Success:
 			return 'All exports complete. See below for links to your files';
 		case RequestStatus.InProgress:
-			return 'Export in progress. Your transcript text should be available immediately, source media may take a few minutes. Use the button below to check the folder where exported items will be saved';
+			return 'Export in progress. Your transcript text should be available immediately, input media may take a few minutes. Use the button below to check the folder where exported items will be saved';
 		case RequestStatus.Ready:
 		default:
 			return '';
@@ -336,7 +336,7 @@ const ExportForm = () => {
 						/>
 					</div>
 					<div className="flex flex-col">
-						<Label htmlFor="source-media">Original source media</Label>
+						<Label htmlFor="source-media">Input media</Label>
 						<div className="text-gray-500 dark:text-gray-300">
 							<span className="text-xs font-normal">
 								Max 10GB, roughly 3 hours of video

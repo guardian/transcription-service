@@ -125,7 +125,7 @@ export const exportTranscriptToDoc = async (
 			exportType: format,
 		};
 	}
-	logger.info(`Source media export complete, file id: ${exportResult}`);
+	logger.info(`Export of ${format} complete, file id: ${exportResult}`);
 	return {
 		status: 'success',
 		id: exportResult,
