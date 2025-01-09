@@ -301,7 +301,8 @@ const getApp = async () => {
 				...item,
 				exportStatus: currentStatuses,
 			});
-			const exportPromises: Promise<void>[] = exportRequest.data.items
+
+			const exportPromises: Promise<ExportStatus>[] = exportRequest.data.items
 				.map((exportType: ExportType) => {
 					if (exportType === 'text' || exportType === 'srt') {
 						return exportTranscriptToDoc(
@@ -338,7 +339,9 @@ const getApp = async () => {
 					}),
 				);
 			res.send(JSON.stringify(currentStatuses));
+			logger.info('Sent response to client, waiting for export to complete...');
 			await Promise.all(exportPromises);
+			logger.info('All exports complete');
 			return;
 		}),
 	]);
@@ -414,12 +417,13 @@ const getApp = async () => {
 
 let api;
 if (runningOnAws) {
-	logger.info('Running on lambda');
-
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let serverlessExpressHandler: any;
 	const serverlessHandler = getApp().then(
-		(app) => (serverlessExpressHandler = serverlessExpress({ app })),
+		(app) =>
+			(serverlessExpressHandler = serverlessExpress({
+				app,
+			})),
 	);
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
