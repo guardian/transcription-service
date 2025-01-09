@@ -145,6 +145,7 @@ export const downloadObject = async (
 	key: string,
 	destinationPath: string,
 ) => {
+	logger.info(`Downloading ${key} from S3 to ${destinationPath}`);
 	const data = await client.send(
 		new GetObjectCommand({
 			Bucket: bucket,
@@ -154,22 +155,43 @@ export const downloadObject = async (
 	if (!data.Body) {
 		throw new Error(`Failed to retrieve object ${key} from bucket ${bucket}`);
 	}
-	await downloadS3Data(data.Body as Readable, destinationPath, key);
-	return {
+	await downloadS3Data(
+		data.Body as Readable,
 		destinationPath,
-		extension: data.Metadata?.['extension'],
-	};
+		key,
+		data.ContentLength,
+	);
+	return data.Metadata?.['extension'];
 };
 
 const downloadS3Data = async (
 	data: Readable,
 	destinationPath: string,
 	key: string,
+	contentLength?: number,
 ) => {
-	const stream = data.pipe(createWriteStream(destinationPath));
-
+	let downloadedBytes = 0;
+	let lastLoggedPercentage = 0;
+	data.on('data', (chunk) => {
+		downloadedBytes += chunk.length;
+		if (contentLength) {
+			const percentage = Math.floor((downloadedBytes / contentLength) * 100);
+			if (
+				downloadedBytes > 0 &&
+				contentLength > 0 &&
+				percentage > lastLoggedPercentage
+			) {
+				lastLoggedPercentage = percentage;
+				logger.info(
+					`Downloaded ${downloadedBytes} of ${contentLength} bytes so far ${contentLength ? `(${percentage}%)` : ''} for ${key}`,
+				);
+			}
+		}
+	});
+	const stream = createWriteStream(destinationPath);
 	await new Promise<void>((resolve, reject) => {
-		stream
+		data
+			.pipe(stream)
 			.on('finish', () => {
 				logger.debug('stream pipe done');
 				resolve();
