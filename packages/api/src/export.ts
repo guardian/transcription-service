@@ -7,7 +7,13 @@ import {
 	TranscriptionConfig,
 	TranscriptionDynamoItem,
 } from '@guardian/transcription-service-backend-common';
-import { ZTokenResponse } from '@guardian/transcription-service-common';
+import {
+	ExportItems,
+	ExportStatus,
+	ExportStatuses,
+	ExportType,
+	ZTokenResponse,
+} from '@guardian/transcription-service-common';
 import {
 	uploadFileToGoogleDrive,
 	uploadToGoogleDocs,
@@ -24,7 +30,7 @@ export const exportMediaToDrive = async (
 	item: TranscriptionDynamoItem,
 	oAuthTokenResponse: ZTokenResponse,
 	folderId: string,
-): Promise<{ statusCode: number; fileId?: string; message?: string }> => {
+): Promise<ExportStatus> => {
 	const mediaSize = await getObjectSize(
 		s3Client,
 		config.app.sourceMediaBucket,
@@ -33,7 +39,8 @@ export const exportMediaToDrive = async (
 	if (mediaSize && mediaSize > LAMBDA_MAX_EPHEMERAL_STORAGE_BYTES) {
 		const msg = `Media file too large to export to google drive. Please manually download the file and upload using the google drive UI`;
 		return {
-			statusCode: 400,
+			exportType: 'source-media',
+			status: 'failure',
 			message: msg,
 		};
 	}
@@ -62,8 +69,9 @@ export const exportMediaToDrive = async (
 		folderId,
 	);
 	return {
-		fileId: id,
-		statusCode: 200,
+		exportType: 'source-media',
+		id,
+		status: 'success',
 	};
 };
 
@@ -75,7 +83,7 @@ export const exportTranscriptToDoc = async (
 	folderId: string,
 	drive: Drive,
 	docs: Docs,
-): Promise<{ statusCode: number; message?: string; documentId?: string }> => {
+): Promise<ExportStatus> => {
 	const transcriptS3Key = item.transcriptKeys[format];
 	const transcriptText = await getObjectText(
 		s3Client,
@@ -86,14 +94,16 @@ export const exportTranscriptToDoc = async (
 		if (transcriptText.failureReason === 'NoSuchKey') {
 			const msg = `Failed to export transcript - file has expired. Please re-upload the file and try again.`;
 			return {
-				statusCode: 410,
+				status: 'failure',
 				message: msg,
+				exportType: format,
 			};
 		}
 		const msg = `Failed to fetch transcript. Please contact the digital investigations team for support`;
 		return {
-			statusCode: 500,
+			status: 'failure',
 			message: msg,
+			exportType: format,
 		};
 	}
 	const exportResult = await uploadToGoogleDocs(
@@ -107,12 +117,28 @@ export const exportTranscriptToDoc = async (
 		const msg = `Failed to create google document for item with id ${item.id}`;
 		logger.error(msg);
 		return {
-			statusCode: 500,
+			status: 'failure',
 			message: msg,
+			exportType: format,
 		};
 	}
 	return {
-		statusCode: 200,
-		documentId: exportResult,
+		status: 'success',
+		id: exportResult,
+		exportType: format,
 	};
+};
+
+export const exportStatusInProgress = (items: ExportItems): ExportStatuses => {
+	return items.map((item: ExportType) => ({
+		status: 'in-progress',
+		exportType: item,
+	}));
+};
+
+export const updateStatus = (
+	status: ExportStatus,
+	statuses: ExportStatuses,
+): ExportStatuses => {
+	return statuses.map((s) => (s.exportType === status.exportType ? status : s));
 };

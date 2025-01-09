@@ -1,5 +1,9 @@
 import React, { useContext, useState } from 'react';
-import { ExportResponse } from '@guardian/transcription-service-common';
+import {
+	ExportStatus,
+	ExportStatuses,
+	ExportType,
+} from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
 import Script from 'next/script';
 import { useSearchParams } from 'next/navigation';
@@ -19,36 +23,40 @@ import {
 	Label,
 	List,
 } from 'flowbite-react';
+import { authFetch } from '@/helpers';
 
-const getDriveLink = (id: string, docType: 'document' | 'file') => {
-	return docType === 'document'
-		? `https://docs.google.com/document/d/${id}`
-		: `https://drive.google.com/file/d/${id}`;
+const getDriveLink = (id: string, exportType: ExportType) => {
+	return exportType === 'source-media'
+		? `https://drive.google.com/file/d/${id}`
+		: `https://docs.google.com/document/d/${id}`;
 };
 
-const makeFileLinks = (
-	exportResponse: ExportResponse,
-): { url: string; text: string }[] => {
-	const links = [];
-	if (exportResponse.textDocumentId) {
-		links.push({
-			url: getDriveLink(exportResponse.textDocumentId, 'document'),
-			text: 'Transcript text',
-		});
+const getExportTypeText = (exportType: ExportType) => {
+	switch (exportType) {
+		case 'source-media':
+			return 'Original source media';
+		case 'text':
+			return 'Transcript text';
+		case 'srt':
+			return 'Transcript text with timecodes (SRT)';
+		default:
+			return 'Unknown export type';
 	}
-	if (exportResponse.srtDocumentId) {
-		links.push({
-			url: getDriveLink(exportResponse.srtDocumentId, 'document'),
-			text: 'Transcript text with timecodes (SRT)',
-		});
+};
+
+const updateExportTypes = (
+	type: ExportType,
+	value: boolean,
+	currentExportTypes: ExportType[],
+) => {
+	if (value) {
+		if (!currentExportTypes.includes(type)) {
+			return [...currentExportTypes, type];
+		}
+		return currentExportTypes;
+	} else {
+		return currentExportTypes.filter((currentType) => currentType !== type);
 	}
-	if (exportResponse.sourceMediaFileId) {
-		links.push({
-			url: getDriveLink(exportResponse.sourceMediaFileId, 'file'),
-			text: 'Original source media',
-		});
-	}
-	return links;
 };
 
 const ExportForm = () => {
@@ -61,10 +69,10 @@ const ExportForm = () => {
 	const [requestStatus, setRequestStatus] = useState<RequestStatus>(
 		RequestStatus.Ready,
 	);
-	const [exportText, setExportText] = useState<boolean>(true);
-	const [exportSrt, setExportSrt] = useState<boolean>(false);
-	const [exportMedia, setExportMedia] = useState<boolean>(false);
-	const [exportResponse, setExportResponse] = useState<ExportResponse>({});
+	const [exportTypesRequested, setExportTypesRequested] = useState<
+		ExportType[]
+	>(['text']);
+	const [exportStatuses, setExportStatuses] = useState<ExportStatus[]>([]);
 
 	// TODO: once we have some CSS/component library, tidy up this messy error handling
 	if (!token) {
@@ -119,21 +127,32 @@ const ExportForm = () => {
 						/>
 						<div className={'ml-10'}>
 							<List>
-								{makeFileLinks(exportResponse).map(
-									({ url, text }: { url: string; text: string }) => (
-										<List.Item icon={ArrowTopRightOnSquareIcon}>
+								{exportStatuses.map((status: ExportStatus) => (
+									<List.Item icon={ArrowTopRightOnSquareIcon}>
+										{status.status === 'success' && (
 											<a
-												href={url}
+												href={getDriveLink(status.id, status.exportType)}
 												target={'_blank'}
 												className={
 													'underline text-blue-700 hover:text-blue-800 visited:text-purple-600'
 												}
 											>
-												{text}
+												{getExportTypeText(status.exportType)}
 											</a>
-										</List.Item>
-									),
-								)}
+										)}
+										{status.status === 'failure' && (
+											<span className={'text-red-700'}>
+												{getExportTypeText(status.exportType)} export failed
+											</span>
+										)}
+										{status.status === 'in-progress' && (
+											<span className={'text-yellow-700'}>
+												{getExportTypeText(status.exportType)} export in
+												progress
+											</span>
+										)}
+									</List.Item>
+								))}
 							</List>
 						</div>
 					</div>
@@ -153,6 +172,38 @@ const ExportForm = () => {
 			</>
 		);
 	}
+
+	const updateStatuses = async () => {
+		const statusResponse = await authFetch(
+			`export/status?id=${transcriptId}`,
+			token,
+		);
+		if (statusResponse.status === 200) {
+			const json = await statusResponse.json();
+			const parsedResponse = ExportStatuses.safeParse(json);
+			if (!parsedResponse.success) {
+				console.error(
+					'Failed to parse export status response',
+					parsedResponse.error,
+				);
+				return;
+			}
+			const statuses = parsedResponse.data.map(
+				(status: ExportStatus) => status.status,
+			);
+			if (statuses.includes('in-progress')) {
+				setTimeout(updateStatuses, 2000);
+			} else {
+				if (statuses.includes('failure')) {
+					setRequestStatus(RequestStatus.Failed);
+					setFailureMessage('One or more exports failed');
+					return;
+				}
+				setRequestStatus(RequestStatus.Success);
+			}
+			setExportStatuses(parsedResponse.data);
+		}
+	};
 
 	const exportHandler = async () => {
 		setCreatingFolder(true);
@@ -177,11 +228,7 @@ const ExportForm = () => {
 				token,
 				tokenResponse,
 				transcriptId,
-				{
-					transcriptText: exportText,
-					transcriptSrt: exportSrt,
-					sourceMedia: exportMedia,
-				},
+				exportTypesRequested,
 				folderId,
 			);
 			if (exportResponse.status !== 200) {
@@ -191,7 +238,7 @@ const ExportForm = () => {
 				return;
 			}
 			const json = await exportResponse.json();
-			const parsedResponse = ExportResponse.safeParse(json);
+			const parsedResponse = ExportStatuses.safeParse(json);
 			if (!parsedResponse.success) {
 				console.error('Failed to parse export response', parsedResponse.error);
 				setRequestStatus(RequestStatus.Failed);
@@ -201,8 +248,8 @@ const ExportForm = () => {
 				return;
 			}
 			setExporting(false);
-			setExportResponse(parsedResponse.data);
-			setRequestStatus(RequestStatus.Success);
+			await updateStatuses();
+			setExportStatuses(parsedResponse.data);
 		} catch (error) {
 			console.error('Export failed', error);
 			setFailureMessage("'Authentication with Google failed'");
@@ -218,7 +265,7 @@ const ExportForm = () => {
 		},
 	};
 
-	const atLeastOneExport = () => exportText || exportSrt || exportMedia;
+	const atLeastOneExport = () => exportTypesRequested.length > 0;
 
 	return (
 		<>
@@ -238,16 +285,32 @@ const ExportForm = () => {
 				<div className="flex items-center gap-2">
 					<Checkbox
 						id="transcript-text"
-						checked={exportText}
-						onChange={() => setExportText(!exportText)}
+						checked={exportTypesRequested.includes('text')}
+						onChange={(e) =>
+							setExportTypesRequested(
+								updateExportTypes(
+									'text',
+									e.target.checked,
+									exportTypesRequested,
+								),
+							)
+						}
 					/>
 					<Label htmlFor="transcript-text">Transcript text</Label>
 				</div>
 				<div className="flex items-center gap-2">
 					<Checkbox
 						id="transcript-srt"
-						checked={exportSrt}
-						onChange={() => setExportSrt(!exportSrt)}
+						checked={exportTypesRequested.includes('srt')}
+						onChange={(e) =>
+							setExportTypesRequested(
+								updateExportTypes(
+									'srt',
+									e.target.checked,
+									exportTypesRequested,
+								),
+							)
+						}
 					/>
 					<Label htmlFor="transcript-srt">
 						Transcript text with timecodes (SRT)
@@ -257,8 +320,16 @@ const ExportForm = () => {
 					<div className="flex h-5 items-center">
 						<Checkbox
 							id="source-media"
-							checked={exportMedia}
-							onChange={() => setExportMedia(!exportMedia)}
+							checked={exportTypesRequested.includes('source-media')}
+							onChange={(e) =>
+								setExportTypesRequested(
+									updateExportTypes(
+										'source-media',
+										e.target.checked,
+										exportTypesRequested,
+									),
+								)
+							}
 						/>
 					</div>
 					<div className="flex flex-col">

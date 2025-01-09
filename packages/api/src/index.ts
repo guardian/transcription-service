@@ -18,6 +18,7 @@ import {
 	logger,
 	getS3Client,
 	sendMessage,
+	writeTranscriptionItem,
 } from '@guardian/transcription-service-backend-common';
 import {
 	ClientConfig,
@@ -27,8 +28,10 @@ import {
 	transcribeUrlRequestBody,
 	MediaDownloadJob,
 	CreateFolderRequest,
-	ExportResponse,
 	signedUrlRequestBody,
+	ExportStatus,
+	ExportStatuses,
+	ExportType,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
@@ -37,7 +40,13 @@ import {
 } from '@guardian/transcription-service-backend-common/src/dynamodb';
 import { createExportFolder, getDriveClients } from './services/googleDrive';
 import { v4 as uuid4 } from 'uuid';
-import { exportMediaToDrive, exportTranscriptToDoc } from './export';
+import {
+	exportMediaToDrive,
+	exportStatusInProgress,
+	exportTranscriptToDoc,
+	updateStatus,
+} from './export';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -56,7 +65,7 @@ const getApp = async () => {
 	);
 
 	const s3Client = getS3Client(config.aws.region);
-	const dynamoClient = getDynamoClient(
+	const dynamoClient: DynamoDBDocumentClient = getDynamoClient(
 		config.aws.region,
 		config.aws.localstackEndpoint,
 	);
@@ -195,6 +204,30 @@ const getApp = async () => {
 		}),
 	]);
 
+	apiRouter.get('/export/status', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			const id = req.query.id as string;
+			if (!id) {
+				res
+					.status(400)
+					.send('You must provide the transcript id in the query string');
+				return;
+			}
+			const { item, errorMessage } = await getTranscriptionItem(
+				dynamoClient,
+				config.app.tableName,
+				id,
+			);
+			if (!item) {
+				res.status(500).send(errorMessage);
+				return;
+			}
+			res.send(JSON.stringify(item.exportStatus));
+			return;
+		}),
+	]);
+
 	apiRouter.post('/export/create-folder', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
@@ -261,59 +294,51 @@ const getApp = async () => {
 				config,
 				exportRequest.data.oAuthTokenResponse,
 			);
-			const exportResult: ExportResponse = {
-				textDocumentId: undefined,
-				srtDocumentId: undefined,
-				sourceMediaFileId: undefined,
-			};
-			if (exportRequest.data.items.transcriptText) {
-				const textResult = await exportTranscriptToDoc(
-					config,
-					s3Client,
-					item,
-					'text',
-					exportRequest.data.folderId,
-					driveClients.drive,
-					driveClients.docs,
+			let currentStatuses: ExportStatuses = exportStatusInProgress(
+				exportRequest.data.items,
+			);
+			await writeTranscriptionItem(dynamoClient, config.app.tableName, {
+				...item,
+				exportStatus: currentStatuses,
+			});
+			const exportPromises: Promise<void>[] = exportRequest.data.items
+				.map((exportType: ExportType) => {
+					if (exportType === 'text' || exportType === 'srt') {
+						return exportTranscriptToDoc(
+							config,
+							s3Client,
+							item,
+							exportType,
+							exportRequest.data.folderId,
+							driveClients.drive,
+							driveClients.docs,
+						);
+					} else {
+						return exportMediaToDrive(
+							config,
+							s3Client,
+							item,
+							exportRequest.data.oAuthTokenResponse,
+							exportRequest.data.folderId,
+						);
+					}
+				})
+				.map((exportResult: Promise<ExportStatus>) =>
+					exportResult.then(async (result: ExportStatus) => {
+						if (result.status === 'failure') {
+							logger.error(result.message);
+						} else {
+							logger.info(`Transcript ${result.exportType} export complete`);
+						}
+						currentStatuses = updateStatus(result, currentStatuses);
+						await writeTranscriptionItem(dynamoClient, config.app.tableName, {
+							...item,
+							exportStatus: currentStatuses,
+						});
+					}),
 				);
-				if (textResult.statusCode !== 200) {
-					res.status(textResult.statusCode).send(textResult.message);
-					return;
-				}
-				exportResult.textDocumentId = textResult.documentId;
-			}
-			if (exportRequest.data.items.transcriptSrt) {
-				const srtResult = await exportTranscriptToDoc(
-					config,
-					s3Client,
-					item,
-					'srt',
-					exportRequest.data.folderId,
-					driveClients.drive,
-					driveClients.docs,
-				);
-				if (srtResult.statusCode !== 200) {
-					res.status(srtResult.statusCode).send(srtResult.message);
-					return;
-				}
-				exportResult.srtDocumentId = srtResult.documentId;
-			}
-			if (exportRequest.data.items.sourceMedia) {
-				const mediaResult = await exportMediaToDrive(
-					config,
-					s3Client,
-					item,
-					exportRequest.data.oAuthTokenResponse,
-					exportRequest.data.folderId,
-				);
-				if (mediaResult.statusCode !== 200) {
-					logger.error('Failed to export media to google drive');
-					res.status(mediaResult.statusCode).send(mediaResult.message);
-					return;
-				}
-				exportResult.sourceMediaFileId = mediaResult.fileId;
-			}
-			res.send(JSON.stringify(exportResult));
+			res.send(JSON.stringify(currentStatuses));
+			await Promise.all(exportPromises);
 			return;
 		}),
 	]);
