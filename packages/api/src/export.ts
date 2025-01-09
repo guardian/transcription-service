@@ -31,6 +31,7 @@ export const exportMediaToDrive = async (
 	oAuthTokenResponse: ZTokenResponse,
 	folderId: string,
 ): Promise<ExportStatus> => {
+	logger.info(`Starting source media export`);
 	const mediaSize = await getObjectSize(
 		s3Client,
 		config.app.sourceMediaBucket,
@@ -68,6 +69,7 @@ export const exportMediaToDrive = async (
 		mimeType,
 		folderId,
 	);
+	logger.info(`Source media export complete, file id: ${id}`);
 	return {
 		exportType: 'source-media',
 		id,
@@ -84,6 +86,7 @@ export const exportTranscriptToDoc = async (
 	drive: Drive,
 	docs: Docs,
 ): Promise<ExportStatus> => {
+	logger.info(`Starting export, export type: ${format}`);
 	const transcriptS3Key = item.transcriptKeys[format];
 	const transcriptText = await getObjectText(
 		s3Client,
@@ -122,6 +125,7 @@ export const exportTranscriptToDoc = async (
 			exportType: format,
 		};
 	}
+	logger.info(`Source media export complete, file id: ${exportResult}`);
 	return {
 		status: 'success',
 		id: exportResult,
