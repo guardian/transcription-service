@@ -14,4 +14,5 @@ export enum RequestStatus {
 	Invalid = 'Invalid',
 	Success = 'Success',
 	Failed = 'Failed',
+	PartialFailure = 'PartialFailure',
 }

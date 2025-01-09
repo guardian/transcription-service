@@ -6,6 +6,7 @@ import {
 	ExclamationCircleIcon,
 	ExclamationTriangleIcon,
 } from '@heroicons/react/16/solid';
+import { ExportStatus } from '@guardian/transcription-service-common';
 
 export const iconForStatus = (status: RequestStatus) => {
 	switch (status) {
@@ -14,8 +15,22 @@ export const iconForStatus = (status: RequestStatus) => {
 		case RequestStatus.Invalid:
 			return <ExclamationCircleIcon className={'w-6 h-6 text-red-500'} />;
 		case RequestStatus.Failed:
+		case RequestStatus.PartialFailure:
 			return <ExclamationTriangleIcon className={'w-6 h-6 text-red-500'} />;
 		case RequestStatus.Success:
+			return <CheckCircleIcon className={'w-6 h-6 text-green-500'} />;
+		default:
+			return null;
+	}
+};
+
+export const iconForExportStatus = (status: ExportStatus) => {
+	switch (status.status) {
+		case 'in-progress':
+			return <Spinner />;
+		case 'failure':
+			return <ExclamationTriangleIcon className={'w-6 h-6 text-red-500'} />;
+		case 'success':
 			return <CheckCircleIcon className={'w-6 h-6 text-green-500'} />;
 		default:
 			return null;

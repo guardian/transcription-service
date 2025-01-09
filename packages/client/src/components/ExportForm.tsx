@@ -14,14 +14,13 @@ import {
 } from '@/services/export';
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/16/solid';
 import { RequestStatus } from '@/types';
-import { InfoMessage } from '@/components/InfoMessage';
+import { iconForExportStatus, InfoMessage } from '@/components/InfoMessage';
 import {
 	Alert,
 	Checkbox,
 	CustomFlowbiteTheme,
 	Flowbite,
 	Label,
-	List,
 } from 'flowbite-react';
 import { authFetch } from '@/helpers';
 
@@ -59,12 +58,26 @@ const updateExportTypes = (
 	}
 };
 
+const statusToMessage = (status: RequestStatus): string => {
+	switch (status) {
+		case RequestStatus.Failed:
+		case RequestStatus.PartialFailure:
+			return 'One or more exports failed. See below for details';
+		case RequestStatus.Success:
+			return 'All exports complete. See below for links to your files';
+		case RequestStatus.InProgress:
+			return 'Export in progress. Your transcript text should be available immediately, source media may take a few minutes. Use the button below to check the folder where exported items will be saved';
+		case RequestStatus.Ready:
+		default:
+			return '';
+	}
+};
+
 const ExportForm = () => {
 	const { token } = useContext(AuthContext);
 	const searchParams = useSearchParams();
 	const [folderId, setFolderId] = useState<string | undefined>();
 	const [creatingFolder, setCreatingFolder] = useState(false);
-	const [exporting, setExporting] = useState(false);
 	const [failureMessage, setFailureMessage] = useState<string>('');
 	const [requestStatus, setRequestStatus] = useState<RequestStatus>(
 		RequestStatus.Ready,
@@ -93,8 +106,7 @@ const ExportForm = () => {
 	if (requestStatus === RequestStatus.Failed) {
 		return (
 			<InfoMessage
-				message={`Export failed with error ${failureMessage ?? 'unknown failure.'}
-							Make sure that your browser isn't blocking pop-ups so that you can log in to your Google account.`}
+				message={`Export failed with error ${failureMessage ?? 'unknown failure.'}`}
 				status={RequestStatus.Failed}
 			/>
 		);
@@ -112,51 +124,41 @@ const ExportForm = () => {
 	if (folderId) {
 		return (
 			<>
-				{exporting ? (
+				<div className="mb-6">
 					<InfoMessage
-						message={
-							'Export in progress. Your transcript text should be available immediately, source media may take a few minutes. Use the button below to check the folder where exported items will end up'
-						}
-						status={RequestStatus.InProgress}
+						message={statusToMessage(requestStatus)}
+						status={requestStatus}
 					/>
-				) : (
-					<div className="mb-6">
-						<InfoMessage
-							message={`Export complete, see below for links to your files`}
-							status={RequestStatus.Success}
-						/>
-						<div className={'ml-10'}>
-							<List>
-								{exportStatuses.map((status: ExportStatus) => (
-									<List.Item icon={ArrowTopRightOnSquareIcon}>
-										{status.status === 'success' && (
-											<a
-												href={getDriveLink(status.id, status.exportType)}
-												target={'_blank'}
-												className={
-													'underline text-blue-700 hover:text-blue-800 visited:text-purple-600'
-												}
-											>
-												{getExportTypeText(status.exportType)}
-											</a>
-										)}
-										{status.status === 'failure' && (
-											<span className={'text-red-700'}>
-												{getExportTypeText(status.exportType)} export failed
-											</span>
-										)}
-										{status.status === 'in-progress' && (
-											<span className={'text-yellow-700'}>
-												{getExportTypeText(status.exportType)} export in
-												progress
-											</span>
-										)}
-									</List.Item>
-								))}
-							</List>
-						</div>
+					<div className={'ml-10'}>
+						{exportStatuses.map((status: ExportStatus) => (
+							<div className={'flex space-x-3'}>
+								{iconForExportStatus(status)}
+								{status.status === 'success' && (
+									<a
+										href={getDriveLink(status.id, status.exportType)}
+										target={'_blank'}
+										className={
+											'underline text-blue-700 hover:text-blue-800 visited:text-purple-600'
+										}
+									>
+										{getExportTypeText(status.exportType)}
+									</a>
+								)}
+								{status.status === 'failure' && (
+									<span className={'text-red-700'}>
+										{getExportTypeText(status.exportType)} export failed
+									</span>
+								)}
+								{status.status === 'in-progress' && (
+									<span className={'text-yellow-700'}>
+										{getExportTypeText(status.exportType)} export in progress
+									</span>
+								)}
+							</div>
+						))}
 					</div>
-				)}
+				</div>
+
 				<a
 					href={`https://drive.google.com/drive/folders/${folderId}`}
 					target={'_blank'}
@@ -175,7 +177,7 @@ const ExportForm = () => {
 
 	const updateStatuses = async () => {
 		const statusResponse = await authFetch(
-			`export/status?id=${transcriptId}`,
+			`/api/export/status?id=${transcriptId}`,
 			token,
 		);
 		if (statusResponse.status === 200) {
@@ -188,6 +190,7 @@ const ExportForm = () => {
 				);
 				return;
 			}
+			setExportStatuses(parsedResponse.data);
 			const statuses = parsedResponse.data.map(
 				(status: ExportStatus) => status.status,
 			);
@@ -195,19 +198,17 @@ const ExportForm = () => {
 				setTimeout(updateStatuses, 2000);
 			} else {
 				if (statuses.includes('failure')) {
-					setRequestStatus(RequestStatus.Failed);
+					setRequestStatus(RequestStatus.PartialFailure);
 					setFailureMessage('One or more exports failed');
 					return;
 				}
 				setRequestStatus(RequestStatus.Success);
 			}
-			setExportStatuses(parsedResponse.data);
 		}
 	};
 
 	const exportHandler = async () => {
 		setCreatingFolder(true);
-		setExporting(true);
 		try {
 			const tokenResponse = await getOAuthToken(token);
 			const createFolderResponse = await createExportFolder(
@@ -223,6 +224,7 @@ const ExportForm = () => {
 			}
 			const folderId = await createFolderResponse.text();
 			setCreatingFolder(false);
+			setRequestStatus(RequestStatus.InProgress);
 			setFolderId(folderId);
 			const exportResponse = await exportTranscript(
 				token,
@@ -247,12 +249,13 @@ const ExportForm = () => {
 				);
 				return;
 			}
-			setExporting(false);
 			await updateStatuses();
 			setExportStatuses(parsedResponse.data);
 		} catch (error) {
 			console.error('Export failed', error);
-			setFailureMessage("'Authentication with Google failed'");
+			setFailureMessage(
+				"'Authentication with Google failed. Make sure that your browser isn't blocking pop-ups so that you can log in to your Google account.'",
+			);
 			setRequestStatus(RequestStatus.Failed);
 		}
 	};
