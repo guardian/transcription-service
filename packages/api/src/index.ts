@@ -424,6 +424,7 @@ if (runningOnAws) {
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	api = async (event: any, context: any) => {
+		context.callbackWaitsForEmptyEventLoop = false;
 		if (!serverlessExpressHandler) {
 			await serverlessHandler;
 		}
