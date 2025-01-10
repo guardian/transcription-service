@@ -173,6 +173,8 @@ export const uploadFileToGoogleDrive = async (
 	let offset = 0;
 
 	for await (const chunk of fileStream) {
+		// pause the stream to prevent node from buffering any more data whilst we upload
+		fileStream.pause();
 		const chunkSize = chunk.length;
 		const range = `bytes ${offset}-${offset + chunkSize - 1}/${fileSize}`;
 
@@ -193,7 +195,9 @@ export const uploadFileToGoogleDrive = async (
 			// Response status is 308 until the final chunk. Final response includes file metadata
 			return ((await response.json()) as { id: string }).id;
 		}
-		if (response.status !== 308) {
+		if (response.status === 308) {
+			//continue
+		} else {
 			const text = await response.text();
 			logger.error(`Received ${response.status} from google, error: ${text}`);
 			throw new Error(
@@ -202,6 +206,8 @@ export const uploadFileToGoogleDrive = async (
 		}
 
 		offset += chunkSize;
+		fileStream.resume();
 	}
+
 	throw new Error('Failed to upload file');
 };

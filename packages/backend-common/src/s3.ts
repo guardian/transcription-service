@@ -164,6 +164,8 @@ export const downloadObject = async (
 	return data.Metadata?.['extension'];
 };
 
+const bytesToMB = (bytes: number) => Math.floor(bytes / 1024 / 1024);
+
 const downloadS3Data = async (
 	data: Readable,
 	destinationPath: string,
@@ -172,9 +174,10 @@ const downloadS3Data = async (
 ) => {
 	let downloadedBytes = 0;
 	let lastLoggedPercentage = 0;
+	const contentLengthMb = contentLength && bytesToMB(contentLength);
 	data.on('data', (chunk) => {
 		downloadedBytes += chunk.length;
-		if (contentLength) {
+		if (contentLength && contentLengthMb) {
 			const percentage = Math.floor((downloadedBytes / contentLength) * 100);
 			if (
 				downloadedBytes > 0 &&
@@ -183,7 +186,7 @@ const downloadS3Data = async (
 			) {
 				lastLoggedPercentage = percentage;
 				logger.info(
-					`Downloaded ${downloadedBytes} of ${contentLength} bytes so far ${contentLength ? `(${percentage}%)` : ''} for ${key}`,
+					`Downloaded ${bytesToMB(downloadedBytes)} of ${contentLengthMb} MB so far (${percentage}%) for ${key}`,
 				);
 			}
 		}
@@ -193,7 +196,6 @@ const downloadS3Data = async (
 		data
 			.pipe(stream)
 			.on('finish', () => {
-				logger.debug('stream pipe done');
 				resolve();
 			})
 			.on('error', (error) => {

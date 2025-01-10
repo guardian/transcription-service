@@ -16,7 +16,8 @@ export const invokeLambda = async (
 
 	const response = await lambdaClient.send(command);
 
-	if (response.StatusCode === 200) {
+	// see https://docs.aws.amazon.com/lambda/latest/api/API_Invoke.html for details of the response
+	if (response.StatusCode === 200 || response.StatusCode === 202) {
 		logger.info('Invocation successful');
 		return;
 	} else {

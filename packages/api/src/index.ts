@@ -30,6 +30,7 @@ import {
 	CreateFolderRequest,
 	signedUrlRequestBody,
 	ExportStatuses,
+	ExportStatus,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
@@ -340,8 +341,18 @@ const getApp = async () => {
 					JSON.stringify(exportRequest.data),
 				);
 			} catch (e) {
-				logger.error('Failed to invoke media export lambda', e);
-				res.status(500).send('Failed to request media export');
+				const msg = 'Failed to invoke media export lambda';
+				logger.error(msg, e);
+				const mediaFailedStatus: ExportStatus = {
+					status: 'failure',
+					exportType: 'source-media',
+					message: msg,
+				};
+				currentStatuses = updateStatus(mediaFailedStatus, currentStatuses);
+				await writeTranscriptionItem(dynamoClient, config.app.tableName, {
+					...item,
+					exportStatus: currentStatuses,
+				});
 			}
 			res.send(JSON.stringify(currentStatuses));
 

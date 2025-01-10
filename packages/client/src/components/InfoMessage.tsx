@@ -11,6 +11,8 @@ import { ExportStatus } from '@guardian/transcription-service-common';
 export const iconForStatus = (status: RequestStatus) => {
 	switch (status) {
 		case RequestStatus.InProgress:
+		case RequestStatus.CreatingFolder:
+		case RequestStatus.TranscriptExportInProgress:
 			return <Spinner className={'w-6 h-6'} />;
 		case RequestStatus.Invalid:
 			return <ExclamationCircleIcon className={'w-6 h-6 text-red-500'} />;

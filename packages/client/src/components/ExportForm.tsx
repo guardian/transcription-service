@@ -65,19 +65,31 @@ const statusToMessage = (status: RequestStatus): string => {
 			return 'One or more exports failed. See below for details';
 		case RequestStatus.Success:
 			return 'All exports complete. See below for links to your files';
+		case RequestStatus.CreatingFolder:
+			return "Export in progress... If nothing happens, make sure that your browser isn't blocking pop-ups.";
+		case RequestStatus.TranscriptExportInProgress:
+			return 'Export in progress. Links to your files will soon appear below.';
 		case RequestStatus.InProgress:
-			return 'Export in progress. Your transcript text should be available immediately, input media may take a few minutes. Use the button below to check the folder where exported items will be saved';
+			return `Export in progress. See below for links to your transcript files. Source media may take several 
+			 minutes - you can stay on this page or click the button to open the google drive folder and wait 
+			 for it to appear there.`;
 		case RequestStatus.Ready:
 		default:
 			return '';
 	}
 };
 
+const exportTypesToStatus = (exportTypes: ExportType[]): ExportStatuses => {
+	return exportTypes.map((type) => ({
+		status: 'in-progress',
+		exportType: type,
+	}));
+};
+
 const ExportForm = () => {
 	const { token } = useContext(AuthContext);
 	const searchParams = useSearchParams();
 	const [folderId, setFolderId] = useState<string | undefined>();
-	const [creatingFolder, setCreatingFolder] = useState(false);
 	const [failureMessage, setFailureMessage] = useState<string>('');
 	const [requestStatus, setRequestStatus] = useState<RequestStatus>(
 		RequestStatus.Ready,
@@ -85,7 +97,7 @@ const ExportForm = () => {
 	const [exportTypesRequested, setExportTypesRequested] = useState<
 		ExportType[]
 	>(['text']);
-	const [exportStatuses, setExportStatuses] = useState<ExportStatus[]>([]);
+	const [exportStatuses, setExportStatuses] = useState<ExportStatuses>([]);
 
 	// TODO: once we have some CSS/component library, tidy up this messy error handling
 	if (!token) {
@@ -111,17 +123,8 @@ const ExportForm = () => {
 			/>
 		);
 	}
-	if (creatingFolder) {
-		return (
-			<InfoMessage
-				message={
-					"Export in progress... If nothing happens, make sure that your browser isn't blocking pop-ups."
-				}
-				status={RequestStatus.InProgress}
-			/>
-		);
-	}
-	if (folderId) {
+
+	if (requestStatus !== RequestStatus.Ready) {
 		return (
 			<>
 				<div className="mb-6">
@@ -208,7 +211,7 @@ const ExportForm = () => {
 	};
 
 	const exportHandler = async () => {
-		setCreatingFolder(true);
+		setRequestStatus(RequestStatus.CreatingFolder);
 		try {
 			const tokenResponse = await getOAuthToken(token);
 			const createFolderResponse = await createExportFolder(
@@ -223,8 +226,8 @@ const ExportForm = () => {
 				return;
 			}
 			const folderId = await createFolderResponse.text();
-			setCreatingFolder(false);
-			setRequestStatus(RequestStatus.InProgress);
+			setRequestStatus(RequestStatus.TranscriptExportInProgress);
+			setExportStatuses(exportTypesToStatus(exportTypesRequested));
 			setFolderId(folderId);
 			const exportResponse = await exportTranscript(
 				token,
@@ -250,6 +253,7 @@ const ExportForm = () => {
 				return;
 			}
 			await updateStatuses();
+			setRequestStatus(RequestStatus.InProgress);
 			setExportStatuses(parsedResponse.data);
 		} catch (error) {
 			console.error('Export failed', error);

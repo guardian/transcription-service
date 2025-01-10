@@ -1,6 +1,4 @@
 import {
-	downloadObject,
-	getObjectSize,
 	getObjectText,
 	isS3Failure,
 	logger,
@@ -12,70 +10,12 @@ import {
 	ExportStatus,
 	ExportStatuses,
 	ExportType,
-	ZTokenResponse,
 } from '@guardian/transcription-service-common';
-import {
-	uploadFileToGoogleDrive,
-	uploadToGoogleDocs,
-} from './services/googleDrive';
+import { uploadToGoogleDocs } from './services/googleDrive';
 import { S3Client } from '@aws-sdk/client-s3';
 import { docs_v1, drive_v3 } from 'googleapis';
 import Drive = drive_v3.Drive;
 import Docs = docs_v1.Docs;
-import { LAMBDA_MAX_EPHEMERAL_STORAGE_BYTES } from './services/lambda';
-
-export const exportMediaToDrive = async (
-	config: TranscriptionConfig,
-	s3Client: S3Client,
-	item: TranscriptionDynamoItem,
-	oAuthTokenResponse: ZTokenResponse,
-	folderId: string,
-): Promise<ExportStatus> => {
-	logger.info(`Starting source media export`);
-	const mediaSize = await getObjectSize(
-		s3Client,
-		config.app.sourceMediaBucket,
-		item.id,
-	);
-	if (mediaSize && mediaSize > LAMBDA_MAX_EPHEMERAL_STORAGE_BYTES) {
-		const msg = `Media file too large to export to google drive. Please manually download the file and upload using the google drive UI`;
-		return {
-			exportType: 'source-media',
-			status: 'failure',
-			message: msg,
-		};
-	}
-	const filePath = `/tmp/${item.id.replace('/', '_')}`;
-	const extension = await downloadObject(
-		s3Client,
-		config.app.sourceMediaBucket,
-		item.id,
-		filePath,
-	);
-
-	const mimeType = 'application/octet-stream';
-
-	// default to mp4 on the assumption that most media exported will be video
-	const extensionOrMp4 = extension || 'mp4';
-
-	const fileName = item.originalFilename.endsWith(`.${extensionOrMp4}`)
-		? item.originalFilename
-		: `${item.originalFilename}.${extensionOrMp4 || 'mp4'}`;
-
-	const id = await uploadFileToGoogleDrive(
-		fileName,
-		oAuthTokenResponse,
-		filePath,
-		mimeType,
-		folderId,
-	);
-	logger.info(`Source media export complete, file id: ${id}`);
-	return {
-		exportType: 'source-media',
-		id,
-		status: 'success',
-	};
-};
 
 export const exportTranscriptToDoc = async (
 	config: TranscriptionConfig,
