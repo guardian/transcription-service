@@ -29,9 +29,7 @@ import {
 	MediaDownloadJob,
 	CreateFolderRequest,
 	signedUrlRequestBody,
-	ExportStatus,
 	ExportStatuses,
-	ExportType,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
@@ -41,12 +39,13 @@ import {
 import { createExportFolder, getDriveClients } from './services/googleDrive';
 import { v4 as uuid4 } from 'uuid';
 import {
-	exportMediaToDrive,
 	exportStatusInProgress,
 	exportTranscriptToDoc,
 	updateStatus,
 } from './export';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import { invokeLambda } from './services/lambda';
+import { LambdaClient } from '@aws-sdk/client-lambda';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -69,6 +68,7 @@ const getApp = async () => {
 		config.aws.region,
 		config.aws.localstackEndpoint,
 	);
+	const lambdaClient = new LambdaClient({ region: config.aws.region });
 
 	app.use(bodyParser.json({ limit: '40mb' }));
 	app.use(passport.initialize());
@@ -302,51 +302,49 @@ const getApp = async () => {
 				exportStatus: currentStatuses,
 			});
 
-			const exportPromises: Promise<string>[] = exportRequest.data.items
-				.map((exportType: ExportType) => {
-					if (exportType === 'text' || exportType === 'srt') {
-						return exportTranscriptToDoc(
-							config,
-							s3Client,
-							item,
-							exportType,
-							exportRequest.data.folderId,
-							driveClients.drive,
-							driveClients.docs,
-						);
-					} else {
-						return exportMediaToDrive(
-							config,
-							s3Client,
-							item,
-							exportRequest.data.oAuthTokenResponse,
-							exportRequest.data.folderId,
-						);
-					}
-				})
-				.map((exportResult: Promise<ExportStatus>) =>
-					exportResult.then((result: ExportStatus) => {
-						if (result.status === 'failure') {
-							logger.error(result.message);
-						} else {
-							logger.info(`Transcript ${result.exportType} export complete`);
-						}
-						currentStatuses = updateStatus(result, currentStatuses);
-						const id = writeTranscriptionItem(
-							dynamoClient,
-							config.app.tableName,
-							{
-								...item,
-								exportStatus: currentStatuses,
-							},
-						);
-						return id;
-					}),
+			if (exportRequest.data.items.includes('text')) {
+				const textExportResult = await exportTranscriptToDoc(
+					config,
+					s3Client,
+					item,
+					'text',
+					exportRequest.data.folderId,
+					driveClients.drive,
+					driveClients.docs,
 				);
+				currentStatuses = updateStatus(textExportResult, currentStatuses);
+			}
+			if (exportRequest.data.items.includes('srt')) {
+				const srtExportResult = await exportTranscriptToDoc(
+					config,
+					s3Client,
+					item,
+					'srt',
+					exportRequest.data.folderId,
+					driveClients.drive,
+					driveClients.docs,
+				);
+				currentStatuses = updateStatus(srtExportResult, currentStatuses);
+			}
+			await writeTranscriptionItem(dynamoClient, config.app.tableName, {
+				...item,
+				exportStatus: currentStatuses,
+			});
+
+			logger.info('Document exports complete.');
+
+			try {
+				await invokeLambda(
+					lambdaClient,
+					config.app.mediaExportFunctionName,
+					JSON.stringify(exportRequest.data),
+				);
+			} catch (e) {
+				logger.error('Failed to invoke media export lambda', e);
+				res.status(500).send('Failed to request media export');
+			}
 			res.send(JSON.stringify(currentStatuses));
-			logger.info('Sent response to client, waiting for export to complete...');
-			await Promise.all(exportPromises);
-			logger.info('All exports complete');
+
 			return;
 		}),
 	]);
@@ -433,7 +431,6 @@ if (runningOnAws) {
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	api = async (event: any, context: any) => {
-		context.callbackWaitsForEmptyEventLoop = false;
 		if (!serverlessExpressHandler) {
 			await serverlessHandler;
 		}

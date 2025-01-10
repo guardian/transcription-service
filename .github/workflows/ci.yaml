@@ -70,6 +70,9 @@ jobs:
       - name: Build output-handler
         run: |
           npm run output-handler::build
+      - name: Build media-export
+        run: |
+          npm run media-export::build
       - name: Build worker-capacity-manager
         run: |
           npm run worker-capacity-manager::build
@@ -106,6 +109,8 @@ jobs:
               - target/api.zip
             transcription-service-output-handler:
               - target/output-handler.zip
+            transcription-service-media-export:
+              - target/media-export.zip
             transcription-service-worker-capacity-manager:
               - target/worker-capacity-manager.zip
             transcription-service-worker:

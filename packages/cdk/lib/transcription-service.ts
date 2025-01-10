@@ -729,6 +729,28 @@ export class TranscriptionService extends GuStack {
 		outputHandlerLambda.addToRolePolicy(getParametersPolicy);
 		outputHandlerLambda.addToRolePolicy(putMetricDataPolicy);
 
+		const mediaExportLambda = new GuLambdaFunction(
+			this,
+			'transcription-service-media-export',
+			{
+				fileName: 'media-export.zip',
+				handler: 'index.mediaExport',
+				runtime: Runtime.NODEJS_20_X,
+				app: `${APP_NAME}-media-export`,
+			},
+		);
+
+		mediaExportLambda.addToRolePolicy(getParametersPolicy);
+		mediaExportLambda.addToRolePolicy(
+			new PolicyStatement({
+				effect: Effect.ALLOW,
+				actions: ['s3:GetObject'],
+				resources: [`${sourceMediaBucket.bucketArn}/*`],
+			}),
+		);
+		transcriptTable.grantReadWriteData(mediaExportLambda);
+		mediaExportLambda.grantInvoke(apiLambda);
+
 		new CfnOutput(this, 'WorkerRoleArn', {
 			exportName: `WorkerRoleArn-${props.stage}`,
 			value: workerRole.roleArn,

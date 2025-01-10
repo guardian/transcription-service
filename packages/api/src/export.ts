@@ -19,10 +19,10 @@ import {
 	uploadToGoogleDocs,
 } from './services/googleDrive';
 import { S3Client } from '@aws-sdk/client-s3';
-import { LAMBDA_MAX_EPHEMERAL_STORAGE_BYTES } from '@guardian/transcription-service-backend-common/src/lambda';
 import { docs_v1, drive_v3 } from 'googleapis';
 import Drive = drive_v3.Drive;
 import Docs = docs_v1.Docs;
+import { LAMBDA_MAX_EPHEMERAL_STORAGE_BYTES } from './services/lambda';
 
 export const exportMediaToDrive = async (
 	config: TranscriptionConfig,
@@ -96,6 +96,7 @@ export const exportTranscriptToDoc = async (
 	if (isS3Failure(transcriptText)) {
 		if (transcriptText.failureReason === 'NoSuchKey') {
 			const msg = `Failed to export transcript - file has expired. Please re-upload the file and try again.`;
+			logger.error(msg);
 			return {
 				status: 'failure',
 				message: msg,
@@ -103,6 +104,7 @@ export const exportTranscriptToDoc = async (
 			};
 		}
 		const msg = `Failed to fetch transcript. Please contact the digital investigations team for support`;
+		logger.error(msg);
 		return {
 			status: 'failure',
 			message: msg,

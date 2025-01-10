@@ -1,0 +1,22 @@
+{
+	"name": "media-export",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"build": "esbuild --bundle --platform=node --target=node20 --outfile=dist/index.js src/index.ts",
+		"start": "STAGE=DEV nodemon src/index.ts"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@guardian/transcription-service-common": "1.0.0",
+		"@guardian/transcription-service-backend-common": "1.0.0"
+	},
+	"devDependencies": {
+		"@types/node": "^20.11.5",
+		"typescript": "^5.3.3",
+		"@types/aws-lambda": "^8.10.133"
+	}
+}
