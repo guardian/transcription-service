@@ -58,6 +58,7 @@ export const writeTranscriptionItem = async (
 	try {
 		await client.send(command);
 		logger.info(`saved to db item ${item.id}`);
+		return item.id;
 	} catch (error) {
 		logger.error('error writing to db', error);
 		throw error;

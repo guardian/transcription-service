@@ -302,7 +302,7 @@ const getApp = async () => {
 				exportStatus: currentStatuses,
 			});
 
-			const exportPromises: Promise<ExportStatus>[] = exportRequest.data.items
+			const exportPromises: Promise<string>[] = exportRequest.data.items
 				.map((exportType: ExportType) => {
 					if (exportType === 'text' || exportType === 'srt') {
 						return exportTranscriptToDoc(
@@ -325,17 +325,22 @@ const getApp = async () => {
 					}
 				})
 				.map((exportResult: Promise<ExportStatus>) =>
-					exportResult.then(async (result: ExportStatus) => {
+					exportResult.then((result: ExportStatus) => {
 						if (result.status === 'failure') {
 							logger.error(result.message);
 						} else {
 							logger.info(`Transcript ${result.exportType} export complete`);
 						}
 						currentStatuses = updateStatus(result, currentStatuses);
-						await writeTranscriptionItem(dynamoClient, config.app.tableName, {
-							...item,
-							exportStatus: currentStatuses,
-						});
+						const id = writeTranscriptionItem(
+							dynamoClient,
+							config.app.tableName,
+							{
+								...item,
+								exportStatus: currentStatuses,
+							},
+						);
+						return id;
 					}),
 				);
 			res.send(JSON.stringify(currentStatuses));
