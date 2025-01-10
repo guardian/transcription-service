@@ -323,25 +323,30 @@ export const UploadForm = () => {
 							</div>
 							<div className={'ml-3'}>
 								{mediaUrlInputs.map((input, index) => (
-									<TextInput
-										id={`media-url-${index}`}
-										placeholder="e.g. https://www.youtube.com?v=abc123"
-										className={'mt-1 mb-1'}
-										color={getStatusColor(input)}
-										helperText={input.status === 'invalid' ? input.reason : ''}
-										onChange={(e) => {
-											setMediaUrlInputs(
-												mediaUrlInputs.map((input, i) =>
-													i === index
-														? checkUrlInputValid({
-																...input,
-																value: e.target.value,
-															})
-														: input,
-												),
-											);
-										}}
-									/>
+									<>
+										<TextInput
+											id={`media-url-${index}`}
+											placeholder="e.g. https://www.youtube.com?v=abc123"
+											className={'mt-1 mb-1'}
+											color={getStatusColor(input)}
+											helperText={
+												input.status === 'invalid' ? input.reason : ''
+											}
+											onChange={(e) => {
+												setMediaUrlInputs(
+													mediaUrlInputs.map((input, i) =>
+														i === index
+															? checkUrlInputValid({
+																	...input,
+																	value: e.target.value,
+																})
+															: input,
+													),
+												);
+											}}
+										/>
+										<hr className="h-0.5 my-2 bg-gray-200 border-0 dark:bg-gray-700" />
+									</>
 								))}
 								<Button
 									size={'sm'}
