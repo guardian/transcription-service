@@ -15,3 +15,21 @@ export enum RequestStatus {
 	Success = 'Success',
 	Failed = 'Failed',
 }
+
+type MediaUrlInvalid = {
+	status: 'invalid';
+	value: string;
+	reason: string;
+};
+
+type MediaUrlValid = {
+	status: 'valid';
+	value: string;
+};
+
+type MediaUrlEmpty = {
+	status: 'empty';
+	value: string;
+};
+
+export type MediaUrlInput = MediaUrlInvalid | MediaUrlValid | MediaUrlEmpty;

@@ -15,13 +15,26 @@ import {
 	FileInput,
 	Label,
 	Select,
-	Textarea,
 	Radio,
 	Alert,
+	TextInput,
+	Button,
 } from 'flowbite-react';
-import { RequestStatus } from '@/types';
+import { MediaUrlInput, RequestStatus } from '@/types';
 import { InfoMessage } from '@/components/InfoMessage';
 import { SubmitResult } from '@/components/SubmitResult';
+import { PlusIcon } from '@heroicons/react/16/solid';
+
+const getStatusColor = (input: MediaUrlInput) => {
+	switch (input.status) {
+		case 'invalid':
+			return 'failure';
+		case 'valid':
+			return 'success';
+		default:
+			return '';
+	}
+};
 
 const submitMediaUrl = async (
 	url: string,
@@ -108,12 +121,26 @@ const updateFileStatus = (
 	};
 };
 
-const checkUrlValid = (url: string) => {
+const checkUrlInputValid = (input: MediaUrlInput): MediaUrlInput => {
 	try {
-		new URL(url);
-		return true;
+		if (input.value === '') {
+			return { value: input.value, status: 'empty' };
+		}
+		const url = new URL(input.value);
+		// we don't want people providing search results pages as yt-dlp will try and fetch every video
+		if (
+			url.pathname.includes('results') &&
+			url.search.includes('search_query')
+		) {
+			return {
+				value: input.value,
+				reason: 'URL is a link to search results. Please link to a video page',
+				status: 'invalid',
+			};
+		}
+		return { value: input.value, status: 'valid' };
 	} catch {
-		return false;
+		return { ...input, reason: 'Invalid URL', status: 'invalid' };
 	}
 };
 
@@ -130,8 +157,10 @@ export const UploadForm = () => {
 	const [translationRequested, setTranslationRequested] =
 		useState<boolean>(false);
 	const [mediaSource, setMediaSource] = useState<MediaSourceType>('file');
-	const [mediaUrlText, setMediaUrlText] = useState<string>('');
 	const [mediaUrls, setMediaUrls] = useState<Record<string, RequestStatus>>({});
+	const [mediaUrlInputs, setMediaUrlInputs] = useState<MediaUrlInput[]>([
+		{ status: 'empty', value: '' },
+	]);
 	const { token } = useContext(AuthContext);
 
 	const reset = () => {
@@ -175,19 +204,17 @@ export const UploadForm = () => {
 		setStatus(RequestStatus.InProgress);
 
 		if (mediaSource === 'url') {
-			const urls = mediaUrlText.split('\n').filter((url) => url !== '');
+			const urls = mediaUrlInputs
+				.filter((input) => input.status === 'valid')
+				.map((input) => input.value.trim());
 			if (urls.length === 0) {
 				return;
 			}
 			const urlsWithStatus = Object.fromEntries(
-				urls.map((url) => [
-					url,
-					checkUrlValid(url) ? RequestStatus.InProgress : RequestStatus.Invalid,
-				]),
+				urls.map((url) => [url, RequestStatus.InProgress]),
 			);
-			const validUrls = urls.filter(checkUrlValid);
 			setMediaUrls(urlsWithStatus);
-			for (const url of validUrls) {
+			for (const url of urls) {
 				const success = await submitMediaUrl(
 					url,
 					token,
@@ -249,6 +276,12 @@ export const UploadForm = () => {
 
 	const languageSelectColor = languageCodeValid === false ? 'red' : '';
 
+	const addUrlInput = () =>
+		setMediaUrlInputs([...mediaUrlInputs, { status: 'empty', value: '' }]);
+
+	const atLeastOneValidUrl = () =>
+		mediaUrlInputs.some((input) => input.status === 'valid');
+
 	return (
 		<>
 			<p className={' pb-3 font-light'}>
@@ -285,19 +318,40 @@ export const UploadForm = () => {
 								<Label
 									className="text-base"
 									htmlFor="media-url"
-									value="Url(s) for transcription (one per line)"
+									value="Url(s) for transcription"
 								/>
 							</div>
 							<div className={'ml-3'}>
-								<Textarea
-									id="media-url"
-									placeholder="e.g. https://www.youtube.com?v=abc123"
-									required
-									rows={4}
-									onChange={(e) => {
-										setMediaUrlText(e.target.value);
-									}}
-								/>
+								{mediaUrlInputs.map((input, index) => (
+									<TextInput
+										id={`media-url-${index}`}
+										placeholder="e.g. https://www.youtube.com?v=abc123"
+										className={'mt-1 mb-1'}
+										color={getStatusColor(input)}
+										helperText={input.status === 'invalid' ? input.reason : ''}
+										onChange={(e) => {
+											setMediaUrlInputs(
+												mediaUrlInputs.map((input, i) =>
+													i === index
+														? checkUrlInputValid({
+																...input,
+																value: e.target.value,
+															})
+														: input,
+												),
+											);
+										}}
+									/>
+								))}
+								<Button
+									size={'sm'}
+									className={'mt-2'}
+									onClick={addUrlInput}
+									color={'light'}
+								>
+									<PlusIcon className="mr-2 h-5 w-5" />
+									Add url
+								</Button>
 							</div>
 						</div>
 						<div className={'mb-4'}>
@@ -398,7 +452,12 @@ export const UploadForm = () => {
 				)}
 				<button
 					type="submit"
-					className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+					className={`text-white px-5 py-2.5 text-center rounded-lg text-sm font-medium ${
+						atLeastOneValidUrl()
+							? 'bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'
+							: 'bg-blue-400 dark:bg-blue-500 cursor-not-allowed'
+					}`}
+					disabled={!atLeastOneValidUrl()}
 				>
 					Submit
 				</button>
