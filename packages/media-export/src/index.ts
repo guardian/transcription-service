@@ -16,9 +16,9 @@ import {
 	TranscriptExportRequest,
 	ZTokenResponse,
 } from '@guardian/transcription-service-common';
-import { uploadFileToGoogleDrive } from 'api/src/services/googleDrive';
 import { updateStatus } from 'api/src/export';
 import { LAMBDA_MAX_EPHEMERAL_STORAGE_BYTES } from 'api/src/services/lambda';
+import { uploadFileToGoogleDrive } from './googleDrive';
 
 export const exportMediaToDrive = async (
 	config: TranscriptionConfig,
