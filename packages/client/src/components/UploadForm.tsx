@@ -55,7 +55,7 @@ const submitMediaUrl = async (
 	});
 	const success = response.status === 200;
 	if (!success) {
-		console.error('Failed to submit urls for transcription');
+		console.error('Failed to submit URLs for transcription');
 		return false;
 	}
 	return true;
@@ -318,7 +318,7 @@ export const UploadForm = () => {
 								<Label
 									className="text-base"
 									htmlFor="media-url"
-									value="Url(s) for transcription"
+									value="URL(s) for transcription"
 								/>
 							</div>
 							<div className={'ml-3'}>
@@ -355,7 +355,7 @@ export const UploadForm = () => {
 									color={'light'}
 								>
 									<PlusIcon className="mr-2 h-5 w-5" />
-									Add url
+									Add URL
 								</Button>
 							</div>
 						</div>
