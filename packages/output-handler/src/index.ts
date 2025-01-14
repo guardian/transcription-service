@@ -74,6 +74,7 @@ const handleTranscriptionSuccess = async (
 		userEmail: transcriptionOutput.userEmail,
 		completedAt: new Date().toISOString(),
 		isTranslation: transcriptionOutput.isTranslation,
+		languageCode: transcriptionOutput.languageCode,
 	};
 
 	try {
