@@ -43,7 +43,7 @@ import { v4 as uuid4 } from 'uuid';
 import {
 	initializeExportStatuses,
 	exportTranscriptToDoc,
-	updateStatus,
+	updateStatuses,
 } from './export';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { invokeLambda } from './services/lambda';
@@ -338,10 +338,10 @@ const getApp = async () => {
 					exportType: 'source-media',
 					message: msg,
 				};
-				exportStatuses = updateStatus(mediaFailedStatus, exportStatuses);
+				exportStatuses = updateStatuses(mediaFailedStatus, exportStatuses);
 				await writeTranscriptionItem(dynamoClient, config.app.tableName, {
 					...item,
-					exportStatuses: updateStatus(mediaFailedStatus, exportStatuses),
+					exportStatuses: updateStatuses(mediaFailedStatus, exportStatuses),
 				});
 			}
 			res.send(JSON.stringify(exportStatuses));

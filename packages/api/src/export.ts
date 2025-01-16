@@ -84,7 +84,7 @@ export const initializeExportStatuses = (
 	}));
 };
 
-export const updateStatus = (
+export const updateStatuses = (
 	updatedStatus: ExportStatus,
 	currentStatuses: ExportStatuses,
 ): ExportStatuses => {

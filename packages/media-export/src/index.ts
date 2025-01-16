@@ -16,7 +16,7 @@ import {
 	TranscriptExportRequest,
 	ZTokenResponse,
 } from '@guardian/transcription-service-common';
-import { updateStatus } from 'api/src/export';
+import { updateStatuses } from 'api/src/export';
 import { LAMBDA_MAX_EPHEMERAL_STORAGE_BYTES } from 'api/src/services/lambda';
 import { uploadFileToGoogleDrive } from './googleDrive';
 
@@ -56,7 +56,7 @@ export const exportMediaToDrive = async (
 
 	const fileName = item.originalFilename.endsWith(`.${extensionOrMp4}`)
 		? item.originalFilename
-		: `${item.originalFilename}.${extensionOrMp4 || 'mp4'}`;
+		: `${item.originalFilename}.${extensionOrMp4}`;
 
 	const id = await uploadFileToGoogleDrive(
 		fileName,
@@ -99,13 +99,13 @@ const processExport = async (exportRequest: TranscriptExportRequest) => {
 		exportRequest.folderId,
 	);
 
-	if (!item.exportStatus) {
+	if (!item.exportStatuses) {
 		throw new Error('No existing export status - cannot update export status');
 	}
-	const newStatuses = updateStatus(result, item.exportStatus);
+	const newStatuses = updateStatuses(result, item.exportStatuses);
 	await writeTranscriptionItem(dynamoClient, config.app.tableName, {
 		...item,
-		exportStatus: newStatuses,
+		exportStatuses: newStatuses,
 	});
 };
 
