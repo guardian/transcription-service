@@ -51,17 +51,17 @@ export const exportTranscriptToDoc = async (
 		};
 	}
 	try {
-		const exportResult = await uploadToGoogleDocs(
+		const docId = await uploadToGoogleDocs(
 			drive,
 			docs,
 			folderId,
 			`${item.originalFilename} transcript${format === 'srt' ? ' with timecodes' : ''} ${item.isTranslation ? ' (English translation)' : ''}`,
 			transcriptText.text,
 		);
-		logger.info(`Export of ${format} complete, file id: ${exportResult}`);
+		logger.info(`Export of ${format} complete, file id: ${docId}`);
 		return {
 			status: 'success',
-			id: exportResult,
+			id: docId,
 			exportType: format,
 		};
 	} catch (error) {
@@ -85,8 +85,10 @@ export const initializeExportStatuses = (
 };
 
 export const updateStatus = (
-	status: ExportStatus,
-	statuses: ExportStatuses,
+	updatedStatus: ExportStatus,
+	currentStatuses: ExportStatuses,
 ): ExportStatuses => {
-	return statuses.map((s) => (s.exportType === status.exportType ? status : s));
+	return currentStatuses.map((s) =>
+		s.exportType === updatedStatus.exportType ? updatedStatus : s,
+	);
 };

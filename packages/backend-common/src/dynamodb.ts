@@ -65,7 +65,7 @@ export const writeTranscriptionItem = async (
 	}
 };
 
-export const getItem = async (
+const getItem = async (
 	client: DynamoDBDocumentClient,
 	tableName: string,
 	itemId: string,

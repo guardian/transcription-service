@@ -29,9 +29,9 @@ import {
 	MediaDownloadJob,
 	CreateFolderRequest,
 	signedUrlRequestBody,
-	ExportStatuses,
 	ExportStatus,
 	ExportStatusRequest,
+	ExportStatuses,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
@@ -293,43 +293,35 @@ const getApp = async () => {
 				config,
 				exportRequest.data.oAuthTokenResponse,
 			);
-			let currentStatuses: ExportStatuses = initializeExportStatuses(
+			let exportStatuses: ExportStatuses = initializeExportStatuses(
 				exportRequest.data.items,
 			);
 			await writeTranscriptionItem(dynamoClient, config.app.tableName, {
 				...item,
-				exportStatuses: currentStatuses,
+				exportStatuses: exportStatuses,
 			});
 
-			if (exportRequest.data.items.includes('text')) {
-				const textExportResult = await exportTranscriptToDoc(
-					config,
-					s3Client,
-					item,
-					'text',
-					exportRequest.data.folderId,
-					driveClients.drive,
-					driveClients.docs,
-				);
-				currentStatuses = updateStatus(textExportResult, currentStatuses);
-			}
-			if (exportRequest.data.items.includes('srt')) {
-				const srtExportResult = await exportTranscriptToDoc(
-					config,
-					s3Client,
-					item,
-					'srt',
-					exportRequest.data.folderId,
-					driveClients.drive,
-					driveClients.docs,
-				);
-				currentStatuses = updateStatus(srtExportResult, currentStatuses);
-			}
+			exportStatuses = await Promise.all(
+				exportStatuses.map((exportStatus: ExportStatus) => {
+					if (exportStatus.exportType == 'source-media') {
+						return exportStatus;
+					}
+					return exportTranscriptToDoc(
+						config,
+						s3Client,
+						item,
+						exportStatus.exportType,
+						exportRequest.data.folderId,
+						driveClients.drive,
+						driveClients.docs,
+					);
+				}),
+			);
+
 			await writeTranscriptionItem(dynamoClient, config.app.tableName, {
 				...item,
-				exportStatuses: currentStatuses,
+				exportStatuses: exportStatuses,
 			});
-
 			logger.info('Document exports complete.');
 
 			try {
@@ -346,13 +338,13 @@ const getApp = async () => {
 					exportType: 'source-media',
 					message: msg,
 				};
-				currentStatuses = updateStatus(mediaFailedStatus, currentStatuses);
+				exportStatuses = updateStatus(mediaFailedStatus, exportStatuses);
 				await writeTranscriptionItem(dynamoClient, config.app.tableName, {
 					...item,
-					exportStatuses: currentStatuses,
+					exportStatuses: updateStatus(mediaFailedStatus, exportStatuses),
 				});
 			}
-			res.send(JSON.stringify(currentStatuses));
+			res.send(JSON.stringify(exportStatuses));
 
 			return;
 		}),
