@@ -155,12 +155,10 @@ export const downloadObject = async (
 	if (!data.Body) {
 		throw new Error(`Failed to retrieve object ${key} from bucket ${bucket}`);
 	}
-	await downloadS3Data(
-		data.Body as Readable,
-		destinationPath,
-		key,
-		data.ContentLength,
-	);
+	// this is nasty but it works, and nobody here https://stackoverflow.com/questions/67366381/aws-s3-v3-javascript-sdk-stream-file-from-bucket-getobjectcommand
+	// seems to be able to agree on a better approach
+	const readableBody = data.Body as Readable;
+	await downloadS3Data(readableBody, destinationPath, key, data.ContentLength);
 	return data.Metadata?.['extension'];
 };
 

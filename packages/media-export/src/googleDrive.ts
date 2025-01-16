@@ -1,6 +1,11 @@
 import { ZTokenResponse } from '@guardian/transcription-service-common';
 import fs from 'node:fs';
 import { logger } from '@guardian/transcription-service-backend-common';
+import { z } from 'zod';
+
+const DriveUploadResponse = z.object({
+	id: z.string(),
+});
 
 export const uploadFileToGoogleDrive = async (
 	fileName: string,
@@ -8,7 +13,7 @@ export const uploadFileToGoogleDrive = async (
 	filePath: string,
 	mimeType: string,
 	folderId: string,
-) => {
+): Promise<string> => {
 	const fileSize = fs.statSync(filePath).size;
 
 	const startResumableSessionResponse = await fetch(
@@ -64,7 +69,14 @@ export const uploadFileToGoogleDrive = async (
 
 		if (response.ok) {
 			// Response status is 308 until the final chunk. Final response includes file metadata
-			return ((await response.json()) as { id: string }).id;
+			const jsonResp = await response.json();
+			const validationResult = DriveUploadResponse.safeParse(jsonResp);
+			if (!validationResult.success) {
+				throw new Error(
+					`Failed to parse response from google drive, resp:${jsonResp}, error: ${validationResult.error}`,
+				);
+			}
+			return validationResult.data.id;
 		}
 		if (response.status === 308) {
 			//continue

@@ -180,11 +180,14 @@ export const ExportStatus = z.discriminatedUnion('status', [
 	ExportFailure,
 	ExportInProgress,
 ]);
+export type ExportStatus = z.infer<typeof ExportStatus>;
 
 export const ExportStatuses = z.array(ExportStatus);
 export type ExportStatuses = z.infer<typeof ExportStatuses>;
 
-export type ExportStatus = z.infer<typeof ExportStatus>;
+export const ExportStatusRequest = z.object({
+	id: z.string(),
+});
 
 export const TranscriptExportRequest = z.object({
 	id: z.string(),

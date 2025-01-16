@@ -31,6 +31,7 @@ import {
 	signedUrlRequestBody,
 	ExportStatuses,
 	ExportStatus,
+	ExportStatusRequest,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
@@ -208,17 +209,19 @@ const getApp = async () => {
 	apiRouter.get('/export/status', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
-			const id = req.query.id as string;
-			if (!id) {
+			const exportStatusRequest = ExportStatusRequest.safeParse(req.query);
+			if (!exportStatusRequest.success) {
 				res
 					.status(400)
-					.send('You must provide the transcript id in the query string');
+					.send(
+						'Invalid request - you must provide the transcript id in the query string',
+					);
 				return;
 			}
 			const { item, errorMessage } = await getTranscriptionItem(
 				dynamoClient,
 				config.app.tableName,
-				id,
+				exportStatusRequest.data.id,
 			);
 			if (!item) {
 				res.status(500).send(errorMessage);
