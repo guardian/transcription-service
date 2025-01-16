@@ -7,7 +7,7 @@ import {
 
 import { z } from 'zod';
 import { logger } from '@guardian/transcription-service-backend-common';
-import { ExportStatus } from '@guardian/transcription-service-common';
+import { ExportStatuses } from '@guardian/transcription-service-common';
 
 export const getDynamoClient = (
 	region: string,
@@ -40,7 +40,7 @@ export const TranscriptionDynamoItem = z.object({
 	userEmail: z.string(),
 	completedAt: z.optional(z.string()), // dynamodb can't handle dates so we need to use an ISO date
 	isTranslation: z.boolean(),
-	exportStatus: z.optional(z.array(ExportStatus)),
+	exportStatuses: ExportStatuses,
 });
 
 export type TranscriptionDynamoItem = z.infer<typeof TranscriptionDynamoItem>;

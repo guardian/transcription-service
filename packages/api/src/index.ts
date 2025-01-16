@@ -228,7 +228,7 @@ const getApp = async () => {
 				res.status(500).send(errorMessage);
 				return;
 			}
-			res.send(JSON.stringify(item.exportStatus));
+			res.send(JSON.stringify(item.exportStatuses));
 			return;
 		}),
 	]);
@@ -298,7 +298,7 @@ const getApp = async () => {
 			);
 			await writeTranscriptionItem(dynamoClient, config.app.tableName, {
 				...item,
-				exportStatus: currentStatuses,
+				exportStatuses: currentStatuses,
 			});
 
 			if (exportRequest.data.items.includes('text')) {
@@ -327,7 +327,7 @@ const getApp = async () => {
 			}
 			await writeTranscriptionItem(dynamoClient, config.app.tableName, {
 				...item,
-				exportStatus: currentStatuses,
+				exportStatuses: currentStatuses,
 			});
 
 			logger.info('Document exports complete.');
@@ -349,7 +349,7 @@ const getApp = async () => {
 				currentStatuses = updateStatus(mediaFailedStatus, currentStatuses);
 				await writeTranscriptionItem(dynamoClient, config.app.tableName, {
 					...item,
-					exportStatus: currentStatuses,
+					exportStatuses: currentStatuses,
 				});
 			}
 			res.send(JSON.stringify(currentStatuses));
