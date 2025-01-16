@@ -41,7 +41,7 @@ import {
 import { createExportFolder, getDriveClients } from './services/googleDrive';
 import { v4 as uuid4 } from 'uuid';
 import {
-	exportStatusInProgress,
+	initializeExportStatuses,
 	exportTranscriptToDoc,
 	updateStatus,
 } from './export';
@@ -222,6 +222,7 @@ const getApp = async () => {
 				dynamoClient,
 				config.app.tableName,
 				exportStatusRequest.data.id,
+				{ check: true, currentUserEmail: req.user?.email },
 			);
 			if (!item) {
 				res.status(500).send(errorMessage);
@@ -246,6 +247,7 @@ const getApp = async () => {
 				dynamoClient,
 				config.app.tableName,
 				createRequest.data.transcriptId,
+				{ check: true, currentUserEmail: req.user?.email },
 			);
 			if (!item) {
 				res.status(500).send(errorMessage);
@@ -281,24 +283,17 @@ const getApp = async () => {
 				dynamoClient,
 				config.app.tableName,
 				exportRequest.data.id,
+				{ check: true, currentUserEmail: req.user?.email },
 			);
 			if (!item) {
 				res.status(500).send(errorMessage);
-				return;
-			}
-			if (item.userEmail !== req.user?.email) {
-				// users can only export their own transcripts. Return a 404 to avoid leaking information about other users' transcripts
-				logger.warn(
-					`User ${req.user?.email} attempted to export transcript ${item.id} which does not belong to them.`,
-				);
-				res.status(404).send(`Transcript not found`);
 				return;
 			}
 			const driveClients = await getDriveClients(
 				config,
 				exportRequest.data.oAuthTokenResponse,
 			);
-			let currentStatuses: ExportStatuses = exportStatusInProgress(
+			let currentStatuses: ExportStatuses = initializeExportStatuses(
 				exportRequest.data.items,
 			);
 			await writeTranscriptionItem(dynamoClient, config.app.tableName, {

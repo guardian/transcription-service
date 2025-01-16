@@ -75,7 +75,9 @@ export const exportTranscriptToDoc = async (
 	}
 };
 
-export const exportStatusInProgress = (items: ExportItems): ExportStatuses => {
+export const initializeExportStatuses = (
+	items: ExportItems,
+): ExportStatuses => {
 	return items.map((item: ExportType) => ({
 		status: 'in-progress',
 		exportType: item,

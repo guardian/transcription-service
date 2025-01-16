@@ -85,10 +85,16 @@ export const getItem = async (
 	}
 };
 
+export type OwnershipCheck = {
+	check: boolean;
+	currentUserEmail?: string;
+};
+
 export const getTranscriptionItem = async (
 	client: DynamoDBDocumentClient,
 	tableName: string,
 	itemId: string,
+	ownershipCheck: OwnershipCheck,
 ): Promise<{ item?: TranscriptionDynamoItem; errorMessage?: string }> => {
 	const item = await getItem(client, tableName, itemId);
 	if (!item) {
@@ -101,6 +107,16 @@ export const getTranscriptionItem = async (
 		const msg = `Failed to parse item ${itemId} from dynamodb. Error: ${parsedItem.error.message}`;
 		logger.error(msg);
 		return { errorMessage: msg };
+	}
+	if (
+		ownershipCheck.check &&
+		parsedItem.data.userEmail !== ownershipCheck.currentUserEmail
+	) {
+		// users can only export their own transcripts. Return a 404 to avoid leaking information about other users' transcripts
+		logger.warn(
+			`User ${ownershipCheck.currentUserEmail} attempted to export transcript ${item.id} which does not belong to them.`,
+		);
+		return { errorMessage: 'Unauthorised' };
 	}
 	return { item: parsedItem.data };
 };

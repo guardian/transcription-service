@@ -85,6 +85,7 @@ const processExport = async (exportRequest: TranscriptExportRequest) => {
 		dynamoClient,
 		config.app.tableName,
 		exportRequest.id,
+		{ check: false },
 	);
 	if (!item) {
 		throw new Error(errorMessage);
