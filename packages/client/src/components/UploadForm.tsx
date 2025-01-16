@@ -282,6 +282,13 @@ export const UploadForm = () => {
 	const atLeastOneValidUrl = () =>
 		mediaUrlInputs.some((input) => input.status === 'valid');
 
+	const disableSubmitButton = () => {
+		if (mediaSource === 'file') {
+			return files === null || files.length === 0;
+		}
+		return !atLeastOneValidUrl();
+	};
+
 	return (
 		<>
 			<p className={' pb-3 font-light'}>
@@ -451,11 +458,11 @@ export const UploadForm = () => {
 				<button
 					type="submit"
 					className={`text-white px-5 py-2.5 text-center rounded-lg text-sm font-medium ${
-						atLeastOneValidUrl()
-							? 'bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'
-							: 'bg-blue-400 dark:bg-blue-500 cursor-not-allowed'
+						disableSubmitButton()
+							? 'bg-blue-400 dark:bg-blue-500 cursor-not-allowed'
+							: 'bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'
 					}`}
-					disabled={!atLeastOneValidUrl()}
+					disabled={disableSubmitButton()}
 				>
 					Submit
 				</button>
