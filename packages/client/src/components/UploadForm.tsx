@@ -333,11 +333,9 @@ export const UploadForm = () => {
 												input.status === 'invalid' ? input.reason : ''
 											}
 											onChange={(e) => {
-												setMediaUrlInputs(
-													mediaUrlInputs.map((input, i) =>
-														i === index ? checkUrlValid(e.target.value) : input,
-													),
-												);
+												const newInputs = [...mediaUrlInputs];
+												newInputs[index] = checkUrlValid(e.target.value);
+												setMediaUrlInputs(newInputs);
 											}}
 										/>
 										<hr className="h-0.5 my-2 bg-gray-200 border-0 dark:bg-gray-700" />
