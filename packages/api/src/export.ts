@@ -34,7 +34,6 @@ export const exportTranscriptToDoc = async (
 	if (isS3Failure(transcriptText)) {
 		if (transcriptText.failureReason === 'NoSuchKey') {
 			const msg = `Failed to export transcript - file has expired. Please re-upload the file and try again.`;
-			logger.error(msg);
 			return {
 				status: 'failure',
 				message: msg,
@@ -42,35 +41,38 @@ export const exportTranscriptToDoc = async (
 			};
 		}
 		const msg = `Failed to fetch transcript. Please contact the digital investigations team for support`;
-		logger.error(msg);
+		logger.error(
+			`Fetching from s3 failed, failure reason: ${transcriptText.failureReason}`,
+		);
 		return {
 			status: 'failure',
 			message: msg,
 			exportType: format,
 		};
 	}
-	const exportResult = await uploadToGoogleDocs(
-		drive,
-		docs,
-		folderId,
-		`${item.originalFilename} transcript${format === 'srt' ? ' with timecodes' : ''} ${item.isTranslation ? ' (English translation)' : ''}`,
-		transcriptText.text,
-	);
-	if (!exportResult) {
+	try {
+		const exportResult = await uploadToGoogleDocs(
+			drive,
+			docs,
+			folderId,
+			`${item.originalFilename} transcript${format === 'srt' ? ' with timecodes' : ''} ${item.isTranslation ? ' (English translation)' : ''}`,
+			transcriptText.text,
+		);
+		logger.info(`Export of ${format} complete, file id: ${exportResult}`);
+		return {
+			status: 'success',
+			id: exportResult,
+			exportType: format,
+		};
+	} catch (error) {
 		const msg = `Failed to create google document for item with id ${item.id}`;
-		logger.error(msg);
+		logger.error(`Creating google doc failed`, error);
 		return {
 			status: 'failure',
 			message: msg,
 			exportType: format,
 		};
 	}
-	logger.info(`Export of ${format} complete, file id: ${exportResult}`);
-	return {
-		status: 'success',
-		id: exportResult,
-		exportType: format,
-	};
 };
 
 export const exportStatusInProgress = (items: ExportItems): ExportStatuses => {
