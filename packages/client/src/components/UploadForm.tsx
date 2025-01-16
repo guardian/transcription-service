@@ -121,26 +121,26 @@ const updateFileStatus = (
 	};
 };
 
-const checkUrlInputValid = (input: MediaUrlInput): MediaUrlInput => {
+const checkUrlValid = (url_input: string): MediaUrlInput => {
 	try {
-		if (input.value === '') {
-			return { value: input.value, status: 'empty' };
+		if (url_input === '') {
+			return { value: url_input, status: 'empty' };
 		}
-		const url = new URL(input.value);
+		const url = new URL(url_input);
 		// we don't want people providing search results pages as yt-dlp will try and fetch every video
 		if (
 			url.pathname.includes('results') &&
 			url.search.includes('search_query')
 		) {
 			return {
-				value: input.value,
+				value: url_input,
 				reason: 'URL is a link to search results. Please link to a video page',
 				status: 'invalid',
 			};
 		}
-		return { value: input.value, status: 'valid' };
+		return { value: url_input, status: 'valid' };
 	} catch {
-		return { ...input, reason: 'Invalid URL', status: 'invalid' };
+		return { value: url_input, reason: 'Invalid URL', status: 'invalid' };
 	}
 };
 
@@ -335,12 +335,7 @@ export const UploadForm = () => {
 											onChange={(e) => {
 												setMediaUrlInputs(
 													mediaUrlInputs.map((input, i) =>
-														i === index
-															? checkUrlInputValid({
-																	...input,
-																	value: e.target.value,
-																})
-															: input,
+														i === index ? checkUrlValid(e.target.value) : input,
 													),
 												);
 											}}
