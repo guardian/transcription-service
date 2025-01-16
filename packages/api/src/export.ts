@@ -14,8 +14,6 @@ import {
 import { uploadToGoogleDocs } from './services/googleDrive';
 import { S3Client } from '@aws-sdk/client-s3';
 import { docs_v1, drive_v3 } from 'googleapis';
-import Drive = drive_v3.Drive;
-import Docs = docs_v1.Docs;
 
 export const exportTranscriptToDoc = async (
 	config: TranscriptionConfig,
@@ -23,8 +21,8 @@ export const exportTranscriptToDoc = async (
 	item: TranscriptionDynamoItem,
 	format: 'srt' | 'text',
 	folderId: string,
-	drive: Drive,
-	docs: Docs,
+	drive: drive_v3.Drive,
+	docs: docs_v1.Docs,
 ): Promise<ExportStatus> => {
 	logger.info(`Starting export, export type: ${format}`);
 	const transcriptS3Key = item.transcriptKeys[format];
