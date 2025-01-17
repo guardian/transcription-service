@@ -81,30 +81,30 @@ const processExport = async (exportRequest: TranscriptExportRequest) => {
 		config.aws.region,
 		config.aws.localstackEndpoint,
 	);
-	const { item, errorMessage } = await getTranscriptionItem(
+	const getItemResult = await getTranscriptionItem(
 		dynamoClient,
 		config.app.tableName,
 		exportRequest.id,
 		{ check: false },
 	);
-	if (!item) {
-		throw new Error(errorMessage);
+	if (getItemResult.status === 'failure') {
+		throw new Error(getItemResult.errorMessage);
 	}
 
 	const result: ExportStatus = await exportMediaToDrive(
 		config,
 		s3Client,
-		item,
+		getItemResult.item,
 		exportRequest.oAuthTokenResponse,
 		exportRequest.folderId,
 	);
 
-	if (!item.exportStatuses) {
+	if (!getItemResult.item.exportStatuses) {
 		throw new Error('No existing export status - cannot update export status');
 	}
-	const newStatuses = updateStatuses(result, item.exportStatuses);
+	const newStatuses = updateStatuses(result, getItemResult.item.exportStatuses);
 	await writeTranscriptionItem(dynamoClient, config.app.tableName, {
-		...item,
+		...getItemResult.item,
 		exportStatuses: newStatuses,
 	});
 };

@@ -90,23 +90,38 @@ export type OwnershipCheck = {
 	currentUserEmail?: string;
 };
 
+type GetTranscriptionItemSuccess = {
+	status: 'success';
+	item: TranscriptionDynamoItem;
+};
+
+type GetTranscriptionItemFailure = {
+	status: 'failure';
+	statusCode: number;
+	errorMessage: string;
+};
+
+type GetTranscriptionItemResult =
+	| GetTranscriptionItemSuccess
+	| GetTranscriptionItemFailure;
+
 export const getTranscriptionItem = async (
 	client: DynamoDBDocumentClient,
 	tableName: string,
 	itemId: string,
 	ownershipCheck: OwnershipCheck,
-): Promise<{ item?: TranscriptionDynamoItem; errorMessage?: string }> => {
+): Promise<GetTranscriptionItemResult> => {
 	const item = await getItem(client, tableName, itemId);
 	if (!item) {
 		const msg = `Failed to fetch item with id ${itemId} from database.`;
 		logger.error(msg);
-		return { errorMessage: msg };
+		return { status: 'failure', errorMessage: msg, statusCode: 500 };
 	}
 	const parsedItem = TranscriptionDynamoItem.safeParse(item);
 	if (!parsedItem.success) {
 		const msg = `Failed to parse item ${itemId} from dynamodb. Error: ${parsedItem.error.message}`;
 		logger.error(msg);
-		return { errorMessage: msg };
+		return { status: 'failure', errorMessage: msg, statusCode: 500 };
 	}
 	if (
 		ownershipCheck.check &&
@@ -116,7 +131,7 @@ export const getTranscriptionItem = async (
 		logger.warn(
 			`User ${ownershipCheck.currentUserEmail} attempted to export transcript ${item.id} which does not belong to them.`,
 		);
-		return { errorMessage: 'Unauthorised' };
+		return { status: 'failure', errorMessage: 'Unauthorised', statusCode: 403 };
 	}
-	return { item: parsedItem.data };
+	return { status: 'success', item: parsedItem.data };
 };

@@ -218,17 +218,17 @@ const getApp = async () => {
 					);
 				return;
 			}
-			const { item, errorMessage } = await getTranscriptionItem(
+			const getItemResult = await getTranscriptionItem(
 				dynamoClient,
 				config.app.tableName,
 				exportStatusRequest.data.id,
 				{ check: true, currentUserEmail: req.user?.email },
 			);
-			if (!item) {
-				res.status(500).send(errorMessage);
+			if (getItemResult.status === 'failure') {
+				res.status(getItemResult.statusCode).send(getItemResult.errorMessage);
 				return;
 			}
-			res.send(JSON.stringify(item.exportStatuses));
+			res.send(JSON.stringify(getItemResult.item));
 			return;
 		}),
 	]);
@@ -243,14 +243,14 @@ const getApp = async () => {
 				res.status(400).send(msg);
 				return;
 			}
-			const { item, errorMessage } = await getTranscriptionItem(
+			const getItemResult = await getTranscriptionItem(
 				dynamoClient,
 				config.app.tableName,
 				createRequest.data.transcriptId,
 				{ check: true, currentUserEmail: req.user?.email },
 			);
-			if (!item) {
-				res.status(500).send(errorMessage);
+			if (getItemResult.status === 'failure') {
+				res.status(getItemResult.statusCode).send(getItemResult.errorMessage);
 				return;
 			}
 			const driveClients = await getDriveClients(
@@ -259,7 +259,7 @@ const getApp = async () => {
 			);
 			const folderId = await createExportFolder(
 				driveClients.drive,
-				`${item.originalFilename} ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`,
+				`${getItemResult.item.originalFilename} ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`,
 			);
 			if (!folderId) {
 				res.status(500).send('Failed to create folder');
@@ -279,14 +279,14 @@ const getApp = async () => {
 				res.status(400).send(msg);
 				return;
 			}
-			const { item, errorMessage } = await getTranscriptionItem(
+			const getItemResult = await getTranscriptionItem(
 				dynamoClient,
 				config.app.tableName,
 				exportRequest.data.id,
 				{ check: true, currentUserEmail: req.user?.email },
 			);
-			if (!item) {
-				res.status(500).send(errorMessage);
+			if (getItemResult.status === 'failure') {
+				res.status(getItemResult.statusCode).send(getItemResult.errorMessage);
 				return;
 			}
 			const driveClients = await getDriveClients(
@@ -297,7 +297,7 @@ const getApp = async () => {
 				exportRequest.data.items,
 			);
 			await writeTranscriptionItem(dynamoClient, config.app.tableName, {
-				...item,
+				...getItemResult.item,
 				exportStatuses: exportStatuses,
 			});
 
@@ -309,7 +309,7 @@ const getApp = async () => {
 					return exportTranscriptToDoc(
 						config,
 						s3Client,
-						item,
+						getItemResult.item,
 						exportStatus.exportType,
 						exportRequest.data.folderId,
 						driveClients.drive,
@@ -319,7 +319,7 @@ const getApp = async () => {
 			);
 
 			await writeTranscriptionItem(dynamoClient, config.app.tableName, {
-				...item,
+				...getItemResult.item,
 				exportStatuses: exportStatuses,
 			});
 			logger.info('Document exports complete.');
@@ -340,7 +340,7 @@ const getApp = async () => {
 				};
 				exportStatuses = updateStatuses(mediaFailedStatus, exportStatuses);
 				await writeTranscriptionItem(dynamoClient, config.app.tableName, {
-					...item,
+					...getItemResult.item,
 					exportStatuses: updateStatuses(mediaFailedStatus, exportStatuses),
 				});
 			}
