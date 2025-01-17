@@ -228,7 +228,7 @@ const getApp = async () => {
 				res.status(getItemResult.statusCode).send(getItemResult.errorMessage);
 				return;
 			}
-			res.send(JSON.stringify(getItemResult.item));
+			res.send(JSON.stringify(getItemResult.item.exportStatuses));
 			return;
 		}),
 	]);
