@@ -112,10 +112,15 @@ export const getTranscriptionItem = async (
 	ownershipCheck: OwnershipCheck,
 ): Promise<GetTranscriptionItemResult> => {
 	const item = await getItem(client, tableName, itemId);
+	const genericNotFoundMessage = 'Transcript not found';
 	if (!item) {
 		const msg = `Failed to fetch item with id ${itemId} from database.`;
 		logger.error(msg);
-		return { status: 'failure', errorMessage: msg, statusCode: 500 };
+		return {
+			status: 'failure',
+			errorMessage: genericNotFoundMessage,
+			statusCode: 404,
+		};
 	}
 	const parsedItem = TranscriptionDynamoItem.safeParse(item);
 	if (!parsedItem.success) {
@@ -131,7 +136,11 @@ export const getTranscriptionItem = async (
 		logger.warn(
 			`User ${ownershipCheck.currentUserEmail} attempted to export transcript ${item.id} which does not belong to them.`,
 		);
-		return { status: 'failure', errorMessage: 'Unauthorised', statusCode: 403 };
+		return {
+			status: 'failure',
+			errorMessage: genericNotFoundMessage,
+			statusCode: 404,
+		};
 	}
 	return { status: 'success', item: parsedItem.data };
 };
