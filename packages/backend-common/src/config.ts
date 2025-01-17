@@ -13,6 +13,7 @@ export interface TranscriptionConfig {
 		secret: string;
 		rootUrl: string;
 		taskQueueUrl: string;
+		gpuTaskQueueUrl: string;
 		deadLetterQueueUrl?: string;
 		mediaDownloadQueueUrl: string;
 		stage: string;
@@ -82,6 +83,11 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 
 	logger.info(`Parameters fetched: ${parameterNames.join(', ')}`);
 	const taskQueueUrl = findParameter(parameters, paramPath, 'taskQueueUrl');
+	const gpuTaskQueueUrl = findParameter(
+		parameters,
+		paramPath,
+		'gpuTaskQueueUrl',
+	);
 	const mediaDownloadQueueUrl = findParameter(
 		parameters,
 		paramPath,
@@ -168,6 +174,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			rootUrl: appRootUrl,
 			secret: appSecret,
 			taskQueueUrl,
+			gpuTaskQueueUrl,
 			deadLetterQueueUrl,
 			mediaDownloadQueueUrl,
 			stage,

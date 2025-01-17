@@ -262,6 +262,8 @@ const pollTranscriptionQueue = async (
 			file: fileToTranscribe,
 			numberOfThreads,
 			model: config.app.stage === 'PROD' ? 'medium' : 'tiny',
+			engine: job.engine,
+			diarize: job.diarize,
 		};
 
 		const transcriptResult = await getTranscriptionText(
@@ -269,6 +271,7 @@ const pollTranscriptionQueue = async (
 			job.languageCode,
 			job.translate,
 			combineTranscribeAndTranslate,
+			job.engine === 'whisperx',
 		);
 
 		// if we've received an interrupt signal we don't want to perform a half-finished transcript upload/publish as

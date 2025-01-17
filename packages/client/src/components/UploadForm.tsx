@@ -66,6 +66,7 @@ const uploadFileAndTranscribe = async (
 	token: string,
 	languageCode: LanguageCode,
 	translationRequested: boolean,
+	diarizationRequested: boolean,
 ) => {
 	const blob = new Blob([file as BlobPart]);
 
@@ -100,6 +101,7 @@ const uploadFileAndTranscribe = async (
 		fileName: file.name,
 		languageCode,
 		translationRequested,
+		diarizationRequested,
 	};
 
 	const sendMessageResponse = await authFetch('/api/transcribe-file', token, {
@@ -163,6 +165,8 @@ export const UploadForm = () => {
 		boolean | undefined
 	>(undefined);
 	const [translationRequested, setTranslationRequested] =
+		useState<boolean>(false);
+	const [diarizationRequested, setDiarizationRequested] =
 		useState<boolean>(false);
 	const [mediaSource, setMediaSource] = useState<MediaSourceType>('file');
 	const [mediaUrls, setMediaUrls] = useState<Record<string, RequestStatus>>({});
@@ -266,6 +270,7 @@ export const UploadForm = () => {
 				token,
 				mediaFileLanguageCode,
 				translationRequested,
+				diarizationRequested,
 			);
 			if (!result) {
 				setUploads((prev) =>
@@ -463,6 +468,31 @@ export const UploadForm = () => {
 						</div>
 					</div>
 				)}
+
+				<div className="mb-4">
+					<div className={'mb-1'}>
+						<Label
+							className="text-base"
+							htmlFor="diarization-checkbox"
+							value="Speaker identification"
+						/>
+					</div>
+					<div className={'ml-3'}>
+						<div className="flex h-5 items-center gap-2">
+							<Checkbox
+								id="diarization"
+								checked={translationRequested}
+								onChange={() => setDiarizationRequested(!diarizationRequested)}
+							/>
+							<div className="flex flex-col">
+								<Label htmlFor="diarization" className="font-light text-base">
+									Attempt speaker identification
+								</Label>
+							</div>
+						</div>
+					</div>
+				</div>
+
 				<button
 					type="submit"
 					className={`text-white px-5 py-2.5 text-center rounded-lg text-sm font-medium ${

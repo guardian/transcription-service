@@ -12,6 +12,7 @@ import {
 	TranscriptionJob,
 	LanguageCode,
 	TranscriptionOutput,
+	TranscriptionEngine,
 } from '@guardian/transcription-service-common';
 import { getSignedUploadUrl } from '@guardian/transcription-service-backend-common';
 import { logger } from '@guardian/transcription-service-backend-common';
@@ -60,6 +61,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	s3Key: string,
 	client: SQSClient,
 	queueUrl: string,
+	gpuQueueUrl: string,
 	outputBucket: string,
 	region: string,
 	userEmail: string,
@@ -67,6 +69,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	inputSignedUrl: string,
 	languageCode: LanguageCode,
 	translationRequested: boolean,
+	diarizationRequested: boolean,
 ): Promise<SendResult> => {
 	const signedUrls = await generateOutputSignedUrls(
 		s3Key,
@@ -76,6 +79,9 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		7,
 		translationRequested,
 	);
+
+	const useWhisperX = true;
+	const queue = useWhisperX ? gpuQueueUrl : queueUrl;
 
 	const jobId = translationRequested ? `${s3Key}-translation` : s3Key;
 	const job: TranscriptionJob = {
@@ -88,10 +94,14 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		outputBucketUrls: signedUrls,
 		languageCode,
 		translate: false,
+		diarize: diarizationRequested,
+		engine: useWhisperX
+			? TranscriptionEngine.WHISPER_X
+			: TranscriptionEngine.WHISPER_CPP,
 	};
 	const messageResult = await sendMessage(
 		client,
-		queueUrl,
+		queue,
 		JSON.stringify(job),
 		s3Key,
 	);
@@ -104,7 +114,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	if (!isSqsFailure(messageResult) && translationRequested) {
 		return await sendMessage(
 			client,
-			queueUrl,
+			queue,
 			JSON.stringify({ ...job, translate: true }),
 			s3Key,
 		);

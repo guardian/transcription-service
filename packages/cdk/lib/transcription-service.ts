@@ -90,12 +90,19 @@ export class TranscriptionService extends GuStack {
 		const APP_NAME = 'transcription-service';
 		const apiId = `${APP_NAME}-${props.stage}`;
 		const isProd = props.stage === 'PROD';
-		const autoScalingGroupName = `transcription-service-workers-${this.stage}`;
+		const workerAutoscalingGroupName = `transcription-service-workers-${this.stage}`;
+		const gpuWorkerAutoscalingGroupName = `transcription-service-gpu-workers-${this.stage}`;
+
 		if (!props.env?.region) throw new Error('region not provided in props');
 
 		const workerAmi = new GuAmiParameter(this, {
 			app: `${APP_NAME}-worker`,
 			description: 'AMI to use for the worker instances',
+		});
+
+		const gpuWorkerAmi = new GuAmiParameter(this, {
+			app: `${APP_NAME}-gpu-worker`,
+			description: 'AMI to use for the gpu worker instances',
 		});
 
 		const s3PrefixListId = new GuStringParameter(
@@ -325,7 +332,7 @@ export class TranscriptionService extends GuStack {
 				new GuAllowPolicy(this, 'SetInstanceProtection', {
 					actions: ['autoscaling:SetInstanceProtection'],
 					resources: [
-						`arn:aws:autoscaling:${props.env.region}:${this.account}:autoScalingGroup:*:autoScalingGroupName/${autoScalingGroupName}`,
+						`arn:aws:autoscaling:${props.env.region}:${this.account}:autoScalingGroup:*:autoScalingGroupName/${workerAutoscalingGroupName}`,
 					],
 				}),
 				new GuAllowPolicy(this, 'WriteCloudwatch', {
@@ -366,29 +373,50 @@ export class TranscriptionService extends GuStack {
 			Port.tcp(443),
 		);
 
+		const launchTemplateProps = {
+			machineImage: MachineImage.genericLinux({
+				'eu-west-1': workerAmi.valueAsString,
+			}),
+			instanceType: InstanceType.of(InstanceClass.C7G, InstanceSize.XLARGE4),
+			// include tags in instance metadata so that we can work out the STAGE
+			instanceMetadataTags: true,
+			// the size of this block device will determine the max input file size for transcription. In future we could
+			// attach the block device on startup once we know how large the file to be transcribed is, or try some kind
+			// of streaming approach to the transcription so we don't need the whole file on disk
+			blockDevices: [
+				{
+					deviceName: '/dev/sda1',
+					// assuming that we intend to support video files, 50GB seems a reasonable starting point
+					volume: BlockDeviceVolume.ebs(50),
+				},
+			],
+			userData,
+			role: workerRole,
+			securityGroup: workerSecurityGroup,
+		};
+
 		const launchTemplate = new LaunchTemplate(
 			this,
 			'TranscriptionWorkerLaunchTemplate',
+			launchTemplateProps,
+		);
+
+		const gpuLaunchTemplate = new LaunchTemplate(
+			this,
+			'TranscriptionWorkerGPULaunchTemplate',
 			{
+				...launchTemplateProps,
 				machineImage: MachineImage.genericLinux({
-					'eu-west-1': workerAmi.valueAsString,
+					'eu-west-1': gpuWorkerAmi.valueAsString,
 				}),
-				instanceType: InstanceType.of(InstanceClass.C7G, InstanceSize.XLARGE4),
-				// include tags in instance metadata so that we can work out the STAGE
-				instanceMetadataTags: true,
-				// the size of this block device will determine the max input file size for transcription. In future we could
-				// attach the block device on startup once we know how large the file to be transcribed is, or try some kind
-				// of streaming approach to the transcription so we don't need the whole file on disk
+				instanceType: InstanceType.of(InstanceClass.G5, InstanceSize.XLARGE),
 				blockDevices: [
 					{
 						deviceName: '/dev/sda1',
-						// assuming that we intend to support video files, 50GB seems a reasonable starting point
-						volume: BlockDeviceVolume.ebs(50),
+						// The AMI with the nvidia cuda drivers and whisperx installed is enormous
+						volume: BlockDeviceVolume.ebs(100),
 					},
 				],
-				userData,
-				role: workerRole,
-				securityGroup: workerSecurityGroup,
 			},
 		);
 
@@ -404,46 +432,82 @@ export class TranscriptionService extends GuStack {
 				]
 			: [InstanceType.of(InstanceClass.T4G, InstanceSize.MEDIUM)];
 
+		const gpuInstanceTypes = isProd
+			? [
+					InstanceType.of(InstanceClass.G5, InstanceSize.XLARGE),
+					InstanceType.of(InstanceClass.G6, InstanceSize.XLARGE),
+				]
+			: [InstanceType.of(InstanceClass.G5, InstanceSize.XLARGE)];
+
 		const guSubnets = GuVpc.subnetsFromParameter(this, {
 			type: SubnetType.PRIVATE,
 			app: workerApp,
 		});
+
+		const instanceTypeToOverride = (instanceType: InstanceType) => ({
+			instanceType,
+			spotOptions: {
+				interruptionBehavior: SpotInstanceInterruption.TERMINATE,
+			},
+		});
+
+		const asgProps = {
+			minCapacity: 0,
+			maxCapacity: isProd ? 20 : 4,
+			autoScalingGroupName: workerAutoscalingGroupName,
+			vpc,
+			vpcSubnets: {
+				subnets: guSubnets,
+			},
+			mixedInstancesPolicy: {
+				launchTemplate,
+				instancesDistribution: {
+					// 0 is the default, including this here just to make it more obvious what's happening
+					onDemandBaseCapacity: 0,
+					// if this value is set to 100, then we won't use spot instances at all, if it is 0 then we use 100% spot
+					onDemandPercentageAboveBaseCapacity: 10,
+					spotAllocationStrategy: SpotAllocationStrategy.CAPACITY_OPTIMIZED,
+					spotMaxPrice: '0.6202',
+				},
+				launchTemplateOverrides: acceptableInstanceTypes.map(
+					instanceTypeToOverride,
+				),
+			},
+			groupMetrics: [GroupMetrics.all()],
+		};
+
 		// unfortunately GuAutoscalingGroup doesn't support having a mixedInstancesPolicy so using the basic ASG here
 		const transcriptionWorkerASG = new AutoScalingGroup(
 			this,
 			'TranscriptionWorkerASG',
+			asgProps,
+		);
+
+		const transcriptionGpuWorkerASG = new AutoScalingGroup(
+			this,
+			'TranscriptionGpuWorkerASG',
 			{
-				minCapacity: 0,
-				maxCapacity: isProd ? 20 : 4,
-				autoScalingGroupName,
-				vpc,
-				vpcSubnets: {
-					subnets: guSubnets,
-				},
+				...asgProps,
+				autoScalingGroupName: gpuWorkerAutoscalingGroupName,
 				mixedInstancesPolicy: {
-					launchTemplate,
+					...asgProps.mixedInstancesPolicy,
+					launchTemplate: gpuLaunchTemplate,
 					instancesDistribution: {
-						// 0 is the default, including this here just to make it more obvious what's happening
-						onDemandBaseCapacity: 0,
-						// if this value is set to 100, then we won't use spot instances at all, if it is 0 then we use 100% spot
-						onDemandPercentageAboveBaseCapacity: 10,
-						spotAllocationStrategy: SpotAllocationStrategy.CAPACITY_OPTIMIZED,
-						spotMaxPrice: '0.6202',
+						...asgProps.mixedInstancesPolicy.instancesDistribution,
+						spotMaxPrice: '1.1230',
 					},
-					launchTemplateOverrides: acceptableInstanceTypes.map(
-						(instanceType) => ({
-							instanceType,
-							spotOptions: {
-								interruptionBehavior: SpotInstanceInterruption.TERMINATE,
-							},
-						}),
-					),
+					launchTemplateOverrides: gpuInstanceTypes.map(instanceTypeToOverride),
 				},
-				groupMetrics: [GroupMetrics.all()],
 			},
 		);
 
 		Tags.of(transcriptionWorkerASG).add(
+			'LogKinesisStreamName',
+			GuLoggingStreamNameParameter.getInstance(this).valueAsString,
+			{ applyToLaunchedInstances: true },
+		);
+
+		Tags.of(transcriptionGpuWorkerASG).add(
 			'LogKinesisStreamName',
 			GuLoggingStreamNameParameter.getInstance(this).valueAsString,
 			{ applyToLaunchedInstances: true },
@@ -457,6 +521,22 @@ export class TranscriptionService extends GuStack {
 			applyToLaunchedInstances: true,
 		});
 
+		Tags.of(transcriptionGpuWorkerASG).add(
+			'SystemdUnit',
+			`${workerApp}.service`,
+			{
+				applyToLaunchedInstances: true,
+			},
+		);
+
+		Tags.of(transcriptionGpuWorkerASG).add(
+			'App',
+			`transcription-service-worker`,
+			{
+				applyToLaunchedInstances: true,
+			},
+		);
+
 		const transcriptionDeadLetterQueue = new Queue(
 			this,
 			`${APP_NAME}-task-dead-letter-queue`,
@@ -468,7 +548,7 @@ export class TranscriptionService extends GuStack {
 		);
 
 		// SQS queue for transcription tasks from API lambda to worker EC2 instances
-		const transcriptionTaskQueue = new Queue(this, `${APP_NAME}-task-queue`, {
+		const taskQueueProps = {
 			fifo: true,
 			queueName: `${APP_NAME}-task-queue-${this.stage}.fifo`,
 			// this is the default. 30 seconds should be enough time to get the
@@ -483,16 +563,32 @@ export class TranscriptionService extends GuStack {
 				queue: transcriptionDeadLetterQueue,
 				maxReceiveCount: MAX_RECEIVE_COUNT,
 			},
-		});
+		};
+		const transcriptionTaskQueue = new Queue(
+			this,
+			`${APP_NAME}-task-queue`,
+			taskQueueProps,
+		);
+		const transcriptionGpuTaskQueue = new Queue(
+			this,
+			`${APP_NAME}-gpu-task-queue`,
+			{
+				...taskQueueProps,
+				queueName: `${APP_NAME}-gpu-task-queue-${this.stage}.fifo`,
+			},
+		);
 
 		// allow API lambda to write to queue
 		transcriptionTaskQueue.grantSendMessages(apiLambda);
+		transcriptionGpuTaskQueue.grantSendMessages(apiLambda);
 
 		// allow worker to receive message from queue
 		transcriptionTaskQueue.grantConsumeMessages(transcriptionWorkerASG);
+		transcriptionGpuTaskQueue.grantConsumeMessages(transcriptionGpuWorkerASG);
 
 		// allow worker to write messages to the dead letter queue
 		transcriptionDeadLetterQueue.grantSendMessages(transcriptionWorkerASG);
+		transcriptionDeadLetterQueue.grantSendMessages(transcriptionGpuWorkerASG);
 
 		const mediaDownloadDeadLetterQueue = new Queue(
 			this,
@@ -583,7 +679,10 @@ export class TranscriptionService extends GuStack {
 				new PolicyStatement({
 					effect: Effect.ALLOW,
 					actions: ['sqs:SendMessage'],
-					resources: [transcriptionTaskQueue.queueArn],
+					resources: [
+						transcriptionTaskQueue.queueArn,
+						transcriptionGpuTaskQueue.queueArn,
+					],
 				}),
 				new PolicyStatement({
 					effect: Effect.ALLOW,
@@ -811,7 +910,10 @@ export class TranscriptionService extends GuStack {
 			new PolicyStatement({
 				effect: Effect.ALLOW,
 				actions: ['sqs:GetQueueAttributes'],
-				resources: [transcriptionTaskQueue.queueArn],
+				resources: [
+					transcriptionTaskQueue.queueArn,
+					transcriptionGpuTaskQueue.queueArn,
+				],
 			}),
 		);
 
