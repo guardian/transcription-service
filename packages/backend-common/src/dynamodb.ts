@@ -26,9 +26,7 @@ export const getDynamoClient = (
 };
 
 export const TranscriptKeys = z.object({
-	srt: z.string(),
-	text: z.string(),
-	json: z.string(),
+	zip: z.string(),
 });
 
 export type TranscriptKeys = z.infer<typeof TranscriptKeys>;
@@ -122,6 +120,8 @@ export const getTranscriptionItem = async (
 			statusCode: 404,
 		};
 	}
+	console.log(`dynamo object`);
+	console.log(item);
 	const parsedItem = TranscriptionDynamoItem.safeParse(item);
 	if (!parsedItem.success) {
 		const msg = `Failed to parse item ${itemId} from dynamodb. Error: ${parsedItem.error.message}`;
