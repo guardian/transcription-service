@@ -105,6 +105,7 @@ const getApp = async () => {
 				url: body.data.url,
 				languageCode: body.data.languageCode,
 				translationRequested: body.data.translationRequested,
+				diarizationRequested: body.data.diarizationRequested,
 				userEmail,
 			};
 
@@ -175,6 +176,7 @@ const getApp = async () => {
 				s3Key,
 				sqsClient,
 				config.app.taskQueueUrl,
+				config.app.gpuTaskQueueUrl,
 				config.app.transcriptionOutputBucket,
 				config.aws.region,
 				userEmail,
@@ -182,6 +184,7 @@ const getApp = async () => {
 				signedUrl,
 				body.data.languageCode,
 				body.data.translationRequested,
+				body.data.diarizationRequested,
 			);
 			if (isSqsFailure(sendResult)) {
 				res.status(500).send(sendResult.errorMsg);

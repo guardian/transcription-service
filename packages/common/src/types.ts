@@ -43,9 +43,15 @@ export const MediaDownloadJob = z.object({
 	userEmail: z.string(),
 	languageCode: zodLanguageCode,
 	translationRequested: z.boolean(),
+	diarizationRequested: z.boolean(),
 });
 
 export type MediaDownloadJob = z.infer<typeof MediaDownloadJob>;
+
+export enum TranscriptionEngine {
+	WHISPER_X = 'whisperx',
+	WHISPER_CPP = 'whispercpp',
+}
 
 export const TranscriptionJob = z.object({
 	id: z.string(),
@@ -57,6 +63,8 @@ export const TranscriptionJob = z.object({
 	outputBucketUrls: OutputBucketUrls,
 	languageCode: zodLanguageCode,
 	translate: z.boolean(),
+	diarize: z.boolean(),
+	engine: z.nativeEnum(TranscriptionEngine),
 	// we can get rid of this when we switch to using a zip
 	translationOutputBucketUrls: z.optional(OutputBucketUrls),
 });
@@ -209,6 +217,7 @@ export const transcribeUrlRequestBody = z.object({
 	url: z.string(),
 	languageCode: zodLanguageCode,
 	translationRequested: z.boolean(),
+	diarizationRequested: z.boolean(),
 });
 
 export type TranscribeUrlRequestBody = z.infer<typeof transcribeUrlRequestBody>;
@@ -218,6 +227,7 @@ export const transcribeFileRequestBody = z.object({
 	fileName: z.string(),
 	languageCode: zodLanguageCode,
 	translationRequested: z.boolean(),
+	diarizationRequested: z.boolean(),
 });
 export type TranscribeFileRequestBody = z.infer<
 	typeof transcribeFileRequestBody

@@ -4,6 +4,7 @@ import { logger } from '@guardian/transcription-service-backend-common';
 import {
 	LanguageCode,
 	languageCodes,
+	TranscriptionEngine,
 } from '@guardian/transcription-service-common';
 import { runSpawnCommand } from '@guardian/transcription-service-backend-common/src/process';
 
@@ -38,6 +39,8 @@ export type WhisperBaseParams = {
 	file: string;
 	numberOfThreads: number;
 	model: WhisperModel;
+	engine: TranscriptionEngine;
+	diarize: boolean;
 };
 
 const CONTAINER_FOLDER = '/input';
@@ -134,6 +137,7 @@ const runTranscription = async (
 	whisperBaseParams: WhisperBaseParams,
 	languageCode: LanguageCode,
 	translate: boolean,
+	whisperX: boolean,
 ) => {
 	try {
 		const params = whisperParams(
@@ -142,7 +146,9 @@ const runTranscription = async (
 			languageCode,
 			translate,
 		);
-		const { fileName, metadata } = await runWhisper(whisperBaseParams, params);
+		const { fileName, metadata } = whisperX
+			? await runWhisperX(whisperBaseParams, languageCode, translate)
+			: await runWhisper(whisperBaseParams, params);
 
 		const srtPath = path.resolve(
 			path.parse(whisperBaseParams.file).dir,
@@ -172,27 +178,45 @@ const runTranscription = async (
 	}
 };
 
+const getLanguageCode = async (
+	whisperBaseParams: WhisperBaseParams,
+	whisperX: boolean,
+): Promise<LanguageCode> => {
+	if (whisperX) {
+		return Promise.resolve('auto');
+	}
+	const dlParams = whisperParams(true, whisperBaseParams.wavPath);
+	const { metadata } = await runWhisper(whisperBaseParams, dlParams);
+	return (
+		languageCodes.find((c) => c === metadata.detectedLanguageCode) || 'auto'
+	);
+};
+
 const transcribeAndTranslate = async (
 	whisperBaseParams: WhisperBaseParams,
+	whisperX: boolean,
 ): Promise<TranscriptionResult> => {
 	try {
-		const dlParams = whisperParams(true, whisperBaseParams.wavPath);
-		const { metadata } = await runWhisper(whisperBaseParams, dlParams);
-		const languageCode =
-			languageCodes.find((c) => c === metadata.detectedLanguageCode) || 'auto';
+		const languageCode = await getLanguageCode(whisperBaseParams, whisperX);
 		const transcription = await runTranscription(
 			whisperBaseParams,
 			languageCode,
 			false,
+			whisperX,
 		);
 
 		// we only run language detection once,
 		// so need to override the detected language of future whisper runs
-		transcription.metadata.detectedLanguageCode = metadata.detectedLanguageCode;
+		transcription.metadata.detectedLanguageCode = languageCode;
 		const translation =
 			languageCode === 'en'
 				? null
-				: await runTranscription(whisperBaseParams, languageCode, true);
+				: await runTranscription(
+						whisperBaseParams,
+						languageCode,
+						true,
+						whisperX,
+					);
 		return {
 			transcripts: transcription.transcripts,
 			transcriptTranslations: translation?.transcripts,
@@ -213,16 +237,24 @@ export const getTranscriptionText = async (
 	languageCode: LanguageCode,
 	translate: boolean,
 	combineTranscribeAndTranslate: boolean,
+	whisperX: boolean,
 ): Promise<TranscriptionResult> => {
 	if (combineTranscribeAndTranslate) {
-		return transcribeAndTranslate(whisperBaseParams);
+		return transcribeAndTranslate(whisperBaseParams, whisperX);
 	}
-	return runTranscription(whisperBaseParams, languageCode, translate);
+	return runTranscription(whisperBaseParams, languageCode, translate, whisperX);
 };
 
 const regexExtract = (text: string, regex: RegExp): string | undefined => {
 	const regexResult = text.match(regex);
 	return regexResult ? regexResult[1] : undefined;
+};
+
+const extractWhisperXStderrData = (stderr: string): TranscriptionMetadata => {
+	//Detected language: en (0.99) in first 30s of audio...
+	const languageRegex = /Detected language: ([a-zA-Z]{2})/;
+	const detectedLanguageCode = regexExtract(stderr, languageRegex);
+	return { detectedLanguageCode };
 };
 
 const extractWhisperStderrData = (stderr: string): TranscriptionMetadata => {
@@ -264,6 +296,39 @@ const whisperParams = (
 			'--language',
 			languageCode,
 		].concat(translateParam);
+	}
+};
+
+export const runWhisperX = async (
+	whisperBaseParams: WhisperBaseParams,
+	languageCode: LanguageCode,
+	translate: boolean,
+) => {
+	const { wavPath, diarize } = whisperBaseParams;
+	const fileName = path.parse(wavPath).name;
+	const model = languageCode === 'en' ? whisperBaseParams.model : 'large';
+	const languageCodeParam =
+		languageCode === 'auto' ? [] : ['--language', languageCode];
+	const translateParam = translate ? ['--task', 'translate'] : [];
+	try {
+		const diarizeParam = diarize ? `--diarize` : '';
+		const result = await runSpawnCommand('transcribe-whisperx', 'whisperx', [
+			wavPath,
+			'--model',
+			model,
+			...languageCodeParam,
+			...translateParam,
+			diarizeParam,
+		]);
+		const metadata = extractWhisperXStderrData(result.stderr);
+		logger.info('Whisper finished successfully', metadata);
+		return {
+			fileName: `${fileName}`,
+			metadata,
+		};
+	} catch (error) {
+		logger.error(`Whisper failed due to `, error);
+		throw error;
 	}
 };
 

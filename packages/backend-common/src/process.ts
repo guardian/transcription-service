@@ -8,6 +8,7 @@ export interface ProcessResult {
 
 export type ProcessName =
 	| 'transcribe'
+	| 'transcribe-whisperx'
 	| 'convertToWav'
 	| 'startProxyTunnel'
 	| 'downloadMedia'
