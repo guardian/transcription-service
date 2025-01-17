@@ -253,8 +253,6 @@ const ExportForm = () => {
 				return;
 			}
 			await updateStatuses();
-			setRequestStatus(RequestStatus.InProgress);
-			setExportStatuses(parsedResponse.data);
 		} catch (error) {
 			console.error('Export failed', error);
 			setFailureMessage(
