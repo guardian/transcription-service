@@ -75,6 +75,7 @@ import { HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
+import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { JsonPath } from 'aws-cdk-lib/aws-stepfunctions';
 
 const topicArnToName = (topicArn: string) => {
@@ -762,6 +763,11 @@ export class TranscriptionService extends GuStack {
 						: undefined,
 			},
 		);
+
+		new StringParameter(this, 'ExportFunctionName', {
+			parameterName: `/${ssmPath}/app/mediaExportFunctionName`,
+			stringValue: mediaExportLambda.functionName,
+		});
 
 		mediaExportLambda.addToRolePolicy(getParametersPolicy);
 		mediaExportLambda.addToRolePolicy(

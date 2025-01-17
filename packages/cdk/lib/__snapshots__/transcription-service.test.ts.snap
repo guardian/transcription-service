@@ -188,6 +188,22 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
+    "ExportFunctionName1C83D756": {
+      "Properties": {
+        "Name": "/TEST/investigations/transcription-service/app/mediaExportFunctionName",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "TEST",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Ref": "transcriptionservicemediaexport2E32D5D8",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "GetDistributablePolicyTranscriptionserviceworker2DFD604E": {
       "Properties": {
         "PolicyDocument": {
