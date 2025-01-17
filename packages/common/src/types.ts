@@ -147,25 +147,63 @@ export const ZTokenResponse = z.object({
 
 export type ZTokenResponse = z.infer<typeof ZTokenResponse>;
 
-export enum TranscriptFormat {
-	SRT = 'srt',
-	TEXT = 'text',
-	JSON = 'json',
-}
+const ExportType = z.union([
+	z.literal('text'),
+	z.literal('srt'),
+	z.literal('source-media'),
+]);
+export type ExportType = z.infer<typeof ExportType>;
+
+export const ExportItems = z.array(ExportType);
+
+export type ExportItems = z.infer<typeof ExportItems>;
+
+const ExportSuccess = z.object({
+	status: z.literal('success'),
+	exportType: ExportType,
+	id: z.string(),
+});
+
+const ExportFailure = z.object({
+	status: z.literal('failure'),
+	exportType: ExportType,
+	message: z.string(),
+});
+
+const ExportInProgress = z.object({
+	status: z.literal('in-progress'),
+	exportType: ExportType,
+});
+
+export const ExportStatus = z.discriminatedUnion('status', [
+	ExportSuccess,
+	ExportFailure,
+	ExportInProgress,
+]);
+export type ExportStatus = z.infer<typeof ExportStatus>;
+
+export const ExportStatuses = z.array(ExportStatus);
+export type ExportStatuses = z.infer<typeof ExportStatuses>;
+
+export const ExportStatusRequest = z.object({
+	id: z.string(),
+});
 
 export const TranscriptExportRequest = z.object({
 	id: z.string(),
 	oAuthTokenResponse: ZTokenResponse,
-	transcriptFormat: z.nativeEnum(TranscriptFormat),
+	items: ExportItems,
+	folderId: z.string(),
 });
 
 export type TranscriptExportRequest = z.infer<typeof TranscriptExportRequest>;
 
-export const ExportResponse = z.object({
-	documentId: z.string(),
+export const CreateFolderRequest = z.object({
+	transcriptId: z.string(),
+	oAuthTokenResponse: ZTokenResponse,
 });
 
-export type ExportResponse = z.infer<typeof ExportResponse>;
+export type CreateFolderRequest = z.infer<typeof CreateFolderRequest>;
 
 export const transcribeUrlRequestBody = z.object({
 	url: z.string(),
@@ -184,6 +222,12 @@ export const transcribeFileRequestBody = z.object({
 export type TranscribeFileRequestBody = z.infer<
 	typeof transcribeFileRequestBody
 >;
+
+export const signedUrlRequestBody = z.object({
+	fileName: z.string(),
+});
+
+export type SignedUrlRequestBody = z.infer<typeof signedUrlRequestBody>;
 
 export const inputBucketObjectMetadata = z.object({
 	'user-email': z.string(),

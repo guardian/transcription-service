@@ -13,13 +13,12 @@ import {
 	getSQSClient,
 	generateOutputSignedUrlAndSendMessage,
 	isSqsFailure,
-	isS3Failure,
 	getSignedDownloadUrl,
 	getObjectMetadata,
 	logger,
-	getObjectText,
 	getS3Client,
 	sendMessage,
+	writeTranscriptionItem,
 } from '@guardian/transcription-service-backend-common';
 import {
 	ClientConfig,
@@ -28,15 +27,27 @@ import {
 	transcribeFileRequestBody,
 	transcribeUrlRequestBody,
 	MediaDownloadJob,
+	CreateFolderRequest,
+	signedUrlRequestBody,
+	ExportStatus,
+	ExportStatusRequest,
+	ExportStatuses,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
 	getDynamoClient,
 	getTranscriptionItem,
-	TranscriptionDynamoItem,
 } from '@guardian/transcription-service-backend-common/src/dynamodb';
-import { createTranscriptDocument } from './services/googleDrive';
+import { createExportFolder, getDriveClients } from './services/googleDrive';
 import { v4 as uuid4 } from 'uuid';
+import {
+	initializeExportStatuses,
+	exportTranscriptToDoc,
+	updateStatuses,
+} from './export';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import { invokeLambda } from './services/lambda';
+import { LambdaClient } from '@aws-sdk/client-lambda';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -55,6 +66,11 @@ const getApp = async () => {
 	);
 
 	const s3Client = getS3Client(config.aws.region);
+	const dynamoClient: DynamoDBDocumentClient = getDynamoClient(
+		config.aws.region,
+		config.aws.localstackEndpoint,
+	);
+	const lambdaClient = new LambdaClient({ region: config.aws.region });
 
 	app.use(bodyParser.json({ limit: '40mb' }));
 	app.use(passport.initialize());
@@ -190,86 +206,159 @@ const getApp = async () => {
 		}),
 	]);
 
-	apiRouter.post('/export', [
+	apiRouter.get('/export/status', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			const exportStatusRequest = ExportStatusRequest.safeParse(req.query);
+			if (!exportStatusRequest.success) {
+				res
+					.status(400)
+					.send(
+						'Invalid request - you must provide the transcript id in the query string',
+					);
+				return;
+			}
+			const getItemResult = await getTranscriptionItem(
+				dynamoClient,
+				config.app.tableName,
+				exportStatusRequest.data.id,
+				{ check: true, currentUserEmail: req.user?.email },
+			);
+			if (getItemResult.status === 'failure') {
+				res.status(getItemResult.statusCode).send(getItemResult.errorMessage);
+				return;
+			}
+			res.send(JSON.stringify(getItemResult.item.exportStatuses));
+			return;
+		}),
+	]);
+
+	apiRouter.post('/export/create-folder', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			const createRequest = CreateFolderRequest.safeParse(req.body);
+			if (!createRequest.success) {
+				const msg = `Failed to parse create folder request ${createRequest.error.message}`;
+				logger.error(msg);
+				res.status(400).send(msg);
+				return;
+			}
+			const getItemResult = await getTranscriptionItem(
+				dynamoClient,
+				config.app.tableName,
+				createRequest.data.transcriptId,
+				{ check: true, currentUserEmail: req.user?.email },
+			);
+			if (getItemResult.status === 'failure') {
+				res.status(getItemResult.statusCode).send(getItemResult.errorMessage);
+				return;
+			}
+			const driveClients = await getDriveClients(
+				config,
+				createRequest.data.oAuthTokenResponse,
+			);
+			const folderId = await createExportFolder(
+				driveClients.drive,
+				`${getItemResult.item.originalFilename} ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`,
+			);
+			if (!folderId) {
+				res.status(500).send('Failed to create folder');
+				return;
+			}
+			res.send(folderId);
+		}),
+	]);
+
+	apiRouter.post('/export/export', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
 			const exportRequest = TranscriptExportRequest.safeParse(req.body);
-			const dynamoClient = getDynamoClient(
-				config.aws.region,
-				config.aws.localstackEndpoint,
-			);
 			if (!exportRequest.success) {
 				const msg = `Failed to parse export request ${exportRequest.error.message}`;
 				logger.error(msg);
 				res.status(400).send(msg);
 				return;
 			}
-			const item = await getTranscriptionItem(
+			const getItemResult = await getTranscriptionItem(
 				dynamoClient,
 				config.app.tableName,
 				exportRequest.data.id,
+				{ check: true, currentUserEmail: req.user?.email },
 			);
-			if (!item) {
-				const msg = `Failed to fetch item with id ${exportRequest.data.id} from database.`;
-				logger.error(msg);
-				res.status(500).send(msg);
+			if (getItemResult.status === 'failure') {
+				res.status(getItemResult.statusCode).send(getItemResult.errorMessage);
 				return;
 			}
-			const parsedItem = TranscriptionDynamoItem.safeParse(item);
-			if (!parsedItem.success) {
-				const msg = `Failed to parse item ${exportRequest.data.id} from dynamodb. Error: ${parsedItem.error.message}`;
-				logger.error(msg);
-				res.status(500).send(msg);
-				return;
-			}
-			if (parsedItem.data.userEmail !== req.user?.email) {
-				// users can only export their own transcripts. Return a 404 to avoid leaking information about other users' transcripts
-				logger.warn(
-					`User ${req.user?.email} attempted to export transcript ${parsedItem.data.id} which does not belong to them.`,
-				);
-				res.status(404).send(`Transcript not found`);
-				return;
-			}
-
-			const transcriptS3Key =
-				parsedItem.data.transcriptKeys[exportRequest.data.transcriptFormat];
-			const transcriptText = await getObjectText(
-				s3Client,
-				config.app.transcriptionOutputBucket,
-				transcriptS3Key,
-			);
-			if (isS3Failure(transcriptText)) {
-				if (transcriptText.failureReason === 'NoSuchKey') {
-					const msg = `Failed to export transcript - file has expired. Please re-upload the file and try again.`;
-					res.status(410).send(msg);
-					return;
-				}
-				const msg = `Failed to fetch transcript. Please contact the digital investigations team for support`;
-				res.status(500).send(msg);
-				return;
-			}
-			const exportResult = await createTranscriptDocument(
+			const driveClients = await getDriveClients(
 				config,
-				`${parsedItem.data.originalFilename} transcript${parsedItem.data.isTranslation ? ' (English translation)' : ''}`,
 				exportRequest.data.oAuthTokenResponse,
-				transcriptText.text,
 			);
-			if (!exportResult) {
-				const msg = `Failed to create google document for item with id ${parsedItem.data.id}`;
-				logger.error(msg);
-				res.status(500).send(msg);
-				return;
-			}
-			res.send({
-				documentId: exportResult,
+			let exportStatuses: ExportStatuses = initializeExportStatuses(
+				exportRequest.data.items,
+			);
+			await writeTranscriptionItem(dynamoClient, config.app.tableName, {
+				...getItemResult.item,
+				exportStatuses: exportStatuses,
 			});
+
+			exportStatuses = await Promise.all(
+				exportStatuses.map((exportStatus: ExportStatus) => {
+					if (exportStatus.exportType == 'source-media') {
+						return exportStatus;
+					}
+					return exportTranscriptToDoc(
+						config,
+						s3Client,
+						getItemResult.item,
+						exportStatus.exportType,
+						exportRequest.data.folderId,
+						driveClients.drive,
+						driveClients.docs,
+					);
+				}),
+			);
+
+			await writeTranscriptionItem(dynamoClient, config.app.tableName, {
+				...getItemResult.item,
+				exportStatuses: exportStatuses,
+			});
+			logger.info('Document exports complete.');
+
+			try {
+				await invokeLambda(
+					lambdaClient,
+					config.app.mediaExportFunctionName,
+					JSON.stringify(exportRequest.data),
+				);
+			} catch (e) {
+				const msg = 'Failed to invoke media export lambda';
+				logger.error(msg, e);
+				const mediaFailedStatus: ExportStatus = {
+					status: 'failure',
+					exportType: 'source-media',
+					message: msg,
+				};
+				exportStatuses = updateStatuses(mediaFailedStatus, exportStatuses);
+				await writeTranscriptionItem(dynamoClient, config.app.tableName, {
+					...getItemResult.item,
+					exportStatuses: updateStatuses(mediaFailedStatus, exportStatuses),
+				});
+			}
+			res.send(JSON.stringify(exportStatuses));
+
 			return;
 		}),
 	]);
 
-	apiRouter.get('/signed-url', [
+	apiRouter.post('/signed-url', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
+			const parsedRequest = signedUrlRequestBody.safeParse(req.body);
+			if (!parsedRequest.success) {
+				res.status(400).send('Invalid request');
+				return;
+			}
+
 			const s3Key = uuid4();
 			const presignedS3Url = await getSignedUploadUrl(
 				config.aws.region,
@@ -278,6 +367,7 @@ const getApp = async () => {
 				60,
 				true,
 				s3Key,
+				parsedRequest.data.fileName,
 			);
 
 			res.set('Cache-Control', 'no-cache');
@@ -331,12 +421,13 @@ const getApp = async () => {
 
 let api;
 if (runningOnAws) {
-	logger.info('Running on lambda');
-
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let serverlessExpressHandler: any;
 	const serverlessHandler = getApp().then(
-		(app) => (serverlessExpressHandler = serverlessExpress({ app })),
+		(app) =>
+			(serverlessExpressHandler = serverlessExpress({
+				app,
+			})),
 	);
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any

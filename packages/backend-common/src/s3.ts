@@ -31,19 +31,29 @@ export const getSignedUploadUrl = (
 	userEmail: string,
 	expiresIn: number,
 	useAccelerateEndpoint: boolean,
-	id?: string,
-) =>
-	getSignedUrlSdk(
+	id: string,
+	fileName?: string,
+) => {
+	const metadata = {
+		'user-email': userEmail,
+	};
+	const metadataWithFilename = fileName
+		? {
+				...metadata,
+				originalFilename: fileName,
+				extension: path.extname(fileName).replace('.', ''),
+			}
+		: metadata;
+	return getSignedUrlSdk(
 		getS3Client(region, useAccelerateEndpoint),
 		new PutObjectCommand({
 			Bucket: bucket,
 			Key: id,
-			Metadata: {
-				'user-email': userEmail,
-			},
+			Metadata: metadataWithFilename,
 		}),
 		{ expiresIn }, // override default expiration time of 15 minutes
 	);
+};
 
 export const getSignedDownloadUrl = async (
 	region: string,
@@ -129,17 +139,61 @@ export const getObjectWithPresignedUrl = async (
 	return destinationPath;
 };
 
+export const downloadObject = async (
+	client: S3Client,
+	bucket: string,
+	key: string,
+	destinationPath: string,
+) => {
+	logger.info(`Downloading ${key} from S3 to ${destinationPath}`);
+	const data = await client.send(
+		new GetObjectCommand({
+			Bucket: bucket,
+			Key: key,
+		}),
+	);
+	if (!data.Body) {
+		throw new Error(`Failed to retrieve object ${key} from bucket ${bucket}`);
+	}
+	// this is nasty but it works, and nobody here https://stackoverflow.com/questions/67366381/aws-s3-v3-javascript-sdk-stream-file-from-bucket-getobjectcommand
+	// seems to be able to agree on a better approach
+	const readableBody = data.Body as Readable;
+	await downloadS3Data(readableBody, destinationPath, key, data.ContentLength);
+	return data.Metadata?.['extension'];
+};
+
+const bytesToMB = (bytes: number) => Math.floor(bytes / 1024 / 1024);
+
 const downloadS3Data = async (
 	data: Readable,
 	destinationPath: string,
 	key: string,
+	contentLength?: number,
 ) => {
-	const stream = data.pipe(createWriteStream(destinationPath));
-
+	let downloadedBytes = 0;
+	let lastLoggedPercentage = 0;
+	const contentLengthMb = contentLength && bytesToMB(contentLength);
+	data.on('data', (chunk) => {
+		downloadedBytes += chunk.length;
+		if (contentLength && contentLengthMb) {
+			const percentage = Math.floor((downloadedBytes / contentLength) * 100);
+			if (
+				downloadedBytes > 0 &&
+				contentLength > 0 &&
+				percentage > lastLoggedPercentage
+			) {
+				lastLoggedPercentage = percentage;
+				logger.info(
+					`Downloaded ${bytesToMB(downloadedBytes)} of ${contentLengthMb} MB so far (${percentage}%) for ${key}`,
+				);
+			}
+		}
+	});
+	const stream = createWriteStream(destinationPath);
 	await new Promise<void>((resolve, reject) => {
-		stream
+		data
+			.pipe(stream)
 			.on('finish', () => {
-				logger.debug('stream pipe done');
 				resolve();
 			})
 			.on('error', (error) => {
@@ -168,4 +222,20 @@ export const getObjectMetadata = async (
 	} catch (e) {
 		return;
 	}
+};
+
+export const mediaKey = (id: string) => `downloaded-media/${id}`;
+
+export const getObjectSize = async (
+	client: S3Client,
+	bucket: string,
+	key: string,
+) => {
+	const data = await client.send(
+		new HeadObjectCommand({
+			Bucket: bucket,
+			Key: key,
+		}),
+	);
+	return data.ContentLength;
 };

@@ -30,6 +30,7 @@ import {
 	Duration,
 	Fn,
 	RemovalPolicy,
+	Size,
 	Tags,
 } from 'aws-cdk-lib';
 import { EndpointType } from 'aws-cdk-lib/aws-apigateway';
@@ -75,6 +76,11 @@ import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { JsonPath } from 'aws-cdk-lib/aws-stepfunctions';
+
+const topicArnToName = (topicArn: string) => {
+	const split = topicArn.split(':');
+	return split[split.length - 1] ?? '';
+};
 
 export class TranscriptionService extends GuStack {
 	constructor(scope: App, id: string, props: GuStackProps) {
@@ -530,6 +536,8 @@ export class TranscriptionService extends GuStack {
 			},
 		).valueAsString;
 
+		const alarmTopicName = topicArnToName(alarmTopicArn);
+
 		const mediaDownloadTask = new GuEcsTask(this, 'media-download-task', {
 			app: mediaDownloadApp,
 			vpc,
@@ -692,6 +700,14 @@ export class TranscriptionService extends GuStack {
 				handler: 'index.outputHandler',
 				runtime: Runtime.NODEJS_20_X,
 				app: `${APP_NAME}-output-handler`,
+				errorPercentageMonitoring:
+					this.stage === 'PROD'
+						? {
+								toleratedErrorPercentage: 0,
+								noMonitoring: false,
+								snsTopicName: alarmTopicName,
+							}
+						: undefined,
 			},
 		);
 
@@ -724,6 +740,39 @@ export class TranscriptionService extends GuStack {
 
 		outputHandlerLambda.addToRolePolicy(getParametersPolicy);
 		outputHandlerLambda.addToRolePolicy(putMetricDataPolicy);
+
+		const mediaExportLambda = new GuLambdaFunction(
+			this,
+			'transcription-service-media-export',
+			{
+				fileName: 'media-export.zip',
+				handler: 'index.mediaExport',
+				runtime: Runtime.NODEJS_20_X,
+				app: `${APP_NAME}-media-export`,
+				ephemeralStorageSize: Size.mebibytes(10240),
+				memorySize: 2048,
+				timeout: Duration.seconds(900),
+				errorPercentageMonitoring:
+					this.stage === 'PROD'
+						? {
+								toleratedErrorPercentage: 0,
+								noMonitoring: false,
+								snsTopicName: alarmTopicName,
+							}
+						: undefined,
+			},
+		);
+
+		mediaExportLambda.addToRolePolicy(getParametersPolicy);
+		mediaExportLambda.addToRolePolicy(
+			new PolicyStatement({
+				effect: Effect.ALLOW,
+				actions: ['s3:GetObject'],
+				resources: [`${sourceMediaBucket.bucketArn}/*`],
+			}),
+		);
+		transcriptTable.grantReadWriteData(mediaExportLambda);
+		mediaExportLambda.grantInvoke(apiLambda);
 
 		new CfnOutput(this, 'WorkerRoleArn', {
 			exportName: `WorkerRoleArn-${props.stage}`,

@@ -69,7 +69,15 @@ const uploadFileAndTranscribe = async (
 ) => {
 	const blob = new Blob([file as BlobPart]);
 
-	const response = await authFetch(`/api/signed-url`, token);
+	const response = await authFetch(`/api/signed-url`, token, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({
+			fileName: file.name,
+		}),
+	});
 	if (!response) {
 		console.error('Failed to fetch signed url');
 		return false;

@@ -10,10 +10,13 @@ export type AuthState = {
 
 export enum RequestStatus {
 	Ready = 'Ready',
+	CreatingFolder = 'CreatingFolder',
+	TranscriptExportInProgress = 'TranscriptExportInProgress',
 	InProgress = 'InProgress',
 	Invalid = 'Invalid',
 	Success = 'Success',
 	Failed = 'Failed',
+	PartialFailure = 'PartialFailure',
 }
 
 type MediaUrlInvalid = {

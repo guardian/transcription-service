@@ -5,19 +5,24 @@ import {
 	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
 import { ZTokenResponse } from '@guardian/transcription-service-common';
+import Drive = drive_v3.Drive;
 
-export const getOrCreateTranscriptFolder = async (
+const ROOT_FOLDER_NAME = 'Guardian Transcribe Tool';
+
+export const getOrCreateFolder = async (
 	drive: drive_v3.Drive,
 	folderName: string,
+	parentId?: string,
 ) => {
 	const fileMetadata = {
 		name: folderName,
 		mimeType: 'application/vnd.google-apps.folder',
+		parents: parentId ? [parentId] : [],
 	};
 	try {
 		// first see if there is already a folder matching folderName
 		const existingFolders = await drive.files.list({
-			q: `mimeType='${fileMetadata.mimeType}' and name ='${folderName}' and trashed=false`,
+			q: `mimeType='${fileMetadata.mimeType}' and name ='${folderName}' and trashed=false ${parentId ? `and '${parentId}' in parents` : ''}`,
 			spaces: 'drive',
 		});
 		// there could be multiple folders with this name, let's upload to the first one
@@ -96,32 +101,31 @@ export const uploadToGoogleDocs = async (
 	return createResponse.data.id;
 };
 
-export const createTranscriptDocument = async (
+export const getDriveClients = async (
 	config: TranscriptionConfig,
-	fileName: string,
 	oAuthTokenResponse: ZTokenResponse,
-	transcriptText: string,
 ) => {
 	const oAuth2Client: OAuth2Client = new google.auth.OAuth2(config.auth);
 	oAuth2Client.setCredentials(oAuthTokenResponse);
 
 	const drive = google.drive({ version: 'v3', auth: oAuth2Client });
 	const docs = google.docs({ version: 'v1', auth: oAuth2Client });
-
-	const folderId = await getOrCreateTranscriptFolder(
-		drive,
-		'Guardian Transcribe Tool',
-	);
-	if (!folderId) {
-		logger.error('Failed to get or create folder');
-		return undefined;
-	}
-	const docId = await uploadToGoogleDocs(
+	return {
 		drive,
 		docs,
-		folderId,
-		fileName,
-		transcriptText,
-	);
-	return docId;
+	};
+};
+
+export const createExportFolder = async (drive: Drive, name: string) => {
+	const rootFolderId = await getOrCreateFolder(drive, ROOT_FOLDER_NAME);
+	if (!rootFolderId) {
+		logger.error(`Failed to get or create root folder '${ROOT_FOLDER_NAME}'`);
+		return undefined;
+	}
+	const folderId = await getOrCreateFolder(drive, name, rootFolderId);
+	if (!folderId) {
+		logger.error(`Failed to get or create folder '${name}'`);
+		return undefined;
+	}
+	return folderId;
 };
