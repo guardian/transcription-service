@@ -272,6 +272,8 @@ const getApp = async () => {
 	apiRouter.post('/export/export', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
+			console.log('req.body: ');
+			console.log(req.body);
 			const exportRequest = TranscriptExportRequest.safeParse(req.body);
 			if (!exportRequest.success) {
 				const msg = `Failed to parse export request ${exportRequest.error.message}`;

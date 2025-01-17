@@ -10,3 +10,19 @@ const SQSMessageBody = z.object({
 export const IncomingSQSEvent = z.object({
 	Records: z.array(SQSMessageBody),
 });
+
+const TranscriptionOutputBaseTest = z.object({
+	id: z.string(),
+	originalFilename: z.string(),
+	userEmail: z.string(),
+	isTranslation: z.boolean(),
+});
+
+const SQSMessageBodyTest = z.object({
+	messageId: z.string(),
+	body: stringToJSONSchema.pipe(TranscriptionOutputBaseTest),
+});
+
+export const IncomingSQSEventTest = z.object({
+	Records: z.array(SQSMessageBodyTest),
+});
