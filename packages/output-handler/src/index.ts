@@ -80,9 +80,7 @@ const handleTranscriptionSuccess = async (
 		id: transcriptionOutput.id,
 		originalFilename: transcriptionOutput.originalFilename,
 		transcriptKeys: {
-			srt: transcriptionOutput.outputBucketKeys.srt,
-			text: transcriptionOutput.outputBucketKeys.text,
-			json: transcriptionOutput.outputBucketKeys.json,
+			zip: transcriptionOutput.outputBucketKeys.zip,
 		},
 		userEmail: transcriptionOutput.userEmail,
 		completedAt: new Date().toISOString(),
@@ -202,11 +200,13 @@ const processMessage = async (event: unknown) => {
 	);
 
 	const parsedEvent = IncomingSQSEvent.safeParse(event);
+
 	if (!parsedEvent.success) {
 		logger.error(
 			`Failed to parse SQS message ${parsedEvent.error.message} + ${JSON.stringify(event)}`,
 			event,
 		);
+
 		throw new Error('Failed to parse SQS message');
 	}
 

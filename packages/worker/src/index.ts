@@ -383,9 +383,7 @@ const pollTranscriptionQueue = async (
 		}
 
 		const outputBucketKeys: OutputBucketKeys = {
-			srt: outputBucketUrls.srt.key,
-			json: outputBucketUrls.json.key,
-			text: outputBucketUrls.text.key,
+			zip: outputBucketUrls.zip.key,
 		};
 
 		const transcriptionOutput: TranscriptionOutputSuccess = {
@@ -397,9 +395,7 @@ const pollTranscriptionQueue = async (
 			outputBucketKeys,
 			translationOutputBucketKeys: job.translationOutputBucketUrls &&
 				transcriptResult.transcriptTranslations && {
-					srt: job.translationOutputBucketUrls.srt.key,
-					json: job.translationOutputBucketUrls.json.key,
-					text: job.translationOutputBucketUrls.text.key,
+					zip: job.translationOutputBucketUrls.zip.key,
 				},
 			isTranslation: job.translate,
 			duration: ffmpegResult.duration,

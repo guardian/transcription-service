@@ -149,6 +149,8 @@ export const sendMessage = async (
 	id: string,
 ): Promise<SendResult> => {
 	const fifo = queueUrl.includes('.fifo');
+	console.log('marji pushing messageBody: ');
+	console.log(messageBody);
 	const fifoProperties = fifo
 		? {
 				MessageGroupId: id,
@@ -334,37 +336,17 @@ const generateOutputSignedUrls = async (
 	expiresInDays: number,
 ): Promise<OutputBucketUrls> => {
 	const expiresIn = expiresInDays * 24 * 60 * 60;
-	const srtKey = `srt/${id}.srt`;
-	const jsonKey = `json/${id}.json`;
-	const textKey = `text/${id}.txt`;
-	const srtSignedS3Url = await getSignedUploadUrl(
+	const zipKey = `zip/${id}.zip`;
+	const zipSignedS3Url = await getSignedUploadUrl(
 		region,
 		outputBucket,
 		userEmail,
 		expiresIn,
 		false,
-		srtKey,
-	);
-	const textSignedS3Url = await getSignedUploadUrl(
-		region,
-		outputBucket,
-		userEmail,
-		expiresIn,
-		false,
-		textKey,
-	);
-	const jsonSignedS3Url = await getSignedUploadUrl(
-		region,
-		outputBucket,
-		userEmail,
-		expiresIn,
-		false,
-		jsonKey,
+		zipKey,
 	);
 
 	return {
-		srt: { url: srtSignedS3Url, key: srtKey },
-		text: { url: textSignedS3Url, key: textKey },
-		json: { url: jsonSignedS3Url, key: jsonKey },
+		zip: { url: zipSignedS3Url, key: zipKey },
 	};
 };

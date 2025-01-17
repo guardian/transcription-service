@@ -35,8 +35,12 @@ export const stringToJSONSchema = z
 	.string()
 	.transform((str, ctx): z.infer<ReturnType<typeof json>> => {
 		try {
+			console.log('trying to parse below:');
+			console.log(str);
 			return JSON.parse(str);
 		} catch (e) {
+			console.log('error parsing json');
+			console.log(e);
 			ctx.addIssue({ code: 'custom', message: 'Invalid JSON' });
 			return z.NEVER;
 		}

@@ -27,11 +27,12 @@ export const exportTranscriptToDoc = async (
 	docs: docs_v1.Docs,
 ): Promise<ExportStatus> => {
 	logger.info(`Starting export, export type: ${format}`);
-	const transcriptS3Key = item.transcriptKeys[format];
+	const transcriptS3Key = item.transcriptKeys['zip'];
 	const transcriptText = await getObjectText(
 		s3Client,
 		config.app.transcriptionOutputBucket,
 		transcriptS3Key,
+		format,
 	);
 	if (isS3Failure(transcriptText)) {
 		if (transcriptText.failureReason === 'NoSuchKey') {
