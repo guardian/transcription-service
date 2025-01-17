@@ -101,6 +101,8 @@ export const getTranscriptionItem = async (
 			statusCode: 404,
 		};
 	}
+	console.log(`dynamo object`);
+	console.log(item);
 	const parsedItem = TranscriptionDynamoItem.safeParse(item);
 	if (!parsedItem.success) {
 		const msg = `Failed to parse item ${itemId} from dynamodb. Error: ${parsedItem.error.message}`;

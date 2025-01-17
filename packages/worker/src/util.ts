@@ -4,16 +4,15 @@ import {
 	uploadToS3,
 	type OutputBucketUrls,
 } from '@guardian/transcription-service-common';
+import { getZipBlob } from '@guardian/transcription-service-backend-common/src/zip';
 
 export const uploadAllTranscriptsToS3 = async (
 	destinationBucketUrls: OutputBucketUrls,
 	files: Transcripts,
 ) => {
-	const getBlob = (file: string) => new Blob([file as BlobPart]);
+	const zipBlob = await getZipBlob(files);
 	const blobs: [string, string, Blob][] = [
-		['srt', destinationBucketUrls.srt.url, getBlob(files.srt)],
-		['json', destinationBucketUrls.json.url, getBlob(files.json)],
-		['text', destinationBucketUrls.text.url, getBlob(files.text)],
+		['zip', destinationBucketUrls.zip.url, zipBlob],
 	];
 
 	for (const blobDetail of blobs) {

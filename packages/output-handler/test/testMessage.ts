@@ -2,18 +2,16 @@ export const testMessage = {
 	Records: [
 		{
 			messageId: 'e60db2e5-b671-4832-abd4-c3fd40fe1c92',
-			status: 'SUCCESS',
-			receiptHandle: 'handle123',
 			body:
 				'{\n' +
-				'  "Type" : "Notification",\n' +
-				'  "MessageId" : "20c227f2-5767-5ac8-a037-79abd623a58a",\n' +
-				'  "TopicArn" : "arn:aws:sns:eu-west-1:123123123:transcription-service-destination-topic-CODE",\n' +
-				'  "Message" : "{\\"id\\":\\"e3df82e0-8e8a-4c36-9388-741ba97e502c\\",\\"languageCode\\":\\"en\\",\\"userEmail\\":\\"someone@guardian.co.uk\\",\\"originalFilename\\":\\"estoyaquishort.wav\\",\\"outputBucketKeys\\":{\\"srt\\":\\"srt/e3df82e0-8e8a-4c36-9388-741ba97e502c.srt\\",\\"json\\":\\"json/e3df82e0-8e8a-4c36-9388-741ba97e502c.json\\",\\"text\\":\\"text/e3df82e0-8e8a-4c36-9388-741ba97e502c.txt\\"}}",\n' +
-				'  "Timestamp" : "2024-02-28T18:44:20.741Z",\n' +
-				'  "SignatureVersion" : "1"' +
+				'  "id" : "21e5a462-0f13-406a-be77-2c737fd63c85",\n' +
+				'  "status" : "SUCCESS",\n' +
+				'  "languageCode" : "en",\n' +
+				'  "userEmail" : "marjan.kalanaki@guardian.co.uk",\n' +
+				'  "originalFilename" : "Snapinsta.app_video_An_tQHhIytNQcvk5Xl2q1sReLqnfp7AaCxMwfpQKHEGi4jblbbg501AUF_NgzDN_SZpPQAmQsNnW28Z2tsPim5i9.mp4",\n' +
+				'  "outputBucketKeys" : {"zip":"zip/21e5a462-0f13-406a-be77-2c737fd63c85.zip"},\n' +
+				'  "isTranslation" : false\n' +
 				'}',
-			eventSourceARN: 'arn:aws:sqs:eu-west-1:123456789:queueMcQueueFace.fifo',
 		},
 	],
 };
