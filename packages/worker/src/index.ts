@@ -262,6 +262,10 @@ const pollTranscriptionQueue = async (
 			file: fileToTranscribe,
 			numberOfThreads,
 			model: config.app.stage === 'PROD' ? 'medium' : 'tiny',
+			subtitleFormat:
+				job.transcriptDestinationService === DestinationService.Giant
+					? 'vtt'
+					: 'srt',
 		};
 
 		const transcriptResult = await getTranscriptionText(
@@ -301,7 +305,7 @@ const pollTranscriptionQueue = async (
 
 		const outputBucketKeys: OutputBucketKeys = {
 			srt: outputBucketUrls.srt.key,
-			json: outputBucketUrls.json.key,
+			zip: outputBucketUrls.zip.key,
 			text: outputBucketUrls.text.key,
 		};
 
@@ -318,7 +322,7 @@ const pollTranscriptionQueue = async (
 			translationOutputBucketKeys: job.translationOutputBucketUrls &&
 				transcriptResult.transcriptTranslations && {
 					srt: job.translationOutputBucketUrls.srt.key,
-					json: job.translationOutputBucketUrls.json.key,
+					zip: job.translationOutputBucketUrls.zip.key,
 					text: job.translationOutputBucketUrls.text.key,
 				},
 			isTranslation: job.translate,

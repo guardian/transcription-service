@@ -7,6 +7,8 @@ import {
 } from '@guardian/transcription-service-common';
 import { runSpawnCommand } from '@guardian/transcription-service-backend-common/src/process';
 
+type SubtitleFormat = 'srt' | 'vtt';
+
 interface FfmpegResult {
 	wavPath: string;
 	duration?: number;
@@ -38,6 +40,7 @@ export type WhisperBaseParams = {
 	file: string;
 	numberOfThreads: number;
 	model: WhisperModel;
+	subtitleFormat: SubtitleFormat;
 };
 
 const CONTAINER_FOLDER = '/input';
@@ -139,6 +142,7 @@ const runTranscription = async (
 		const params = whisperParams(
 			false,
 			whisperBaseParams.wavPath,
+			whisperBaseParams.subtitleFormat,
 			languageCode,
 			translate,
 		);
@@ -146,7 +150,7 @@ const runTranscription = async (
 
 		const srtPath = path.resolve(
 			path.parse(whisperBaseParams.file).dir,
-			`${fileName}.srt`,
+			`${fileName}.vtt`,
 		);
 		const textPath = path.resolve(
 			path.parse(whisperBaseParams.file).dir,
@@ -176,7 +180,11 @@ const transcribeAndTranslate = async (
 	whisperBaseParams: WhisperBaseParams,
 ): Promise<TranscriptionResult> => {
 	try {
-		const dlParams = whisperParams(true, whisperBaseParams.wavPath);
+		const dlParams = whisperParams(
+			true,
+			whisperBaseParams.wavPath,
+			whisperBaseParams.subtitleFormat,
+		);
 		const { metadata } = await runWhisper(whisperBaseParams, dlParams);
 		const languageCode =
 			languageCodes.find((c) => c === metadata.detectedLanguageCode) || 'auto';
@@ -245,6 +253,7 @@ const extractWhisperStderrData = (stderr: string): TranscriptionMetadata => {
 const whisperParams = (
 	detectLanguageOnly: boolean,
 	file: string,
+	subtitleFormat: SubtitleFormat = 'srt',
 	languageCode: LanguageCode = 'auto',
 	translate: boolean = false,
 ) => {
@@ -255,8 +264,9 @@ const whisperParams = (
 		const containerOutputFilePath = path.resolve(CONTAINER_FOLDER, fileName);
 		logger.info(`Transcription output file path: ${containerOutputFilePath}`);
 		const translateParam: string[] = translate ? ['--translate'] : [];
+		logger.warn(`subtitleFormat is ${subtitleFormat}`);
 		return [
-			'--output-srt',
+			subtitleFormat == 'vtt' ? '--output-vtt' : '--output-srt',
 			'--output-txt',
 			'--output-json',
 			'--output-file',
