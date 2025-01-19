@@ -307,7 +307,7 @@ const generateOutputSignedUrls = async (
 	const fileName = `${id}${translate ? '-translation' : ''}`;
 	const expiresIn = expiresInDays * 24 * 60 * 60;
 	const srtKey = `srt/${fileName}.srt`;
-	const jsonKey = `json/${fileName}.json`;
+	const jsonKey = `zip/${fileName}.zip`;
 	const textKey = `text/${fileName}.txt`;
 	const srtSignedS3Url = await getSignedUploadUrl(
 		region,
@@ -337,6 +337,6 @@ const generateOutputSignedUrls = async (
 	return {
 		srt: { url: srtSignedS3Url, key: srtKey },
 		text: { url: textSignedS3Url, key: textKey },
-		json: { url: jsonSignedS3Url, key: jsonKey },
+		zip: { url: jsonSignedS3Url, key: jsonKey },
 	};
 };

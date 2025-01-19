@@ -24,7 +24,7 @@ export type SignedUrl = z.infer<typeof SignedUrl>;
 const OutputBucketUrls = z.object({
 	srt: SignedUrl,
 	text: SignedUrl,
-	json: SignedUrl,
+	zip: SignedUrl,
 });
 
 export type OutputBucketUrls = z.infer<typeof OutputBucketUrls>;
@@ -32,7 +32,7 @@ export type OutputBucketUrls = z.infer<typeof OutputBucketUrls>;
 const OutputBucketKeys = z.object({
 	srt: z.string(),
 	text: z.string(),
-	json: z.string(),
+	zip: z.string(),
 });
 
 export type OutputBucketKeys = z.infer<typeof OutputBucketKeys>;
