@@ -569,6 +569,7 @@ export class TranscriptionService extends GuStack {
 			`${APP_NAME}-task-queue`,
 			taskQueueProps,
 		);
+
 		const transcriptionGpuTaskQueue = new Queue(
 			this,
 			`${APP_NAME}-gpu-task-queue`,
@@ -577,6 +578,10 @@ export class TranscriptionService extends GuStack {
 				queueName: `${APP_NAME}-gpu-task-queue-${this.stage}.fifo`,
 			},
 		);
+		new StringParameter(this, 'GPUTaskQueueUrlParameter', {
+			parameterName: `/${ssmPath}/app/gpuTaskQueueUrl`,
+			stringValue: transcriptionGpuTaskQueue.queueUrl,
+		});
 
 		// allow API lambda to write to queue
 		transcriptionTaskQueue.grantSendMessages(apiLambda);
