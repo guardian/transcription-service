@@ -481,7 +481,7 @@ export const UploadForm = () => {
 						<div className="flex h-5 items-center gap-2">
 							<Checkbox
 								id="diarization"
-								checked={translationRequested}
+								checked={diarizationRequested}
 								onChange={() => setDiarizationRequested(!diarizationRequested)}
 							/>
 							<div className="flex flex-col">

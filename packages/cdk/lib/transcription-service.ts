@@ -579,7 +579,7 @@ export class TranscriptionService extends GuStack {
 			},
 		);
 		new StringParameter(this, 'GPUTaskQueueUrlParameter', {
-			parameterName: `/${ssmPath}/app/gpuTaskQueueUrl`,
+			parameterName: `/${ssmPath}/gpuTaskQueueUrl`,
 			stringValue: transcriptionGpuTaskQueue.queueUrl,
 		});
 
