@@ -68,6 +68,13 @@ const main = async () => {
 	);
 
 	const autoScalingClient = getASGClient(config.aws.region);
+	const isGpu = config.app.app.startsWith('transcription-service-gpu-worker');
+	const asgName = isGpu
+		? `transcription-service-gpu-workers-${config.app.stage}`
+		: `transcription-service-workers-${config.app.stage}`;
+	const taskQueueUrl = isGpu
+		? config.app.gpuTaskQueueUrl
+		: config.app.taskQueueUrl;
 
 	if (config.app.stage !== 'DEV') {
 		// start job to regularly check the instance interruption (Note: deliberately not using await here so the job
@@ -88,7 +95,9 @@ const main = async () => {
 			await pollTranscriptionQueue(
 				pollCount,
 				sqsClient,
+				taskQueueUrl,
 				autoScalingClient,
+				asgName,
 				metrics,
 				config,
 				instanceId,
@@ -125,7 +134,9 @@ const publishTranscriptionOutputFailure = async (
 const pollTranscriptionQueue = async (
 	pollCount: number,
 	sqsClient: SQSClient,
+	taskQueueUrl: string,
 	autoScalingClient: AutoScalingClient,
+	asgName: string,
 	metrics: MetricsService,
 	config: TranscriptionConfig,
 	instanceId: string,
@@ -138,38 +149,74 @@ const pollTranscriptionQueue = async (
 		`worker polling for transcription task. Poll count = ${pollCount}`,
 	);
 
-	await updateScaleInProtection(autoScalingClient, stage, true, instanceId);
+	await updateScaleInProtection(
+		autoScalingClient,
+		stage,
+		true,
+		instanceId,
+		asgName,
+	);
 
-	const message = await getNextMessage(sqsClient, config.app.taskQueueUrl);
+	const message = await getNextMessage(sqsClient, taskQueueUrl);
 
 	if (isSqsFailure(message)) {
 		logger.error(`Failed to fetch message due to ${message.errorMsg}`);
-		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
+		await updateScaleInProtection(
+			autoScalingClient,
+			stage,
+			false,
+			instanceId,
+			asgName,
+		);
 		return;
 	}
 
 	if (!message.message) {
 		logger.info('No messages available');
-		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
+		await updateScaleInProtection(
+			autoScalingClient,
+			stage,
+			false,
+			instanceId,
+			asgName,
+		);
 		return;
 	}
 
 	const taskMessage = message.message;
 	if (!taskMessage.Body) {
 		logger.error('message missing body');
-		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
+		await updateScaleInProtection(
+			autoScalingClient,
+			stage,
+			false,
+			instanceId,
+			asgName,
+		);
 		return;
 	}
 	if (!taskMessage.Attributes && !isDev) {
 		logger.error('message missing attributes');
-		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
+		await updateScaleInProtection(
+			autoScalingClient,
+			stage,
+			false,
+			instanceId,
+			asgName,
+		);
 		return;
 	}
 
 	const receiptHandle = taskMessage.ReceiptHandle;
 	if (!receiptHandle) {
 		logger.error('message missing receipt handle');
-		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
+		await updateScaleInProtection(
+			autoScalingClient,
+			stage,
+			false,
+			instanceId,
+			asgName,
+		);
 		return;
 	}
 	CURRENT_MESSAGE_RECEIPT_HANDLE = receiptHandle;
@@ -179,7 +226,13 @@ const pollTranscriptionQueue = async (
 	if (!job) {
 		await metrics.putMetric(FailureMetric);
 		logger.error('Failed to parse job message', message);
-		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
+		await updateScaleInProtection(
+			autoScalingClient,
+			stage,
+			false,
+			instanceId,
+			asgName,
+		);
 		return;
 	}
 
@@ -214,7 +267,7 @@ const pollTranscriptionQueue = async (
 				);
 				await moveMessageToDeadLetterQueue(
 					sqsClient,
-					config.app.taskQueueUrl,
+					taskQueueUrl,
 					config.app.deadLetterQueueUrl,
 					taskMessage.Body,
 					receiptHandle,
@@ -250,7 +303,7 @@ const pollTranscriptionQueue = async (
 			// this worker to delete the message when it's finished.
 			await changeMessageVisibility(
 				sqsClient,
-				config.app.taskQueueUrl,
+				taskQueueUrl,
 				receiptHandle,
 				(ffmpegResult.duration * 2 + 600) * extraTranslationTimMultiplier,
 			);
@@ -346,17 +399,12 @@ const pollTranscriptionQueue = async (
 		);
 
 		logger.info(`Deleting message ${taskMessage.MessageId}`);
-		await deleteMessage(sqsClient, config.app.taskQueueUrl, receiptHandle);
+		await deleteMessage(sqsClient, taskQueueUrl, receiptHandle);
 	} catch (error) {
 		const msg = 'Worker failed to complete';
 		logger.error(msg, error);
 		// Terminate the message visibility timeout
-		await changeMessageVisibility(
-			sqsClient,
-			config.app.taskQueueUrl,
-			receiptHandle,
-			0,
-		);
+		await changeMessageVisibility(sqsClient, taskQueueUrl, receiptHandle, 0);
 
 		// the type of ApproximateReceiveCount is string | undefined so need to
 		// handle the case where its missing. use default value
@@ -375,7 +423,13 @@ const pollTranscriptionQueue = async (
 		}
 	} finally {
 		logger.resetCommonMetadata();
-		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
+		await updateScaleInProtection(
+			autoScalingClient,
+			stage,
+			false,
+			instanceId,
+			asgName,
+		);
 	}
 };
 

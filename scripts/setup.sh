@@ -39,16 +39,27 @@ echo "Created queue in localstack, url: ${DEAD_LETTER_QUEUE_URL_LOCALHOST}"
 #########
 ##### task queue
 #########
-QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-task-queue-DEV.fifo \
+TASK_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-task-queue-DEV.fifo \
   --attributes '{
   "FifoQueue": "true",
   "ContentBasedDeduplication": "true",
   "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:transcription-service-task-dead-letter-queue-DEV.fifo\",\"maxReceiveCount\":\"3\"}"
   }' | jq .QueueUrl)
 # We don't install the localstack dns so need to replace the endpoint with localhost
-QUEUE_URL_LOCALHOST=${QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
+TASK_QUEUE_URL_LOCALHOST=${TASK_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
 
-echo "Created task queue in localstack, url: ${QUEUE_URL_LOCALHOST}"
+echo "Created task queue in localstack, url: ${TASK_QUEUE_URL_LOCALHOST}"
+
+GPU_TASK_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-gpu-task-queue-DEV.fifo \
+  --attributes '{
+  "FifoQueue": "true",
+  "ContentBasedDeduplication": "true",
+  "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:transcription-service-task-dead-letter-queue-DEV.fifo\",\"maxReceiveCount\":\"3\"}"
+  }' | jq .QueueUrl)
+# We don't install the localstack dns so need to replace the endpoint with localhost
+GPU_TASK_QUEUE_URL_LOCALHOST=${GPU_TASK_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
+
+echo "Created task queue in localstack, url: ${GPU_TASK_QUEUE_URL_LOCALHOST}"
 
 #########
 ##### output queue

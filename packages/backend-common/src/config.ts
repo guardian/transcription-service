@@ -4,6 +4,7 @@ import { defaultProvider } from '@aws-sdk/credential-provider-node';
 import { logger } from '@guardian/transcription-service-backend-common';
 import { DestinationService } from '@guardian/transcription-service-common';
 import { SecretsManager } from '@aws-sdk/client-secrets-manager';
+
 export interface TranscriptionConfig {
 	auth: {
 		clientId: string;
@@ -17,6 +18,7 @@ export interface TranscriptionConfig {
 		deadLetterQueueUrl?: string;
 		mediaDownloadQueueUrl: string;
 		stage: string;
+		app: string;
 		emailNotificationFromAddress: string;
 		sourceMediaBucket: string;
 		transcriptionOutputBucket: string;
@@ -73,6 +75,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		region,
 		credentials: credentialProvider(stage !== 'DEV'),
 	});
+	const app = await getEnvVarOrMetadata('APP', 'tags/instance/App');
 
 	const paramPath = `/${stage}/investigations/transcription-service/`;
 
@@ -178,6 +181,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			deadLetterQueueUrl,
 			mediaDownloadQueueUrl,
 			stage,
+			app,
 			sourceMediaBucket,
 			emailNotificationFromAddress,
 			destinationQueueUrls: {
