@@ -907,7 +907,10 @@ export class TranscriptionService extends GuStack {
 					'autoscaling:SetDesiredCapacity',
 					'autoscaling:DescribeAutoScalingInstances',
 				],
-				resources: [transcriptionWorkerASG.autoScalingGroupArn],
+				resources: [
+					transcriptionWorkerASG.autoScalingGroupArn,
+					transcriptionGpuWorkerASG.autoScalingGroupArn,
+				],
 			}),
 		);
 
