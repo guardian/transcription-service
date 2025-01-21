@@ -1,3 +1,4 @@
+import { z } from 'zod';
 // languages supported by whisper.cpp
 // copied from
 // https://github.com/ggerganov/whisper.cpp/blob/25d313b38b1f562200f915cd5952555613cd0110/whisper.cpp#L251
@@ -108,11 +109,12 @@ export const languageCodeToLanguage = Object.freeze({
 
 type LanguageCodeToLanguage = typeof languageCodeToLanguage;
 
-export type LanguageCode = keyof LanguageCodeToLanguage;
-
 // There doesn't seem to be a way to get the object keys that has a type which
 // is an array of a union of string literals rather than an array of strings.
 // https://www.charpeni.com/blog/properly-type-object-keys-and-object-entries
-export const languageCodes = Object.keys(
-	languageCodeToLanguage,
-) as unknown as LanguageCode[];
+export const languageCodes = Object.keys(languageCodeToLanguage) as [
+	keyof LanguageCodeToLanguage,
+];
+
+export const LanguageCode = z.enum(languageCodes);
+export type LanguageCode = z.infer<typeof LanguageCode>;

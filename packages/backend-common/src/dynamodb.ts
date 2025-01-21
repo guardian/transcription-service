@@ -5,9 +5,8 @@ import {
 	GetCommand,
 } from '@aws-sdk/lib-dynamodb';
 
-import { z } from 'zod';
 import { logger } from '@guardian/transcription-service-backend-common';
-import { ExportStatuses } from '@guardian/transcription-service-common';
+import { TranscriptionDynamoItem } from '@guardian/transcription-service-common';
 
 export const getDynamoClient = (
 	region: string,
@@ -24,27 +23,6 @@ export const getDynamoClient = (
 	const client = new DynamoDBClient(clientConfig);
 	return DynamoDBDocumentClient.from(client);
 };
-
-export const TranscriptKeys = z.object({
-	srt: z.string(),
-	text: z.string(),
-	json: z.string(),
-});
-
-export type TranscriptKeys = z.infer<typeof TranscriptKeys>;
-
-export const TranscriptionDynamoItem = z.object({
-	id: z.string(),
-	originalFilename: z.string(),
-	transcriptKeys: TranscriptKeys,
-	userEmail: z.string(),
-	completedAt: z.optional(z.string()), // dynamodb can't handle dates so we need to use an ISO date
-	isTranslation: z.boolean(),
-	exportStatuses: z.optional(ExportStatuses),
-	languageCode: z.optional(z.string()),
-});
-
-export type TranscriptionDynamoItem = z.infer<typeof TranscriptionDynamoItem>;
 
 export const writeTranscriptionItem = async (
 	client: DynamoDBDocumentClient,
