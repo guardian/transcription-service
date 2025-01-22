@@ -338,6 +338,7 @@ export class TranscriptionService extends GuStack {
 					actions: ['autoscaling:SetInstanceProtection'],
 					resources: [
 						`arn:aws:autoscaling:${props.env.region}:${this.account}:autoScalingGroup:*:autoScalingGroupName/${workerAutoscalingGroupName}`,
+						`arn:aws:autoscaling:${props.env.region}:${this.account}:autoScalingGroup:*:autoScalingGroupName/${gpuWorkerAutoscalingGroupName}`,
 					],
 				}),
 				new GuAllowPolicy(this, 'WriteCloudwatch', {

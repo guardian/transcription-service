@@ -23,6 +23,7 @@ export const runSpawnCommand = (
 	args: ReadonlyArray<string>,
 	logImmediately: boolean = false,
 ): Promise<ProcessResult> => {
+	console.log(args);
 	const logStdout = !processesWithHiddenStdout.includes(processName);
 	return new Promise((resolve, reject) => {
 		const cp = spawn(cmd, args);

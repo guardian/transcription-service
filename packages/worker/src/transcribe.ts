@@ -9,7 +9,6 @@ import {
 import { runSpawnCommand } from '@guardian/transcription-service-backend-common/src/process';
 
 interface FfmpegResult {
-	wavPath: string;
 	duration?: number;
 }
 
@@ -34,16 +33,17 @@ type TranscriptionResult = {
 };
 
 export type WhisperBaseParams = {
-	containerId: string;
+	containerId?: string;
 	wavPath: string;
 	file: string;
 	numberOfThreads: number;
 	model: WhisperModel;
 	engine: TranscriptionEngine;
 	diarize: boolean;
+	stage: string;
 };
 
-const CONTAINER_FOLDER = '/input';
+export const CONTAINER_FOLDER = '/input';
 
 export const getOrCreateContainer = async (
 	tempDir: string,
@@ -72,43 +72,41 @@ export const getOrCreateContainer = async (
 	return newContainer.stdout.trim();
 };
 
-export const convertToWav = async (
-	containerId: string,
-	file: string,
-): Promise<FfmpegResult | undefined> => {
-	const fileName = path.basename(file);
-	const filePath = `${CONTAINER_FOLDER}/${fileName}`;
-	const wavPath = `${CONTAINER_FOLDER}/${fileName}-converted.wav`;
-	logger.info(`containerId: ${containerId}`);
-	logger.info(`file path: ${filePath}`);
-	logger.info(`wav file path: ${wavPath}`);
+export const getFfmpegParams = (
+	sourceFilePath: string,
+	outputWavPath: string,
+) => {
+	return [
+		'-y',
+		'-i',
+		sourceFilePath,
+		'-ar',
+		'16000',
+		'-ac',
+		'1',
+		'-c:a',
+		'pcm_s16le',
+		outputWavPath,
+	];
+};
 
+export const runFfmpeg = async (
+	ffmpegParams: string[],
+	containerId?: string,
+): Promise<FfmpegResult | undefined> => {
 	try {
-		const res = await runSpawnCommand(
-			'convertToWav',
-			'docker',
-			[
-				'exec',
-				containerId,
-				'ffmpeg',
-				'-y',
-				'-i',
-				filePath,
-				'-ar',
-				'16000',
-				'-ac',
-				'1',
-				'-c:a',
-				'pcm_s16le',
-				wavPath,
-			],
-			true,
-		);
+		const res = containerId
+			? await runSpawnCommand(
+					'convertToWav',
+					'docker',
+					['exec', containerId, 'ffmpeg', ...ffmpegParams],
+					true,
+				)
+			: await runSpawnCommand('convertToWav', 'ffmpeg', ffmpegParams, true);
 
 		const duration = getDuration(res.stderr);
 
 		return {
-			wavPath,
 			duration,
 		};
 	} catch (error) {
@@ -304,21 +302,25 @@ export const runWhisperX = async (
 	languageCode: LanguageCode,
 	translate: boolean,
 ) => {
-	const { wavPath, diarize } = whisperBaseParams;
+	const { wavPath, diarize, stage } = whisperBaseParams;
 	const fileName = path.parse(wavPath).name;
 	const model = languageCode === 'en' ? whisperBaseParams.model : 'large';
 	const languageCodeParam =
 		languageCode === 'auto' ? [] : ['--language', languageCode];
 	const translateParam = translate ? ['--task', 'translate'] : [];
+	const computeParam = stage === 'DEV' ? ['--compute', 'int8'] : [];
 	try {
-		const diarizeParam = diarize ? `--diarize` : '';
+		const diarizeParam = diarize ? [`--diarize`] : [];
 		const result = await runSpawnCommand('transcribe-whisperx', 'whisperx', [
-			wavPath,
 			'--model',
 			model,
 			...languageCodeParam,
 			...translateParam,
-			diarizeParam,
+			...diarizeParam,
+			...computeParam,
+			'--output_dir',
+			path.parse(wavPath).dir,
+			wavPath,
 		]);
 		const metadata = extractWhisperXStderrData(result.stderr);
 		logger.info('Whisper finished successfully', metadata);
@@ -337,6 +339,9 @@ export const runWhisper = async (
 	whisperParams: string[],
 ) => {
 	const { containerId, numberOfThreads, model, wavPath } = whisperBaseParams;
+	if (!containerId) {
+		throw new Error("Container id undefined - can't run whisper container");
+	}
 	const fileName = path.parse(wavPath).name;
 	logger.info(
 		`Runnning whisper with params ${whisperParams}, base params: ${JSON.stringify(whisperBaseParams, null, 2)}`,

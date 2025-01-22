@@ -23,9 +23,11 @@ import {
 } from '@guardian/transcription-service-common';
 import {
 	getTranscriptionText,
-	convertToWav,
+	runFfmpeg,
 	getOrCreateContainer,
 	WhisperBaseParams,
+	CONTAINER_FOLDER,
+	getFfmpegParams,
 } from './transcribe';
 import path from 'path';
 
@@ -41,7 +43,7 @@ import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import { checkSpotInterrupt } from './spot-termination';
 import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
 
-const POLLING_INTERVAL_SECONDS = 30;
+const POLLING_INTERVAL_SECONDS = 5;
 
 // Mutable variable is needed here to get feedback from checkSpotInterrupt
 let INTERRUPTION_TIME: Date | undefined = undefined;
@@ -75,6 +77,8 @@ const main = async () => {
 	const taskQueueUrl = isGpu
 		? config.app.gpuTaskQueueUrl
 		: config.app.taskQueueUrl;
+
+	console.log('QUEUE URL', taskQueueUrl, isGpu);
 
 	if (config.app.stage !== 'DEV') {
 		// start job to regularly check the instance interruption (Note: deliberately not using await here so the job
@@ -146,7 +150,7 @@ const pollTranscriptionQueue = async (
 	const isDev = config.app.stage === 'DEV';
 
 	logger.info(
-		`worker polling for transcription task. Poll count = ${pollCount}`,
+		`worker polling ${taskQueueUrl} for transcription task. Poll count = ${pollCount}`,
 	);
 
 	await updateScaleInProtection(
@@ -244,7 +248,9 @@ const pollTranscriptionQueue = async (
 
 		logger.info(`Fetched transcription job with id ${job.id}`);
 
-		const destinationDirectory = isDev ? `${__dirname}/sample` : '/tmp';
+		const destinationDirectory = isDev
+			? `${__dirname}/../../../worker-tmp-files`
+			: '/tmp';
 
 		const fileToTranscribe = await getObjectWithPresignedUrl(
 			inputSignedUrl,
@@ -252,12 +258,24 @@ const pollTranscriptionQueue = async (
 			destinationDirectory,
 		);
 
-		// docker container to run ffmpeg and whisper on file
-		const containerId = await getOrCreateContainer(
-			path.parse(fileToTranscribe).dir,
-		);
+		const useContainer = job.engine !== 'whisperx';
 
-		const ffmpegResult = await convertToWav(containerId, fileToTranscribe);
+		const ffmpegDir = useContainer ? CONTAINER_FOLDER : destinationDirectory;
+
+		const fileName = path.basename(fileToTranscribe);
+		const filePath = `${ffmpegDir}/${fileName}`;
+		const wavPath = `${ffmpegDir}/${fileName}-converted.wav`;
+		logger.info(`Input file path: ${filePath}, Output file path: ${wavPath}`);
+
+		const ffmpegParams = getFfmpegParams(filePath, wavPath);
+
+		// docker container to run ffmpeg and whisper on file
+		const containerId = useContainer
+			? await getOrCreateContainer(path.parse(fileToTranscribe).dir)
+			: undefined;
+
+		const ffmpegResult = await runFfmpeg(ffmpegParams, containerId);
+
 		if (ffmpegResult === undefined) {
 			// when ffmpeg fails to transcribe, move message to the dead letter
 			// queue
@@ -311,12 +329,13 @@ const pollTranscriptionQueue = async (
 
 		const whisperBaseParams: WhisperBaseParams = {
 			containerId,
-			wavPath: ffmpegResult.wavPath,
+			wavPath: wavPath,
 			file: fileToTranscribe,
 			numberOfThreads,
 			model: config.app.stage === 'PROD' ? 'medium' : 'tiny',
 			engine: job.engine,
 			diarize: job.diarize,
+			stage: config.app.stage,
 		};
 
 		const transcriptResult = await getTranscriptionText(

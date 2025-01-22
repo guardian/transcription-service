@@ -119,10 +119,11 @@ const getApp = async () => {
 				res.status(500).send(sendResult.errorMsg);
 				return;
 			}
-			logger.info('API successfully sent the message to SQS', {
+			logger.info('API successfully sent media download message to SQS', {
 				id,
 				url: body.data.url,
 				userEmail,
+				queue: config.app.mediaDownloadQueueUrl,
 			});
 			res.send('Message sent');
 		}),
@@ -194,6 +195,8 @@ const getApp = async () => {
 				id: s3Key,
 				filename: body.data.fileName,
 				userEmail,
+				gpuQueue: config.app.gpuTaskQueueUrl,
+				taskQueue: config.app.taskQueueUrl,
 			});
 			res.send('Message sent');
 		}),
