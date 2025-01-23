@@ -332,7 +332,11 @@ const pollTranscriptionQueue = async (
 			wavPath: wavPath,
 			file: fileToTranscribe,
 			numberOfThreads,
-			model: config.app.stage === 'PROD' ? 'medium' : 'tiny',
+			// whisperx always runs on powerful gpu instances so let's always use the medium model
+			model:
+				job.engine !== 'whisperx' && config.app.stage !== 'PROD'
+					? 'tiny'
+					: 'medium',
 			engine: job.engine,
 			diarize: job.diarize,
 			stage: config.app.stage,
