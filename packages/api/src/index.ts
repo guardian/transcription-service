@@ -176,10 +176,7 @@ const getApp = async () => {
 			const sendResult = await generateOutputSignedUrlAndSendMessage(
 				s3Key,
 				sqsClient,
-				config.app.taskQueueUrl,
-				config.app.gpuTaskQueueUrl,
-				config.app.transcriptionOutputBucket,
-				config.aws.region,
+				config,
 				userEmail,
 				body.data.fileName,
 				signedUrl,

@@ -93,14 +93,13 @@ const requestTranscription = async (
 	const sendResult = await generateOutputSignedUrlAndSendMessage(
 		s3Key,
 		sqsClient,
-		config.app.taskQueueUrl,
-		config.app.transcriptionOutputBucket,
-		config.aws.region,
+		config,
 		job.userEmail,
 		metadata.title,
 		signedUrl,
 		job.languageCode,
 		job.translationRequested,
+		job.diarizationRequested,
 	);
 	if (isSqsFailure(sendResult)) {
 		throw new Error('Failed to send transcription job');

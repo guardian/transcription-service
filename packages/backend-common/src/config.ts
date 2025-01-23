@@ -28,6 +28,7 @@ export interface TranscriptionConfig {
 		mediaDownloadProxyIpAddress: string;
 		mediaDownloadProxyPort: number;
 		mediaExportFunctionName: string;
+		useWhisperx: boolean;
 	};
 	aws: {
 		region: string;
@@ -168,6 +169,13 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		'media-download/proxy-ip-address',
 	);
 
+	const useWhisperxParam = findParameter(
+		parameters,
+		paramPath,
+		'app/useWhisperx',
+	);
+	const useWhisperx = useWhisperxParam === 'true';
+
 	return {
 		auth: {
 			clientId: authClientId,
@@ -194,6 +202,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			mediaDownloadProxyIpAddress,
 			mediaDownloadProxyPort: 1337,
 			mediaExportFunctionName,
+			useWhisperx,
 		},
 		aws: {
 			region,
