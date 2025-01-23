@@ -288,7 +288,6 @@ export class TranscriptionService extends GuStack {
 
 		const workerApp = `${APP_NAME}-worker`;
 		const userData = UserData.forLinux({ shebang: '#!/bin/bash' });
-		const gpuUserData = UserData.forLinux({ shebang: '#!/bin/bash' });
 
 		const userDataCommands = [
 			`export STAGE=${props.stage}`,
@@ -299,7 +298,6 @@ export class TranscriptionService extends GuStack {
 		].join('\n');
 
 		userData.addCommands(userDataCommands);
-		gpuUserData.addCommands(userDataCommands);
 
 		const loggingStreamName =
 			GuLoggingStreamNameParameter.getInstance(this).valueAsString;
@@ -420,7 +418,7 @@ export class TranscriptionService extends GuStack {
 						volume: BlockDeviceVolume.ebs(100),
 					},
 				],
-				userData: gpuUserData,
+				userData,
 			},
 		);
 

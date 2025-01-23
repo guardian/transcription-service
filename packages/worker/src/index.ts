@@ -43,7 +43,7 @@ import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import { checkSpotInterrupt } from './spot-termination';
 import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
 
-const POLLING_INTERVAL_SECONDS = 5;
+const POLLING_INTERVAL_SECONDS = 15;
 
 // Mutable variable is needed here to get feedback from checkSpotInterrupt
 let INTERRUPTION_TIME: Date | undefined = undefined;
@@ -74,11 +74,9 @@ const main = async () => {
 	const asgName = isGpu
 		? `transcription-service-gpu-workers-${config.app.stage}`
 		: `transcription-service-workers-${config.app.stage}`;
-	const taskQueueUrl = isGpu
-		? config.app.gpuTaskQueueUrl
-		: config.app.taskQueueUrl;
+	const queueUrl = isGpu ? config.app.gpuTaskQueueUrl : config.app.taskQueueUrl;
 
-	console.log('QUEUE URL', taskQueueUrl, isGpu);
+	logger.info(`Worker reading from queue ${queueUrl}`);
 
 	if (config.app.stage !== 'DEV') {
 		// start job to regularly check the instance interruption (Note: deliberately not using await here so the job
@@ -99,7 +97,7 @@ const main = async () => {
 			await pollTranscriptionQueue(
 				pollCount,
 				sqsClient,
-				taskQueueUrl,
+				queueUrl,
 				autoScalingClient,
 				asgName,
 				metrics,

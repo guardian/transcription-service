@@ -48,7 +48,7 @@ TASK_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --que
 # We don't install the localstack dns so need to replace the endpoint with localhost
 TASK_QUEUE_URL_LOCALHOST=${TASK_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
 
-echo "Created task queue in localstack, url: ${TASK_QUEUE_URL_LOCALHOST}"
+echo "Created cpu task queue in localstack, url: ${TASK_QUEUE_URL_LOCALHOST}"
 
 GPU_TASK_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-gpu-task-queue-DEV.fifo \
   --attributes '{
@@ -59,7 +59,7 @@ GPU_TASK_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue -
 # We don't install the localstack dns so need to replace the endpoint with localhost
 GPU_TASK_QUEUE_URL_LOCALHOST=${GPU_TASK_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
 
-echo "Created task queue in localstack, url: ${GPU_TASK_QUEUE_URL_LOCALHOST}"
+echo "Created gpu task queue in localstack, url: ${GPU_TASK_QUEUE_URL_LOCALHOST}"
 
 #########
 ##### output queue

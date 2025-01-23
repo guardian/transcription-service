@@ -59,8 +59,9 @@ def download_huggingface_align_models():
 # Diarization - see https://github.com/m-bain/whisperX/blob/main/whisperx/diarize.py
 
 def download_diarization_models(auth_token):
-    PYANNOTE_MODEL="pyannote/speaker-diarization-3.1"
-    Pipeline.from_pretrained(PYANNOTE_MODEL, use_auth_token=auth_token)
+    pyannote_model="pyannote/speaker-diarization-3.1"
+    print(f"Downloading diarization models {pyannote_model}")
+    Pipeline.from_pretrained(pyannote_model, use_auth_token=auth_token)
 
 # faster-whisper models
 
@@ -88,6 +89,7 @@ def download_model(
     Returns:
       The path to the downloaded model.
     """
+    print(f"Downloading whisper model {model}")
     repo_id = WHISPER_MODELS.get(model)
 
     allow_patterns = [

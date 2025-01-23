@@ -308,6 +308,8 @@ export const runWhisperX = async (
 	const languageCodeParam =
 		languageCode === 'auto' ? [] : ['--language', languageCode];
 	const translateParam = translate ? ['--task', 'translate'] : [];
+	// On mac arm processors, we need to set the compute type to int8
+	// see https://github.com/m-bain/whisperX?tab=readme-ov-file#usage--command-line
 	const computeParam = stage === 'DEV' ? ['--compute', 'int8'] : [];
 	try {
 		const diarizeParam = diarize ? [`--diarize`] : [];
@@ -340,7 +342,9 @@ export const runWhisper = async (
 ) => {
 	const { containerId, numberOfThreads, model, wavPath } = whisperBaseParams;
 	if (!containerId) {
-		throw new Error("Container id undefined - can't run whisper container");
+		throw new Error(
+			"Container id undefined - can't run whisper container (has this worker ended up in whisperX mode?)",
+		);
 	}
 	const fileName = path.parse(wavPath).name;
 	logger.info(
