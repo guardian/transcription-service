@@ -290,19 +290,16 @@ export class TranscriptionService extends GuStack {
 		const userData = UserData.forLinux({ shebang: '#!/bin/bash' });
 		const gpuUserData = UserData.forLinux({ shebang: '#!/bin/bash' });
 
-		const makeUserData = (workerType: 'gpu' | 'cpu') => {
-			return [
-				`export STAGE=${props.stage}`,
-				`export AWS_REGION=${props.env?.region}`,
-				`export WORKER_TYPE=${workerType}`,
-				`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
-				`dpkg -i transcription-service-worker_1.0.0_all.deb`,
-				`service transcription-service-worker start`,
-			].join('\n');
-		};
+		const userDataCommands = [
+			`export STAGE=${props.stage}`,
+			`export AWS_REGION=${props.env.region}`,
+			`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
+			`dpkg -i transcription-service-worker_1.0.0_all.deb`,
+			`service transcription-service-worker start`,
+		].join('\n');
 
-		userData.addCommands(makeUserData('cpu'));
-		gpuUserData.addCommands(makeUserData('gpu'));
+		userData.addCommands(userDataCommands);
+		gpuUserData.addCommands(userDataCommands);
 
 		const loggingStreamName =
 			GuLoggingStreamNameParameter.getInstance(this).valueAsString;
