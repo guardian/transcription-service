@@ -38,7 +38,7 @@ export class TranscriptionServiceRepository extends GuStack {
 				lifecycleRules: [
 					{
 						tagPrefixList: ['main'],
-						maxImageCount: undefined,
+						maxImageCount: 20,
 						rulePriority: 1,
 					},
 					{
@@ -59,7 +59,7 @@ export class TranscriptionServiceRepository extends GuStack {
 				lifecycleRules: [
 					{
 						tagPrefixList: ['main'],
-						maxImageCount: undefined,
+						maxImageCount: 20,
 						rulePriority: 1,
 					},
 					{
