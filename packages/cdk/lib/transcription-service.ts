@@ -410,7 +410,7 @@ export class TranscriptionService extends GuStack {
 				machineImage: MachineImage.genericLinux({
 					'eu-west-1': gpuWorkerAmi.valueAsString,
 				}),
-				instanceType: InstanceType.of(InstanceClass.G5, InstanceSize.XLARGE),
+				instanceType: InstanceType.of(InstanceClass.G4DN, InstanceSize.XLARGE2),
 				blockDevices: [
 					{
 						deviceName: '/dev/sda1',
@@ -436,6 +436,8 @@ export class TranscriptionService extends GuStack {
 
 		const gpuInstanceTypes = isProd
 			? [
+					InstanceType.of(InstanceClass.G4DN, InstanceSize.XLARGE2),
+					InstanceType.of(InstanceClass.G4DN, InstanceSize.XLARGE),
 					InstanceType.of(InstanceClass.G5, InstanceSize.XLARGE),
 					InstanceType.of(InstanceClass.G6, InstanceSize.XLARGE),
 				]
@@ -496,7 +498,7 @@ export class TranscriptionService extends GuStack {
 					launchTemplate: gpuLaunchTemplate,
 					instancesDistribution: {
 						...asgProps.mixedInstancesPolicy.instancesDistribution,
-						spotMaxPrice: '1.1230',
+						spotMaxPrice: '0.7520',
 					},
 					launchTemplateOverrides: gpuInstanceTypes.map(instanceTypeToOverride),
 				},
