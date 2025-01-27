@@ -53,7 +53,13 @@ export class TranscriptionServiceRepository extends GuStack {
 				repositoryName: `transcription-service-media-download`,
 				lifecycleRules: [
 					{
-						maxImageCount: 5,
+						tagPrefixList: ['main'],
+						maxImageCount: undefined,
+						rulePriority: 1,
+					},
+					{
+						maxImageCount: 10,
+						rulePriority: 2,
 					},
 				],
 				imageTagMutability: TagMutability.MUTABLE,
