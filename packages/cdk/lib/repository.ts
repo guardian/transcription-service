@@ -37,7 +37,12 @@ export class TranscriptionServiceRepository extends GuStack {
 				repositoryName: `transcription-service`,
 				lifecycleRules: [
 					{
-						maxImageCount: 5,
+						tagPrefixList: ['main'],
+						maxImageCount: undefined,
+						rulePriority: 1,
+					},
+					{
+						maxImageCount: 10,
 					},
 				],
 				imageTagMutability: TagMutability.MUTABLE,
@@ -58,7 +63,7 @@ export class TranscriptionServiceRepository extends GuStack {
 						rulePriority: 1,
 					},
 					{
-						maxImageCount: 20,
+						maxImageCount: 10,
 						rulePriority: 2,
 					},
 				],
