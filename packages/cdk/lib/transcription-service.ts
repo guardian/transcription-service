@@ -410,7 +410,7 @@ export class TranscriptionService extends GuStack {
 				machineImage: MachineImage.genericLinux({
 					'eu-west-1': gpuWorkerAmi.valueAsString,
 				}),
-				instanceType: InstanceType.of(InstanceClass.G4DN, InstanceSize.XLARGE2),
+				instanceType: InstanceType.of(InstanceClass.G4DN, InstanceSize.XLARGE),
 				blockDevices: [
 					{
 						deviceName: '/dev/sda1',
@@ -436,12 +436,12 @@ export class TranscriptionService extends GuStack {
 
 		const gpuInstanceTypes = isProd
 			? [
-					InstanceType.of(InstanceClass.G4DN, InstanceSize.XLARGE2),
 					InstanceType.of(InstanceClass.G4DN, InstanceSize.XLARGE),
+					InstanceType.of(InstanceClass.G4DN, InstanceSize.XLARGE2),
 					InstanceType.of(InstanceClass.G5, InstanceSize.XLARGE),
 					InstanceType.of(InstanceClass.G6, InstanceSize.XLARGE),
 				]
-			: [InstanceType.of(InstanceClass.G5, InstanceSize.XLARGE)];
+			: [InstanceType.of(InstanceClass.G4DN, InstanceSize.XLARGE)];
 
 		const guSubnets = GuVpc.subnetsFromParameter(this, {
 			type: SubnetType.PRIVATE,

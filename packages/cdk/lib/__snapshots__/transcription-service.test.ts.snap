@@ -681,7 +681,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             },
             "Overrides": [
               {
-                "InstanceType": "g5.xlarge",
+                "InstanceType": "g4dn.2xlarge",
               },
             ],
           },
