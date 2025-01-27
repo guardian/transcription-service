@@ -96,8 +96,13 @@ const getApp = async () => {
 			const userEmail = req.user?.email;
 			const body = transcribeUrlRequestBody.safeParse(req.body);
 			const id = uuid4();
-			if (!body.success || !userEmail) {
-				res.status(422).send('missing request params');
+			if (!body.success) {
+				logger.error('Failed to parse transcribe url request', body.error);
+				res.status(422).send('Invalid request body');
+				return;
+			}
+			if (!userEmail) {
+				res.status(403).send('No user email property - is user loged in?');
 				return;
 			}
 			const downloadJob: MediaDownloadJob = {
