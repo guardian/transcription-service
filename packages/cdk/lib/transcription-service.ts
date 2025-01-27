@@ -725,6 +725,10 @@ export class TranscriptionService extends GuStack {
 					name: 'STAGE',
 					value: this.stage,
 				},
+				{
+					name: 'APP',
+					value: mediaDownloadApp,
+				},
 			],
 		});
 

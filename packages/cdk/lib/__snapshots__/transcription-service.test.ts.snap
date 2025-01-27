@@ -665,7 +665,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             "OnDemandBaseCapacity": 0,
             "OnDemandPercentageAboveBaseCapacity": 10,
             "SpotAllocationStrategy": "capacity-optimized",
-            "SpotMaxPrice": "1.1230",
+            "SpotMaxPrice": "0.7520",
           },
           "LaunchTemplate": {
             "LaunchTemplateSpecification": {
@@ -1031,7 +1031,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             },
           },
           "ImageId": "ami-12345",
-          "InstanceType": "g5.xlarge",
+          "InstanceType": "g4dn.2xlarge",
           "MetadataOptions": {
             "InstanceMetadataTags": "enabled",
           },
@@ -1713,7 +1713,7 @@ service transcription-service-worker start",
                   "GroupId",
                 ],
               },
-              ""]}},"Overrides":{"ContainerOverrides":[{"Name":"media-download-task-TaskContainer","Environment":[{"Name":"MESSAGE_BODY","Value.$":"$[0].body"},{"Name":"AWS_REGION","Value":"test-region"},{"Name":"STAGE","Value":"TEST"}]}]},"LaunchType":"FARGATE","PlatformVersion":"LATEST"}}}}",
+              ""]}},"Overrides":{"ContainerOverrides":[{"Name":"media-download-task-TaskContainer","Environment":[{"Name":"MESSAGE_BODY","Value.$":"$[0].body"},{"Name":"AWS_REGION","Value":"test-region"},{"Name":"STAGE","Value":"TEST"},{"Name":"APP","Value":"media-download"}]}]},"LaunchType":"FARGATE","PlatformVersion":"LATEST"}}}}",
             ],
           ],
         },
