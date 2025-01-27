@@ -320,6 +320,7 @@ export const runWhisperX = async (
 			...translateParam,
 			...diarizeParam,
 			...computeParam,
+			'--no_align',
 			'--output_dir',
 			path.parse(wavPath).dir,
 			wavPath,
