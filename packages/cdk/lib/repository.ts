@@ -58,7 +58,7 @@ export class TranscriptionServiceRepository extends GuStack {
 						rulePriority: 1,
 					},
 					{
-						maxImageCount: 10,
+						maxImageCount: 20,
 						rulePriority: 2,
 					},
 				],
