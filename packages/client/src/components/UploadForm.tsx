@@ -320,7 +320,7 @@ export const UploadForm = () => {
 						id="file-radio"
 						name="media-type"
 						value="file"
-						defaultChecked
+						checked={mediaSource === 'file'}
 						onClick={() => setMediaSource('file')}
 					/>
 					<Label htmlFor="file-radio">File</Label>
@@ -328,6 +328,7 @@ export const UploadForm = () => {
 						id="url-radio"
 						name="media-type"
 						value="url"
+						checked={mediaSource === 'url'}
 						onClick={() => setMediaSource('url')}
 					/>
 					<Label htmlFor="url-radio">URL</Label>
