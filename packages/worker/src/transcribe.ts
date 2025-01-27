@@ -321,6 +321,8 @@ export const runWhisperX = async (
 			...diarizeParam,
 			...computeParam,
 			'--no_align',
+			'--model_cache_only',
+			'True',
 			'--output_dir',
 			path.parse(wavPath).dir,
 			wavPath,
