@@ -41,6 +41,7 @@ const submitMediaUrl = async (
 	token: string,
 	languageCode: LanguageCode,
 	translationRequested: boolean,
+	diarizationRequested: boolean,
 ) => {
 	const response = await authFetch('/api/transcribe-url', token, {
 		method: 'POST',
@@ -51,6 +52,7 @@ const submitMediaUrl = async (
 			url,
 			languageCode,
 			translationRequested,
+			diarizationRequested,
 		}),
 	});
 	const success = response.status === 200;
@@ -232,6 +234,7 @@ export const UploadForm = () => {
 					token,
 					mediaFileLanguageCode,
 					translationRequested,
+					diarizationRequested,
 				);
 				if (success) {
 					setMediaUrls((prev) => ({
