@@ -84,9 +84,8 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		? config.app.gpuTaskQueueUrl
 		: config.app.taskQueueUrl;
 
-	const jobId = translationRequested ? `${s3Key}-translation` : s3Key;
 	const job: TranscriptionJob = {
-		id: jobId, // id of the source file
+		id: s3Key, // id of the source file
 		inputSignedUrl,
 		sentTimestamp: new Date().toISOString(),
 		userEmail,
@@ -116,7 +115,8 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		return await sendMessage(
 			client,
 			queue,
-			JSON.stringify({ ...job, translate: true }),
+			JSON.stringify({ ...job, id: `${s3Key}-translation`, translate: true }),
+
 			s3Key,
 		);
 	}
