@@ -77,7 +77,15 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		config.app.transcriptionOutputBucket,
 		userEmail,
 		7,
-		translationRequested,
+		false,
+	);
+	const signedUrlsTranslation = await generateOutputSignedUrls(
+		s3Key,
+		config.aws.region,
+		config.app.transcriptionOutputBucket,
+		userEmail,
+		7,
+		true,
 	);
 
 	const queue = config.app.useWhisperx
@@ -115,8 +123,12 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		return await sendMessage(
 			client,
 			queue,
-			JSON.stringify({ ...job, id: `${s3Key}-translation`, translate: true }),
-
+			JSON.stringify({
+				...job,
+				id: `${s3Key}-translation`,
+				translate: true,
+				outputBucketUrls: signedUrlsTranslation,
+			}),
 			s3Key,
 		);
 	}
