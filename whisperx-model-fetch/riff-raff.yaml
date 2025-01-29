@@ -1,0 +1,15 @@
+allowedStages:
+  - PROD
+deployments:
+  whisperx-model-fetch:
+    type: aws-s3
+    regions:
+      - eu-west-1
+    stacks:
+      - deploy
+    app: transcription-service-repository
+    parameters:
+      bucketSsmLookup: true
+      bucketSsmKeyStageParam:
+        PROD: /PROD/deploy/amigo/amigo.data.bucket
+        CODE: /CODE/deploy/amigo/amigo.data.bucket
