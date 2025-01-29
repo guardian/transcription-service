@@ -300,7 +300,7 @@ export const UploadForm = () => {
 	return (
 		<>
 			<p className={' pb-3 font-light'}>
-				This tool can transcribe both audio and video files. You will receive an
+				This tool can transcribe both audio and video. You will receive an
 				email when the transcription is ready.
 			</p>
 			<form id="media-upload-form" onSubmit={handleSubmit}>
