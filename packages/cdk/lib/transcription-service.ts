@@ -374,39 +374,41 @@ export class TranscriptionService extends GuStack {
 			Port.tcp(443),
 		);
 
-		const launchTemplateProps = {
-			machineImage: MachineImage.genericLinux({
-				'eu-west-1': workerAmi.valueAsString,
-			}),
-			instanceType: InstanceType.of(InstanceClass.C7G, InstanceSize.XLARGE4),
+		const commonLaunchTemplateProps = {
 			// include tags in instance metadata so that we can work out the STAGE
 			instanceMetadataTags: true,
-			// the size of this block device will determine the max input file size for transcription. In future we could
-			// attach the block device on startup once we know how large the file to be transcribed is, or try some kind
-			// of streaming approach to the transcription so we don't need the whole file on disk
-			blockDevices: [
-				{
-					deviceName: '/dev/sda1',
-					// assuming that we intend to support video files, 50GB seems a reasonable starting point
-					volume: BlockDeviceVolume.ebs(50),
-				},
-			],
 			userData,
 			role: workerRole,
 			securityGroup: workerSecurityGroup,
 		};
 
-		const launchTemplate = new LaunchTemplate(
+		const cpuWorkerLaunchTemplate = new LaunchTemplate(
 			this,
 			'TranscriptionWorkerLaunchTemplate',
-			launchTemplateProps,
+			{
+				...commonLaunchTemplateProps,
+				machineImage: MachineImage.genericLinux({
+					'eu-west-1': workerAmi.valueAsString,
+				}),
+				instanceType: InstanceType.of(InstanceClass.C7G, InstanceSize.XLARGE4),
+				// the size of this block device will determine the max input file size for transcription. In future we could
+				// attach the block device on startup once we know how large the file to be transcribed is, or try some kind
+				// of streaming approach to the transcription so we don't need the whole file on disk
+				blockDevices: [
+					{
+						deviceName: '/dev/sda1',
+						// assuming that we intend to support video files, 50GB seems a reasonable starting point
+						volume: BlockDeviceVolume.ebs(50),
+					},
+				],
+			},
 		);
 
-		const gpuLaunchTemplate = new LaunchTemplate(
+		const gpuWorkerLaunchTemplate = new LaunchTemplate(
 			this,
 			'TranscriptionWorkerGPULaunchTemplate',
 			{
-				...launchTemplateProps,
+				...commonLaunchTemplateProps,
 				machineImage: MachineImage.genericLinux({
 					'eu-west-1': gpuWorkerAmi.valueAsString,
 				}),
@@ -418,7 +420,6 @@ export class TranscriptionService extends GuStack {
 						volume: BlockDeviceVolume.ebs(100),
 					},
 				],
-				userData,
 			},
 		);
 
@@ -455,49 +456,54 @@ export class TranscriptionService extends GuStack {
 			},
 		});
 
-		const asgProps = {
+		const commonAsgProps = {
 			minCapacity: 0,
 			maxCapacity: isProd ? 20 : 4,
-			autoScalingGroupName: workerAutoscalingGroupName,
 			vpc,
 			vpcSubnets: {
 				subnets: guSubnets,
 			},
-			mixedInstancesPolicy: {
-				launchTemplate,
-				instancesDistribution: {
-					// 0 is the default, including this here just to make it more obvious what's happening
-					onDemandBaseCapacity: 0,
-					// if this value is set to 100, then we won't use spot instances at all, if it is 0 then we use 100% spot
-					onDemandPercentageAboveBaseCapacity: 10,
-					spotAllocationStrategy: SpotAllocationStrategy.CAPACITY_OPTIMIZED,
-					spotMaxPrice: '0.6202',
-				},
-				launchTemplateOverrides: acceptableInstanceTypes.map(
-					instanceTypeToOverride,
-				),
-			},
 			groupMetrics: [GroupMetrics.all()],
+		};
+
+		const commonInstancesDistributionprops = {
+			// 0 is the default, including this here just to make it more obvious what's happening
+			onDemandBaseCapacity: 0,
+			// if this value is set to 100, then we won't use spot instances at all, if it is 0 then we use 100% spot
+			onDemandPercentageAboveBaseCapacity: 10,
+			spotAllocationStrategy: SpotAllocationStrategy.CAPACITY_OPTIMIZED,
 		};
 
 		// unfortunately GuAutoscalingGroup doesn't support having a mixedInstancesPolicy so using the basic ASG here
 		const transcriptionWorkerASG = new AutoScalingGroup(
 			this,
 			'TranscriptionWorkerASG',
-			asgProps,
+			{
+				...commonAsgProps,
+				autoScalingGroupName: workerAutoscalingGroupName,
+				mixedInstancesPolicy: {
+					launchTemplate: cpuWorkerLaunchTemplate,
+					instancesDistribution: {
+						...commonInstancesDistributionprops,
+						spotMaxPrice: '0.6202',
+					},
+					launchTemplateOverrides: acceptableInstanceTypes.map(
+						instanceTypeToOverride,
+					),
+				},
+			},
 		);
 
 		const transcriptionGpuWorkerASG = new AutoScalingGroup(
 			this,
 			'TranscriptionGpuWorkerASG',
 			{
-				...asgProps,
+				...commonAsgProps,
 				autoScalingGroupName: gpuWorkerAutoscalingGroupName,
 				mixedInstancesPolicy: {
-					...asgProps.mixedInstancesPolicy,
-					launchTemplate: gpuLaunchTemplate,
+					launchTemplate: gpuWorkerLaunchTemplate,
 					instancesDistribution: {
-						...asgProps.mixedInstancesPolicy.instancesDistribution,
+						...commonInstancesDistributionprops,
 						spotMaxPrice: '0.7520',
 					},
 					launchTemplateOverrides: gpuInstanceTypes.map(instanceTypeToOverride),

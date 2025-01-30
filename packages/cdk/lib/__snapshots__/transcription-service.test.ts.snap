@@ -681,7 +681,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             },
             "Overrides": [
               {
-                "InstanceType": "g4dn.2xlarge",
+                "InstanceType": "g4dn.xlarge",
               },
             ],
           },
@@ -1031,7 +1031,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             },
           },
           "ImageId": "ami-12345",
-          "InstanceType": "g4dn.2xlarge",
+          "InstanceType": "g4dn.xlarge",
           "MetadataOptions": {
             "InstanceMetadataTags": "enabled",
           },
