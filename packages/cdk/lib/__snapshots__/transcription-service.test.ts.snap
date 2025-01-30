@@ -1803,7 +1803,12 @@ service transcription-service-worker start",
               {
                 "ContainerPath": "/media-download",
                 "ReadOnly": false,
-                "SourceVolume": "media-download-volume",
+                "SourceVolume": "media-download-download-volume",
+              },
+              {
+                "ContainerPath": "/tmp",
+                "ReadOnly": false,
+                "SourceVolume": "media-download-temp-volume",
               },
             ],
             "Name": "media-download-task-TaskContainer",
@@ -1860,7 +1865,10 @@ service transcription-service-worker start",
         },
         "Volumes": [
           {
-            "Name": "media-download-volume",
+            "Name": "media-download-download-volume",
+          },
+          {
+            "Name": "media-download-temp-volume",
           },
         ],
       },
