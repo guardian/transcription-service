@@ -1,3 +1,7 @@
+# This script is used in the amigo whisperx role - see https://github.com/guardian/amigo/pull/1607 - it enables running
+# whisperx offline, by pre-downloading all the required models to the AMI. It exists in this repo so that we can make
+# changes as new models are released without having to modify amigo itself
+
 import torchaudio
 from pyannote.audio import Pipeline
 import sys

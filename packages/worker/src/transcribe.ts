@@ -176,13 +176,18 @@ const runTranscription = async (
 	}
 };
 
+// This function is currently only used in the transcribeAndTranslate path (which at present is only used by giant).
+// Giant doesn't have a UI component to provide the language of files uploaded, so we always need to detech the language
 const getLanguageCode = async (
 	whisperBaseParams: WhisperBaseParams,
 	whisperX: boolean,
 ): Promise<LanguageCode> => {
+	// whisperx is so slow to start up let's not even bother pre-detecting the language and just let it run detection
+	// for both transcription and translation
 	if (whisperX) {
 		return Promise.resolve('auto');
 	}
+	// run whisper.cpp in 'detect language' mode
 	const dlParams = whisperParams(true, whisperBaseParams.wavPath);
 	const { metadata } = await runWhisper(whisperBaseParams, dlParams);
 	return (
@@ -190,6 +195,10 @@ const getLanguageCode = async (
 	);
 };
 
+// Note: this functionality is only for transcription jobs coming from giant at the moment, though it could be good
+// to make it the standard approach for the transcription tool too (rather than what happens currently, where the
+// transcription API sends two messages to the worker - one for transcription, another for transcription with translation
+// (see generateOutputSignedUrlAndSendMessage in sqs.ts)
 const transcribeAndTranslate = async (
 	whisperBaseParams: WhisperBaseParams,
 	whisperX: boolean,
@@ -330,7 +339,7 @@ export const runWhisperX = async (
 		const metadata = extractWhisperXStderrData(result.stderr);
 		logger.info('Whisper finished successfully', metadata);
 		return {
-			fileName: `${fileName}`,
+			fileName,
 			metadata,
 		};
 	} catch (error) {
