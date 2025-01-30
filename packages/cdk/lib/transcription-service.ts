@@ -619,13 +619,22 @@ export class TranscriptionService extends GuStack {
 			],
 		});
 
-		const volume = {
-			name: `${mediaDownloadApp}-volume`,
+		const downloadVolume = {
+			name: `${mediaDownloadApp}-download-volume`,
 		};
-		mediaDownloadTask.taskDefinition.addVolume(volume);
+		const tempVolume = {
+			name: `${mediaDownloadApp}-temp-volume`,
+		};
+		mediaDownloadTask.taskDefinition.addVolume(downloadVolume);
+		mediaDownloadTask.taskDefinition.addVolume(tempVolume);
 		mediaDownloadTask.containerDefinition.addMountPoints({
-			sourceVolume: volume.name,
+			sourceVolume: downloadVolume.name,
 			containerPath: '/media-download', // needs to match DOWNLOAD_DIRECTORY in media-download index.ts
+			readOnly: false,
+		});
+		mediaDownloadTask.containerDefinition.addMountPoints({
+			sourceVolume: tempVolume.name,
+			containerPath: '/tmp', // needed by yt-dlp
 			readOnly: false,
 		});
 
