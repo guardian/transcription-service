@@ -26,6 +26,10 @@ export const getDynamoClient = (
 };
 
 export const TranscriptKeys = z.object({
+	zip: z.string(),
+});
+
+export const TranscriptKeysDeprecated = z.object({
 	srt: z.string(),
 	text: z.string(),
 	json: z.string(),
@@ -36,7 +40,7 @@ export type TranscriptKeys = z.infer<typeof TranscriptKeys>;
 export const TranscriptionDynamoItem = z.object({
 	id: z.string(),
 	originalFilename: z.string(),
-	transcriptKeys: TranscriptKeys,
+	transcriptKeys: z.union([TranscriptKeys, TranscriptKeysDeprecated]),
 	userEmail: z.string(),
 	completedAt: z.optional(z.string()), // dynamodb can't handle dates so we need to use an ISO date
 	isTranslation: z.boolean(),
@@ -44,6 +48,36 @@ export const TranscriptionDynamoItem = z.object({
 });
 
 export type TranscriptionDynamoItem = z.infer<typeof TranscriptionDynamoItem>;
+
+export const getTranscriptS3Key = (
+	item: TranscriptionDynamoItem,
+	format: 'srt' | 'text',
+): {
+	key: string;
+	fileFormat: 'srt' | 'text' | 'zip';
+} => {
+	const keys = item.transcriptKeys;
+
+	// Check if it's the new TranscriptKeys format
+	const parsedTranscriptKeys = TranscriptKeys.safeParse(keys);
+	if (parsedTranscriptKeys.success) {
+		return {
+			key: (keys as z.infer<typeof TranscriptKeys>).zip,
+			fileFormat: 'zip',
+		};
+	}
+
+	// Check if it's the deprecated TranscriptKeys format
+	const parsedDeprecated = TranscriptKeysDeprecated.safeParse(keys);
+	if (parsedDeprecated.success) {
+		return {
+			key: (keys as z.infer<typeof TranscriptKeysDeprecated>)[format],
+			fileFormat: format,
+		};
+	}
+
+	throw new Error('Unexpected transcriptKeys format');
+};
 
 export const writeTranscriptionItem = async (
 	client: DynamoDBDocumentClient,
@@ -122,6 +156,8 @@ export const getTranscriptionItem = async (
 			statusCode: 404,
 		};
 	}
+	console.log(`dynamo object`);
+	console.log(item);
 	const parsedItem = TranscriptionDynamoItem.safeParse(item);
 	if (!parsedItem.success) {
 		const msg = `Failed to parse item ${itemId} from dynamodb. Error: ${parsedItem.error.message}`;
