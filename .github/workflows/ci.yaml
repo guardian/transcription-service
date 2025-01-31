@@ -125,3 +125,22 @@ jobs:
           contentDirectories: |
             cdk.out:
               - packages/cdk/cdk.out/TranscriptionServiceRepository.template.json
+  whisperx-model-fetch:
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Upload whisperx model fetch project to riff-raff
+        uses: guardian/actions-riff-raff@v4
+        with:
+          roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          configPath: whisperx-model-fetch/riff-raff.yaml
+          projectName: investigations::transcription-service-whisperx-model-fetch
+          contentDirectories: |
+            whisperx-model-fetch:
+              - whisperx-model-fetch/download_whisperx_models.py
