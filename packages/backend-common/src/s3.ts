@@ -114,6 +114,7 @@ export const getObjectText = async (
 	client: S3Client,
 	bucket: string,
 	key: string,
+	keyFileFormat: 'srt' | 'text' | 'zip',
 	format: 'srt' | 'text',
 ): Promise<GetObjectTextResult> => {
 	try {
@@ -124,33 +125,42 @@ export const getObjectText = async (
 			}),
 		);
 
-		// const body = data.Body as Readable;
-
 		const body = ReadableBody.parse(data.Body);
 
-		const extension = format === 'text' ? 'txt' : format;
+		if (keyFileFormat === 'zip') {
+			const extension = format === 'text' ? 'txt' : format;
 
-		const transcriptText = await new Promise<string>((resolve, reject) => {
-			body
-				.pipe(unzipper.Parse())
-				.on('entry', async (entry) => {
-					if (entry.path === `transcript.${extension}`) {
-						const text = await entry
-							.buffer()
-							.then((buffer: Buffer) => buffer.toString('utf-8'));
-						resolve(text); // Resolve immediately when the file is found
-					} else {
-						entry.autodrain(); // Skip other files
-					}
-				})
-				.on('error', reject) // Handle errors during extraction
-				.on('close', () => reject(new Error('FileNotFound'))); // Reject if the file is not found
-		});
+			const transcriptText = await new Promise<string>((resolve, reject) => {
+				body
+					.pipe(unzipper.Parse())
+					.on('entry', async (entry) => {
+						if (entry.path === `transcript.${extension}`) {
+							const text = await entry
+								.buffer()
+								.then((buffer: Buffer) => buffer.toString('utf-8'));
+							resolve(text); // Resolve immediately when the file is found
+						} else {
+							entry.autodrain(); // Skip other files
+						}
+					})
+					.on('error', reject) // Handle errors during extraction
+					.on('close', () => reject(new Error('FileNotFound'))); // Reject if the file is not found
+			});
 
-		return {
-			status: AWSStatus.Success,
-			text: transcriptText,
-		};
+			return {
+				status: AWSStatus.Success,
+				text: transcriptText,
+			};
+		} else {
+			const chunks: Uint8Array[] = [];
+			for await (const chunk of body) {
+				chunks.push(chunk);
+			}
+			return {
+				status: AWSStatus.Success,
+				text: Buffer.concat(chunks).toString('utf-8'),
+			};
+		}
 	} catch (error: unknown) {
 		if (error instanceof Error) {
 			if (error.name === 'NoSuchKey') {
