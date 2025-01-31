@@ -35,9 +35,18 @@ export class TranscriptionServiceRepository extends GuStack {
 			'TranscriptionServiceRepository',
 			{
 				repositoryName: `transcription-service`,
+				// these are confusing - see https://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html
 				lifecycleRules: [
+					// keep most recent 20 images tagged with 'main'
 					{
-						maxImageCount: 5,
+						tagPrefixList: ['main'],
+						maxImageCount: 20,
+						rulePriority: 1,
+					},
+					// keep 10 most recent images not tagged with 'main'
+					{
+						maxImageCount: 10,
+						rulePriority: 2,
 					},
 				],
 				imageTagMutability: TagMutability.MUTABLE,
@@ -51,9 +60,18 @@ export class TranscriptionServiceRepository extends GuStack {
 			'MediaDownloadRepository',
 			{
 				repositoryName: `transcription-service-media-download`,
+				// these are confusing - see https://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html
 				lifecycleRules: [
+					// keep most recent 20 images tagged with 'main'
 					{
-						maxImageCount: 5,
+						tagPrefixList: ['main'],
+						maxImageCount: 20,
+						rulePriority: 1,
+					},
+					// keep 10 most recent images not tagged with 'main'
+					{
+						maxImageCount: 10,
+						rulePriority: 2,
 					},
 				],
 				imageTagMutability: TagMutability.MUTABLE,
