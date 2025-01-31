@@ -71,7 +71,6 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	translationRequested: boolean,
 	diarizationRequested: boolean,
 ): Promise<SendResult> => {
-	const translationId = `${s3Key}-translation`;
 	const signedUrls = await generateOutputSignedUrls(
 		s3Key,
 		config.aws.region,
@@ -112,6 +111,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		return messageResult;
 	}
 	if (!isSqsFailure(messageResult) && translationRequested) {
+		const translationId = `${s3Key}-translation`;
 		const signedUrlsTranslation = await generateOutputSignedUrls(
 			translationId,
 			config.aws.region,
@@ -124,11 +124,11 @@ export const generateOutputSignedUrlAndSendMessage = async (
 			queue,
 			JSON.stringify({
 				...job,
-				id: `${s3Key}-translation`,
+				id: translationId,
 				translate: true,
 				outputBucketUrls: signedUrlsTranslation,
 			}),
-			s3Key,
+			translationId,
 		);
 	}
 	return messageResult;
