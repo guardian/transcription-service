@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { languageCodeToLanguage } from './languages';
+import { LanguageCode, languageCodeToLanguage } from './languages';
 
 // thanks https://github.com/colinhacks/zod/discussions/2125#discussioncomment-7452235
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -247,3 +247,24 @@ export type InputBucketObjectMetadata = z.infer<
 >;
 
 export type MediaSourceType = 'file' | 'url';
+
+export const TranscriptKeys = z.object({
+	srt: z.string(),
+	text: z.string(),
+	json: z.string(),
+});
+
+export type TranscriptKeys = z.infer<typeof TranscriptKeys>;
+
+export const TranscriptionDynamoItem = z.object({
+	id: z.string(),
+	originalFilename: z.string(),
+	transcriptKeys: TranscriptKeys,
+	userEmail: z.string(),
+	completedAt: z.optional(z.string()), // dynamodb can't handle dates so we need to use an ISO date
+	isTranslation: z.boolean(),
+	languageCode: z.optional(LanguageCode),
+	exportStatuses: z.optional(ExportStatuses),
+});
+
+export type TranscriptionDynamoItem = z.infer<typeof TranscriptionDynamoItem>;
