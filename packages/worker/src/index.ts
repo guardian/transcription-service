@@ -23,9 +23,11 @@ import {
 } from '@guardian/transcription-service-common';
 import {
 	getTranscriptionText,
-	convertToWav,
+	runFfmpeg,
 	getOrCreateContainer,
 	WhisperBaseParams,
+	CONTAINER_FOLDER,
+	getFfmpegParams,
 } from './transcribe';
 import path from 'path';
 
@@ -41,7 +43,7 @@ import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import { checkSpotInterrupt } from './spot-termination';
 import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
 
-const POLLING_INTERVAL_SECONDS = 30;
+const POLLING_INTERVAL_SECONDS = 15;
 
 // Mutable variable is needed here to get feedback from checkSpotInterrupt
 let INTERRUPTION_TIME: Date | undefined = undefined;
@@ -68,6 +70,13 @@ const main = async () => {
 	);
 
 	const autoScalingClient = getASGClient(config.aws.region);
+	const isGpu = config.app.app.startsWith('transcription-service-gpu-worker');
+	const asgName = isGpu
+		? `transcription-service-gpu-workers-${config.app.stage}`
+		: `transcription-service-workers-${config.app.stage}`;
+	const queueUrl = isGpu ? config.app.gpuTaskQueueUrl : config.app.taskQueueUrl;
+
+	logger.info(`Worker reading from queue ${queueUrl}`);
 
 	if (config.app.stage !== 'DEV') {
 		// start job to regularly check the instance interruption (Note: deliberately not using await here so the job
@@ -88,7 +97,9 @@ const main = async () => {
 			await pollTranscriptionQueue(
 				pollCount,
 				sqsClient,
+				queueUrl,
 				autoScalingClient,
+				asgName,
 				metrics,
 				config,
 				instanceId,
@@ -125,7 +136,9 @@ const publishTranscriptionOutputFailure = async (
 const pollTranscriptionQueue = async (
 	pollCount: number,
 	sqsClient: SQSClient,
+	taskQueueUrl: string,
 	autoScalingClient: AutoScalingClient,
+	asgName: string,
 	metrics: MetricsService,
 	config: TranscriptionConfig,
 	instanceId: string,
@@ -135,41 +148,77 @@ const pollTranscriptionQueue = async (
 	const isDev = config.app.stage === 'DEV';
 
 	logger.info(
-		`worker polling for transcription task. Poll count = ${pollCount}`,
+		`worker polling ${taskQueueUrl} for transcription task. Poll count = ${pollCount}`,
 	);
 
-	await updateScaleInProtection(autoScalingClient, stage, true, instanceId);
+	await updateScaleInProtection(
+		autoScalingClient,
+		stage,
+		true,
+		instanceId,
+		asgName,
+	);
 
-	const message = await getNextMessage(sqsClient, config.app.taskQueueUrl);
+	const message = await getNextMessage(sqsClient, taskQueueUrl);
 
 	if (isSqsFailure(message)) {
 		logger.error(`Failed to fetch message due to ${message.errorMsg}`);
-		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
+		await updateScaleInProtection(
+			autoScalingClient,
+			stage,
+			false,
+			instanceId,
+			asgName,
+		);
 		return;
 	}
 
 	if (!message.message) {
 		logger.info('No messages available');
-		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
+		await updateScaleInProtection(
+			autoScalingClient,
+			stage,
+			false,
+			instanceId,
+			asgName,
+		);
 		return;
 	}
 
 	const taskMessage = message.message;
 	if (!taskMessage.Body) {
 		logger.error('message missing body');
-		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
+		await updateScaleInProtection(
+			autoScalingClient,
+			stage,
+			false,
+			instanceId,
+			asgName,
+		);
 		return;
 	}
 	if (!taskMessage.Attributes && !isDev) {
 		logger.error('message missing attributes');
-		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
+		await updateScaleInProtection(
+			autoScalingClient,
+			stage,
+			false,
+			instanceId,
+			asgName,
+		);
 		return;
 	}
 
 	const receiptHandle = taskMessage.ReceiptHandle;
 	if (!receiptHandle) {
 		logger.error('message missing receipt handle');
-		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
+		await updateScaleInProtection(
+			autoScalingClient,
+			stage,
+			false,
+			instanceId,
+			asgName,
+		);
 		return;
 	}
 	CURRENT_MESSAGE_RECEIPT_HANDLE = receiptHandle;
@@ -179,7 +228,13 @@ const pollTranscriptionQueue = async (
 	if (!job) {
 		await metrics.putMetric(FailureMetric);
 		logger.error('Failed to parse job message', message);
-		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
+		await updateScaleInProtection(
+			autoScalingClient,
+			stage,
+			false,
+			instanceId,
+			asgName,
+		);
 		return;
 	}
 
@@ -191,7 +246,9 @@ const pollTranscriptionQueue = async (
 
 		logger.info(`Fetched transcription job with id ${job.id}`);
 
-		const destinationDirectory = isDev ? `${__dirname}/sample` : '/tmp';
+		const destinationDirectory = isDev
+			? `${__dirname}/../../../worker-tmp-files`
+			: '/tmp';
 
 		const fileToTranscribe = await getObjectWithPresignedUrl(
 			inputSignedUrl,
@@ -199,12 +256,24 @@ const pollTranscriptionQueue = async (
 			destinationDirectory,
 		);
 
-		// docker container to run ffmpeg and whisper on file
-		const containerId = await getOrCreateContainer(
-			path.parse(fileToTranscribe).dir,
-		);
+		const useContainer = job.engine !== 'whisperx';
 
-		const ffmpegResult = await convertToWav(containerId, fileToTranscribe);
+		const ffmpegDir = useContainer ? CONTAINER_FOLDER : destinationDirectory;
+
+		const fileName = path.basename(fileToTranscribe);
+		const filePath = `${ffmpegDir}/${fileName}`;
+		const wavPath = `${ffmpegDir}/${fileName}-converted.wav`;
+		logger.info(`Input file path: ${filePath}, Output file path: ${wavPath}`);
+
+		const ffmpegParams = getFfmpegParams(filePath, wavPath);
+
+		// docker container to run ffmpeg and whisper on file
+		const containerId = useContainer
+			? await getOrCreateContainer(path.parse(fileToTranscribe).dir)
+			: undefined;
+
+		const ffmpegResult = await runFfmpeg(ffmpegParams, containerId);
+
 		if (ffmpegResult === undefined) {
 			// when ffmpeg fails to transcribe, move message to the dead letter
 			// queue
@@ -214,7 +283,7 @@ const pollTranscriptionQueue = async (
 				);
 				await moveMessageToDeadLetterQueue(
 					sqsClient,
-					config.app.taskQueueUrl,
+					taskQueueUrl,
 					config.app.deadLetterQueueUrl,
 					taskMessage.Body,
 					receiptHandle,
@@ -250,7 +319,7 @@ const pollTranscriptionQueue = async (
 			// this worker to delete the message when it's finished.
 			await changeMessageVisibility(
 				sqsClient,
-				config.app.taskQueueUrl,
+				taskQueueUrl,
 				receiptHandle,
 				(ffmpegResult.duration * 2 + 600) * extraTranslationTimMultiplier,
 			);
@@ -258,10 +327,17 @@ const pollTranscriptionQueue = async (
 
 		const whisperBaseParams: WhisperBaseParams = {
 			containerId,
-			wavPath: ffmpegResult.wavPath,
+			wavPath: wavPath,
 			file: fileToTranscribe,
 			numberOfThreads,
-			model: config.app.stage === 'PROD' ? 'medium' : 'tiny',
+			// whisperx always runs on powerful gpu instances so let's always use the medium model
+			model:
+				job.engine !== 'whisperx' && config.app.stage !== 'PROD'
+					? 'tiny'
+					: 'medium',
+			engine: job.engine,
+			diarize: job.diarize,
+			stage: config.app.stage,
 		};
 
 		const transcriptResult = await getTranscriptionText(
@@ -269,6 +345,7 @@ const pollTranscriptionQueue = async (
 			job.languageCode,
 			job.translate,
 			combineTranscribeAndTranslate,
+			job.engine === 'whisperx',
 		);
 
 		// if we've received an interrupt signal we don't want to perform a half-finished transcript upload/publish as
@@ -343,17 +420,12 @@ const pollTranscriptionQueue = async (
 		);
 
 		logger.info(`Deleting message ${taskMessage.MessageId}`);
-		await deleteMessage(sqsClient, config.app.taskQueueUrl, receiptHandle);
+		await deleteMessage(sqsClient, taskQueueUrl, receiptHandle);
 	} catch (error) {
 		const msg = 'Worker failed to complete';
 		logger.error(msg, error);
 		// Terminate the message visibility timeout
-		await changeMessageVisibility(
-			sqsClient,
-			config.app.taskQueueUrl,
-			receiptHandle,
-			0,
-		);
+		await changeMessageVisibility(sqsClient, taskQueueUrl, receiptHandle, 0);
 
 		// the type of ApproximateReceiveCount is string | undefined so need to
 		// handle the case where its missing. use default value
@@ -372,7 +444,13 @@ const pollTranscriptionQueue = async (
 		}
 	} finally {
 		logger.resetCommonMetadata();
-		await updateScaleInProtection(autoScalingClient, stage, false, instanceId);
+		await updateScaleInProtection(
+			autoScalingClient,
+			stage,
+			false,
+			instanceId,
+			asgName,
+		);
 	}
 };
 

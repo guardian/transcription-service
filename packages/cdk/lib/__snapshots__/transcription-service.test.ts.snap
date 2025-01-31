@@ -5,6 +5,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
   "Metadata": {
     "gu:cdk:constructs": [
       "GuAmiParameter",
+      "GuAmiParameter",
       "GuStringParameter",
       "GuStringParameter",
       "GuCertificate",
@@ -83,6 +84,10 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
     },
   },
   "Parameters": {
+    "AMITranscriptionservicegpuworker": {
+      "Description": "AMI to use for the gpu worker instances",
+      "Type": "AWS::EC2::Image::Id",
+    },
     "AMITranscriptionserviceworker": {
       "Description": "AMI to use for the worker instances",
       "Type": "AWS::EC2::Image::Id",
@@ -187,6 +192,38 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "ExportFunctionName1C83D756": {
+      "Properties": {
+        "Name": "/TEST/investigations/transcription-service/app/mediaExportFunctionName",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "TEST",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Ref": "transcriptionservicemediaexport2E32D5D8",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "GPUTaskQueueUrlParameter64941E19": {
+      "Properties": {
+        "Name": "/TEST/investigations/transcription-service/gpuTaskQueueUrl",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "TEST",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Ref": "transcriptionservicegputaskqueue9ECF56C3",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
     },
     "GetDistributablePolicyTranscriptionserviceworker2DFD604E": {
       "Properties": {
@@ -314,6 +351,22 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
               "Resource": {
                 "Fn::GetAtt": [
                   "transcriptionservicetaskqueue428AC4BA",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionservicegputaskqueue9ECF56C3",
                   "Arn",
                 ],
               },
@@ -476,18 +529,32 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             {
               "Action": "autoscaling:SetInstanceProtection",
               "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:aws:autoscaling:test-region:",
-                    {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":autoScalingGroup:*:autoScalingGroupName/transcription-service-workers-TEST",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:autoscaling:test-region:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":autoScalingGroup:*:autoScalingGroupName/transcription-service-workers-TEST",
+                    ],
                   ],
-                ],
-              },
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:autoscaling:test-region:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":autoScalingGroup:*:autoScalingGroupName/transcription-service-gpu-workers-TEST",
+                    ],
+                  ],
+                },
+              ],
             },
           ],
           "Version": "2012-10-17",
@@ -582,6 +649,92 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       },
       "Type": "AWS::DynamoDB::Table",
       "UpdateReplacePolicy": "Retain",
+    },
+    "TranscriptionGpuWorkerASGD890BE2A": {
+      "Properties": {
+        "AutoScalingGroupName": "transcription-service-gpu-workers-TEST",
+        "MaxSize": "4",
+        "MetricsCollection": [
+          {
+            "Granularity": "1Minute",
+          },
+        ],
+        "MinSize": "0",
+        "MixedInstancesPolicy": {
+          "InstancesDistribution": {
+            "OnDemandBaseCapacity": 0,
+            "OnDemandPercentageAboveBaseCapacity": 10,
+            "SpotAllocationStrategy": "capacity-optimized",
+            "SpotMaxPrice": "0.7520",
+          },
+          "LaunchTemplate": {
+            "LaunchTemplateSpecification": {
+              "LaunchTemplateId": {
+                "Ref": "TranscriptionWorkerGPULaunchTemplate4C8137DB",
+              },
+              "Version": {
+                "Fn::GetAtt": [
+                  "TranscriptionWorkerGPULaunchTemplate4C8137DB",
+                  "LatestVersionNumber",
+                ],
+              },
+            },
+            "Overrides": [
+              {
+                "InstanceType": "g4dn.xlarge",
+              },
+            ],
+          },
+        },
+        "Tags": [
+          {
+            "Key": "App",
+            "PropagateAtLaunch": true,
+            "Value": "transcription-service-gpu-worker",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "PropagateAtLaunch": true,
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "PropagateAtLaunch": true,
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "LogKinesisStreamName",
+            "PropagateAtLaunch": true,
+            "Value": {
+              "Ref": "LoggingStreamName",
+            },
+          },
+          {
+            "Key": "Stack",
+            "PropagateAtLaunch": true,
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "PropagateAtLaunch": true,
+            "Value": "TEST",
+          },
+          {
+            "Key": "SystemdUnit",
+            "PropagateAtLaunch": true,
+            "Value": "transcription-service-worker.service",
+          },
+        ],
+        "VPCZoneIdentifier": {
+          "Ref": "transcriptionserviceworkerPrivateSubnets",
+        },
+      },
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "UpdatePolicy": {
+        "AutoScalingScheduledAction": {
+          "IgnoreUnmodifiedGroupSizeProperties": true,
+        },
+      },
     },
     "TranscriptionServiceOutputBucketTranscriptionservice35996ED2": {
       "DeletionPolicy": "Retain",
@@ -853,6 +1006,154 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
           "IgnoreUnmodifiedGroupSizeProperties": true,
         },
       },
+    },
+    "TranscriptionWorkerGPULaunchTemplate4C8137DB": {
+      "DependsOn": [
+        "InstanceRoleTranscriptionserviceworkerDefaultPolicy994AD936",
+        "InstanceRoleTranscriptionserviceworkerA8AC6615",
+      ],
+      "Properties": {
+        "LaunchTemplateData": {
+          "BlockDeviceMappings": [
+            {
+              "DeviceName": "/dev/sda1",
+              "Ebs": {
+                "VolumeSize": 100,
+              },
+            },
+          ],
+          "IamInstanceProfile": {
+            "Arn": {
+              "Fn::GetAtt": [
+                "TranscriptionWorkerGPULaunchTemplateProfile9CA5FF85",
+                "Arn",
+              ],
+            },
+          },
+          "ImageId": "ami-12345",
+          "InstanceType": "g4dn.xlarge",
+          "MetadataOptions": {
+            "InstanceMetadataTags": "enabled",
+          },
+          "SecurityGroupIds": [
+            {
+              "Fn::GetAtt": [
+                "TranscriptionServiceWorkerSGTranscriptionserviceworker6EE23C91",
+                "GroupId",
+              ],
+            },
+          ],
+          "TagSpecifications": [
+            {
+              "ResourceType": "instance",
+              "Tags": [
+                {
+                  "Key": "gu:cdk:version",
+                  "Value": "TEST",
+                },
+                {
+                  "Key": "gu:repo",
+                  "Value": "guardian/transcription-service",
+                },
+                {
+                  "Key": "Name",
+                  "Value": "TranscriptionService/TranscriptionWorkerGPULaunchTemplate",
+                },
+                {
+                  "Key": "Stack",
+                  "Value": "investigations",
+                },
+                {
+                  "Key": "Stage",
+                  "Value": "TEST",
+                },
+              ],
+            },
+            {
+              "ResourceType": "volume",
+              "Tags": [
+                {
+                  "Key": "gu:cdk:version",
+                  "Value": "TEST",
+                },
+                {
+                  "Key": "gu:repo",
+                  "Value": "guardian/transcription-service",
+                },
+                {
+                  "Key": "Name",
+                  "Value": "TranscriptionService/TranscriptionWorkerGPULaunchTemplate",
+                },
+                {
+                  "Key": "Stack",
+                  "Value": "investigations",
+                },
+                {
+                  "Key": "Stage",
+                  "Value": "TEST",
+                },
+              ],
+            },
+          ],
+          "UserData": {
+            "Fn::Base64": {
+              "Fn::Join": [
+                "",
+                [
+                  "#!/bin/bash
+export STAGE=TEST
+export AWS_REGION=test-region
+aws s3 cp s3://",
+                  {
+                    "Ref": "DistributionBucketName",
+                  },
+                  "/investigations/TEST/transcription-service-worker/transcription-service-worker_1.0.0_all.deb .
+dpkg -i transcription-service-worker_1.0.0_all.deb
+service transcription-service-worker start",
+                ],
+              ],
+            },
+          },
+        },
+        "TagSpecifications": [
+          {
+            "ResourceType": "launch-template",
+            "Tags": [
+              {
+                "Key": "gu:cdk:version",
+                "Value": "TEST",
+              },
+              {
+                "Key": "gu:repo",
+                "Value": "guardian/transcription-service",
+              },
+              {
+                "Key": "Name",
+                "Value": "TranscriptionService/TranscriptionWorkerGPULaunchTemplate",
+              },
+              {
+                "Key": "Stack",
+                "Value": "investigations",
+              },
+              {
+                "Key": "Stage",
+                "Value": "TEST",
+              },
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::EC2::LaunchTemplate",
+    },
+    "TranscriptionWorkerGPULaunchTemplateProfile9CA5FF85": {
+      "Properties": {
+        "Roles": [
+          {
+            "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::InstanceProfile",
     },
     "TranscriptionWorkerLaunchTemplate03F06207": {
       "DependsOn": [
@@ -1412,7 +1713,7 @@ service transcription-service-worker start",
                   "GroupId",
                 ],
               },
-              ""]}},"Overrides":{"ContainerOverrides":[{"Name":"media-download-task-TaskContainer","Environment":[{"Name":"MESSAGE_BODY","Value.$":"$[0].body"},{"Name":"AWS_REGION","Value":"test-region"},{"Name":"STAGE","Value":"TEST"}]}]},"LaunchType":"FARGATE","PlatformVersion":"LATEST"}}}}",
+              ""]}},"Overrides":{"ContainerOverrides":[{"Name":"media-download-task-TaskContainer","Environment":[{"Name":"MESSAGE_BODY","Value.$":"$[0].body"},{"Name":"AWS_REGION","Value":"test-region"},{"Name":"STAGE","Value":"TEST"},{"Name":"APP","Value":"media-download"}]}]},"LaunchType":"FARGATE","PlatformVersion":"LATEST"}}}}",
             ],
           ],
         },
@@ -1803,7 +2104,12 @@ service transcription-service-worker start",
               {
                 "ContainerPath": "/media-download",
                 "ReadOnly": false,
-                "SourceVolume": "media-download-volume",
+                "SourceVolume": "media-download-download-volume",
+              },
+              {
+                "ContainerPath": "/tmp",
+                "ReadOnly": false,
+                "SourceVolume": "media-download-temp-volume",
               },
             ],
             "Name": "media-download-task-TaskContainer",
@@ -1860,7 +2166,10 @@ service transcription-service-worker start",
         },
         "Volumes": [
           {
-            "Name": "media-download-volume",
+            "Name": "media-download-download-volume",
+          },
+          {
+            "Name": "media-download-temp-volume",
           },
         ],
       },
@@ -1883,12 +2192,20 @@ service transcription-service-worker start",
             {
               "Action": "sqs:SendMessage",
               "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "transcriptionservicetaskqueue428AC4BA",
-                  "Arn",
-                ],
-              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "transcriptionservicetaskqueue428AC4BA",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::GetAtt": [
+                    "transcriptionservicegputaskqueue9ECF56C3",
+                    "Arn",
+                  ],
+                },
+              ],
             },
             {
               "Action": "secretsmanager:GetSecretValue",
@@ -2330,6 +2647,20 @@ service transcription-service-worker start",
               "Resource": {
                 "Fn::GetAtt": [
                   "transcriptionservicetaskqueue428AC4BA",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionservicegputaskqueue9ECF56C3",
                   "Arn",
                 ],
               },
@@ -2844,6 +3175,44 @@ service transcription-service-worker start",
         },
       },
       "Type": "AWS::Lambda::Permission",
+    },
+    "transcriptionservicegputaskqueue9ECF56C3": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ContentBasedDeduplication": true,
+        "FifoQueue": true,
+        "QueueName": "transcription-service-gpu-task-queue-TEST.fifo",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "transcriptionservicetaskdeadletterqueue8A13A1F1",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "VisibilityTimeout": 30,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
     },
     "transcriptionservicemediadownloaddeadletterqueueE0C3D72F": {
       "DeletionPolicy": "Delete",
@@ -3817,35 +4186,64 @@ service transcription-service-worker start",
                 "autoscaling:DescribeAutoScalingInstances",
               ],
               "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    ":autoscaling:test-region:",
-                    {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":autoScalingGroup:*:autoScalingGroupName/",
-                    {
-                      "Ref": "TranscriptionWorkerASGCAE69A98",
-                    },
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":autoscaling:test-region:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":autoScalingGroup:*:autoScalingGroupName/",
+                      {
+                        "Ref": "TranscriptionWorkerASGCAE69A98",
+                      },
+                    ],
                   ],
-                ],
-              },
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":autoscaling:test-region:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":autoScalingGroup:*:autoScalingGroupName/",
+                      {
+                        "Ref": "TranscriptionGpuWorkerASGD890BE2A",
+                      },
+                    ],
+                  ],
+                },
+              ],
             },
             {
               "Action": "sqs:GetQueueAttributes",
               "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "transcriptionservicetaskqueue428AC4BA",
-                  "Arn",
-                ],
-              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "transcriptionservicetaskqueue428AC4BA",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::GetAtt": [
+                    "transcriptionservicegputaskqueue9ECF56C3",
+                    "Arn",
+                  ],
+                },
+              ],
             },
             {
               "Action": [

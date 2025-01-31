@@ -10,6 +10,7 @@ export const updateScaleInProtection = async (
 	stage: string,
 	value: boolean,
 	instanceId: string,
+	asgName: string,
 ) => {
 	try {
 		if (stage !== 'DEV') {
@@ -17,7 +18,7 @@ export const updateScaleInProtection = async (
 
 			const input = {
 				InstanceIds: [instanceId],
-				AutoScalingGroupName: `transcription-service-workers-${stage}`,
+				AutoScalingGroupName: asgName,
 				ProtectedFromScaleIn: value,
 			};
 			const command = new SetInstanceProtectionCommand(input);

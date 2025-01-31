@@ -4,6 +4,7 @@ import { defaultProvider } from '@aws-sdk/credential-provider-node';
 import { logger } from '@guardian/transcription-service-backend-common';
 import { DestinationService } from '@guardian/transcription-service-common';
 import { SecretsManager } from '@aws-sdk/client-secrets-manager';
+
 export interface TranscriptionConfig {
 	auth: {
 		clientId: string;
@@ -13,9 +14,11 @@ export interface TranscriptionConfig {
 		secret: string;
 		rootUrl: string;
 		taskQueueUrl: string;
+		gpuTaskQueueUrl: string;
 		deadLetterQueueUrl?: string;
 		mediaDownloadQueueUrl: string;
 		stage: string;
+		app: string;
 		emailNotificationFromAddress: string;
 		sourceMediaBucket: string;
 		transcriptionOutputBucket: string;
@@ -25,6 +28,7 @@ export interface TranscriptionConfig {
 		mediaDownloadProxyIpAddress: string;
 		mediaDownloadProxyPort: number;
 		mediaExportFunctionName: string;
+		useWhisperx: boolean;
 	};
 	aws: {
 		region: string;
@@ -72,6 +76,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		region,
 		credentials: credentialProvider(stage !== 'DEV'),
 	});
+	const app = await getEnvVarOrMetadata('APP', 'tags/instance/App');
 
 	const paramPath = `/${stage}/investigations/transcription-service/`;
 
@@ -82,6 +87,11 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 
 	logger.info(`Parameters fetched: ${parameterNames.join(', ')}`);
 	const taskQueueUrl = findParameter(parameters, paramPath, 'taskQueueUrl');
+	const gpuTaskQueueUrl = findParameter(
+		parameters,
+		paramPath,
+		'gpuTaskQueueUrl',
+	);
 	const mediaDownloadQueueUrl = findParameter(
 		parameters,
 		paramPath,
@@ -159,6 +169,13 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		'media-download/proxy-ip-address',
 	);
 
+	const useWhisperxParam = findParameter(
+		parameters,
+		paramPath,
+		'app/useWhisperx',
+	);
+	const useWhisperx = useWhisperxParam === 'true';
+
 	return {
 		auth: {
 			clientId: authClientId,
@@ -168,9 +185,11 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			rootUrl: appRootUrl,
 			secret: appSecret,
 			taskQueueUrl,
+			gpuTaskQueueUrl,
 			deadLetterQueueUrl,
 			mediaDownloadQueueUrl,
 			stage,
+			app,
 			sourceMediaBucket,
 			emailNotificationFromAddress,
 			destinationQueueUrls: {
@@ -183,6 +202,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			mediaDownloadProxyIpAddress,
 			mediaDownloadProxyPort: 1337,
 			mediaExportFunctionName,
+			useWhisperx,
 		},
 		aws: {
 			region,

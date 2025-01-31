@@ -8,6 +8,7 @@ export interface ProcessResult {
 
 export type ProcessName =
 	| 'transcribe'
+	| 'transcribe-whisperx'
 	| 'convertToWav'
 	| 'startProxyTunnel'
 	| 'downloadMedia'
@@ -22,6 +23,9 @@ export const runSpawnCommand = (
 	args: ReadonlyArray<string>,
 	logImmediately: boolean = false,
 ): Promise<ProcessResult> => {
+	logger.info(
+		`Running process ${processName} with command: ${cmd} ${args.join(' ')}`,
+	);
 	const logStdout = !processesWithHiddenStdout.includes(processName);
 	return new Promise((resolve, reject) => {
 		const cp = spawn(cmd, args);

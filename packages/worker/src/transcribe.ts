@@ -4,11 +4,11 @@ import { logger } from '@guardian/transcription-service-backend-common';
 import {
 	LanguageCode,
 	languageCodes,
+	TranscriptionEngine,
 } from '@guardian/transcription-service-common';
 import { runSpawnCommand } from '@guardian/transcription-service-backend-common/src/process';
 
 interface FfmpegResult {
-	wavPath: string;
 	duration?: number;
 }
 
@@ -33,14 +33,17 @@ type TranscriptionResult = {
 };
 
 export type WhisperBaseParams = {
-	containerId: string;
+	containerId?: string;
 	wavPath: string;
 	file: string;
 	numberOfThreads: number;
 	model: WhisperModel;
+	engine: TranscriptionEngine;
+	diarize: boolean;
+	stage: string;
 };
 
-const CONTAINER_FOLDER = '/input';
+export const CONTAINER_FOLDER = '/input';
 
 export const getOrCreateContainer = async (
 	tempDir: string,
@@ -69,43 +72,41 @@ export const getOrCreateContainer = async (
 	return newContainer.stdout.trim();
 };
 
-export const convertToWav = async (
-	containerId: string,
-	file: string,
-): Promise<FfmpegResult | undefined> => {
-	const fileName = path.basename(file);
-	const filePath = `${CONTAINER_FOLDER}/${fileName}`;
-	const wavPath = `${CONTAINER_FOLDER}/${fileName}-converted.wav`;
-	logger.info(`containerId: ${containerId}`);
-	logger.info(`file path: ${filePath}`);
-	logger.info(`wav file path: ${wavPath}`);
+export const getFfmpegParams = (
+	sourceFilePath: string,
+	outputWavPath: string,
+) => {
+	return [
+		'-y',
+		'-i',
+		sourceFilePath,
+		'-ar',
+		'16000',
+		'-ac',
+		'1',
+		'-c:a',
+		'pcm_s16le',
+		outputWavPath,
+	];
+};
 
+export const runFfmpeg = async (
+	ffmpegParams: string[],
+	containerId?: string,
+): Promise<FfmpegResult | undefined> => {
 	try {
-		const res = await runSpawnCommand(
-			'convertToWav',
-			'docker',
-			[
-				'exec',
-				containerId,
-				'ffmpeg',
-				'-y',
-				'-i',
-				filePath,
-				'-ar',
-				'16000',
-				'-ac',
-				'1',
-				'-c:a',
-				'pcm_s16le',
-				wavPath,
-			],
-			true,
-		);
+		const res = containerId
+			? await runSpawnCommand(
+					'convertToWav',
+					'docker',
+					['exec', containerId, 'ffmpeg', ...ffmpegParams],
+					true,
+				)
+			: await runSpawnCommand('convertToWav', 'ffmpeg', ffmpegParams, true);
 
 		const duration = getDuration(res.stderr);
 
 		return {
-			wavPath,
 			duration,
 		};
 	} catch (error) {
@@ -134,6 +135,7 @@ const runTranscription = async (
 	whisperBaseParams: WhisperBaseParams,
 	languageCode: LanguageCode,
 	translate: boolean,
+	whisperX: boolean,
 ) => {
 	try {
 		const params = whisperParams(
@@ -142,7 +144,9 @@ const runTranscription = async (
 			languageCode,
 			translate,
 		);
-		const { fileName, metadata } = await runWhisper(whisperBaseParams, params);
+		const { fileName, metadata } = whisperX
+			? await runWhisperX(whisperBaseParams, languageCode, translate)
+			: await runWhisper(whisperBaseParams, params);
 
 		const srtPath = path.resolve(
 			path.parse(whisperBaseParams.file).dir,
@@ -172,27 +176,54 @@ const runTranscription = async (
 	}
 };
 
+// This function is currently only used in the transcribeAndTranslate path (which at present is only used by giant).
+// Giant doesn't have a UI component to provide the language of files uploaded, so we always need to detech the language
+const getLanguageCode = async (
+	whisperBaseParams: WhisperBaseParams,
+	whisperX: boolean,
+): Promise<LanguageCode> => {
+	// whisperx is so slow to start up let's not even bother pre-detecting the language and just let it run detection
+	// for both transcription and translation
+	if (whisperX) {
+		return Promise.resolve('auto');
+	}
+	// run whisper.cpp in 'detect language' mode
+	const dlParams = whisperParams(true, whisperBaseParams.wavPath);
+	const { metadata } = await runWhisper(whisperBaseParams, dlParams);
+	return (
+		languageCodes.find((c) => c === metadata.detectedLanguageCode) || 'auto'
+	);
+};
+
+// Note: this functionality is only for transcription jobs coming from giant at the moment, though it could be good
+// to make it the standard approach for the transcription tool too (rather than what happens currently, where the
+// transcription API sends two messages to the worker - one for transcription, another for transcription with translation
+// (see generateOutputSignedUrlAndSendMessage in sqs.ts)
 const transcribeAndTranslate = async (
 	whisperBaseParams: WhisperBaseParams,
+	whisperX: boolean,
 ): Promise<TranscriptionResult> => {
 	try {
-		const dlParams = whisperParams(true, whisperBaseParams.wavPath);
-		const { metadata } = await runWhisper(whisperBaseParams, dlParams);
-		const languageCode =
-			languageCodes.find((c) => c === metadata.detectedLanguageCode) || 'auto';
+		const languageCode = await getLanguageCode(whisperBaseParams, whisperX);
 		const transcription = await runTranscription(
 			whisperBaseParams,
 			languageCode,
 			false,
+			whisperX,
 		);
 
 		// we only run language detection once,
 		// so need to override the detected language of future whisper runs
-		transcription.metadata.detectedLanguageCode = metadata.detectedLanguageCode;
+		transcription.metadata.detectedLanguageCode = languageCode;
 		const translation =
 			languageCode === 'en'
 				? null
-				: await runTranscription(whisperBaseParams, languageCode, true);
+				: await runTranscription(
+						whisperBaseParams,
+						languageCode,
+						true,
+						whisperX,
+					);
 		return {
 			transcripts: transcription.transcripts,
 			transcriptTranslations: translation?.transcripts,
@@ -213,16 +244,24 @@ export const getTranscriptionText = async (
 	languageCode: LanguageCode,
 	translate: boolean,
 	combineTranscribeAndTranslate: boolean,
+	whisperX: boolean,
 ): Promise<TranscriptionResult> => {
 	if (combineTranscribeAndTranslate) {
-		return transcribeAndTranslate(whisperBaseParams);
+		return transcribeAndTranslate(whisperBaseParams, whisperX);
 	}
-	return runTranscription(whisperBaseParams, languageCode, translate);
+	return runTranscription(whisperBaseParams, languageCode, translate, whisperX);
 };
 
 const regexExtract = (text: string, regex: RegExp): string | undefined => {
 	const regexResult = text.match(regex);
 	return regexResult ? regexResult[1] : undefined;
+};
+
+const extractWhisperXStderrData = (stderr: string): TranscriptionMetadata => {
+	//Detected language: en (0.99) in first 30s of audio...
+	const languageRegex = /Detected language: ([a-zA-Z]{2})/;
+	const detectedLanguageCode = regexExtract(stderr, languageRegex);
+	return { detectedLanguageCode };
 };
 
 const extractWhisperStderrData = (stderr: string): TranscriptionMetadata => {
@@ -267,11 +306,58 @@ const whisperParams = (
 	}
 };
 
+export const runWhisperX = async (
+	whisperBaseParams: WhisperBaseParams,
+	languageCode: LanguageCode,
+	translate: boolean,
+) => {
+	const { wavPath, diarize, stage } = whisperBaseParams;
+	const fileName = path.parse(wavPath).name;
+	const model = languageCode === 'en' ? whisperBaseParams.model : 'large';
+	const languageCodeParam =
+		languageCode === 'auto' ? [] : ['--language', languageCode];
+	const translateParam = translate ? ['--task', 'translate'] : [];
+	// On mac arm processors, we need to set the compute type to int8
+	// see https://github.com/m-bain/whisperX?tab=readme-ov-file#usage--command-line
+	const computeParam = stage === 'DEV' ? ['--compute', 'int8'] : [];
+	try {
+		const diarizeParam = diarize ? [`--diarize`] : [];
+		const result = await runSpawnCommand('transcribe-whisperx', 'whisperx', [
+			'--model',
+			model,
+			...languageCodeParam,
+			...translateParam,
+			...diarizeParam,
+			...computeParam,
+			'--no_align',
+			'--model_cache_only',
+			'True',
+			'--output_dir',
+			path.parse(wavPath).dir,
+			wavPath,
+		]);
+		const metadata = extractWhisperXStderrData(result.stderr);
+		logger.info('Whisper finished successfully', metadata);
+		return {
+			fileName,
+			metadata,
+		};
+	} catch (error) {
+		logger.error(`Whisper failed due to `, error);
+		throw error;
+	}
+};
+
 export const runWhisper = async (
 	whisperBaseParams: WhisperBaseParams,
 	whisperParams: string[],
 ) => {
 	const { containerId, numberOfThreads, model, wavPath } = whisperBaseParams;
+	if (!containerId) {
+		throw new Error(
+			"Container id undefined - can't run whisper container (has this worker ended up in whisperX mode?)",
+		);
+	}
 	const fileName = path.parse(wavPath).name;
 	logger.info(
 		`Runnning whisper with params ${whisperParams}, base params: ${JSON.stringify(whisperBaseParams, null, 2)}`,

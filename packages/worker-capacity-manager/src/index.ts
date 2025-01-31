@@ -8,33 +8,55 @@ import {
 } from '@guardian/transcription-service-backend-common';
 import { setDesiredCapacity } from './asg';
 import { getSQSQueueLengthIncludingInvisible } from './sqs';
+import { SQSClient } from '@aws-sdk/client-sqs';
+import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
 
-const updateASGCapacity = async () => {
+const updateASGCapacity = async (
+	asgClient: AutoScalingClient,
+	sqsClient: SQSClient,
+	queueUrl: string,
+	asgName: string,
+) => {
+	const totalMessagesInQueue = await getSQSQueueLengthIncludingInvisible(
+		sqsClient,
+		queueUrl,
+	);
+
+	logger.info(
+		`setting asg desired capacity to total messages in queue: ${totalMessagesInQueue}`,
+	);
+	await setDesiredCapacity(asgClient, asgName, totalMessagesInQueue);
+};
+
+const updateASGsCapacity = async () => {
 	const config = await getConfig();
 	const sqsClient = getSQSClient(
 		config.aws.region,
 		config.aws.localstackEndpoint,
 	);
 	const asgClient = getASGClient(config.aws.region);
-	const asgGroupName = `transcription-service-workers-${config.app.stage}`;
-
-	const totalMessagesInQueue = await getSQSQueueLengthIncludingInvisible(
+	const asgName = `transcription-service-workers-${config.app.stage}`;
+	const gpuAsgName = `transcription-service-gpu-workers-${config.app.stage}`;
+	await updateASGCapacity(
+		asgClient,
 		sqsClient,
 		config.app.taskQueueUrl,
+		asgName,
 	);
-
-	logger.info(
-		`setting asg desired capacity to total messages in queue: ${totalMessagesInQueue}`,
+	await updateASGCapacity(
+		asgClient,
+		sqsClient,
+		config.app.gpuTaskQueueUrl,
+		gpuAsgName,
 	);
-	await setDesiredCapacity(asgClient, asgGroupName, totalMessagesInQueue);
 };
 const handler: Handler = async () => {
-	await updateASGCapacity();
+	await updateASGsCapacity();
 	return 'Updated the ASG capacity';
 };
 
 if (!process.env['AWS_EXECUTION_ENV']) {
-	updateASGCapacity();
+	updateASGsCapacity();
 }
 
 export { handler as workerCapacityManager };

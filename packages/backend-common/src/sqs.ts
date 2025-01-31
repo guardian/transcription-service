@@ -12,8 +12,12 @@ import {
 	TranscriptionJob,
 	LanguageCode,
 	TranscriptionOutput,
+	TranscriptionEngine,
 } from '@guardian/transcription-service-common';
-import { getSignedUploadUrl } from '@guardian/transcription-service-backend-common';
+import {
+	getSignedUploadUrl,
+	TranscriptionConfig,
+} from '@guardian/transcription-service-backend-common';
 import { logger } from '@guardian/transcription-service-backend-common';
 import { AWSStatus } from './types';
 
@@ -59,23 +63,26 @@ export const isSqsFailure = (
 export const generateOutputSignedUrlAndSendMessage = async (
 	s3Key: string,
 	client: SQSClient,
-	queueUrl: string,
-	outputBucket: string,
-	region: string,
+	config: TranscriptionConfig,
 	userEmail: string,
 	originalFilename: string,
 	inputSignedUrl: string,
 	languageCode: LanguageCode,
 	translationRequested: boolean,
+	diarizationRequested: boolean,
 ): Promise<SendResult> => {
 	const signedUrls = await generateOutputSignedUrls(
 		s3Key,
-		region,
-		outputBucket,
+		config.aws.region,
+		config.app.transcriptionOutputBucket,
 		userEmail,
 		7,
 		translationRequested,
 	);
+
+	const queue = config.app.useWhisperx
+		? config.app.gpuTaskQueueUrl
+		: config.app.taskQueueUrl;
 
 	const jobId = translationRequested ? `${s3Key}-translation` : s3Key;
 	const job: TranscriptionJob = {
@@ -88,10 +95,14 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		outputBucketUrls: signedUrls,
 		languageCode,
 		translate: false,
+		diarize: diarizationRequested,
+		engine: config.app.useWhisperx
+			? TranscriptionEngine.WHISPER_X
+			: TranscriptionEngine.WHISPER_CPP,
 	};
 	const messageResult = await sendMessage(
 		client,
-		queueUrl,
+		queue,
 		JSON.stringify(job),
 		s3Key,
 	);
@@ -104,7 +115,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	if (!isSqsFailure(messageResult) && translationRequested) {
 		return await sendMessage(
 			client,
-			queueUrl,
+			queue,
 			JSON.stringify({ ...job, translate: true }),
 			s3Key,
 		);

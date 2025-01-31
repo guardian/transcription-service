@@ -96,8 +96,13 @@ const getApp = async () => {
 			const userEmail = req.user?.email;
 			const body = transcribeUrlRequestBody.safeParse(req.body);
 			const id = uuid4();
-			if (!body.success || !userEmail) {
-				res.status(422).send('missing request params');
+			if (!body.success) {
+				logger.error('Failed to parse transcribe url request', body.error);
+				res.status(422).send('Invalid request body');
+				return;
+			}
+			if (!userEmail) {
+				res.status(403).send('No user email property - is user loged in?');
 				return;
 			}
 			const downloadJob: MediaDownloadJob = {
@@ -105,6 +110,7 @@ const getApp = async () => {
 				url: body.data.url,
 				languageCode: body.data.languageCode,
 				translationRequested: body.data.translationRequested,
+				diarizationRequested: body.data.diarizationRequested,
 				userEmail,
 			};
 
@@ -118,10 +124,11 @@ const getApp = async () => {
 				res.status(500).send(sendResult.errorMsg);
 				return;
 			}
-			logger.info('API successfully sent the message to SQS', {
+			logger.info('API successfully sent media download message to SQS', {
 				id,
 				url: body.data.url,
 				userEmail,
+				queue: config.app.mediaDownloadQueueUrl,
 			});
 			res.send('Message sent');
 		}),
@@ -174,14 +181,13 @@ const getApp = async () => {
 			const sendResult = await generateOutputSignedUrlAndSendMessage(
 				s3Key,
 				sqsClient,
-				config.app.taskQueueUrl,
-				config.app.transcriptionOutputBucket,
-				config.aws.region,
+				config,
 				userEmail,
 				body.data.fileName,
 				signedUrl,
 				body.data.languageCode,
 				body.data.translationRequested,
+				body.data.diarizationRequested,
 			);
 			if (isSqsFailure(sendResult)) {
 				res.status(500).send(sendResult.errorMsg);
@@ -191,6 +197,8 @@ const getApp = async () => {
 				id: s3Key,
 				filename: body.data.fileName,
 				userEmail,
+				gpuQueue: config.app.gpuTaskQueueUrl,
+				taskQueue: config.app.taskQueueUrl,
 			});
 			res.send('Message sent');
 		}),
