@@ -66,6 +66,8 @@ deployments:
       bucketSsmLookup: true
       cacheControl: public, max-age=60
       publicReadAcl: false
+    dependencies:
+      - cfn-eu-west-1-investigations-transcription-service
   lambda-upload-eu-west-1-investigations-transcription-service-output-handler:
     type: aws-lambda
     stacks:
