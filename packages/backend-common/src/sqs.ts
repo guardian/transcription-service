@@ -77,16 +77,14 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		config.app.transcriptionOutputBucket,
 		userEmail,
 		7,
-		translationRequested,
 	);
 
 	const queue = config.app.useWhisperx
 		? config.app.gpuTaskQueueUrl
 		: config.app.taskQueueUrl;
 
-	const jobId = translationRequested ? `${s3Key}-translation` : s3Key;
 	const job: TranscriptionJob = {
-		id: jobId, // id of the source file
+		id: s3Key, // id of the source file
 		inputSignedUrl,
 		sentTimestamp: new Date().toISOString(),
 		userEmail,
@@ -113,11 +111,24 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		return messageResult;
 	}
 	if (!isSqsFailure(messageResult) && translationRequested) {
+		const translationId = `${s3Key}-translation`;
+		const signedUrlsTranslation = await generateOutputSignedUrls(
+			translationId,
+			config.aws.region,
+			config.app.transcriptionOutputBucket,
+			userEmail,
+			7,
+		);
 		return await sendMessage(
 			client,
 			queue,
-			JSON.stringify({ ...job, translate: true }),
-			s3Key,
+			JSON.stringify({
+				...job,
+				id: translationId,
+				translate: true,
+				outputBucketUrls: signedUrlsTranslation,
+			}),
+			translationId,
 		);
 	}
 	return messageResult;
@@ -313,13 +324,11 @@ const generateOutputSignedUrls = async (
 	outputBucket: string,
 	userEmail: string,
 	expiresInDays: number,
-	translate: boolean,
 ): Promise<OutputBucketUrls> => {
-	const fileName = `${id}${translate ? '-translation' : ''}`;
 	const expiresIn = expiresInDays * 24 * 60 * 60;
-	const srtKey = `srt/${fileName}.srt`;
-	const jsonKey = `json/${fileName}.json`;
-	const textKey = `text/${fileName}.txt`;
+	const srtKey = `srt/${id}.srt`;
+	const jsonKey = `json/${id}.json`;
+	const textKey = `text/${id}.txt`;
 	const srtSignedS3Url = await getSignedUploadUrl(
 		region,
 		outputBucket,
