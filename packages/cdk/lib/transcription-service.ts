@@ -440,7 +440,6 @@ export class TranscriptionService extends GuStack {
 					InstanceType.of(InstanceClass.G4DN, InstanceSize.XLARGE),
 					InstanceType.of(InstanceClass.G4DN, InstanceSize.XLARGE2),
 					InstanceType.of(InstanceClass.G5, InstanceSize.XLARGE),
-					InstanceType.of(InstanceClass.G6, InstanceSize.XLARGE),
 				]
 			: [InstanceType.of(InstanceClass.G4DN, InstanceSize.XLARGE)];
 
