@@ -117,3 +117,9 @@ DYNAMODB_ARN=$(aws --endpoint-url=http://localhost:4566 dynamodb create-table \
                                          --key-schema AttributeName=id,KeyType=HASH | jq .TableDescription.TableArn)
 
 echo "Created table, arn: ${DYNAMODB_ARN}"
+
+echo ""
+echo "Installing whisperX dependencies (required to run gpu worker locally)"
+echo ""
+
+pipenv install
