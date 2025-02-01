@@ -8,3 +8,9 @@ export const authFetch = async (
 
 	return await fetch(request);
 };
+
+export const addHttpsProtocol = (url: string) => {
+	if (url.startsWith('http://') || url.startsWith('https://')) {
+		return url;
+	} else return `https://${url}`;
+};
