@@ -9,7 +9,6 @@ import {
 } from '@guardian/transcription-service-backend-common';
 import {
 	getDynamoClient,
-	TranscriptionDynamoItem,
 	writeTranscriptionItem,
 } from '@guardian/transcription-service-backend-common/src/dynamodb';
 import { testMessage } from '../test/testMessage';
@@ -18,6 +17,7 @@ import {
 	TranscriptionOutputSuccess,
 	TranscriptionOutputFailure,
 	transcriptionOutputIsTranscriptionFailure,
+	TranscriptionDynamoItem,
 } from '@guardian/transcription-service-common';
 import {
 	MetricsService,
@@ -74,6 +74,7 @@ const handleTranscriptionSuccess = async (
 		userEmail: transcriptionOutput.userEmail,
 		completedAt: new Date().toISOString(),
 		isTranslation: transcriptionOutput.isTranslation,
+		languageCode: transcriptionOutput.languageCode,
 	};
 
 	try {

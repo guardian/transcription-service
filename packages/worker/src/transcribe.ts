@@ -2,8 +2,10 @@ import path from 'path';
 import { readFile } from '@guardian/transcription-service-backend-common';
 import { logger } from '@guardian/transcription-service-backend-common';
 import {
-	LanguageCode,
+	InputLanguageCode,
+	inputToOutputLanguageCode,
 	languageCodes,
+	OutputLanguageCode,
 	TranscriptionEngine,
 } from '@guardian/transcription-service-common';
 import { runSpawnCommand } from '@guardian/transcription-service-backend-common/src/process';
@@ -21,7 +23,7 @@ export interface Transcripts {
 }
 
 type TranscriptionMetadata = {
-	detectedLanguageCode?: string;
+	detectedLanguageCode: OutputLanguageCode;
 	loadTimeMs?: number;
 	totalTimeMs?: number;
 };
@@ -133,7 +135,7 @@ const getDuration = (ffmpegOutput: string) => {
 
 const runTranscription = async (
 	whisperBaseParams: WhisperBaseParams,
-	languageCode: LanguageCode,
+	languageCode: InputLanguageCode,
 	translate: boolean,
 	whisperX: boolean,
 ) => {
@@ -181,7 +183,7 @@ const runTranscription = async (
 const getLanguageCode = async (
 	whisperBaseParams: WhisperBaseParams,
 	whisperX: boolean,
-): Promise<LanguageCode> => {
+): Promise<InputLanguageCode> => {
 	// whisperx is so slow to start up let's not even bother pre-detecting the language and just let it run detection
 	// for both transcription and translation
 	if (whisperX) {
@@ -214,7 +216,8 @@ const transcribeAndTranslate = async (
 
 		// we only run language detection once,
 		// so need to override the detected language of future whisper runs
-		transcription.metadata.detectedLanguageCode = languageCode;
+		transcription.metadata.detectedLanguageCode =
+			inputToOutputLanguageCode(languageCode);
 		const translation =
 			languageCode === 'en'
 				? null
@@ -241,7 +244,7 @@ const transcribeAndTranslate = async (
 
 export const getTranscriptionText = async (
 	whisperBaseParams: WhisperBaseParams,
-	languageCode: LanguageCode,
+	languageCode: InputLanguageCode,
 	translate: boolean,
 	combineTranscribeAndTranslate: boolean,
 	whisperX: boolean,
@@ -257,11 +260,16 @@ const regexExtract = (text: string, regex: RegExp): string | undefined => {
 	return regexResult ? regexResult[1] : undefined;
 };
 
+const parseLanguageCodeString = (languageCode?: string): OutputLanguageCode =>
+	languageCodes.find((c) => c === languageCode) || 'UNKNOWN';
+
 const extractWhisperXStderrData = (stderr: string): TranscriptionMetadata => {
 	//Detected language: en (0.99) in first 30s of audio...
 	const languageRegex = /Detected language: ([a-zA-Z]{2})/;
 	const detectedLanguageCode = regexExtract(stderr, languageRegex);
-	return { detectedLanguageCode };
+	return {
+		detectedLanguageCode: parseLanguageCodeString(detectedLanguageCode),
+	};
 };
 
 const extractWhisperStderrData = (stderr: string): TranscriptionMetadata => {
@@ -275,7 +283,7 @@ const extractWhisperStderrData = (stderr: string): TranscriptionMetadata => {
 	const loadTime = regexExtract(stderr, loadTimeRegex);
 
 	return {
-		detectedLanguageCode: detectedLanguageCode,
+		detectedLanguageCode: parseLanguageCodeString(detectedLanguageCode),
 		loadTimeMs: loadTime ? parseInt(loadTime) : undefined,
 		totalTimeMs: totalTime ? parseInt(totalTime) : undefined,
 	};
@@ -284,7 +292,7 @@ const extractWhisperStderrData = (stderr: string): TranscriptionMetadata => {
 const whisperParams = (
 	detectLanguageOnly: boolean,
 	file: string,
-	languageCode: LanguageCode = 'auto',
+	languageCode: InputLanguageCode = 'auto',
 	translate: boolean = false,
 ) => {
 	if (detectLanguageOnly) {
@@ -308,7 +316,7 @@ const whisperParams = (
 
 export const runWhisperX = async (
 	whisperBaseParams: WhisperBaseParams,
-	languageCode: LanguageCode,
+	languageCode: InputLanguageCode,
 	translate: boolean,
 ) => {
 	const { wavPath, diarize, stage } = whisperBaseParams;

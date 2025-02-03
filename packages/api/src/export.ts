@@ -3,13 +3,13 @@ import {
 	isS3Failure,
 	logger,
 	TranscriptionConfig,
-	TranscriptionDynamoItem,
 } from '@guardian/transcription-service-backend-common';
 import {
 	ExportItems,
 	ExportStatus,
 	ExportStatuses,
 	ExportType,
+	TranscriptionDynamoItem,
 } from '@guardian/transcription-service-common';
 import { uploadToGoogleDocs } from './services/googleDrive';
 import { S3Client } from '@aws-sdk/client-s3';

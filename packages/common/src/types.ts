@@ -1,13 +1,15 @@
 import { z } from 'zod';
-import { languageCodeToLanguage } from './languages';
+import { inputLanguageCodes, outputLanguageCodes } from './languages';
 
-// thanks https://github.com/colinhacks/zod/discussions/2125#discussioncomment-7452235
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getKeys<T extends Record<string, any>>(obj: T) {
-	return Object.keys(obj) as [keyof typeof obj];
-}
+export const InputLanguageCode = z.enum(inputLanguageCodes);
+export type InputLanguageCode = z.infer<typeof InputLanguageCode>;
 
-const zodLanguageCode = z.enum(getKeys(languageCodeToLanguage));
+export const OutputLanguageCode = z.enum(outputLanguageCodes);
+export type OutputLanguageCode = z.infer<typeof OutputLanguageCode>;
+
+export const inputToOutputLanguageCode = (
+	c: InputLanguageCode,
+): OutputLanguageCode => (c === 'auto' ? 'UNKNOWN' : c);
 
 export enum DestinationService {
 	TranscriptionService = 'TranscriptionService',
@@ -41,7 +43,7 @@ export const MediaDownloadJob = z.object({
 	id: z.string(),
 	url: z.string(),
 	userEmail: z.string(),
-	languageCode: zodLanguageCode,
+	languageCode: InputLanguageCode,
 	translationRequested: z.boolean(),
 	diarizationRequested: z.boolean(),
 });
@@ -61,7 +63,7 @@ export const TranscriptionJob = z.object({
 	userEmail: z.string(),
 	transcriptDestinationService: z.nativeEnum(DestinationService),
 	outputBucketUrls: OutputBucketUrls,
-	languageCode: zodLanguageCode,
+	languageCode: InputLanguageCode,
 	translate: z.boolean(),
 	diarize: z.boolean(),
 	engine: z.nativeEnum(TranscriptionEngine),
@@ -80,7 +82,7 @@ const TranscriptionOutputBase = z.object({
 
 export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
 	status: z.literal('SUCCESS'),
-	languageCode: z.string(),
+	languageCode: OutputLanguageCode,
 	outputBucketKeys: OutputBucketKeys,
 	// we can get rid of this when we switch to using a zip
 	translationOutputBucketKeys: z.optional(OutputBucketKeys),
@@ -215,7 +217,7 @@ export type CreateFolderRequest = z.infer<typeof CreateFolderRequest>;
 
 export const transcribeUrlRequestBody = z.object({
 	url: z.string(),
-	languageCode: zodLanguageCode,
+	languageCode: InputLanguageCode,
 	translationRequested: z.boolean(),
 	diarizationRequested: z.boolean(),
 });
@@ -225,7 +227,7 @@ export type TranscribeUrlRequestBody = z.infer<typeof transcribeUrlRequestBody>;
 export const transcribeFileRequestBody = z.object({
 	s3Key: z.string(),
 	fileName: z.string(),
-	languageCode: zodLanguageCode,
+	languageCode: InputLanguageCode,
 	translationRequested: z.boolean(),
 	diarizationRequested: z.boolean(),
 });
@@ -247,3 +249,24 @@ export type InputBucketObjectMetadata = z.infer<
 >;
 
 export type MediaSourceType = 'file' | 'url';
+
+export const TranscriptKeys = z.object({
+	srt: z.string(),
+	text: z.string(),
+	json: z.string(),
+});
+
+export type TranscriptKeys = z.infer<typeof TranscriptKeys>;
+
+export const TranscriptionDynamoItem = z.object({
+	id: z.string(),
+	originalFilename: z.string(),
+	transcriptKeys: TranscriptKeys,
+	userEmail: z.string(),
+	completedAt: z.optional(z.string()), // dynamodb can't handle dates so we need to use an ISO date
+	isTranslation: z.boolean(),
+	languageCode: z.optional(OutputLanguageCode),
+	exportStatuses: z.optional(ExportStatuses),
+});
+
+export type TranscriptionDynamoItem = z.infer<typeof TranscriptionDynamoItem>;

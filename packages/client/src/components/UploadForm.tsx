@@ -3,11 +3,11 @@ import React, { useContext, useState } from 'react';
 import {
 	SignedUrlResponseBody,
 	uploadToS3,
-	languageCodeToLanguage,
-	type LanguageCode,
 	languageCodes,
 	TranscribeFileRequestBody,
 	MediaSourceType,
+	InputLanguageCode,
+	languageCodeToLanguageWithAuto,
 } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
 import {
@@ -39,7 +39,7 @@ const getStatusColor = (input: MediaUrlInput) => {
 const submitMediaUrl = async (
 	url: string,
 	token: string,
-	languageCode: LanguageCode,
+	languageCode: InputLanguageCode,
 	translationRequested: boolean,
 	diarizationRequested: boolean,
 ) => {
@@ -66,7 +66,7 @@ const submitMediaUrl = async (
 const uploadFileAndTranscribe = async (
 	file: File,
 	token: string,
-	languageCode: LanguageCode,
+	languageCode: InputLanguageCode,
 	translationRequested: boolean,
 	diarizationRequested: boolean,
 ) => {
@@ -161,7 +161,7 @@ export const UploadForm = () => {
 	const [files, setFiles] = useState<FileList | null>(null);
 	const [uploads, setUploads] = useState<Record<string, RequestStatus>>({});
 	const [mediaFileLanguageCode, setMediaFileLanguageCode] = useState<
-		LanguageCode | undefined
+		InputLanguageCode | undefined
 	>(undefined);
 	const [languageCodeValid, setLanguageCodeValid] = useState<
 		boolean | undefined
@@ -308,8 +308,8 @@ export const UploadForm = () => {
 	return (
 		<>
 			<p className={' pb-3 font-light'}>
-				This tool can transcribe both audio and video. You will receive an
-				email when the transcription is ready.
+				This tool can transcribe both audio and video. You will receive an email
+				when the transcription is ready.
 			</p>
 			<form id="media-upload-form" onSubmit={handleSubmit}>
 				<div className={'mb-1'}>
@@ -425,16 +425,16 @@ export const UploadForm = () => {
 								borderColor: languageSelectColor,
 							}}
 							onChange={(e) => {
-								setMediaFileLanguageCode(e.target.value as LanguageCode);
+								setMediaFileLanguageCode(e.target.value as InputLanguageCode);
 								setLanguageCodeValid(true);
 							}}
 						>
 							<option disabled selected>
 								Select a language
 							</option>
-							{languageCodes.map((languageCode: LanguageCode) => (
+							{languageCodes.map((languageCode: InputLanguageCode) => (
 								<option key={languageCode} value={languageCode}>
-									{languageCodeToLanguage[languageCode]}
+									{languageCodeToLanguageWithAuto[languageCode]}
 								</option>
 							))}
 						</Select>
