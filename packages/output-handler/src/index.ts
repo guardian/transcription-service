@@ -18,7 +18,6 @@ import {
 	TranscriptionOutputFailure,
 	transcriptionOutputIsTranscriptionFailure,
 	TranscriptionDynamoItem,
-	LanguageCode,
 } from '@guardian/transcription-service-common';
 import {
 	MetricsService,
@@ -64,14 +63,6 @@ const handleTranscriptionSuccess = async (
 	metrics: MetricsService,
 	sourceMediaDownloadUrl: string,
 ) => {
-	const languageCode = LanguageCode.safeParse(transcriptionOutput.languageCode);
-	if (!languageCode.success) {
-		logger.error('Failed to parse language code', {
-			languageCode: transcriptionOutput.languageCode,
-		});
-		await metrics.putMetric(FailureMetric);
-		return;
-	}
 	const dynamoItem: TranscriptionDynamoItem = {
 		id: transcriptionOutput.id,
 		originalFilename: transcriptionOutput.originalFilename,
@@ -83,7 +74,7 @@ const handleTranscriptionSuccess = async (
 		userEmail: transcriptionOutput.userEmail,
 		completedAt: new Date().toISOString(),
 		isTranslation: transcriptionOutput.isTranslation,
-		languageCode: languageCode.data,
+		languageCode: transcriptionOutput.languageCode,
 	};
 
 	try {

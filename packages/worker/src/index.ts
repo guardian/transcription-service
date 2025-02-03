@@ -17,6 +17,7 @@ import {
 import {
 	DestinationService,
 	OutputBucketKeys,
+	OutputLanguageCode,
 	TranscriptionJob,
 	TranscriptionOutputFailure,
 	type TranscriptionOutputSuccess,
@@ -348,6 +349,11 @@ const pollTranscriptionQueue = async (
 			job.engine === 'whisperx',
 		);
 
+		const languageCode: OutputLanguageCode =
+			job.languageCode === 'auto'
+				? transcriptResult.metadata.detectedLanguageCode
+				: job.languageCode;
+
 		// if we've received an interrupt signal we don't want to perform a half-finished transcript upload/publish as
 		// this may, for example, result in duplicate emails to the user. Here we assume that we can upload some text
 		// files to s3 and make a single request to SNS and SQS within 20 seconds
@@ -385,10 +391,7 @@ const pollTranscriptionQueue = async (
 		const transcriptionOutput: TranscriptionOutputSuccess = {
 			id: job.id,
 			status: 'SUCCESS',
-			languageCode:
-				job.languageCode === 'auto'
-					? transcriptResult.metadata.detectedLanguageCode || 'UNKNOWN'
-					: job.languageCode,
+			languageCode,
 			userEmail: job.userEmail,
 			originalFilename: job.originalFilename,
 			outputBucketKeys,

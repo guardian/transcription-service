@@ -10,9 +10,9 @@ import {
 	OutputBucketUrls,
 	DestinationService,
 	TranscriptionJob,
-	LanguageCode,
 	TranscriptionOutput,
 	TranscriptionEngine,
+	InputLanguageCode,
 } from '@guardian/transcription-service-common';
 import {
 	getSignedUploadUrl,
@@ -67,7 +67,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	userEmail: string,
 	originalFilename: string,
 	inputSignedUrl: string,
-	languageCode: LanguageCode,
+	languageCode: InputLanguageCode,
 	translationRequested: boolean,
 	diarizationRequested: boolean,
 ): Promise<SendResult> => {

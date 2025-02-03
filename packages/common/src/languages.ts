@@ -1,10 +1,8 @@
-import { z } from 'zod';
 // languages supported by whisper.cpp
 // copied from
 // https://github.com/ggerganov/whisper.cpp/blob/25d313b38b1f562200f915cd5952555613cd0110/whisper.cpp#L251
 // and values transformed to title case
-export const languageCodeToLanguage = Object.freeze({
-	auto: 'Auto-detect language (not yet recommended)',
+const languageCodeToLanguage = {
 	en: 'English',
 	zh: 'Chinese',
 	de: 'German',
@@ -105,16 +103,24 @@ export const languageCodeToLanguage = Object.freeze({
 	jw: 'Javanese',
 	su: 'Sundanese',
 	yue: 'Cantonese',
+};
+
+export const languageCodeToLanguageWithAuto = Object.freeze({
+	auto: 'Auto-detect language (not yet recommended)',
+	...languageCodeToLanguage,
 });
 
-type LanguageCodeToLanguage = typeof languageCodeToLanguage;
+export const languageCodeToLanguageWithUnknown = Object.freeze({
+	UNKNOWN: 'Detected language not recognised',
+	...languageCodeToLanguage,
+});
 
-// There doesn't seem to be a way to get the object keys that has a type which
-// is an array of a union of string literals rather than an array of strings.
-// https://www.charpeni.com/blog/properly-type-object-keys-and-object-entries
-export const languageCodes = Object.keys(languageCodeToLanguage) as [
-	keyof LanguageCodeToLanguage,
-];
+// thanks https://github.com/colinhacks/zod/discussions/2125#discussioncomment-7452235
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getKeys<T extends Record<string, any>>(obj: T) {
+	return Object.keys(obj) as [keyof typeof obj];
+}
 
-export const LanguageCode = z.enum(languageCodes);
-export type LanguageCode = z.infer<typeof LanguageCode>;
+export const languageCodes = getKeys(languageCodeToLanguage);
+export const inputLanguageCodes = getKeys(languageCodeToLanguageWithAuto);
+export const outputLanguageCodes = getKeys(languageCodeToLanguageWithUnknown);
