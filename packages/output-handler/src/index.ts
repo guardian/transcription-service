@@ -165,14 +165,15 @@ const processMessage = async (event: unknown) => {
 
 	for (const record of parsedEvent.data.Records) {
 		const transcriptionOutput = record.body;
-		const sourceMediaDownloadUrl = await getSignedDownloadUrl(
-			config.aws.region,
-			config.app.sourceMediaBucket,
-			transcriptionOutput.id,
-			7 * 24 * 60 * 60,
-		);
 		if (transcriptionOutputIsSuccess(transcriptionOutput)) {
-			logger.info('handling transcription success');
+			const sourceMediaDownloadUrl = await getSignedDownloadUrl(
+				config.aws.region,
+				config.app.sourceMediaBucket,
+				transcriptionOutput.id,
+				7 * 24 * 60 * 60,
+				transcriptionOutput.originalFilename,
+			);
+			logger.info(`handling transcription success`);
 			await handleTranscriptionSuccess(
 				config,
 				transcriptionOutput,
@@ -181,7 +182,15 @@ const processMessage = async (event: unknown) => {
 				sourceMediaDownloadUrl,
 			);
 		} else if (transcriptionOutputIsTranscriptionFailure(transcriptionOutput)) {
-			logger.info('handling transcription failure');
+			logger.info(
+				`Handling transcription failure. Transcription output: ${JSON.stringify(transcriptionOutput)}`,
+			);
+			const sourceMediaDownloadUrl = await getSignedDownloadUrl(
+				config.aws.region,
+				config.app.sourceMediaBucket,
+				transcriptionOutput.id,
+				7 * 24 * 60 * 60,
+			);
 			await handleTranscriptionFailure(
 				config,
 				transcriptionOutput,

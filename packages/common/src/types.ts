@@ -98,6 +98,7 @@ export type MediaDownloadFailure = z.infer<typeof MediaDownloadFailure>;
 
 export const TranscriptionOutputFailure = TranscriptionOutputBase.extend({
 	status: z.literal('TRANSCRIPTION_FAILURE'),
+	id: z.string(),
 });
 
 export const TranscriptionOutput = z.union([
@@ -120,7 +121,7 @@ export const transcriptionOutputIsSuccess = (
 
 export const transcriptionOutputIsTranscriptionFailure = (
 	output: TranscriptionOutput,
-): output is TranscriptionOutputSuccess =>
+): output is TranscriptionOutputFailure =>
 	output.status === 'TRANSCRIPTION_FAILURE';
 
 export type TranscriptionOutput = z.infer<typeof TranscriptionOutput>;

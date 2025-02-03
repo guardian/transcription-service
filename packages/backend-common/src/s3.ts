@@ -60,15 +60,21 @@ export const getSignedDownloadUrl = async (
 	bucket: string,
 	key: string,
 	expiresIn: number,
-) =>
-	await getSignedUrlSdk(
+	overrideFilename?: string,
+) => {
+	const responseContentDisposition = overrideFilename
+		? `attachment; filename="${overrideFilename}"`
+		: undefined;
+	return await getSignedUrlSdk(
 		getS3Client(region),
 		new GetObjectCommand({
 			Bucket: bucket,
 			Key: key,
+			ResponseContentDisposition: responseContentDisposition,
 		}),
 		{ expiresIn }, // override default expiration time of 15 minutes
 	);
+};
 
 type GetObjectTextSuccess = {
 	status: AWSStatus.Success;
