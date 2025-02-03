@@ -665,7 +665,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             "OnDemandBaseCapacity": 0,
             "OnDemandPercentageAboveBaseCapacity": 10,
             "SpotAllocationStrategy": "capacity-optimized",
-            "SpotMaxPrice": "0.7520",
+            "SpotMaxPrice": "0.5260",
           },
           "LaunchTemplate": {
             "LaunchTemplateSpecification": {
@@ -2104,12 +2104,7 @@ service transcription-service-worker start",
               {
                 "ContainerPath": "/media-download",
                 "ReadOnly": false,
-                "SourceVolume": "media-download-download-volume",
-              },
-              {
-                "ContainerPath": "/tmp",
-                "ReadOnly": false,
-                "SourceVolume": "media-download-temp-volume",
+                "SourceVolume": "media-download-volume",
               },
             ],
             "Name": "media-download-task-TaskContainer",
@@ -2166,10 +2161,7 @@ service transcription-service-worker start",
         },
         "Volumes": [
           {
-            "Name": "media-download-download-volume",
-          },
-          {
-            "Name": "media-download-temp-volume",
+            "Name": "media-download-volume",
           },
         ],
       },

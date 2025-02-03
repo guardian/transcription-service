@@ -503,7 +503,7 @@ export class TranscriptionService extends GuStack {
 					launchTemplate: gpuWorkerLaunchTemplate,
 					instancesDistribution: {
 						...commonInstancesDistributionprops,
-						spotMaxPrice: '0.7520',
+						spotMaxPrice: '0.5260',
 					},
 					launchTemplateOverrides: gpuInstanceTypes.map(instanceTypeToOverride),
 				},
