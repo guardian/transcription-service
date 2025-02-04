@@ -248,6 +248,7 @@ export class TranscriptionService extends GuStack {
 			},
 			app: `${APP_NAME}-api`,
 			layers: [ffmpegLayer],
+			ephemeralStorageSize: Size.gibibytes(10), // needed so api can download source files to get the duration
 			api: {
 				id: apiId,
 				description: 'API for transcription service frontend',
