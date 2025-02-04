@@ -1,5 +1,6 @@
 allowedStages:
   - PROD
+  - CODE
 deployments:
   whisperx-model-fetch:
     type: aws-s3
