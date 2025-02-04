@@ -8,6 +8,7 @@ export type MediaMetadata = {
 	extension: string;
 	filename: string;
 	mediaPath: string;
+	duration: number;
 };
 
 const extractInfoJson = (infoJsonPath: string): MediaMetadata => {
@@ -18,6 +19,7 @@ const extractInfoJson = (infoJsonPath: string): MediaMetadata => {
 		extension: json.ext,
 		filename: json.filename,
 		mediaPath: `${json.filename}`,
+		duration: parseInt(json.duration),
 	};
 };
 

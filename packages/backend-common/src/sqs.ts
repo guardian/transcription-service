@@ -70,6 +70,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	languageCode: InputLanguageCode,
 	translationRequested: boolean,
 	diarizationRequested: boolean,
+	duration: number,
 ): Promise<SendResult> => {
 	const signedUrls = await generateOutputSignedUrls(
 		s3Key,
@@ -79,9 +80,15 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		7,
 	);
 
-	const queue = config.app.useWhisperx
-		? config.app.gpuTaskQueueUrl
-		: config.app.taskQueueUrl;
+	const engine =
+		config.app.useWhisperx && (duration > 900 || diarizationRequested)
+			? TranscriptionEngine.WHISPER_X
+			: TranscriptionEngine.WHISPER_CPP;
+
+	const queue =
+		engine === TranscriptionEngine.WHISPER_X
+			? config.app.gpuTaskQueueUrl
+			: config.app.taskQueueUrl;
 
 	const job: TranscriptionJob = {
 		id: s3Key, // id of the source file
@@ -94,9 +101,8 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		languageCode,
 		translate: false,
 		diarize: diarizationRequested,
-		engine: config.app.useWhisperx
-			? TranscriptionEngine.WHISPER_X
-			: TranscriptionEngine.WHISPER_CPP,
+		engine,
+		duration,
 	};
 	const messageResult = await sendMessage(
 		client,

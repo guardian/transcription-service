@@ -19,6 +19,7 @@ import {
 	getS3Client,
 	sendMessage,
 	writeTranscriptionItem,
+	downloadObject,
 } from '@guardian/transcription-service-backend-common';
 import {
 	ClientConfig,
@@ -48,7 +49,7 @@ import {
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { invokeLambda } from './services/lambda';
 import { LambdaClient } from '@aws-sdk/client-lambda';
-import { exec } from 'node:child_process';
+import { getFileDuration } from '@guardian/transcription-service-backend-common/src/ffmpeg';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -173,6 +174,15 @@ const getApp = async () => {
 				return;
 			}
 
+			const tempPath = `/tmp/${s3Key}`;
+			await downloadObject(
+				s3Client,
+				config.app.sourceMediaBucket,
+				s3Key,
+				tempPath,
+			);
+			const duration = await getFileDuration(tempPath);
+
 			const signedUrl = await getSignedDownloadUrl(
 				config.aws.region,
 				config.app.sourceMediaBucket,
@@ -189,6 +199,7 @@ const getApp = async () => {
 				body.data.languageCode,
 				body.data.translationRequested,
 				body.data.diarizationRequested,
+				duration,
 			);
 			if (isSqsFailure(sendResult)) {
 				res.status(500).send(sendResult.errorMsg);
@@ -387,21 +398,6 @@ const getApp = async () => {
 			res.set('Cache-Control', 'no-cache');
 			const responseBody: SignedUrlResponseBody = { presignedS3Url, s3Key };
 			res.send(responseBody);
-		}),
-	]);
-
-	apiRouter.get('/test-ffmpeg', [
-		// checkAuth,
-		asyncHandler(async (req, res) => {
-			exec('ffmpeg -version', (error, stdout, stderr) => {
-				console.log(stdout);
-				console.log(stderr);
-				if (error) {
-					console.error(`exec error: ${error}`);
-					return;
-				}
-				res.send('Ok');
-			});
 		}),
 	]);
 
