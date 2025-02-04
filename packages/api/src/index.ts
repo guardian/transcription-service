@@ -48,6 +48,7 @@ import {
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { invokeLambda } from './services/lambda';
 import { LambdaClient } from '@aws-sdk/client-lambda';
+import { exec } from 'node:child_process';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -386,6 +387,21 @@ const getApp = async () => {
 			res.set('Cache-Control', 'no-cache');
 			const responseBody: SignedUrlResponseBody = { presignedS3Url, s3Key };
 			res.send(responseBody);
+		}),
+	]);
+
+	apiRouter.get('/test-ffmpeg', [
+		// checkAuth,
+		asyncHandler(async (req, res) => {
+			exec('ffmpeg -version', (error, stdout, stderr) => {
+				console.log(stdout);
+				console.log(stderr);
+				if (error) {
+					console.error(`exec error: ${error}`);
+					return;
+				}
+				res.send('Ok');
+			});
 		}),
 	]);
 
