@@ -81,7 +81,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	);
 
 	const engine =
-		config.app.useWhisperx && (duration > 900 || diarizationRequested)
+		config.app.useWhisperx && (duration > 600 || diarizationRequested)
 			? TranscriptionEngine.WHISPER_X
 			: TranscriptionEngine.WHISPER_CPP;
 
