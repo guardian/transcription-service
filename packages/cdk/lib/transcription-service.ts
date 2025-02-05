@@ -215,6 +215,11 @@ export class TranscriptionService extends GuStack {
 			default: '/investigations/transcription-service/lambdaLayerBucketArn',
 		});
 
+		const ffmpegHash = new GuStringParameter(this, 'FFMpegLayerZipKey', {
+			description:
+				"Key for the ffmpeg layer's zip file (pushed to layerBucket by publish-ffmpeg-layer.sh script)",
+		});
+
 		const ffmpegLayer = new LayerVersion(
 			this,
 			`FFMpegLayer_x86_64-${this.stage}`,
@@ -225,7 +230,7 @@ export class TranscriptionService extends GuStack {
 						'LambdaLayerBucket',
 						layerBucket.valueAsString,
 					),
-					'ffmpeg_x86_64-ba72e86a4234ae0f807fe035f89eeecf.zip',
+					ffmpegHash.valueAsString,
 				),
 				description: 'FFMpeg Layer',
 				layerVersionName: 'FFMpegLayer',
