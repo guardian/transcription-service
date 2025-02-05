@@ -29,10 +29,10 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuGetDistributablePolicy",
       "GuParameterStoreReadPolicy",
       "GuVpcParameter",
+      "GuVpcPublicSubnetsParameter",
+      "GuVpcPrivateSubnetsParameter",
       "GuSecurityGroup",
-      "GuSubnetListParameter",
       "GuStringParameter",
-      "GuSubnetListParameter",
       "GuSecurityGroup",
       "GuEcsTask",
       "GuAllowPolicy",
@@ -69,7 +69,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             {
               "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
             },
-            ".execute-api.test-region.",
+            ".execute-api.eu-west-1.",
             {
               "Ref": "AWS::URLSuffix",
             },
@@ -120,14 +120,14 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "Description": "Virtual Private Cloud to run EC2 instances within. Should NOT be the account default VPC.",
       "Type": "AWS::SSM::Parameter::Value<AWS::EC2::VPC::Id>",
     },
-    "mediadownloadPrivateSubnets": {
+    "VpcPrivateSubnets": {
       "Default": "/account/vpc/primary/subnets/private",
-      "Description": "A list of private subnets",
+      "Description": "A comma-separated list of private subnets",
       "Type": "AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>",
     },
-    "transcriptionserviceworkerPrivateSubnets": {
-      "Default": "/account/vpc/primary/subnets/private",
-      "Description": "A list of private subnets",
+    "VpcPublicSubnets": {
+      "Default": "/account/vpc/primary/subnets/public",
+      "Description": "A comma-separated list of public subnets",
       "Type": "AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>",
     },
   },
@@ -271,7 +271,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:kinesis:test-region:",
+                    "arn:aws:kinesis:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -482,7 +482,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:test-region:",
+                    "arn:aws:ssm:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -501,7 +501,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:test-region:",
+                    "arn:aws:ssm:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -534,7 +534,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                   "Fn::Join": [
                     "",
                     [
-                      "arn:aws:autoscaling:test-region:",
+                      "arn:aws:autoscaling:eu-west-1:",
                       {
                         "Ref": "AWS::AccountId",
                       },
@@ -546,7 +546,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                   "Fn::Join": [
                     "",
                     [
-                      "arn:aws:autoscaling:test-region:",
+                      "arn:aws:autoscaling:eu-west-1:",
                       {
                         "Ref": "AWS::AccountId",
                       },
@@ -725,9 +725,32 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             "Value": "transcription-service-worker.service",
           },
         ],
-        "VPCZoneIdentifier": {
-          "Ref": "transcriptionserviceworkerPrivateSubnets",
-        },
+        "VPCZoneIdentifier": [
+          {
+            "Fn::Select": [
+              0,
+              {
+                "Ref": "VpcPrivateSubnets",
+              },
+            ],
+          },
+          {
+            "Fn::Select": [
+              1,
+              {
+                "Ref": "VpcPrivateSubnets",
+              },
+            ],
+          },
+          {
+            "Fn::Select": [
+              2,
+              {
+                "Ref": "VpcPrivateSubnets",
+              },
+            ],
+          },
+        ],
       },
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "UpdatePolicy": {
@@ -996,9 +1019,32 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             "Value": "transcription-service-worker.service",
           },
         ],
-        "VPCZoneIdentifier": {
-          "Ref": "transcriptionserviceworkerPrivateSubnets",
-        },
+        "VPCZoneIdentifier": [
+          {
+            "Fn::Select": [
+              0,
+              {
+                "Ref": "VpcPrivateSubnets",
+              },
+            ],
+          },
+          {
+            "Fn::Select": [
+              1,
+              {
+                "Ref": "VpcPrivateSubnets",
+              },
+            ],
+          },
+          {
+            "Fn::Select": [
+              2,
+              {
+                "Ref": "VpcPrivateSubnets",
+              },
+            ],
+          },
+        ],
       },
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "UpdatePolicy": {
@@ -1030,7 +1076,9 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
               ],
             },
           },
-          "ImageId": "ami-12345",
+          "ImageId": {
+            "Ref": "AMITranscriptionservicegpuworker",
+          },
           "InstanceType": "g4dn.xlarge",
           "MetadataOptions": {
             "InstanceMetadataTags": "enabled",
@@ -1102,7 +1150,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                 [
                   "#!/bin/bash
 export STAGE=TEST
-export AWS_REGION=test-region
+export AWS_REGION=eu-west-1
 aws s3 cp s3://",
                   {
                     "Ref": "DistributionBucketName",
@@ -1178,7 +1226,9 @@ service transcription-service-worker start",
               ],
             },
           },
-          "ImageId": "ami-12345",
+          "ImageId": {
+            "Ref": "AMITranscriptionserviceworker",
+          },
           "InstanceType": "c7g.4xlarge",
           "MetadataOptions": {
             "InstanceMetadataTags": "enabled",
@@ -1250,7 +1300,7 @@ service transcription-service-worker start",
                 [
                   "#!/bin/bash
 export STAGE=TEST
-export AWS_REGION=test-region
+export AWS_REGION=eu-west-1
 aws s3 cp s3://",
                   {
                     "Ref": "DistributionBucketName",
@@ -1317,7 +1367,7 @@ service transcription-service-worker start",
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:test-region:",
+                    "arn:aws:ssm:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -1409,7 +1459,7 @@ service transcription-service-worker start",
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":kinesis:test-region:",
+                    ":kinesis:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -1684,7 +1734,7 @@ service transcription-service-worker start",
                 "Fn::Select": [
                   0,
                   {
-                    "Ref": "mediadownloadPrivateSubnets",
+                    "Ref": "VpcPrivateSubnets",
                   },
                 ],
               },
@@ -1693,7 +1743,7 @@ service transcription-service-worker start",
                 "Fn::Select": [
                   1,
                   {
-                    "Ref": "mediadownloadPrivateSubnets",
+                    "Ref": "VpcPrivateSubnets",
                   },
                 ],
               },
@@ -1702,7 +1752,7 @@ service transcription-service-worker start",
                 "Fn::Select": [
                   2,
                   {
-                    "Ref": "mediadownloadPrivateSubnets",
+                    "Ref": "VpcPrivateSubnets",
                   },
                 ],
               },
@@ -1713,7 +1763,7 @@ service transcription-service-worker start",
                   "GroupId",
                 ],
               },
-              ""]}},"Overrides":{"ContainerOverrides":[{"Name":"media-download-task-TaskContainer","Environment":[{"Name":"MESSAGE_BODY","Value.$":"$[0].body"},{"Name":"AWS_REGION","Value":"test-region"},{"Name":"STAGE","Value":"TEST"},{"Name":"APP","Value":"media-download"}]}]},"LaunchType":"FARGATE","PlatformVersion":"LATEST"}}}}",
+              ""]}},"Overrides":{"ContainerOverrides":[{"Name":"media-download-task-TaskContainer","Environment":[{"Name":"MESSAGE_BODY","Value.$":"$[0].body"},{"Name":"AWS_REGION","Value":"eu-west-1"},{"Name":"STAGE","Value":"TEST"},{"Name":"APP","Value":"media-download"}]}]},"LaunchType":"FARGATE","PlatformVersion":"LATEST"}}}}",
             ],
           ],
         },
@@ -1911,7 +1961,7 @@ service transcription-service-worker start",
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":events:test-region:",
+                    ":events:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -1990,7 +2040,7 @@ service transcription-service-worker start",
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":ecr:test-region:",
+                    ":ecr:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -2081,7 +2131,7 @@ service transcription-service-worker start",
                   {
                     "Ref": "AWS::AccountId",
                   },
-                  ".dkr.ecr.test-region.",
+                  ".dkr.ecr.eu-west-1.",
                   {
                     "Ref": "AWS::URLSuffix",
                   },
@@ -2095,7 +2145,7 @@ service transcription-service-worker start",
                 "awslogs-group": {
                   "Ref": "mediadownloadtaskTaskDefinitionmediadownloadtaskTaskContainerLogGroup5E8F5823",
                 },
-                "awslogs-region": "test-region",
+                "awslogs-region": "eu-west-1",
                 "awslogs-stream-prefix": "media-download",
               },
             },
@@ -2255,7 +2305,7 @@ service transcription-service-worker start",
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:test-region:",
+                    "arn:aws:ssm:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -2577,7 +2627,7 @@ service transcription-service-worker start",
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:test-region:",
+                    "arn:aws:ssm:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -2596,7 +2646,7 @@ service transcription-service-worker start",
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:test-region:",
+                    "arn:aws:ssm:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -2615,7 +2665,7 @@ service transcription-service-worker start",
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:test-region:",
+                    "arn:aws:ssm:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -2755,7 +2805,7 @@ service transcription-service-worker start",
               {
                 "Ref": "AWS::Partition",
               },
-              ":execute-api:test-region:",
+              ":execute-api:eu-west-1:",
               {
                 "Ref": "AWS::AccountId",
               },
@@ -2788,7 +2838,7 @@ service transcription-service-worker start",
               {
                 "Ref": "AWS::Partition",
               },
-              ":execute-api:test-region:",
+              ":execute-api:eu-west-1:",
               {
                 "Ref": "AWS::AccountId",
               },
@@ -2822,7 +2872,7 @@ service transcription-service-worker start",
                 {
                   "Ref": "AWS::Partition",
                 },
-                ":apigateway:test-region:lambda:path/2015-03-31/functions/",
+                ":apigateway:eu-west-1:lambda:path/2015-03-31/functions/",
                 {
                   "Fn::GetAtt": [
                     "transcriptionserviceapi022C22E7",
@@ -2996,7 +3046,7 @@ service transcription-service-worker start",
       },
       "Type": "AWS::ApiGateway::RestApi",
     },
-    "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDAd2059b6daf8e8b62e9e06f13a0ee9ac8": {
+    "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDAf7581d6fe4da3f83814871bebd451991": {
       "DependsOn": [
         "transcriptionserviceapitranscriptionserviceTESTproxyANY65A12BB3",
         "transcriptionserviceapitranscriptionserviceTESTproxy923E1B16",
@@ -3016,7 +3066,7 @@ service transcription-service-worker start",
       ],
       "Properties": {
         "DeploymentId": {
-          "Ref": "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDAd2059b6daf8e8b62e9e06f13a0ee9ac8",
+          "Ref": "transcriptionserviceapitranscriptionserviceTESTDeployment439CFDDAf7581d6fe4da3f83814871bebd451991",
         },
         "RestApiId": {
           "Ref": "transcriptionserviceapitranscriptionserviceTESTD0A6228F",
@@ -3077,7 +3127,7 @@ service transcription-service-worker start",
                 {
                   "Ref": "AWS::Partition",
                 },
-                ":apigateway:test-region:lambda:path/2015-03-31/functions/",
+                ":apigateway:eu-west-1:lambda:path/2015-03-31/functions/",
                 {
                   "Fn::GetAtt": [
                     "transcriptionserviceapi022C22E7",
@@ -3116,7 +3166,7 @@ service transcription-service-worker start",
               {
                 "Ref": "AWS::Partition",
               },
-              ":execute-api:test-region:",
+              ":execute-api:eu-west-1:",
               {
                 "Ref": "AWS::AccountId",
               },
@@ -3149,7 +3199,7 @@ service transcription-service-worker start",
               {
                 "Ref": "AWS::Partition",
               },
-              ":execute-api:test-region:",
+              ":execute-api:eu-west-1:",
               {
                 "Ref": "AWS::AccountId",
               },
@@ -3384,7 +3434,7 @@ service transcription-service-worker start",
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:test-region:",
+                    "arn:aws:ssm:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -3403,7 +3453,7 @@ service transcription-service-worker start",
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:test-region:",
+                    "arn:aws:ssm:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -3422,7 +3472,7 @@ service transcription-service-worker start",
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:test-region:",
+                    "arn:aws:ssm:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -3651,7 +3701,7 @@ service transcription-service-worker start",
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:test-region:",
+                    "arn:aws:ssm:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -3670,7 +3720,7 @@ service transcription-service-worker start",
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:test-region:",
+                    "arn:aws:ssm:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -3775,7 +3825,7 @@ service transcription-service-worker start",
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:test-region:",
+                    "arn:aws:ssm:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -4144,7 +4194,7 @@ service transcription-service-worker start",
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:test-region:",
+                    "arn:aws:ssm:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -4163,7 +4213,7 @@ service transcription-service-worker start",
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:test-region:",
+                    "arn:aws:ssm:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -4187,7 +4237,7 @@ service transcription-service-worker start",
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":autoscaling:test-region:",
+                      ":autoscaling:eu-west-1:",
                       {
                         "Ref": "AWS::AccountId",
                       },
@@ -4206,7 +4256,7 @@ service transcription-service-worker start",
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":autoscaling:test-region:",
+                      ":autoscaling:eu-west-1:",
                       {
                         "Ref": "AWS::AccountId",
                       },
@@ -4247,7 +4297,7 @@ service transcription-service-worker start",
                 "Fn::Join": [
                   "",
                   [
-                    "arn:aws:ssm:test-region:",
+                    "arn:aws:ssm:eu-west-1:",
                     {
                       "Ref": "AWS::AccountId",
                     },

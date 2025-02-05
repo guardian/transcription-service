@@ -9,11 +9,7 @@ import {
 	GuStringParameter,
 } from '@guardian/cdk/lib/constructs/core';
 import { GuCname } from '@guardian/cdk/lib/constructs/dns';
-import {
-	GuSecurityGroup,
-	GuVpc,
-	SubnetType,
-} from '@guardian/cdk/lib/constructs/ec2';
+import { GuSecurityGroup } from '@guardian/cdk/lib/constructs/ec2';
 import { GuEcsTask } from '@guardian/cdk/lib/constructs/ecs';
 import {
 	GuAllowPolicy,
@@ -22,6 +18,7 @@ import {
 } from '@guardian/cdk/lib/constructs/iam';
 import { GuLambdaFunction } from '@guardian/cdk/lib/constructs/lambda';
 import { GuS3Bucket } from '@guardian/cdk/lib/constructs/s3';
+import { GuVpcImport } from '@guardian/cdk/lib/constructs/vpc';
 import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import {
 	type App,
@@ -342,20 +339,20 @@ export class TranscriptionService extends GuStack {
 				}),
 			],
 		});
-		const vpc = GuVpc.fromIdParameter(
-			this,
-			'InvestigationsInternetEnabledVpc',
-			{
-				availabilityZones: ['eu-west-1a', 'eu-west-1b', 'eu-west-1c'],
-			},
-		);
+		const vpcImport = GuVpcImport.fromSsmParametersRegional(this);
+		// 	this,
+		// 	'InvestigationsInternetEnabledVpc',
+		// 	{
+		// 		availabilityZones: ['eu-west-1a', 'eu-west-1b', 'eu-west-1c'],
+		// 	},
+		// );
 
 		const workerSecurityGroup = new GuSecurityGroup(
 			this,
 			`TranscriptionServiceWorkerSG`,
 			{
 				app: workerApp,
-				vpc,
+				vpc: vpcImport.vpc,
 				allowAllOutbound: false,
 			},
 		);
@@ -443,10 +440,7 @@ export class TranscriptionService extends GuStack {
 				]
 			: [InstanceType.of(InstanceClass.G4DN, InstanceSize.XLARGE)];
 
-		const guSubnets = GuVpc.subnetsFromParameter(this, {
-			type: SubnetType.PRIVATE,
-			app: workerApp,
-		});
+		const guSubnets = vpcImport.privateSubnets;
 
 		const instanceTypeToOverride = (instanceType: InstanceType) => ({
 			instanceType,
@@ -458,7 +452,7 @@ export class TranscriptionService extends GuStack {
 		const commonAsgProps = {
 			minCapacity: 0,
 			maxCapacity: isProd ? 20 : 4,
-			vpc,
+			vpc: vpcImport.vpc,
 			vpcSubnets: {
 				subnets: guSubnets,
 			},
@@ -651,15 +645,8 @@ export class TranscriptionService extends GuStack {
 
 		const mediaDownloadTask = new GuEcsTask(this, 'media-download-task', {
 			app: mediaDownloadApp,
-			vpc,
-			subnets: GuVpc.subnetsFromParameterFixedNumber(
-				this,
-				{
-					type: SubnetType.PRIVATE,
-					app: mediaDownloadApp,
-				},
-				3,
-			),
+			vpc: vpcImport.vpc,
+			subnets: vpcImport.privateSubnets,
 			containerConfiguration: {
 				repository: Repository.fromRepositoryName(
 					this,
@@ -679,7 +666,7 @@ export class TranscriptionService extends GuStack {
 					: { noMonitoring: true },
 			securityGroups: [
 				new GuSecurityGroup(this, 'media-download-sg', {
-					vpc,
+					vpc: vpcImport.vpc,
 					allowAllOutbound: true,
 					app: mediaDownloadApp,
 				}),

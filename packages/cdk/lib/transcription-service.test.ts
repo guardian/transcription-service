@@ -8,7 +8,7 @@ describe('The TranscriptionService stack', () => {
 		const stack = new TranscriptionService(app, 'TranscriptionService', {
 			stack: 'investigations',
 			stage: 'TEST',
-			env: { region: 'test-region' },
+			env: { region: 'eu-west-1' },
 		});
 		const template = Template.fromStack(stack);
 		expect(template.toJSON()).toMatchSnapshot();
