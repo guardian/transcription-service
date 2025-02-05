@@ -225,7 +225,7 @@ export class TranscriptionService extends GuStack {
 						'LambdaLayerBucket',
 						layerBucket.valueAsString,
 					),
-					'ffmpeg_x86_64.zip',
+					'ffmpeg_x86_64-ba72e86a4234ae0f807fe035f89eeecf.zip',
 				),
 				description: 'FFMpeg Layer',
 				layerVersionName: 'FFMpegLayer',
