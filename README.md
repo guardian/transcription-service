@@ -1,10 +1,16 @@
 # transcription-service
 
-A self service app for journalists to upload audio/video files and receive transcription through email notifications.
+The guardian transcription service provides a simple user interface for guardian staff members to upload audio/video
+files they need a transcript for. It then runs the transcription and notifies the user when it is complete. Transcripts
+can then be exported to google drive.
 
-We use localstack to run SQS locally rather than needing to create 'dev' queues in AWS. This is set up via docker.
+Technically, the tool is a bunch of infrastructure and UI that wraps around [whisperX](https://github.com/m-bain/whisperX)
+and [whisper.cpp](https://github.com/ggerganov/whisper.cpp). We're very grateful to @ggerganov and @m-bain for their work
+on these projects, which provide the core functionality of the transcription service.
 
 ## Get started
+
+We use localstack to run SQS locally rather than needing to create 'dev' queues in AWS. This is set up via docker.
 
 1. Get Janus creds (for fetching creds from AWS Parameter Store)
 2. Use the `scripts/setup.sh` script to install dependencies, set up the nginx mapping and create a docker based sqs queue
