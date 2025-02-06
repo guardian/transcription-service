@@ -190,6 +190,7 @@ const processMessage = async (event: unknown) => {
 				config.app.sourceMediaBucket,
 				transcriptionOutput.id,
 				7 * 24 * 60 * 60,
+				transcriptionOutput.originalFilename,
 			);
 			await handleTranscriptionFailure(
 				config,
