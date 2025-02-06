@@ -34,6 +34,17 @@ npm run client::start
 
 If all goes well the frontend is available at https://transcribe.local.dev-gutools.co.uk and the backend is available at https://api.transcribe.local.dev-gutools.co.uk
 
+### Running gpu worker (whisperX) locally
+
+Running the gpu/whisperx worker needs whisperx and associated dependencies to be available. If you have already run
+setup.sh then the environment should be setup, and you can run `npm run gpu-worker::start` to activate the python
+environment and run the worker. We use [pipenv](https://pipenv.pypa.io) to manage the python environment
+
+The same python environment can be used to test changes to the model download python script.
+
+NOTE: To get the API to actually send messages to the gpu queue, you'll need to update the useWhisperX property in
+`config.ts` - either by hard coding it or modifying the value in parameter store.
+
 ## Emulating a production deployment
 
 Occasionally you will want to develop something which relies on the specific ways we deploy into production.
