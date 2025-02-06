@@ -31,15 +31,8 @@ If all goes well the frontend is available at https://transcribe.local.dev-gutoo
 ### Running gpu worker (whisperX) locally
 
 Running the gpu/whisperx worker needs whisperx and associated dependencies to be available. If you have already run
-setup.sh then the environment should be setup, and you can run:
-
-```
-# load python environment with whisperx installed
-pipenv shell
-
-# run worker
-npm run gpu-worker::start
-```
+setup.sh then the environment should be setup, and you can run `npm run gpu-worker::start` to activate the python
+environment and run the worker. We use [pipenv](https://pipenv.pypa.io) to manage the python environment
 
 The same python environment can be used to test changes to the model download python script.
 
