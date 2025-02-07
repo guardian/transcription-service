@@ -619,9 +619,11 @@ export class TranscriptionService extends GuStack {
 			],
 		});
 
+		// downloaded media will be saved to this volume
 		const downloadVolume = {
 			name: `${mediaDownloadApp}-download-volume`,
 		};
+		// yt-dlp sometimes writes to /tmp
 		const tempVolume = {
 			name: `${mediaDownloadApp}-temp-volume`,
 		};
