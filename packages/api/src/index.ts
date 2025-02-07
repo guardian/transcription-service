@@ -332,25 +332,30 @@ const getApp = async () => {
 			});
 			logger.info('Document exports complete.');
 
-			try {
-				await invokeLambda(
-					lambdaClient,
-					config.app.mediaExportFunctionName,
-					JSON.stringify(exportRequest.data),
-				);
-			} catch (e) {
-				const msg = 'Failed to invoke media export lambda';
-				logger.error(msg, e);
-				const mediaFailedStatus: ExportStatus = {
-					status: 'failure',
-					exportType: 'source-media',
-					message: msg,
-				};
-				exportStatuses = updateStatuses(mediaFailedStatus, exportStatuses);
-				await writeTranscriptionItem(dynamoClient, config.app.tableName, {
-					...getItemResult.item,
-					exportStatuses: updateStatuses(mediaFailedStatus, exportStatuses),
-				});
+			if (exportRequest.data.items.includes('source-media')) {
+				try {
+					// source media export is slow as it involves downloading/uploading a potentially large media file
+					// for this reason we handle it in a separate lambda, allowing us to return a response to the user
+					// within the api gateway 30s timeout
+					await invokeLambda(
+						lambdaClient,
+						config.app.mediaExportFunctionName,
+						JSON.stringify(exportRequest.data),
+					);
+				} catch (e) {
+					const msg = 'Failed to invoke media export lambda';
+					logger.error(msg, e);
+					const mediaFailedStatus: ExportStatus = {
+						status: 'failure',
+						exportType: 'source-media',
+						message: msg,
+					};
+					exportStatuses = updateStatuses(mediaFailedStatus, exportStatuses);
+					await writeTranscriptionItem(dynamoClient, config.app.tableName, {
+						...getItemResult.item,
+						exportStatuses: updateStatuses(mediaFailedStatus, exportStatuses),
+					});
+				}
 			}
 			res.send(JSON.stringify(exportStatuses));
 
