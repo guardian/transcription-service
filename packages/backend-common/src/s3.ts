@@ -55,20 +55,32 @@ export const getSignedUploadUrl = (
 	);
 };
 
+const sanitizeFilename = (filename: string) => {
+	let sanitized = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+	sanitized = sanitized.substring(0, 255);
+	return sanitized;
+};
+
 export const getSignedDownloadUrl = async (
 	region: string,
 	bucket: string,
 	key: string,
 	expiresIn: number,
-) =>
-	await getSignedUrlSdk(
+	overrideFilename?: string,
+) => {
+	const responseContentDisposition = overrideFilename
+		? `attachment; filename="${sanitizeFilename(overrideFilename)}"`
+		: undefined;
+	return await getSignedUrlSdk(
 		getS3Client(region),
 		new GetObjectCommand({
 			Bucket: bucket,
 			Key: key,
+			ResponseContentDisposition: responseContentDisposition,
 		}),
 		{ expiresIn }, // override default expiration time of 15 minutes
 	);
+};
 
 type GetObjectTextSuccess = {
 	status: AWSStatus.Success;

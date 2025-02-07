@@ -120,7 +120,7 @@ export const transcriptionOutputIsSuccess = (
 
 export const transcriptionOutputIsTranscriptionFailure = (
 	output: TranscriptionOutput,
-): output is TranscriptionOutputSuccess =>
+): output is TranscriptionOutputFailure =>
 	output.status === 'TRANSCRIPTION_FAILURE';
 
 export type TranscriptionOutput = z.infer<typeof TranscriptionOutput>;
