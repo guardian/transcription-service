@@ -55,6 +55,12 @@ export const getSignedUploadUrl = (
 	);
 };
 
+const sanitizeFilename = (filename: string) => {
+	let sanitized = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+	sanitized = sanitized.substring(0, 255);
+	return sanitized;
+};
+
 export const getSignedDownloadUrl = async (
 	region: string,
 	bucket: string,
@@ -63,7 +69,7 @@ export const getSignedDownloadUrl = async (
 	overrideFilename?: string,
 ) => {
 	const responseContentDisposition = overrideFilename
-		? `attachment; filename="${overrideFilename}"`
+		? `attachment; filename="${sanitizeFilename(overrideFilename)}"`
 		: undefined;
 	return await getSignedUrlSdk(
 		getS3Client(region),
