@@ -1,4 +1,4 @@
-import { authFetch } from '@/helpers';
+import { addHttpsProtocol, authFetch } from '@/helpers';
 import React, { useContext, useState } from 'react';
 import {
 	SignedUrlResponseBody,
@@ -138,7 +138,8 @@ const checkUrlValid = (url_input: string): MediaUrlInput => {
 		if (url_input === '') {
 			return { value: url_input, status: 'empty' };
 		}
-		const url = new URL(url_input);
+		const cleanedUrlInput = addHttpsProtocol(url_input);
+		const url = new URL(cleanedUrlInput);
 		// we don't want people providing search results pages as yt-dlp will try and fetch every video
 		if (
 			url.pathname.includes('results') &&
@@ -229,8 +230,9 @@ export const UploadForm = () => {
 			);
 			setMediaUrls(urlsWithStatus);
 			for (const url of urls) {
+				const urlWithProtocol = addHttpsProtocol(url);
 				const success = await submitMediaUrl(
-					url,
+					urlWithProtocol,
 					token,
 					mediaFileLanguageCode,
 					translationRequested,
