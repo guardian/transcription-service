@@ -53,19 +53,19 @@ const transcriptionFailureMessageBody = (
 		<h1>${isTranslation ? 'English translation ' : 'Transcription'}for ${originalFilename} has failed.</h1>
 		<p>Please make sure that the file is a valid audio or video file.</p>
 		<p>Click <a href="${sourceMediaDownloadUrl}">here</a> to download the input media.</p>
-		<p>Contact digital.investigations@guardian.co.uk for support.</p>
+		<p>Contact digital.investigations@theguardian.com for support.</p>
 		<p>Transcription ID: ${id}</p>
 	`;
 };
 
 const mediaDownloadFailureMessageBody = (url: string) => {
 	return `
-		<h1>Media download of ${url} failed.</h1>
+		<h1>Media download failed for ${url}</h1>
 		<p>You recently requested a transcription of the media at this url ${url}. Unfortunately, the transcription service
         was unable to download the media for transcription.</p> 
         <p>This might be because the url is for an unsupported website. For a list of supported sites, see 
-        [here](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md).</p>
-        <p>Please contact digital.investigations@guardian.co.uk for further assistance.</p>
+        <a href="https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md">here</a>.</p>
+        <p>Please contact digital.investigations@theguardian.com for further assistance.</p>
         `;
 };
 
