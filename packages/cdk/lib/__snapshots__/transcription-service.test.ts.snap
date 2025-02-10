@@ -11,6 +11,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuCertificate",
       "GuS3Bucket",
       "GuS3Bucket",
+      "GuStringParameter",
       "GuDistributionBucketParameter",
       "GuApiLambda",
       "GuPolicy",
@@ -103,6 +104,10 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
     },
     "InvestigationsAlarmTopicArn": {
       "Default": "/TEST/investigations/alarmTopicArn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "LayerBucketArn": {
+      "Default": "/investigations/transcription-service/lambdaLayerBucketArn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "LoggingStreamName": {
@@ -208,6 +213,48 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "FFMpegLayerx8664TEST3F325D39": {
+      "Properties": {
+        "CompatibleArchitectures": [
+          "x86_64",
+        ],
+        "CompatibleRuntimes": [
+          "nodejs18.x",
+          "nodejs22.x",
+          "nodejs20.x",
+          "nodejs18.x",
+        ],
+        "Content": {
+          "S3Bucket": {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::Split": [
+                  "/",
+                  {
+                    "Fn::Select": [
+                      5,
+                      {
+                        "Fn::Split": [
+                          ":",
+                          {
+                            "Ref": "LayerBucketArn",
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "S3Key": "ffmpeg_x86_64-1998ca7c6bd4313262b49cd9a66bc690.zip",
+        },
+        "Description": "FFMpeg Layer",
+        "LayerName": "FFMpegLayer",
+      },
+      "Type": "AWS::Lambda::LayerVersion",
     },
     "GPUTaskQueueUrlParameter64941E19": {
       "Properties": {
@@ -2442,7 +2489,15 @@ service transcription-service-worker start",
             "STAGE": "TEST",
           },
         },
+        "EphemeralStorage": {
+          "Size": 10240,
+        },
         "Handler": "index.api",
+        "Layers": [
+          {
+            "Ref": "FFMpegLayerx8664TEST3F325D39",
+          },
+        ],
         "LoggingConfig": {
           "LogFormat": "JSON",
         },

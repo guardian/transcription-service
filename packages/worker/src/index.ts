@@ -126,6 +126,7 @@ const publishTranscriptionOutputFailure = async (
 		userEmail: job.userEmail,
 		originalFilename: job.originalFilename,
 		isTranslation: job.translate,
+		duration: job.duration,
 	};
 	try {
 		await publishTranscriptionOutput(sqsClient, destination, failureMessage);
@@ -402,6 +403,7 @@ const pollTranscriptionQueue = async (
 					text: job.translationOutputBucketUrls.text.key,
 				},
 			isTranslation: job.translate,
+			duration: ffmpegResult.duration,
 		};
 
 		await publishTranscriptionOutput(
