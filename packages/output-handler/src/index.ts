@@ -18,6 +18,8 @@ import {
 	TranscriptionOutputFailure,
 	transcriptionOutputIsTranscriptionFailure,
 	TranscriptionDynamoItem,
+	transcriptionOutputIsMediaDownloadFailure,
+	MediaDownloadFailure,
 } from '@guardian/transcription-service-common';
 import {
 	MetricsService,
@@ -41,7 +43,7 @@ const successMessageBody = (
 	`;
 };
 
-const failureMessageBody = (
+const transcriptionFailureMessageBody = (
 	originalFilename: string,
 	id: string,
 	isTranslation: boolean,
@@ -51,9 +53,20 @@ const failureMessageBody = (
 		<h1>${isTranslation ? 'English translation ' : 'Transcription'}for ${originalFilename} has failed.</h1>
 		<p>Please make sure that the file is a valid audio or video file.</p>
 		<p>Click <a href="${sourceMediaDownloadUrl}">here</a> to download the input media.</p>
-		<p>Contact digital.investigations@guardian.co.uk for support.</p>
+		<p>Contact digital.investigations@theguardian.com for support.</p>
 		<p>Transcription ID: ${id}</p>
 	`;
+};
+
+const mediaDownloadFailureMessageBody = (url: string) => {
+	return `
+		<h1>Media download failed for ${url}</h1>
+		<p>You recently requested a transcription of the media at this url ${url}. Unfortunately, the transcription service
+        was unable to download the media for transcription.</p> 
+        <p>This might be because the url is for an unsupported website. For a list of supported sites, see 
+        <a href="https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md">here</a>.</p>
+        <p>Please contact digital.investigations@theguardian.com for further assistance.</p>
+        `;
 };
 
 const handleTranscriptionSuccess = async (
@@ -125,7 +138,7 @@ const handleTranscriptionFailure = async (
 			config.app.emailNotificationFromAddress,
 			transcriptionOutput.userEmail,
 			`${transcriptionOutput.isTranslation ? 'English translation ' : 'Transcription'} failed for ${transcriptionOutput.originalFilename}`,
-			failureMessageBody(
+			transcriptionFailureMessageBody(
 				transcriptionOutput.originalFilename,
 				transcriptionOutput.id,
 				transcriptionOutput.isTranslation,
@@ -133,11 +146,43 @@ const handleTranscriptionFailure = async (
 			),
 		);
 
-		logger.info('Output handler successfully sent failure email notification', {
-			id: transcriptionOutput.id,
-			filename: transcriptionOutput.originalFilename,
-			userEmail: transcriptionOutput.userEmail,
-		});
+		logger.info(
+			'Output handler successfully sent transcription failure email notification',
+			{
+				id: transcriptionOutput.id,
+				filename: transcriptionOutput.originalFilename,
+				userEmail: transcriptionOutput.userEmail,
+			},
+		);
+	} catch (error) {
+		logger.error('Failed to process sqs failure message', error);
+		await metrics.putMetric(FailureMetric);
+	}
+};
+
+const handleMediaDownloadFailure = async (
+	config: TranscriptionConfig,
+	failure: MediaDownloadFailure,
+	sesClient: SESClient,
+	metrics: MetricsService,
+) => {
+	try {
+		await sendEmail(
+			sesClient,
+			config.app.emailNotificationFromAddress,
+			failure.userEmail,
+			`Media download failed for ${failure.url}`,
+			mediaDownloadFailureMessageBody(failure.url),
+		);
+
+		logger.info(
+			'Output handler successfully sent media download failure email notification',
+			{
+				id: failure.id,
+				url: failure.url,
+				userEmail: failure.userEmail,
+			},
+		);
 	} catch (error) {
 		logger.error('Failed to process sqs failure message', error);
 		await metrics.putMetric(FailureMetric);
@@ -198,6 +243,16 @@ const processMessage = async (event: unknown) => {
 				sesClient,
 				metrics,
 				sourceMediaDownloadUrl,
+			);
+		} else if (transcriptionOutputIsMediaDownloadFailure(transcriptionOutput)) {
+			logger.info(
+				`Handling media download failure. Output: ${JSON.stringify(transcriptionOutput)}`,
+			);
+			await handleMediaDownloadFailure(
+				config,
+				transcriptionOutput,
+				sesClient,
+				metrics,
 			);
 		}
 	}

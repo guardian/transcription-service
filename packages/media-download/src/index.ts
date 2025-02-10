@@ -64,6 +64,7 @@ const reportDownloadFailure = async (
 		id: job.id,
 		status: 'MEDIA_DOWNLOAD_FAILURE',
 		url: job.url,
+		userEmail: job.userEmail,
 	};
 	const result = await sendMessage(
 		sqsClient,
