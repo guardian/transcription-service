@@ -73,10 +73,13 @@ export const TranscriptionJob = z.object({
 
 export type TranscriptionJob = z.infer<typeof TranscriptionJob>;
 
-const TranscriptionOutputBase = z.object({
+const OutputBase = z.object({
 	id: z.string(),
-	originalFilename: z.string(),
 	userEmail: z.string(),
+});
+
+const TranscriptionOutputBase = OutputBase.extend({
+	originalFilename: z.string(),
 	isTranslation: z.boolean(),
 });
 
@@ -88,8 +91,7 @@ export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
 	translationOutputBucketKeys: z.optional(OutputBucketKeys),
 });
 
-export const MediaDownloadFailure = z.object({
-	id: z.string(),
+export const MediaDownloadFailure = OutputBase.extend({
 	status: z.literal('MEDIA_DOWNLOAD_FAILURE'),
 	url: z.string(),
 });
@@ -122,6 +124,10 @@ export const transcriptionOutputIsTranscriptionFailure = (
 	output: TranscriptionOutput,
 ): output is TranscriptionOutputFailure =>
 	output.status === 'TRANSCRIPTION_FAILURE';
+
+export const transcriptionOutputIsMediaDownloadFailure = (
+	output: TranscriptionOutput,
+): output is MediaDownloadFailure => output.status === 'MEDIA_DOWNLOAD_FAILURE';
 
 export type TranscriptionOutput = z.infer<typeof TranscriptionOutput>;
 

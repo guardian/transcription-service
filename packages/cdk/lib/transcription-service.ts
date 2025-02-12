@@ -696,6 +696,7 @@ export class TranscriptionService extends GuStack {
 					resources: [
 						transcriptionTaskQueue.queueArn,
 						transcriptionGpuTaskQueue.queueArn,
+						transcriptionOutputQueue.queueArn,
 					],
 				}),
 				new PolicyStatement({
