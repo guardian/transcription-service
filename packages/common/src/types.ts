@@ -92,7 +92,6 @@ export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
 });
 
 export const MediaDownloadFailure = OutputBase.extend({
-	id: z.string(),
 	status: z.literal('MEDIA_DOWNLOAD_FAILURE'),
 	url: z.string(),
 });
