@@ -70,7 +70,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	languageCode: InputLanguageCode,
 	translationRequested: boolean,
 	diarizationRequested: boolean,
-	duration: number,
+	duration?: number,
 ): Promise<SendResult> => {
 	const signedUrls = await generateOutputSignedUrls(
 		s3Key,
@@ -81,7 +81,8 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	);
 
 	const engine =
-		config.app.useWhisperx && (duration > 600 || diarizationRequested)
+		config.app.useWhisperx &&
+		(!duration || duration > 600 || diarizationRequested)
 			? TranscriptionEngine.WHISPER_X
 			: TranscriptionEngine.WHISPER_CPP;
 
