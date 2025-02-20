@@ -80,6 +80,8 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		7,
 	);
 
+	// user whisperX if whisperX enabled and...
+	// duration is either unknown or greater than 10 minutes or  diarization has been requested
 	const engine =
 		config.app.useWhisperx &&
 		(!duration || duration > 600 || diarizationRequested)
@@ -103,7 +105,6 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		translate: false,
 		diarize: diarizationRequested,
 		engine,
-		duration,
 	};
 	const messageResult = await sendMessage(
 		client,

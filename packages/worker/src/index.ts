@@ -126,7 +126,6 @@ const publishTranscriptionOutputFailure = async (
 		userEmail: job.userEmail,
 		originalFilename: job.originalFilename,
 		isTranslation: job.translate,
-		duration: job.duration,
 	};
 	try {
 		await publishTranscriptionOutput(sqsClient, destination, failureMessage);

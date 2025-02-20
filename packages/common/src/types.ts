@@ -69,8 +69,6 @@ export const TranscriptionJob = z.object({
 	engine: z.nativeEnum(TranscriptionEngine),
 	// we can get rid of this when we switch to using a zip
 	translationOutputBucketUrls: z.optional(OutputBucketUrls),
-	// this is optional because giant currently doesn't know file duration
-	duration: z.optional(z.number()),
 });
 
 export type TranscriptionJob = z.infer<typeof TranscriptionJob>;
@@ -83,7 +81,6 @@ const OutputBase = z.object({
 const TranscriptionOutputBase = OutputBase.extend({
 	originalFilename: z.string(),
 	isTranslation: z.boolean(),
-	duration: z.optional(z.number()),
 });
 
 export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
@@ -92,6 +89,7 @@ export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
 	outputBucketKeys: OutputBucketKeys,
 	// we can get rid of this when we switch to using a zip
 	translationOutputBucketKeys: z.optional(OutputBucketKeys),
+	duration: z.optional(z.number()),
 });
 
 export const MediaDownloadFailure = OutputBase.extend({
