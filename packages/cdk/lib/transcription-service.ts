@@ -67,11 +67,16 @@ import {
 	Role,
 	ServicePrincipal,
 } from 'aws-cdk-lib/aws-iam';
-import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import {
+	Architecture,
+	Code,
+	LayerVersion,
+	Runtime,
+} from 'aws-cdk-lib/aws-lambda';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { LogGroup } from 'aws-cdk-lib/aws-logs';
 import { CfnPipe } from 'aws-cdk-lib/aws-pipes';
-import { HttpMethods } from 'aws-cdk-lib/aws-s3';
+import { Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
@@ -205,6 +210,40 @@ export class TranscriptionService extends GuStack {
 			});
 		}
 
+		const layerBucket = new GuStringParameter(this, 'LayerBucketArn', {
+			fromSSM: true,
+			default: '/investigations/transcription-service/lambdaLayerBucketArn',
+		});
+
+		const ffmpegHash = new GuStringParameter(this, 'FFMpegLayerZipKey', {
+			description:
+				"Key for the ffmpeg layer's zip file (pushed to layerBucket by publish-ffmpeg-layer.sh script)",
+		});
+
+		const ffmpegLayer = new LayerVersion(
+			this,
+			`FFMpegLayer_x86_64-${this.stage}`,
+			{
+				code: Code.fromBucket(
+					Bucket.fromBucketArn(
+						this,
+						'LambdaLayerBucket',
+						layerBucket.valueAsString,
+					),
+					ffmpegHash.valueAsString,
+				),
+				description: 'FFMpeg Layer',
+				layerVersionName: 'FFMpegLayer',
+				compatibleArchitectures: [Architecture.X86_64],
+				compatibleRuntimes: [
+					Runtime.NODEJS_LATEST,
+					Runtime.NODEJS_22_X,
+					Runtime.NODEJS_20_X,
+					Runtime.NODEJS_18_X,
+				],
+			},
+		);
+
 		const apiLambda = new GuApiLambda(this, 'transcription-service-api', {
 			fileName: 'api.zip',
 			handler: 'index.api',
@@ -213,6 +252,8 @@ export class TranscriptionService extends GuStack {
 				noMonitoring: true,
 			},
 			app: `${APP_NAME}-api`,
+			layers: [ffmpegLayer],
+			ephemeralStorageSize: Size.gibibytes(10), // needed so api can download source files to get the duration
 			api: {
 				id: apiId,
 				description: 'API for transcription service frontend',

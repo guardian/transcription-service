@@ -111,10 +111,12 @@ const handleTranscriptionSuccess = async (
 			),
 		);
 
-		logger.info('Output handler successfully sent success email notification', {
+		logger.info('Output handler sent success email notification', {
 			id: transcriptionOutput.id,
 			filename: transcriptionOutput.originalFilename,
 			userEmail: transcriptionOutput.userEmail,
+			duration: transcriptionOutput.duration || '',
+			languageCode: transcriptionOutput.languageCode,
 		});
 	} catch (error) {
 		logger.error(

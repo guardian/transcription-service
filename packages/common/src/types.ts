@@ -89,6 +89,7 @@ export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
 	outputBucketKeys: OutputBucketKeys,
 	// we can get rid of this when we switch to using a zip
 	translationOutputBucketKeys: z.optional(OutputBucketKeys),
+	duration: z.optional(z.number()),
 });
 
 export const MediaDownloadFailure = OutputBase.extend({
