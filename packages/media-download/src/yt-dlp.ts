@@ -17,7 +17,7 @@ const extractInfoJson = (infoJsonPath: string): MediaMetadata => {
 		title: json.title,
 		extension: json.ext,
 		filename: json.filename,
-		mediaPath: `${json.filename}.${json.ext}`,
+		mediaPath: `${json.filename}`,
 	};
 };
 
