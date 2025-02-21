@@ -17,7 +17,7 @@ const extractInfoJson = (infoJsonPath: string): MediaMetadata => {
 		title: json.title,
 		extension: json.ext,
 		filename: json.filename,
-		mediaPath: `${json.filename}.${json.ext}`,
+		mediaPath: `${json.filename}`,
 	};
 };
 
@@ -76,7 +76,7 @@ export const downloadMedia = async (
 				'--no-clean-info-json',
 				'--newline',
 				'-o',
-				`${destinationDirectoryPath}/${id}`,
+				`${destinationDirectoryPath}/${id}.%(ext)s`,
 				...proxyParams,
 				url,
 			],
