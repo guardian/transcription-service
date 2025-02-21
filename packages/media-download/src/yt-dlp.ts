@@ -76,7 +76,7 @@ export const downloadMedia = async (
 				'--no-clean-info-json',
 				'--newline',
 				'-o',
-				`${destinationDirectoryPath}/${id}`,
+				`${destinationDirectoryPath}/${id}.%(ext)s`,
 				...proxyParams,
 				url,
 			],
