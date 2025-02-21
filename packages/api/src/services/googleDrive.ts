@@ -9,6 +9,8 @@ import Drive = drive_v3.Drive;
 
 const ROOT_FOLDER_NAME = 'Guardian Transcribe Tool';
 
+const escapeApostrophes = (s: string) => s.replaceAll("'", "\\'");
+
 export const getOrCreateFolder = async (
 	drive: drive_v3.Drive,
 	folderName: string,
@@ -22,7 +24,8 @@ export const getOrCreateFolder = async (
 	try {
 		// first see if there is already a folder matching folderName
 		const existingFolders = await drive.files.list({
-			q: `mimeType='${fileMetadata.mimeType}' and name ='${folderName}' and trashed=false ${parentId ? `and '${parentId}' in parents` : ''}`,
+			// Beware! single apostrophes within property values must be escaped
+			q: `mimeType='${escapeApostrophes(fileMetadata.mimeType)}' and name ='${escapeApostrophes(folderName)}' and trashed=false ${parentId ? `and '${escapeApostrophes(parentId)}' in parents` : ''}`,
 			spaces: 'drive',
 		});
 		// there could be multiple folders with this name, let's upload to the first one
