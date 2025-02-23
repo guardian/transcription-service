@@ -147,7 +147,7 @@ const checkUrlValid = (url_input: string): MediaUrlInput => {
 		) {
 			return {
 				value: url_input,
-				reason: 'URL is a link to search results. Please link to a video page',
+				reason: 'That URL is a link to search results. Please link to a video page',
 				status: 'invalid',
 			};
 		}
@@ -346,6 +346,11 @@ export const UploadForm = () => {
 									htmlFor="media-url"
 									value="URL(s) for transcription"
 								/>
+								<p className="font-light">
+									Paste the URL of a webpage or social media post containing 
+									the video or audio that you wish to save/transcribe. 
+									Click ‘+ Add URL’ to add multiple URLs.
+								</p>	
 							</div>
 							<div className={'ml-3'}>
 								{mediaUrlInputs.map((input, index) => (
@@ -380,8 +385,8 @@ export const UploadForm = () => {
 						</div>
 						<div className={'mb-4'}>
 							<Alert color="info">
-								Material on YouTube belongs to the copyright holder. Please only
-								use this service to get a download of a video for legitimate
+								Material may be protected by copyright. Please only
+								use this service to get a download for legitimate
 								journalistic purposes
 							</Alert>
 						</div>
