@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import { runSpawnCommand } from '@guardian/transcription-service-backend-common/src/process';
 import { logger } from '@guardian/transcription-service-backend-common';
 import { MEDIA_DOWNLOAD_WORKING_DIRECTORY } from './index';
+import path from 'path';
 
 export type MediaMetadata = {
 	title: string;
@@ -11,13 +12,16 @@ export type MediaMetadata = {
 	duration: number;
 };
 
-const extractInfoJson = (infoJsonPath: string): MediaMetadata => {
+const extractInfoJson = (
+	infoJsonPath: string,
+	outputFilePath: string,
+): MediaMetadata => {
 	const file = fs.readFileSync(infoJsonPath, 'utf8');
 	const json = JSON.parse(file);
 	return {
 		title: json.title,
 		extension: json.ext,
-		filename: json.filename,
+		filename: path.basename(outputFilePath),
 		mediaPath: `${json.filename}`,
 		duration: parseInt(json.duration),
 	};
@@ -70,12 +74,14 @@ export const downloadMedia = async (
 ) => {
 	const proxyParams = proxyUrl ? ['--proxy', proxyUrl] : [];
 	try {
+		const filepathLocation = `${destinationDirectoryPath}/${id}.txt`;
 		await runSpawnCommand(
 			'downloadMedia',
 			'yt-dlp',
 			[
 				'--write-info-json',
 				'--no-clean-info-json',
+				`--print-to-file after_move:filepath ${filepathLocation}`,
 				'--newline',
 				'-o',
 				`${destinationDirectoryPath}/${id}.%(ext)s`,
@@ -84,8 +90,10 @@ export const downloadMedia = async (
 			],
 			true,
 		);
+		const outputPath = fs.readFileSync(filepathLocation, 'utf8').trim();
 		const metadata = extractInfoJson(
 			`${destinationDirectoryPath}/${id}.info.json`,
+			outputPath,
 		);
 
 		return metadata;
