@@ -387,7 +387,7 @@ export const UploadForm = () => {
 						<div className={'mb-4'}>
 							<Alert color="info">
 								Material may be protected by copyright. Please only use this
-								service to get a download for legitimate journalistic purposes
+								service to get a download for legitimate journalistic purposes.
 							</Alert>
 						</div>
 					</>
