@@ -248,7 +248,7 @@ const ExportForm = () => {
 				console.error('Failed to parse export response', parsedResponse.error);
 				setRequestStatus(RequestStatus.Failed);
 				setFailureMessage(
-					`Export succeeded but failed to get document id - check your Google Drive`,
+					`Export succeeded but failed to get document ID. Check your Google Drive`,
 				);
 				return;
 			}
@@ -286,7 +286,7 @@ const ExportForm = () => {
 					/>
 				</div>
 				<p className="font-light">
-					Exported items will be saved in the same folder in google drive
+					Exported items will be saved in the same folder in Google Drive
 				</p>
 
 				<div className="flex items-center gap-2">
@@ -343,7 +343,7 @@ const ExportForm = () => {
 						<Label htmlFor="source-media">Input media</Label>
 						<div className="text-gray-500 dark:text-gray-300">
 							<span className="text-xs font-normal">
-								Max 10GB, roughly 3 hours of video
+								Max 10GB (roughly 3 hours of video)
 							</span>
 						</div>
 					</div>

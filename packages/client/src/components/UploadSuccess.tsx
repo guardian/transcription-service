@@ -11,7 +11,7 @@ export const UploadSuccess = ({
 	const mediaDownloadText = mediaSource === 'url' && (
 		<p>
 			The media at the URL you submitted will first be downloaded, then
-			transcribed. The download will take 5 minutes for a 1 hour video
+			transcribed. The download will take five minutes for a one-hour video
 		</p>
 	);
 	const completeText =
@@ -23,7 +23,7 @@ export const UploadSuccess = ({
 		>
 			<span className="font-medium">{completeText} </span>{' '}
 			<p>
-				Transcription in progress - check your email for the completed
+				Transcription in progress. Check your email for the completed
 				transcript.{' '}
 			</p>
 			<div className="font-medium">
@@ -35,9 +35,9 @@ export const UploadSuccess = ({
 					duration of the media file.{' '}
 				</p>
 				<p>
-					If you have requested a translation, you will receive 2 emails: one
-					for the transcription in the original language, another for the
-					english translation. The emails will arrive at different times.
+					If you have requested a translation, you will receive two emails: one
+					for the transcription in the original language; another for the
+					English translation. The emails will arrive at different times.
 				</p>
 			</div>
 			<button
