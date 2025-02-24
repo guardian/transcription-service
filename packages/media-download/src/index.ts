@@ -20,7 +20,8 @@ import {
 	MediaDownloadJob,
 } from '@guardian/transcription-service-common';
 
-export const MEDIA_DOWNLOAD_WORKING_DIRECTORY = '/media-download';
+// This needs to be kept in sync with CDK downloadVolume
+export const ECS_MEDIA_DOWNLOAD_WORKING_DIRECTORY = '/media-download';
 
 const uploadToS3 = async (
 	s3Client: S3Client,
@@ -138,17 +139,21 @@ const main = async () => {
 	const useProxy =
 		config.app.stage !== 'DEV' || process.env['USE_PROXY'] === 'true';
 
+	const workingDirectory =
+		config.app.stage === 'DEV' ? '/tmp' : ECS_MEDIA_DOWNLOAD_WORKING_DIRECTORY;
+
 	const proxyUrl = useProxy
 		? await startProxyTunnel(
 				await config.app.mediaDownloadProxySSHKey(),
 				config.app.mediaDownloadProxyIpAddress,
 				config.app.mediaDownloadProxyPort,
+				workingDirectory,
 			)
 		: undefined;
 
 	const metadata = await downloadMedia(
 		job.url,
-		MEDIA_DOWNLOAD_WORKING_DIRECTORY,
+		workingDirectory,
 		job.id,
 		proxyUrl,
 	);

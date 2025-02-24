@@ -1,13 +1,10 @@
 import fs from 'node:fs';
 import { runSpawnCommand } from '@guardian/transcription-service-backend-common/src/process';
 import { logger } from '@guardian/transcription-service-backend-common';
-import { MEDIA_DOWNLOAD_WORKING_DIRECTORY } from './index';
-import path from 'path';
 
 export type MediaMetadata = {
 	title: string;
 	extension: string;
-	filename: string;
 	mediaPath: string;
 	duration: number;
 };
@@ -20,9 +17,8 @@ const extractInfoJson = (
 	const json = JSON.parse(file);
 	return {
 		title: json.title,
-		extension: json.ext,
-		filename: path.basename(outputFilePath),
-		mediaPath: `${json.filename}`,
+		extension: json.ext || json.entries[0]?.ext,
+		mediaPath: outputFilePath,
 		duration: parseInt(json.duration),
 	};
 };
@@ -31,13 +27,12 @@ export const startProxyTunnel = async (
 	key: string,
 	ip: string,
 	port: number,
+	workingDirectory: string,
 ): Promise<string> => {
 	try {
-		fs.writeFileSync(
-			`${MEDIA_DOWNLOAD_WORKING_DIRECTORY}/media_download`,
-			key + '\n',
-			{ mode: 0o600 },
-		);
+		fs.writeFileSync(`${workingDirectory}/media_download`, key + '\n', {
+			mode: 0o600,
+		});
 		const result = await runSpawnCommand(
 			'startProxyTunnel',
 			'ssh',
@@ -53,7 +48,7 @@ export const startProxyTunnel = async (
 				'-N',
 				'-f',
 				'-i',
-				`${MEDIA_DOWNLOAD_WORKING_DIRECTORY}/media_download`,
+				`${workingDirectory}/media_download`,
 				`media_download@${ip}`,
 			],
 			true,
@@ -68,23 +63,26 @@ export const startProxyTunnel = async (
 
 export const downloadMedia = async (
 	url: string,
-	destinationDirectoryPath: string,
+	workingDirectory: string,
 	id: string,
 	proxyUrl?: string,
 ) => {
 	const proxyParams = proxyUrl ? ['--proxy', proxyUrl] : [];
 	try {
-		const filepathLocation = `${destinationDirectoryPath}/${id}.txt`;
+		const filepathLocation = `${workingDirectory}/${id}.txt`;
+		fs.writeFileSync(filepathLocation, '');
 		await runSpawnCommand(
 			'downloadMedia',
 			'yt-dlp',
 			[
 				'--write-info-json',
 				'--no-clean-info-json',
-				`--print-to-file after_move:filepath ${filepathLocation}`,
+				'--print-to-file',
+				'after_move:filepath',
+				`${filepathLocation}`,
 				'--newline',
 				'-o',
-				`${destinationDirectoryPath}/${id}.%(ext)s`,
+				`${workingDirectory}/${id}.%(ext)s`,
 				...proxyParams,
 				url,
 			],
@@ -92,8 +90,11 @@ export const downloadMedia = async (
 		);
 		const outputPath = fs.readFileSync(filepathLocation, 'utf8').trim();
 		const metadata = extractInfoJson(
-			`${destinationDirectoryPath}/${id}.info.json`,
+			`${workingDirectory}/${id}.info.json`,
 			outputPath,
+		);
+		logger.info(
+			`Download complete, extracted metadata: ${JSON.stringify(metadata)}`,
 		);
 
 		return metadata;

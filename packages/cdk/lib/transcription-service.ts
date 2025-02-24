@@ -789,7 +789,7 @@ export class TranscriptionService extends GuStack {
 		mediaDownloadTask.taskDefinition.addVolume(tempVolume);
 		mediaDownloadTask.containerDefinition.addMountPoints({
 			sourceVolume: downloadVolume.name,
-			containerPath: '/media-download', // needs to match DOWNLOAD_DIRECTORY in media-download index.ts
+			containerPath: '/media-download', // needs to match ECS_MEDIA_DOWNLOAD_WORKING_DIRECTORY in media-download index.ts
 			readOnly: false,
 		});
 		mediaDownloadTask.containerDefinition.addMountPoints({
