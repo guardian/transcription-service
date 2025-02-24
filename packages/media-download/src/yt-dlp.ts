@@ -70,6 +70,7 @@ export const downloadMedia = async (
 	const proxyParams = proxyUrl ? ['--proxy', proxyUrl] : [];
 	try {
 		const filepathLocation = `${workingDirectory}/${id}.txt`;
+		// yt-dlp --print-to-file appends to the file, so wipe it first
 		fs.writeFileSync(filepathLocation, '');
 		await runSpawnCommand(
 			'downloadMedia',
