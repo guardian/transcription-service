@@ -402,6 +402,7 @@ const pollTranscriptionQueue = async (
 					text: job.translationOutputBucketUrls.text.key,
 				},
 			isTranslation: job.translate,
+			duration: ffmpegResult.duration,
 		};
 
 		await publishTranscriptionOutput(

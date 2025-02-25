@@ -101,6 +101,7 @@ const requestTranscription = async (
 		job.languageCode,
 		job.translationRequested,
 		job.diarizationRequested,
+		metadata.duration,
 	);
 	if (isSqsFailure(sendResult)) {
 		throw new Error('Failed to send transcription job');
