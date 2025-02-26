@@ -32,11 +32,13 @@ deployments:
         AMITranscriptionserviceworker:
           BuiltBy: amigo
           Recipe: investigations-transcription-service
-          amiEncrypted: investigations
+          Encrypted: investigations
+          AmigoStage: PROD
         AMITranscriptionservicegpuworker:
           BuiltBy: amigo
           Recipe: investigations-transcription-service-gpu
-          amiEncrypted: investigations
+          Encrypted: investigations
+          AmigoStage: PROD
     dependencies:
       - lambda-upload-eu-west-1-investigations-transcription-service
       - lambda-upload-eu-west-1-investigations-transcription-service-output-handler
