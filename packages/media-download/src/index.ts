@@ -97,7 +97,7 @@ const requestTranscription = async (
 		sqsClient,
 		config,
 		job.userEmail,
-		metadata.title,
+		`${metadata.title}.${metadata.extension}`,
 		signedUrl,
 		job.languageCode,
 		job.translationRequested,
