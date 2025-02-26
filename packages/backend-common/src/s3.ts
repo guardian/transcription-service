@@ -56,9 +56,14 @@ export const getSignedUploadUrl = (
 };
 
 const sanitizeFilename = (filename: string) => {
-	let sanitized = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
-	sanitized = sanitized.substring(0, 255);
-	return sanitized;
+	const extension = path.extname(filename);
+	if (!extension) {
+		return filename.substring(0, 250);
+	}
+	const truncatedExtension = extension.substring(0, 20);
+	const nameNoExtension = path.basename(filename, extension);
+	const truncatedName = nameNoExtension.substring(0, 220);
+	return `${truncatedName}.${truncatedExtension}`;
 };
 
 export const getSignedDownloadUrl = async (
