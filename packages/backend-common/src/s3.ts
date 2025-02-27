@@ -56,12 +56,16 @@ export const getSignedUploadUrl = (
 };
 
 const sanitizeFilename = (filename: string) => {
-	const extension = path.extname(filename);
+	const sanitized = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+	const extension = path.extname(sanitized);
 	if (!extension) {
-		return filename.substring(0, 250);
+		// no extension - just return the filename truncated to 250 characters (max macos is 255, but the user may
+		// manually add an extension so let's give them some headroom)
+		return sanitized.substring(0, 250);
 	}
+	// file has an extension - truncate that to 20 chars and the filename to 220 chars
 	const truncatedExtension = extension.substring(0, 20);
-	const nameNoExtension = path.basename(filename, extension);
+	const nameNoExtension = path.basename(sanitized, extension);
 	const truncatedName = nameNoExtension.substring(0, 220);
 	return `${truncatedName}.${truncatedExtension}`;
 };
