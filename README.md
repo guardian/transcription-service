@@ -8,6 +8,8 @@ Technically, the tool is a bunch of infrastructure and UI that wraps around [whi
 and [whisper.cpp](https://github.com/ggerganov/whisper.cpp). We're very grateful to @ggerganov and @m-bain for their work
 on these projects, which provide the core functionality of the transcription service.
 
+For guardian staff - the runbook is [here](https://docs.google.com/document/d/12UfGuT2FkVaWPonT_fGbtCoO-P2iC8teAzq6FVVZ8rk/edit?tab=t.0).
+
 ## Get started
 
 We use localstack to run SQS locally rather than needing to create 'dev' queues in AWS. This is set up via docker.
