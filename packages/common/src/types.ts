@@ -253,10 +253,14 @@ export type InputBucketObjectMetadata = z.infer<
 
 export type MediaSourceType = 'file' | 'url';
 
-export const TranscriptKeys = z.object({
+export const TranscriptKeysDeprecated = z.object({
 	srt: z.string(),
 	text: z.string(),
 	json: z.string(),
+});
+
+export const TranscriptKeys = z.object({
+	zip: z.string(),
 });
 
 export type TranscriptKeys = z.infer<typeof TranscriptKeys>;
@@ -264,7 +268,7 @@ export type TranscriptKeys = z.infer<typeof TranscriptKeys>;
 export const TranscriptionDynamoItem = z.object({
 	id: z.string(),
 	originalFilename: z.string(),
-	transcriptKeys: TranscriptKeys,
+	transcriptKeys: z.union([TranscriptKeys, TranscriptKeysDeprecated]),
 	userEmail: z.string(),
 	completedAt: z.optional(z.string()), // dynamodb can't handle dates so we need to use an ISO date
 	isTranslation: z.boolean(),

@@ -6,7 +6,11 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 
 import { logger } from '@guardian/transcription-service-backend-common';
-import { TranscriptionDynamoItem } from '@guardian/transcription-service-common';
+import {
+	TranscriptionDynamoItem,
+	TranscriptKeys,
+	TranscriptKeysDeprecated,
+} from '@guardian/transcription-service-common';
 
 export const getDynamoClient = (
 	region: string,
@@ -22,6 +26,36 @@ export const getDynamoClient = (
 
 	const client = new DynamoDBClient(clientConfig);
 	return DynamoDBDocumentClient.from(client);
+};
+
+export const getTranscriptS3Key = (
+	item: TranscriptionDynamoItem,
+	format: 'srt' | 'text',
+): {
+	key: string;
+	fileFormat: 'srt' | 'text' | 'zip';
+} => {
+	const keys = item.transcriptKeys;
+
+	// Check if it's the new TranscriptKeys format
+	const parsedTranscriptKeys = TranscriptKeys.safeParse(keys);
+	if (parsedTranscriptKeys.success) {
+		return {
+			key: parsedTranscriptKeys.data.zip,
+			fileFormat: 'zip',
+		};
+	}
+
+	// Check if it's the deprecated TranscriptKeys format
+	const parsedDeprecated = TranscriptKeysDeprecated.safeParse(keys);
+	if (parsedDeprecated.success) {
+		return {
+			key: parsedDeprecated.data[format],
+			fileFormat: format,
+		};
+	}
+
+	throw new Error('Unexpected transcriptKeys format');
 };
 
 export const writeTranscriptionItem = async (
