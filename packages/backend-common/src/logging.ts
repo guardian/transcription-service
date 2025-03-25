@@ -25,7 +25,13 @@ class ServerLogger {
 
 	constructor() {
 		const winstonConfig: winston.LoggerOptions = {
-			level: 'info',
+			levels: {
+				ERROR: 0,
+				WARN: 1,
+				INFO: 2,
+				DEBUG: 3,
+			},
+			level: 'INFO',
 			format: combine(timestamp({ alias: '@timestamp' }), json()),
 			transports: [new winston.transports.Console()],
 		};
