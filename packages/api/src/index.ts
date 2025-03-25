@@ -188,6 +188,10 @@ const getApp = async () => {
 				config.app.sourceMediaBucket,
 				s3Key,
 				604800, // one week in seconds
+				// NOTE presigned urls will expire before a week has elapsed
+				// because of this issue
+				// https://repost.aws/knowledge-center/presigned-url-s3-bucket-expiration
+				// Can we just give workers read permission to the entire bucket?
 			);
 			const sendResult = await generateOutputSignedUrlAndSendMessage(
 				s3Key,
