@@ -41,7 +41,8 @@ export const runSpawnCommand = (
 		cp.stderr.on('data', (data) => {
 			stderr.push(data.toString());
 			if (logImmediately) {
-				logger.error(data.toString());
+				// ffmpeg sends all text output to stderr even when it's successful
+				logger.info(data.toString());
 			}
 		});
 
