@@ -10,7 +10,7 @@ export interface LoggerFunctions {
 }
 
 interface LogEvent {
-	level: 'debug' | 'info' | 'warn' | 'error';
+	level: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
 	message: string;
 	stack_trace?: string;
 	meta?: Record<string, string | number>;
@@ -56,14 +56,14 @@ class ServerLogger {
 
 	debug(message: string): void {
 		this.log({
-			level: 'debug',
+			level: 'DEBUG',
 			message,
 		});
 	}
 
 	info(message: string, meta?: Record<string, string>): void {
 		this.log({
-			level: 'info',
+			level: 'INFO',
 			message,
 			meta: meta,
 		});
@@ -71,7 +71,7 @@ class ServerLogger {
 
 	warn(message: string, error?: Error): void {
 		this.log({
-			level: 'warn',
+			level: 'WARN',
 			message,
 			stack_trace: error instanceof Error ? error.stack : undefined,
 		});
@@ -79,7 +79,7 @@ class ServerLogger {
 
 	error(message: string, error?: Error | unknown): void {
 		this.log({
-			level: 'error',
+			level: 'ERROR',
 			message,
 			stack_trace: error instanceof Error ? error.stack : undefined,
 		});
