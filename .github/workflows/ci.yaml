@@ -17,6 +17,8 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: 'npm'
+      - name: configure npm
+        run: npm config set registry https://registry.npmjs.org/
       - name: Install dependencies
         run: npm install
       - name: Build media-download
