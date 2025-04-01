@@ -981,6 +981,14 @@ export class TranscriptionService extends GuStack {
 		workerCapacityManagerLambda.addToRolePolicy(
 			new PolicyStatement({
 				effect: Effect.ALLOW,
+				actions: ['autoscaling:DescribeAutoScalingGroups'],
+				resources: ['*'],
+			}),
+		);
+
+		workerCapacityManagerLambda.addToRolePolicy(
+			new PolicyStatement({
+				effect: Effect.ALLOW,
 				actions: ['sqs:GetQueueAttributes'],
 				resources: [
 					transcriptionTaskQueue.queueArn,
