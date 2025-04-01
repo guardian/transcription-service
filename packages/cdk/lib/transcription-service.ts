@@ -970,12 +970,19 @@ export class TranscriptionService extends GuStack {
 				actions: [
 					'autoscaling:SetDesiredCapacity',
 					'autoscaling:DescribeAutoScalingInstances',
-					'autoscaling:DescribeAutoScalingGroups',
 				],
 				resources: [
 					transcriptionWorkerASG.autoScalingGroupArn,
 					transcriptionGpuWorkerASG.autoScalingGroupArn,
 				],
+			}),
+		);
+
+		workerCapacityManagerLambda.addToRolePolicy(
+			new PolicyStatement({
+				effect: Effect.ALLOW,
+				actions: ['autoscaling:DescribeAutoScalingGroups'],
+				resources: ['*'],
 			}),
 		);
 
