@@ -22,10 +22,14 @@ const updateASGCapacity = async (
 		queueUrl,
 	);
 
+	// TODO get max capacity from ASG and replace hardcoded value
+	const prodAsgMaxCapacity = 20;
+	const desiredCapacity = Math.min(totalMessagesInQueue, prodAsgMaxCapacity);
+
 	logger.info(
 		`setting asg desired capacity to total messages in queue: ${totalMessagesInQueue}`,
 	);
-	await setDesiredCapacity(asgClient, asgName, totalMessagesInQueue);
+	await setDesiredCapacity(asgClient, asgName, desiredCapacity);
 };
 
 const updateASGsCapacity = async () => {
