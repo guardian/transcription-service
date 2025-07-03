@@ -28,11 +28,14 @@ deployments:
       templateStagePaths:
         CODE: TranscriptionService-CODE.template.json
         PROD: TranscriptionService-PROD.template.json
-      amiTags:
-        Recipe: investigations-transcription-service
-        AmigoStage: PROD
-      amiParameter: AMITranscriptionserviceworker
       amiEncrypted: investigations
+      amiParametersToTags:
+        AMITranscriptionserviceworker:
+          BuiltBy: amigo
+          Recipe: investigations-transcription-service
+        AMITranscriptionservicegpuworker:
+          BuiltBy: amigo
+          Recipe: investigations-transcription-service-gpu
     dependencies:
       - lambda-upload-eu-west-1-investigations-transcription-service
       - lambda-upload-eu-west-1-investigations-transcription-service-output-handler
