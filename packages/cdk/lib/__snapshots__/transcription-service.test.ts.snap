@@ -5,10 +5,14 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
   "Metadata": {
     "gu:cdk:constructs": [
       "GuAmiParameter",
+      "GuAmiParameter",
+      "GuStringParameter",
       "GuStringParameter",
       "GuCertificate",
       "GuS3Bucket",
       "GuS3Bucket",
+      "GuStringParameter",
+      "GuStringParameter",
       "GuDistributionBucketParameter",
       "GuApiLambda",
       "GuPolicy",
@@ -29,9 +33,15 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuVpcParameter",
       "GuSecurityGroup",
       "GuSubnetListParameter",
-      "GuLambdaFunction",
-      "GuLambdaFunction",
       "GuStringParameter",
+      "GuSubnetListParameter",
+      "GuSecurityGroup",
+      "GuEcsTask",
+      "GuAllowPolicy",
+      "GuAllowPolicy",
+      "GuLambdaFunction",
+      "GuLambdaFunction",
+      "GuLambdaFunction",
     ],
     "gu:cdk:version": "TEST",
   },
@@ -45,6 +55,11 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
           "InstanceRoleTranscriptionserviceworkerA8AC6615",
           "Arn",
         ],
+      },
+    },
+    "mediadownloadtaskStateMachineArnOutput": {
+      "Value": {
+        "Ref": "mediadownloadtaskStateMachineBC35AB31",
       },
     },
     "transcriptionserviceapitranscriptionserviceTESTEndpointA34D5917": {
@@ -71,6 +86,10 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
     },
   },
   "Parameters": {
+    "AMITranscriptionservicegpuworker": {
+      "Description": "AMI to use for the gpu worker instances",
+      "Type": "AWS::EC2::Image::Id",
+    },
     "AMITranscriptionserviceworker": {
       "Description": "AMI to use for the worker instances",
       "Type": "AWS::EC2::Image::Id",
@@ -80,8 +99,20 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "Description": "SSM parameter containing the S3 bucket name holding distribution artifacts",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "FFMpegLayerZipKey": {
+      "Description": "Key for the ffmpeg layer's zip file (pushed to layerBucket by publish-ffmpeg-layer.sh script)",
+      "Type": "String",
+    },
+    "GiantTranscriptionOutputQueueArn": {
+      "Default": "/TEST/investigations/GiantTranscriptionOutputQueueArn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "InvestigationsAlarmTopicArn": {
       "Default": "/TEST/investigations/alarmTopicArn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "LayerBucketArn": {
+      "Default": "/investigations/transcription-service/lambdaLayerBucketArn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "LoggingStreamName": {
@@ -98,6 +129,11 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "Default": "/account/vpc/primary/id",
       "Description": "Virtual Private Cloud to run EC2 instances within. Should NOT be the account default VPC.",
       "Type": "AWS::SSM::Parameter::Value<AWS::EC2::VPC::Id>",
+    },
+    "mediadownloadPrivateSubnets": {
+      "Default": "/account/vpc/primary/subnets/private",
+      "Description": "A list of private subnets",
+      "Type": "AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>",
     },
     "transcriptionserviceworkerPrivateSubnets": {
       "Default": "/account/vpc/primary/subnets/private",
@@ -166,6 +202,82 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "ExportFunctionName1C83D756": {
+      "Properties": {
+        "Name": "/TEST/investigations/transcription-service/app/mediaExportFunctionName",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "TEST",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Ref": "transcriptionservicemediaexport2E32D5D8",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "FFMpegLayerx8664TEST3F325D39": {
+      "Properties": {
+        "CompatibleArchitectures": [
+          "x86_64",
+        ],
+        "CompatibleRuntimes": [
+          "nodejs18.x",
+          "nodejs22.x",
+          "nodejs20.x",
+          "nodejs18.x",
+        ],
+        "Content": {
+          "S3Bucket": {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::Split": [
+                  "/",
+                  {
+                    "Fn::Select": [
+                      5,
+                      {
+                        "Fn::Split": [
+                          ":",
+                          {
+                            "Ref": "LayerBucketArn",
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "S3Key": {
+            "Ref": "FFMpegLayerZipKey",
+          },
+        },
+        "Description": "FFMpeg Layer",
+        "LayerName": "FFMpegLayer",
+      },
+      "Type": "AWS::Lambda::LayerVersion",
+    },
+    "GPUTaskQueueUrlParameter64941E19": {
+      "Properties": {
+        "Name": "/TEST/investigations/transcription-service/gpuTaskQueueUrl",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "TEST",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Ref": "transcriptionservicegputaskqueue9ECF56C3",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
     },
     "GetDistributablePolicyTranscriptionserviceworker2DFD604E": {
       "Properties": {
@@ -293,6 +405,22 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
               "Resource": {
                 "Fn::GetAtt": [
                   "transcriptionservicetaskqueue428AC4BA",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionservicegputaskqueue9ECF56C3",
                   "Arn",
                 ],
               },
@@ -455,18 +583,32 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             {
               "Action": "autoscaling:SetInstanceProtection",
               "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:aws:autoscaling:test-region:",
-                    {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":autoScalingGroup:*:autoScalingGroupName/transcription-service-workers-TEST",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:autoscaling:test-region:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":autoScalingGroup:*:autoScalingGroupName/transcription-service-workers-TEST",
+                    ],
                   ],
-                ],
-              },
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:autoscaling:test-region:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":autoScalingGroup:*:autoScalingGroupName/transcription-service-gpu-workers-TEST",
+                    ],
+                  ],
+                },
+              ],
             },
           ],
           "Version": "2012-10-17",
@@ -561,6 +703,92 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       },
       "Type": "AWS::DynamoDB::Table",
       "UpdateReplacePolicy": "Retain",
+    },
+    "TranscriptionGpuWorkerASGD890BE2A": {
+      "Properties": {
+        "AutoScalingGroupName": "transcription-service-gpu-workers-TEST",
+        "MaxSize": "4",
+        "MetricsCollection": [
+          {
+            "Granularity": "1Minute",
+          },
+        ],
+        "MinSize": "0",
+        "MixedInstancesPolicy": {
+          "InstancesDistribution": {
+            "OnDemandBaseCapacity": 0,
+            "OnDemandPercentageAboveBaseCapacity": 10,
+            "SpotAllocationStrategy": "capacity-optimized",
+            "SpotMaxPrice": "0.5260",
+          },
+          "LaunchTemplate": {
+            "LaunchTemplateSpecification": {
+              "LaunchTemplateId": {
+                "Ref": "TranscriptionWorkerGPULaunchTemplate4C8137DB",
+              },
+              "Version": {
+                "Fn::GetAtt": [
+                  "TranscriptionWorkerGPULaunchTemplate4C8137DB",
+                  "LatestVersionNumber",
+                ],
+              },
+            },
+            "Overrides": [
+              {
+                "InstanceType": "g4dn.xlarge",
+              },
+            ],
+          },
+        },
+        "Tags": [
+          {
+            "Key": "App",
+            "PropagateAtLaunch": true,
+            "Value": "transcription-service-gpu-worker",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "PropagateAtLaunch": true,
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "PropagateAtLaunch": true,
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "LogKinesisStreamName",
+            "PropagateAtLaunch": true,
+            "Value": {
+              "Ref": "LoggingStreamName",
+            },
+          },
+          {
+            "Key": "Stack",
+            "PropagateAtLaunch": true,
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "PropagateAtLaunch": true,
+            "Value": "TEST",
+          },
+          {
+            "Key": "SystemdUnit",
+            "PropagateAtLaunch": true,
+            "Value": "transcription-service-worker.service",
+          },
+        ],
+        "VPCZoneIdentifier": {
+          "Ref": "transcriptionserviceworkerPrivateSubnets",
+        },
+      },
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "UpdatePolicy": {
+        "AutoScalingScheduledAction": {
+          "IgnoreUnmodifiedGroupSizeProperties": true,
+        },
+      },
     },
     "TranscriptionServiceOutputBucketTranscriptionservice35996ED2": {
       "DeletionPolicy": "Retain",
@@ -833,6 +1061,155 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         },
       },
     },
+    "TranscriptionWorkerGPULaunchTemplate4C8137DB": {
+      "DependsOn": [
+        "InstanceRoleTranscriptionserviceworkerDefaultPolicy994AD936",
+        "InstanceRoleTranscriptionserviceworkerA8AC6615",
+      ],
+      "Properties": {
+        "LaunchTemplateData": {
+          "BlockDeviceMappings": [
+            {
+              "DeviceName": "/dev/sda1",
+              "Ebs": {
+                "VolumeSize": 100,
+              },
+            },
+          ],
+          "IamInstanceProfile": {
+            "Arn": {
+              "Fn::GetAtt": [
+                "TranscriptionWorkerGPULaunchTemplateProfile9CA5FF85",
+                "Arn",
+              ],
+            },
+          },
+          "ImageId": "ami-12345",
+          "InstanceType": "g4dn.xlarge",
+          "MetadataOptions": {
+            "HttpTokens": "required",
+            "InstanceMetadataTags": "enabled",
+          },
+          "SecurityGroupIds": [
+            {
+              "Fn::GetAtt": [
+                "TranscriptionServiceWorkerSGTranscriptionserviceworker6EE23C91",
+                "GroupId",
+              ],
+            },
+          ],
+          "TagSpecifications": [
+            {
+              "ResourceType": "instance",
+              "Tags": [
+                {
+                  "Key": "gu:cdk:version",
+                  "Value": "TEST",
+                },
+                {
+                  "Key": "gu:repo",
+                  "Value": "guardian/transcription-service",
+                },
+                {
+                  "Key": "Name",
+                  "Value": "TranscriptionService/TranscriptionWorkerGPULaunchTemplate",
+                },
+                {
+                  "Key": "Stack",
+                  "Value": "investigations",
+                },
+                {
+                  "Key": "Stage",
+                  "Value": "TEST",
+                },
+              ],
+            },
+            {
+              "ResourceType": "volume",
+              "Tags": [
+                {
+                  "Key": "gu:cdk:version",
+                  "Value": "TEST",
+                },
+                {
+                  "Key": "gu:repo",
+                  "Value": "guardian/transcription-service",
+                },
+                {
+                  "Key": "Name",
+                  "Value": "TranscriptionService/TranscriptionWorkerGPULaunchTemplate",
+                },
+                {
+                  "Key": "Stack",
+                  "Value": "investigations",
+                },
+                {
+                  "Key": "Stage",
+                  "Value": "TEST",
+                },
+              ],
+            },
+          ],
+          "UserData": {
+            "Fn::Base64": {
+              "Fn::Join": [
+                "",
+                [
+                  "#!/bin/bash
+export STAGE=TEST
+export AWS_REGION=test-region
+aws s3 cp s3://",
+                  {
+                    "Ref": "DistributionBucketName",
+                  },
+                  "/investigations/TEST/transcription-service-worker/transcription-service-worker_1.0.0_all.deb .
+dpkg -i transcription-service-worker_1.0.0_all.deb
+service transcription-service-worker start",
+                ],
+              ],
+            },
+          },
+        },
+        "TagSpecifications": [
+          {
+            "ResourceType": "launch-template",
+            "Tags": [
+              {
+                "Key": "gu:cdk:version",
+                "Value": "TEST",
+              },
+              {
+                "Key": "gu:repo",
+                "Value": "guardian/transcription-service",
+              },
+              {
+                "Key": "Name",
+                "Value": "TranscriptionService/TranscriptionWorkerGPULaunchTemplate",
+              },
+              {
+                "Key": "Stack",
+                "Value": "investigations",
+              },
+              {
+                "Key": "Stage",
+                "Value": "TEST",
+              },
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::EC2::LaunchTemplate",
+    },
+    "TranscriptionWorkerGPULaunchTemplateProfile9CA5FF85": {
+      "Properties": {
+        "Roles": [
+          {
+            "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::InstanceProfile",
+    },
     "TranscriptionWorkerLaunchTemplate03F06207": {
       "DependsOn": [
         "InstanceRoleTranscriptionserviceworkerDefaultPolicy994AD936",
@@ -1044,12 +1421,17 @@ service transcription-service-worker start",
             {
               "Action": "sqs:SendMessage",
               "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "transcriptionserviceoutputqueue2A0B1C70",
-                  "Arn",
-                ],
-              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "transcriptionserviceoutputqueue2A0B1C70",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Ref": "GiantTranscriptionOutputQueueArn",
+                },
+              ],
             },
           ],
           "Version": "2012-10-17",
@@ -1106,6 +1488,985 @@ service transcription-service-worker start",
       },
       "Type": "AWS::IAM::Policy",
     },
+    "eventbridgepiperoleA95C594F": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "pipes.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "mediadownloadqueuesfnpipelog51AF4181": {
+      "DeletionPolicy": "Snapshot",
+      "Properties": {
+        "LogGroupName": "/aws/pipes/TEST/media-download-queue-sfn-pipe",
+        "RetentionInDays": 7,
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Snapshot",
+    },
+    "mediadownloadsgMediadownload47EFEEBF": {
+      "Properties": {
+        "GroupDescription": "TranscriptionService/media-download-sgMediadownload",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "media-download",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcId",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "mediadownloadsqssfn": {
+      "Properties": {
+        "Description": "Pipe to trigger the media download service from the associated SQS queue.",
+        "DesiredState": "RUNNING",
+        "LogConfiguration": {
+          "CloudwatchLogsLogDestination": {
+            "LogGroupArn": {
+              "Fn::GetAtt": [
+                "mediadownloadqueuesfnpipelog51AF4181",
+                "Arn",
+              ],
+            },
+          },
+          "Level": "INFO",
+        },
+        "Name": "media-download-queue-sfn-pipe-TEST",
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "eventbridgepiperoleA95C594F",
+            "Arn",
+          ],
+        },
+        "Source": {
+          "Fn::GetAtt": [
+            "transcriptionservicemediadownloadtaskqueue26AAF7A2",
+            "Arn",
+          ],
+        },
+        "SourceParameters": {
+          "SqsQueueParameters": {
+            "BatchSize": 1,
+          },
+        },
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "TEST",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Target": {
+          "Ref": "mediadownloadtaskStateMachineBC35AB31",
+        },
+        "TargetParameters": {
+          "StepFunctionStateMachineParameters": {
+            "InvocationType": "FIRE_AND_FORGET",
+          },
+        },
+      },
+      "Type": "AWS::Pipes::Pipe",
+    },
+    "mediadownloadsshkey0D71533A": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "GenerateSecretString": {},
+        "Name": "media-download-ssh-key-TEST",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::SecretsManager::Secret",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "mediadownloadtaskCluster0F581551": {
+      "Properties": {
+        "ClusterName": "media-download-cluster-TEST",
+        "ClusterSettings": [
+          {
+            "Name": "containerInsights",
+            "Value": "disabled",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "media-download",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::ECS::Cluster",
+    },
+    "mediadownloadtaskClusterC1A4BD6F": {
+      "Properties": {
+        "CapacityProviders": [
+          "FARGATE",
+          "FARGATE_SPOT",
+        ],
+        "Cluster": {
+          "Ref": "mediadownloadtaskCluster0F581551",
+        },
+        "DefaultCapacityProviderStrategy": [],
+      },
+      "Type": "AWS::ECS::ClusterCapacityProviderAssociations",
+    },
+    "mediadownloadtaskStateMachineBC35AB31": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "mediadownloadtaskStateMachineRoleDefaultPolicyCEB648A5",
+        "mediadownloadtaskStateMachineRoleF0B835C7",
+      ],
+      "Properties": {
+        "DefinitionString": {
+          "Fn::Join": [
+            "",
+            [
+              "{"StartAt":"media-download-task-task","States":{"media-download-task-task":{"End":true,"Type":"Task","TimeoutSeconds":7200,"ResultPath":null,"Resource":"arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":states:::ecs:runTask.sync","Parameters":{"Cluster":"",
+              {
+                "Fn::GetAtt": [
+                  "mediadownloadtaskCluster0F581551",
+                  "Arn",
+                ],
+              },
+              "","TaskDefinition":"investigations-TEST-media-download","NetworkConfiguration":{"AwsvpcConfiguration":{"Subnets":["",
+              {
+                "Fn::Select": [
+                  0,
+                  {
+                    "Ref": "mediadownloadPrivateSubnets",
+                  },
+                ],
+              },
+              "","",
+              {
+                "Fn::Select": [
+                  1,
+                  {
+                    "Ref": "mediadownloadPrivateSubnets",
+                  },
+                ],
+              },
+              "","",
+              {
+                "Fn::Select": [
+                  2,
+                  {
+                    "Ref": "mediadownloadPrivateSubnets",
+                  },
+                ],
+              },
+              ""],"SecurityGroups":["",
+              {
+                "Fn::GetAtt": [
+                  "mediadownloadsgMediadownload47EFEEBF",
+                  "GroupId",
+                ],
+              },
+              ""]}},"Overrides":{"ContainerOverrides":[{"Name":"media-download-task-TaskContainer","Environment":[{"Name":"MESSAGE_BODY","Value.$":"$[0].body"},{"Name":"AWS_REGION","Value":"test-region"},{"Name":"STAGE","Value":"TEST"},{"Name":"APP","Value":"media-download"}]}]},"LaunchType":"FARGATE","PlatformVersion":"LATEST"}}}}",
+            ],
+          ],
+        },
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "mediadownloadtaskStateMachineRoleF0B835C7",
+            "Arn",
+          ],
+        },
+        "StateMachineName": "media-download-TEST",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "media-download",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::StepFunctions::StateMachine",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "mediadownloadtaskStateMachineRoleDefaultPolicyCEB648A5": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "ecs:RunTask",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Fn::Select": [
+                        1,
+                        {
+                          "Fn::Split": [
+                            ":",
+                            {
+                              "Ref": "mediadownloadtaskTaskDefinitionFC07F68F",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    ":",
+                    {
+                      "Fn::Select": [
+                        2,
+                        {
+                          "Fn::Split": [
+                            ":",
+                            {
+                              "Ref": "mediadownloadtaskTaskDefinitionFC07F68F",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    ":",
+                    {
+                      "Fn::Select": [
+                        3,
+                        {
+                          "Fn::Split": [
+                            ":",
+                            {
+                              "Ref": "mediadownloadtaskTaskDefinitionFC07F68F",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    ":",
+                    {
+                      "Fn::Select": [
+                        4,
+                        {
+                          "Fn::Split": [
+                            ":",
+                            {
+                              "Ref": "mediadownloadtaskTaskDefinitionFC07F68F",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    ":",
+                    {
+                      "Fn::Select": [
+                        0,
+                        {
+                          "Fn::Split": [
+                            "/",
+                            {
+                              "Fn::Select": [
+                                5,
+                                {
+                                  "Fn::Split": [
+                                    ":",
+                                    {
+                                      "Ref": "mediadownloadtaskTaskDefinitionFC07F68F",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    "/",
+                    {
+                      "Fn::Select": [
+                        1,
+                        {
+                          "Fn::Split": [
+                            "/",
+                            {
+                              "Fn::Select": [
+                                5,
+                                {
+                                  "Fn::Split": [
+                                    ":",
+                                    {
+                                      "Ref": "mediadownloadtaskTaskDefinitionFC07F68F",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    ":*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ecs:StopTask",
+                "ecs:DescribeTasks",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": "iam:PassRole",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "mediadownloadtaskTaskDefinitionTaskRoleF1A7E4C5",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::GetAtt": [
+                    "mediadownloadtaskTaskDefinitionExecutionRoleF9D79F8D",
+                    "Arn",
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "events:PutTargets",
+                "events:PutRule",
+                "events:DescribeRule",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":events:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":rule/StepFunctionsGetEventsForECSTaskRule",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "mediadownloadtaskStateMachineRoleDefaultPolicyCEB648A5",
+        "Roles": [
+          {
+            "Ref": "mediadownloadtaskStateMachineRoleF0B835C7",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "mediadownloadtaskStateMachineRoleF0B835C7": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "states.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "media-download",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "mediadownloadtaskTaskDefinitionExecutionRoleDefaultPolicyB7099C18": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:BatchGetImage",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ecr:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":repository/transcription-service-media-download",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "ecr:GetAuthorizationToken",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "mediadownloadtaskTaskDefinitionmediadownloadtaskTaskContainerLogGroup5E8F5823",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "mediadownloadtaskTaskDefinitionExecutionRoleDefaultPolicyB7099C18",
+        "Roles": [
+          {
+            "Ref": "mediadownloadtaskTaskDefinitionExecutionRoleF9D79F8D",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "mediadownloadtaskTaskDefinitionExecutionRoleF9D79F8D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "media-download",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "mediadownloadtaskTaskDefinitionFC07F68F": {
+      "Properties": {
+        "ContainerDefinitions": [
+          {
+            "Cpu": 2048,
+            "Essential": true,
+            "Image": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "AWS::AccountId",
+                  },
+                  ".dkr.ecr.test-region.",
+                  {
+                    "Ref": "AWS::URLSuffix",
+                  },
+                  "/transcription-service-media-download:main",
+                ],
+              ],
+            },
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "mediadownloadtaskTaskDefinitionmediadownloadtaskTaskContainerLogGroup5E8F5823",
+                },
+                "awslogs-region": "test-region",
+                "awslogs-stream-prefix": "media-download",
+              },
+            },
+            "Memory": 4096,
+            "MountPoints": [
+              {
+                "ContainerPath": "/media-download",
+                "ReadOnly": false,
+                "SourceVolume": "media-download-download-volume",
+              },
+              {
+                "ContainerPath": "/tmp",
+                "ReadOnly": false,
+                "SourceVolume": "media-download-temp-volume",
+              },
+            ],
+            "Name": "media-download-task-TaskContainer",
+            "ReadonlyRootFilesystem": true,
+          },
+        ],
+        "Cpu": "2048",
+        "EphemeralStorage": {
+          "SizeInGiB": 50,
+        },
+        "ExecutionRoleArn": {
+          "Fn::GetAtt": [
+            "mediadownloadtaskTaskDefinitionExecutionRoleF9D79F8D",
+            "Arn",
+          ],
+        },
+        "Family": "investigations-TEST-media-download",
+        "Memory": "4096",
+        "NetworkMode": "awsvpc",
+        "RequiresCompatibilities": [
+          "FARGATE",
+        ],
+        "RuntimePlatform": {
+          "CpuArchitecture": "ARM64",
+          "OperatingSystemFamily": "LINUX",
+        },
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "media-download",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "TaskRoleArn": {
+          "Fn::GetAtt": [
+            "mediadownloadtaskTaskDefinitionTaskRoleF1A7E4C5",
+            "Arn",
+          ],
+        },
+        "Volumes": [
+          {
+            "Name": "media-download-download-volume",
+          },
+          {
+            "Name": "media-download-temp-volume",
+          },
+        ],
+      },
+      "Type": "AWS::ECS::TaskDefinition",
+    },
+    "mediadownloadtaskTaskDefinitionTaskRoleDefaultPolicy06C55C38": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sqs:ReceiveMessage",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionservicemediadownloadtaskqueue26AAF7A2",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": "sqs:SendMessage",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "transcriptionservicetaskqueue428AC4BA",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::GetAtt": [
+                    "transcriptionservicegputaskqueue9ECF56C3",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::GetAtt": [
+                    "transcriptionserviceoutputqueue2A0B1C70",
+                    "Arn",
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "secretsmanager:GetSecretValue",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "mediadownloadsshkey0D71533A",
+              },
+            },
+            {
+              "Action": "s3:PutObject",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "TranscriptionServiceOutputBucketTranscriptionservice35996ED2",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040",
+                        "Arn",
+                      ],
+                    },
+                    "/downloaded-media/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:GetParameter",
+                "ssm:GetParametersByPath",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "mediadownloadtaskTaskDefinitionTaskRoleDefaultPolicy06C55C38",
+        "Roles": [
+          {
+            "Ref": "mediadownloadtaskTaskDefinitionTaskRoleF1A7E4C5",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "mediadownloadtaskTaskDefinitionTaskRoleF1A7E4C5": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "media-download",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "mediadownloadtaskTaskDefinitionmediadownloadtaskTaskContainerLogGroup5E8F5823": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "RetentionInDays": 14,
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "media-download",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "sfnstart28C06245": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "states:StartExecution",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "mediadownloadtaskStateMachineBC35AB31",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "sfnstart28C06245",
+        "Roles": [
+          {
+            "Ref": "eventbridgepiperoleA95C594F",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "sqsread488ED370": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionservicemediadownloadtaskqueue26AAF7A2",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "sqsread488ED370",
+        "Roles": [
+          {
+            "Ref": "eventbridgepiperoleA95C594F",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
     "transcriptionDNSentry": {
       "Properties": {
         "Name": "transcribe.code.dev-gutools.co.uk",
@@ -1142,7 +2503,15 @@ service transcription-service-worker start",
             "STAGE": "TEST",
           },
         },
+        "EphemeralStorage": {
+          "Size": 10240,
+        },
         "Handler": "index.api",
+        "Layers": [
+          {
+            "Ref": "FFMpegLayerx8664TEST3F325D39",
+          },
+        ],
         "LoggingConfig": {
           "LogFormat": "JSON",
         },
@@ -1353,6 +2722,34 @@ service transcription-service-worker start",
             },
             {
               "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionservicegputaskqueue9ECF56C3",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionservicemediadownloadtaskqueue26AAF7A2",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
                 "dynamodb:BatchGetItem",
                 "dynamodb:GetRecords",
                 "dynamodb:GetShardIterator",
@@ -1376,6 +2773,32 @@ service transcription-service-worker start",
                 },
                 {
                   "Ref": "AWS::NoValue",
+                },
+              ],
+            },
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "transcriptionservicemediaexport2E32D5D8",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "transcriptionservicemediaexport2E32D5D8",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
                 },
               ],
             },
@@ -1822,6 +3245,380 @@ service transcription-service-worker start",
       },
       "Type": "AWS::Lambda::Permission",
     },
+    "transcriptionservicegputaskqueue9ECF56C3": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ContentBasedDeduplication": true,
+        "FifoQueue": true,
+        "QueueName": "transcription-service-gpu-task-queue-TEST.fifo",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "transcriptionservicetaskdeadletterqueue8A13A1F1",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "VisibilityTimeout": 30,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "transcriptionservicemediadownloaddeadletterqueueE0C3D72F": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ContentBasedDeduplication": true,
+        "FifoQueue": true,
+        "QueueName": "transcription-service-media-download-dead-letter-queue-TEST.fifo",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "transcriptionservicemediadownloadtaskqueue26AAF7A2": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ContentBasedDeduplication": true,
+        "FifoQueue": true,
+        "QueueName": "transcription-service-media-download-task-queue-TEST.fifo",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "transcriptionservicemediadownloaddeadletterqueueE0C3D72F",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "VisibilityTimeout": 30,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "transcriptionservicemediaexport2E32D5D8": {
+      "DependsOn": [
+        "transcriptionservicemediaexportServiceRoleDefaultPolicy399DDE1F",
+        "transcriptionservicemediaexportServiceRoleF9FB6814",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DistributionBucketName",
+          },
+          "S3Key": "investigations/TEST/transcription-service-media-export/media-export.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "APP": "transcription-service-media-export",
+            "STACK": "investigations",
+            "STAGE": "TEST",
+          },
+        },
+        "EphemeralStorage": {
+          "Size": 10240,
+        },
+        "Handler": "index.mediaExport",
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+        },
+        "MemorySize": 2048,
+        "Role": {
+          "Fn::GetAtt": [
+            "transcriptionservicemediaexportServiceRoleF9FB6814",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service-media-export",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "transcriptionservicemediaexportServiceRoleDefaultPolicy399DDE1F": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                      "/investigations/TEST/transcription-service-media-export/media-export.zip",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "ssm:GetParametersByPath",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service-media-export",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service-media-export/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:GetParameter",
+                "ssm:GetParametersByPath",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "s3:GetObject",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "TranscriptTableA6F8B506",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Ref": "AWS::NoValue",
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "transcriptionservicemediaexportServiceRoleDefaultPolicy399DDE1F",
+        "Roles": [
+          {
+            "Ref": "transcriptionservicemediaexportServiceRoleF9FB6814",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "transcriptionservicemediaexportServiceRoleF9FB6814": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service-media-export",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "transcriptionserviceoutputhandler5AC33606": {
       "DependsOn": [
         "transcriptionserviceoutputhandlerServiceRoleDefaultPolicy926F9B97",
@@ -2014,20 +3811,36 @@ service transcription-service-worker start",
             {
               "Action": "s3:GetObject",
               "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    {
-                      "Fn::GetAtt": [
-                        "TranscriptionServiceOutputBucketTranscriptionservice35996ED2",
-                        "Arn",
-                      ],
-                    },
-                    "/*",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "TranscriptionServiceOutputBucketTranscriptionservice35996ED2",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
                   ],
-                ],
-              },
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "TranscriptionServiceSourceMediaBucketTranscriptionservice4981E040",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
             },
             {
               "Action": [
@@ -2442,35 +4255,69 @@ service transcription-service-worker start",
                 "autoscaling:DescribeAutoScalingInstances",
               ],
               "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    ":autoscaling:test-region:",
-                    {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":autoScalingGroup:*:autoScalingGroupName/",
-                    {
-                      "Ref": "TranscriptionWorkerASGCAE69A98",
-                    },
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":autoscaling:test-region:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":autoScalingGroup:*:autoScalingGroupName/",
+                      {
+                        "Ref": "TranscriptionWorkerASGCAE69A98",
+                      },
+                    ],
                   ],
-                ],
-              },
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":autoscaling:test-region:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":autoScalingGroup:*:autoScalingGroupName/",
+                      {
+                        "Ref": "TranscriptionGpuWorkerASGD890BE2A",
+                      },
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "autoscaling:DescribeAutoScalingGroups",
+              "Effect": "Allow",
+              "Resource": "*",
             },
             {
               "Action": "sqs:GetQueueAttributes",
               "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "transcriptionservicetaskqueue428AC4BA",
-                  "Arn",
-                ],
-              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "transcriptionservicetaskqueue428AC4BA",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::GetAtt": [
+                    "transcriptionservicegputaskqueue9ECF56C3",
+                    "Arn",
+                  ],
+                },
+              ],
             },
             {
               "Action": [
