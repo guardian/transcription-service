@@ -1236,6 +1236,7 @@ service transcription-service-worker start",
           "ImageId": "ami-12345",
           "InstanceType": "c7g.4xlarge",
           "MetadataOptions": {
+            "HttpTokens": "required",
             "InstanceMetadataTags": "enabled",
           },
           "SecurityGroupIds": [

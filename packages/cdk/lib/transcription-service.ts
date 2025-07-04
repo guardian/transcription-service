@@ -420,6 +420,7 @@ export class TranscriptionService extends GuStack {
 			instanceMetadataTags: true,
 			userData,
 			role: workerRole,
+			requireImdsv2: true,
 			securityGroup: workerSecurityGroup,
 		};
 
@@ -454,7 +455,6 @@ export class TranscriptionService extends GuStack {
 					'eu-west-1': gpuWorkerAmi.valueAsString,
 				}),
 				instanceType: InstanceType.of(InstanceClass.G4DN, InstanceSize.XLARGE),
-				requireImdsv2: true,
 				blockDevices: [
 					{
 						deviceName: '/dev/sda1',
