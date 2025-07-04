@@ -504,6 +504,7 @@ export class TranscriptionService extends GuStack {
 				subnets: guSubnets,
 			},
 			groupMetrics: [GroupMetrics.all()],
+			requireImdsv2: true,
 		};
 
 		const commonInstancesDistributionprops = {
