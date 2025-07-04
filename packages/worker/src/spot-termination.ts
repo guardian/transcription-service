@@ -20,10 +20,10 @@ export const checkSpotInterrupt = async (
 			// 	'X-aws-ec2-metadata-token': imdsToken,
 			// },
 		});
-		console.log('IMDSRESP', result.status, result.statusText);
+		logger.info('IMDSRESP', result.status, result.statusText);
 		if (result.status === 200) {
 			const json = await result.json();
-			console.log('IMDSDATA', json);
+			logger.info('IMDSDATA', json);
 			if (json.action === 'terminate') {
 				const interruptionTime = new Date(json.time);
 				setInterruptionTime(interruptionTime);
