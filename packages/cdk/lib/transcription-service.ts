@@ -454,6 +454,7 @@ export class TranscriptionService extends GuStack {
 					'eu-west-1': gpuWorkerAmi.valueAsString,
 				}),
 				instanceType: InstanceType.of(InstanceClass.G4DN, InstanceSize.XLARGE),
+				requireImdsv2: true,
 				blockDevices: [
 					{
 						deviceName: '/dev/sda1',
@@ -504,7 +505,6 @@ export class TranscriptionService extends GuStack {
 				subnets: guSubnets,
 			},
 			groupMetrics: [GroupMetrics.all()],
-			requireImdsv2: true,
 		};
 
 		const commonInstancesDistributionprops = {
