@@ -52,7 +52,7 @@ export const checkSpotInterrupt = async (
 				return;
 			}
 		} else {
-			logger.info(
+			logger.error(
 				`Non-200 response from ${url}: ${result.status} ${result.statusText}`,
 			);
 		}
