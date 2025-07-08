@@ -41,8 +41,28 @@ type DestinationQueueUrls = {
 	[DestinationService.Giant]: string;
 };
 
+export const METADATA_SERVICE_URL = 'http://169.254.169.254';
+
 const credentialProvider = (onAws: boolean) =>
 	onAws ? undefined : defaultProvider({ profile: 'investigations' });
+
+export const getIMDSToken = async (): Promise<string> => {
+	const metadataResult = await fetch(
+		`${METADATA_SERVICE_URL}/latest/api/token`,
+		{
+			method: 'PUT',
+			headers: {
+				'X-aws-ec2-metadata-token-ttl-seconds': '21600', // 6 hours
+			},
+		},
+	);
+	if (!metadataResult.ok) {
+		throw new Error(
+			`Failed to fetch IMDS token, status: ${metadataResult.status}`,
+		);
+	}
+	return await metadataResult.text();
+};
 
 // We need to know the region and STAGE before fetching parameters from SSM. On lambda these values can be retrieved from
 // environment variables, on EC2 instances we need to use the instance metadata service. Locally, we hard code
@@ -57,8 +77,14 @@ const getEnvVarOrMetadata = async (
 		return Promise.resolve(env);
 	}
 	// see https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html for metadata docs
+	const imdsToken = await getIMDSToken();
 	const metadataResult = await fetch(
-		`http://169.254.169.254/latest/meta-data/${metadataPath}`,
+		`${METADATA_SERVICE_URL}/latest/meta-data/${metadataPath}`,
+		{
+			headers: {
+				'X-aws-ec2-metadata-token': imdsToken,
+			},
+		},
 	);
 	const metadataValue = await metadataResult.text();
 	return clean ? clean(metadataValue) : metadataValue;

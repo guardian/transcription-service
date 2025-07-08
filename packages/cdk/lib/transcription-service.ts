@@ -420,6 +420,7 @@ export class TranscriptionService extends GuStack {
 			instanceMetadataTags: true,
 			userData,
 			role: workerRole,
+			requireImdsv2: true,
 			securityGroup: workerSecurityGroup,
 		};
 

@@ -1,6 +1,8 @@
 import {
 	changeMessageVisibility,
+	getIMDSToken,
 	logger,
+	METADATA_SERVICE_URL,
 } from '@guardian/transcription-service-backend-common';
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { getCurrentReceiptHandle, setInterruptionTime } from './index';
@@ -11,9 +13,15 @@ export const checkSpotInterrupt = async (
 	client: SQSClient,
 	queueUrl: string,
 ) => {
-	const url = 'http://169.254.169.254/latest/meta-data/spot/instance-action';
+	const imdsToken = await getIMDSToken();
+	const url = `${METADATA_SERVICE_URL}/latest/meta-data/spot/instance-action`;
 	try {
-		const result = await fetch(url);
+		const result = await fetch(url, {
+			headers: {
+				'X-aws-ec2-metadata-token': imdsToken,
+			},
+		});
+
 		if (result.status === 200) {
 			const json = await result.json();
 			if (json.action === 'terminate') {
@@ -43,6 +51,10 @@ export const checkSpotInterrupt = async (
 				// once the interrupt warning has happened, we don't need to keep checking
 				return;
 			}
+		} else {
+			logger.error(
+				`Non-200 response from ${url}: ${result.status} ${result.statusText}`,
+			);
 		}
 	} catch (e) {
 		console.error('Error during spot termination check', e);
