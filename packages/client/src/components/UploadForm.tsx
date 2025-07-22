@@ -19,6 +19,7 @@ import {
 	Alert,
 	TextInput,
 	Button,
+	HelperText,
 } from 'flowbite-react';
 import { MediaUrlInput, RequestStatus } from '@/types';
 import { InfoMessage } from '@/components/InfoMessage';
@@ -314,6 +315,7 @@ export const UploadForm = () => {
 				This tool can transcribe both audio and video. You will receive an email
 				when the transcription is ready.
 			</p>
+
 			<form id="media-upload-form" onSubmit={handleSubmit}>
 				<div className={'mb-1'}>
 					<Label className="text-base">I want to transcribe a...</Label>
@@ -327,15 +329,11 @@ export const UploadForm = () => {
 						onClick={() => setMediaSource('file')}
 					/>
 					<Label htmlFor="file-radio">File</Label>
-					<Radio
-						id="url-radio"
-						name="media-type"
-						value="url"
-						checked={mediaSource === 'url'}
-						onClick={() => setMediaSource('url')}
-					/>
-					<Label htmlFor="url-radio">URL</Label>
 				</div>
+				<HelperText color={'failure'}>
+					Unfortunately, URL transcription is unavailable as of 22 July. We'll
+					send an email round when it has been fixed.
+				</HelperText>
 				{mediaSource === 'url' && (
 					<>
 						<div className="mb-4"></div>
