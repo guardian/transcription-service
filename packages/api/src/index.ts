@@ -33,6 +33,7 @@ import {
 	ExportStatus,
 	ExportStatusRequest,
 	ExportStatuses,
+	DownloadUrlRequest,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
@@ -45,6 +46,7 @@ import {
 	initializeExportStatuses,
 	exportTranscriptToDoc,
 	updateStatuses,
+	getDownloadUrls,
 } from './export';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { invokeLambda } from './services/lambda';
@@ -227,6 +229,33 @@ const getApp = async () => {
 				googleClientId: config.auth.clientId,
 			};
 			res.send(JSON.stringify(clientConfig));
+		}),
+	]);
+
+	apiRouter.get('/export/get-download-urls', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			const downloadUrlRequest = DownloadUrlRequest.safeParse(req.query);
+			if (!downloadUrlRequest.success) {
+				res
+					.status(400)
+					.send(
+						'Invalid request - you must provide the transcript id and the exportType (text/srt/source-media) in the query string',
+					);
+				return;
+			}
+			const getItemResult = await getTranscriptionItem(
+				dynamoClient,
+				config.app.tableName,
+				downloadUrlRequest.data.id,
+				{ check: true, currentUserEmail: req.user?.email },
+			);
+			if (getItemResult.status === 'failure') {
+				res.status(getItemResult.statusCode).send(getItemResult.errorMessage);
+				return;
+			}
+			const urls = await getDownloadUrls(config, getItemResult.item);
+			res.send(JSON.stringify(urls));
 		}),
 	]);
 

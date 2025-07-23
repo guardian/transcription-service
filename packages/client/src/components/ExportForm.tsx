@@ -1,5 +1,6 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
+	DownloadUrls,
 	ExportStatus,
 	ExportStatuses,
 	ExportType,
@@ -98,6 +99,9 @@ const ExportForm = () => {
 		ExportType[]
 	>(['text']);
 	const [exportStatuses, setExportStatuses] = useState<ExportStatuses>([]);
+	const [downloadUrls, setDownloadUrls] = useState<DownloadUrls | undefined>(
+		undefined,
+	);
 
 	// TODO: once we have some CSS/component library, tidy up this messy error handling
 	if (!token) {
@@ -115,6 +119,21 @@ const ExportForm = () => {
 			/>
 		);
 	}
+	useEffect(() => {
+		authFetch(`/api/export/download-urls?id=${transcriptId}`, token).then(
+			(urls) => {
+				const parsedUrls = DownloadUrls.safeParse(urls);
+				if (!parsedUrls.success) {
+					console.error(
+						'Failed to parse download URLs response',
+						parsedUrls.error,
+					);
+					return;
+				}
+				setDownloadUrls(parsedUrls.data);
+			},
+		);
+	}, [transcriptId]);
 	if (requestStatus === RequestStatus.Failed) {
 		return (
 			<InfoMessage
@@ -303,7 +322,9 @@ const ExportForm = () => {
 							)
 						}
 					/>
-					<Label htmlFor="transcript-text">Transcript text</Label>
+					<Label htmlFor="transcript-text">
+						Transcript text (<a href={downloadUrls?.text}>Download</a>)
+					</Label>
 				</div>
 				<div className="flex items-center gap-2">
 					<Checkbox
@@ -320,7 +341,8 @@ const ExportForm = () => {
 						}
 					/>
 					<Label htmlFor="transcript-srt">
-						Transcript text with timecodes (SRT)
+						Transcript text with timecodes (SRT) (
+						<a href={downloadUrls?.srt}>Download</a>)
 					</Label>
 				</div>
 				<div className="flex gap-2">
@@ -340,7 +362,9 @@ const ExportForm = () => {
 						/>
 					</div>
 					<div className="flex flex-col">
-						<Label htmlFor="source-media">Input media</Label>
+						<Label htmlFor="source-media">
+							Input media (<a href={downloadUrls?.sourceMedia}>Download</a>)
+						</Label>
 						<div className="text-gray-500 dark:text-gray-300">
 							<span className="text-xs font-normal">
 								Max 10GB (roughly 3 hours of video)
