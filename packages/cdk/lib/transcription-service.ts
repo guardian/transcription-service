@@ -786,8 +786,16 @@ export class TranscriptionService extends GuStack {
 		const tempVolume = {
 			name: `${mediaDownloadApp}-temp-volume`,
 		};
+		const cacheVolume = {
+			name: `${mediaDownloadApp}-cache-volume`,
+		};
+		const sshVolume = {
+			name: `${mediaDownloadApp}-ssh-volume`,
+		};
 		mediaDownloadTask.taskDefinition.addVolume(downloadVolume);
 		mediaDownloadTask.taskDefinition.addVolume(tempVolume);
+		mediaDownloadTask.taskDefinition.addVolume(cacheVolume);
+		mediaDownloadTask.taskDefinition.addVolume(sshVolume);
 		mediaDownloadTask.containerDefinition.addMountPoints({
 			sourceVolume: downloadVolume.name,
 			containerPath: '/media-download', // needs to match ECS_MEDIA_DOWNLOAD_WORKING_DIRECTORY in media-download index.ts
@@ -796,6 +804,16 @@ export class TranscriptionService extends GuStack {
 		mediaDownloadTask.containerDefinition.addMountPoints({
 			sourceVolume: tempVolume.name,
 			containerPath: '/tmp', // needed by yt-dlp
+			readOnly: false,
+		});
+		mediaDownloadTask.containerDefinition.addMountPoints({
+			sourceVolume: cacheVolume.name,
+			containerPath: '/root/.cache', // needed by yt-dlp
+			readOnly: false,
+		});
+		mediaDownloadTask.containerDefinition.addMountPoints({
+			sourceVolume: sshVolume.name,
+			containerPath: '/root/.ssh',
 			readOnly: false,
 		});
 
