@@ -1,5 +1,6 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
+	DownloadUrls,
 	ExportStatus,
 	ExportStatuses,
 	ExportType,
@@ -98,6 +99,9 @@ const ExportForm = () => {
 		ExportType[]
 	>(['text']);
 	const [exportStatuses, setExportStatuses] = useState<ExportStatuses>([]);
+	const [downloadUrls, setDownloadUrls] = useState<DownloadUrls | undefined>(
+		undefined,
+	);
 
 	// TODO: once we have some CSS/component library, tidy up this messy error handling
 	if (!token) {
@@ -115,6 +119,21 @@ const ExportForm = () => {
 			/>
 		);
 	}
+	useEffect(() => {
+		authFetch(`/api/export/download-urls?id=${transcriptId}`, token)
+			.then((urls) => urls.json())
+			.then((json) => {
+				const parsedUrls = DownloadUrls.safeParse(json);
+				if (!parsedUrls.success) {
+					console.error(
+						'Failed to parse download URLs response',
+						parsedUrls.error,
+					);
+					return;
+				}
+				setDownloadUrls(parsedUrls.data);
+			});
+	}, [transcriptId]);
 	if (requestStatus === RequestStatus.Failed) {
 		return (
 			<InfoMessage
@@ -370,6 +389,35 @@ const ExportForm = () => {
 			>
 				Export to Google Drive
 			</button>
+
+			<div className="flex flex-col mt-5">
+				{downloadUrls && (
+					<p className="font-light">
+						Alternatively, you can directly download the files to your computer:{' '}
+						<a
+							className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+							href={downloadUrls.text}
+						>
+							transcript text
+						</a>
+						,{' '}
+						<a
+							className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+							href={downloadUrls.srt}
+						>
+							transcript SRT
+						</a>
+						,{' '}
+						<a
+							className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+							href={downloadUrls.sourceMedia}
+						>
+							input media
+						</a>
+						.
+					</p>
+				)}
+			</div>
 		</>
 	);
 };

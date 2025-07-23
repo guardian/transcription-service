@@ -206,6 +206,18 @@ export const ExportStatusRequest = z.object({
 	id: z.string(),
 });
 
+export const DownloadUrlRequest = z.object({
+	id: z.string(),
+});
+export type DownloadUrlRequest = z.infer<typeof DownloadUrlRequest>;
+
+export const DownloadUrls = z.object({
+	text: z.string(),
+	srt: z.string(),
+	sourceMedia: z.string(),
+});
+export type DownloadUrls = z.infer<typeof DownloadUrls>;
+
 export const TranscriptExportRequest = z.object({
 	id: z.string(),
 	oAuthTokenResponse: ZTokenResponse,
