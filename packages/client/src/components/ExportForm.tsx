@@ -21,7 +21,6 @@ import {
 	Checkbox,
 	CustomFlowbiteTheme,
 	Flowbite,
-	HelperText,
 	Label,
 } from 'flowbite-react';
 import { authFetch } from '@/helpers';
@@ -391,14 +390,34 @@ const ExportForm = () => {
 				Export to Google Drive
 			</button>
 
-			{downloadUrls && (
-				<HelperText>
-					You can also download the transcription output and input media:{' '}
-					<a href={downloadUrls.text}>transcript text</a>,{' '}
-					<a href={downloadUrls.srt}>transcript SRT</a>,{' '}
-					<a href={downloadUrls.sourceMedia}>input media</a>.
-				</HelperText>
-			)}
+			<div className="flex flex-col mt-5">
+				{downloadUrls && (
+					<p className="font-light">
+						Alternatively, you can directly download the files to your computer:{' '}
+						<a
+							className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+							href={downloadUrls.text}
+						>
+							transcript text
+						</a>
+						,{' '}
+						<a
+							className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+							href={downloadUrls.srt}
+						>
+							transcript SRT
+						</a>
+						,{' '}
+						<a
+							className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+							href={downloadUrls.sourceMedia}
+						>
+							input media
+						</a>
+						.
+					</p>
+				)}
+			</div>
 		</>
 	);
 };
