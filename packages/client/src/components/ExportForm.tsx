@@ -121,9 +121,10 @@ const ExportForm = () => {
 		);
 	}
 	useEffect(() => {
-		authFetch(`/api/export/download-urls?id=${transcriptId}`, token).then(
-			(urls) => {
-				const parsedUrls = DownloadUrls.safeParse(urls);
+		authFetch(`/api/export/download-urls?id=${transcriptId}`, token)
+			.then((urls) => urls.json())
+			.then((json) => {
+				const parsedUrls = DownloadUrls.safeParse(json);
 				if (!parsedUrls.success) {
 					console.error(
 						'Failed to parse download URLs response',
@@ -132,8 +133,7 @@ const ExportForm = () => {
 					return;
 				}
 				setDownloadUrls(parsedUrls.data);
-			},
-		);
+			});
 	}, [transcriptId]);
 	if (requestStatus === RequestStatus.Failed) {
 		return (
