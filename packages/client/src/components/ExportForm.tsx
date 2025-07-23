@@ -21,6 +21,7 @@ import {
 	Checkbox,
 	CustomFlowbiteTheme,
 	Flowbite,
+	HelperText,
 	Label,
 } from 'flowbite-react';
 import { authFetch } from '@/helpers';
@@ -322,9 +323,7 @@ const ExportForm = () => {
 							)
 						}
 					/>
-					<Label htmlFor="transcript-text">
-						Transcript text (<a href={downloadUrls?.text}>Download</a>)
-					</Label>
+					<Label htmlFor="transcript-text">Transcript text</Label>
 				</div>
 				<div className="flex items-center gap-2">
 					<Checkbox
@@ -341,8 +340,7 @@ const ExportForm = () => {
 						}
 					/>
 					<Label htmlFor="transcript-srt">
-						Transcript text with timecodes (SRT) (
-						<a href={downloadUrls?.srt}>Download</a>)
+						Transcript text with timecodes (SRT)
 					</Label>
 				</div>
 				<div className="flex gap-2">
@@ -362,9 +360,7 @@ const ExportForm = () => {
 						/>
 					</div>
 					<div className="flex flex-col">
-						<Label htmlFor="source-media">
-							Input media (<a href={downloadUrls?.sourceMedia}>Download</a>)
-						</Label>
+						<Label htmlFor="source-media">Input media</Label>
 						<div className="text-gray-500 dark:text-gray-300">
 							<span className="text-xs font-normal">
 								Max 10GB (roughly 3 hours of video)
@@ -394,6 +390,15 @@ const ExportForm = () => {
 			>
 				Export to Google Drive
 			</button>
+
+			{downloadUrls && (
+				<HelperText>
+					You can also download the transcription output and input media:{' '}
+					<a href={downloadUrls.text}>transcript text</a>,{' '}
+					<a href={downloadUrls.srt}>transcript SRT</a>,{' '}
+					<a href={downloadUrls.sourceMedia}>input media</a>.
+				</HelperText>
+			)}
 		</>
 	);
 };

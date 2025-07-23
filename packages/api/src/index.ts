@@ -232,7 +232,7 @@ const getApp = async () => {
 		}),
 	]);
 
-	apiRouter.get('/export/get-download-urls', [
+	apiRouter.get('/export/download-urls', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
 			const downloadUrlRequest = DownloadUrlRequest.safeParse(req.query);
