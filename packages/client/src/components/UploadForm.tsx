@@ -19,7 +19,6 @@ import {
 	Alert,
 	TextInput,
 	Button,
-	HelperText,
 } from 'flowbite-react';
 import { MediaUrlInput, RequestStatus } from '@/types';
 import { InfoMessage } from '@/components/InfoMessage';
@@ -329,11 +328,15 @@ export const UploadForm = () => {
 						onClick={() => setMediaSource('file')}
 					/>
 					<Label htmlFor="file-radio">File</Label>
+					<Radio
+						id="url-radio"
+						name="media-type"
+						value="url"
+						checked={mediaSource === 'url'}
+						onClick={() => setMediaSource('url')}
+					/>
+					<Label htmlFor="url-radio">URL</Label>
 				</div>
-				<HelperText color={'failure'}>
-					Unfortunately, URL transcription is unavailable as of 22 July. We'll
-					send an email round when it has been fixed.
-				</HelperText>
 				{mediaSource === 'url' && (
 					<>
 						<div className="mb-4"></div>
