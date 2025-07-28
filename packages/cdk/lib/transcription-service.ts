@@ -60,6 +60,7 @@ import {
 	UserData,
 } from 'aws-cdk-lib/aws-ec2';
 import { Repository } from 'aws-cdk-lib/aws-ecr';
+import { ContainerInsights } from 'aws-cdk-lib/aws-ecs';
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import {
 	Effect,
@@ -702,6 +703,7 @@ export class TranscriptionService extends GuStack {
 				},
 				3,
 			),
+			containerInsights: ContainerInsights.DISABLED,
 			containerConfiguration: {
 				repository: Repository.fromRepositoryName(
 					this,
