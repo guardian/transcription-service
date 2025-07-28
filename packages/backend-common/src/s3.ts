@@ -63,7 +63,8 @@ const sanitizeFilename = (filename: string) => {
 		// manually add an extension so let's give them some headroom)
 		return sanitized.substring(0, 250);
 	}
-	// file has an extension - truncate that to 20 chars and the filename to 220 chars
+	// file has an extension - truncate that to 20 chars and the filename to 220 chars. Note that extension will
+	// include the leading . - so we start the substring from position 1
 	const truncatedExtension = extension.substring(1, 21);
 	const nameNoExtension = path.basename(sanitized, extension);
 	const truncatedName = nameNoExtension.substring(0, 220);
