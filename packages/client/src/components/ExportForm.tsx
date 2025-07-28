@@ -1,5 +1,6 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
+	DownloadUrls,
 	ExportStatus,
 	ExportStatuses,
 	ExportType,
@@ -98,6 +99,12 @@ const ExportForm = () => {
 		ExportType[]
 	>(['text']);
 	const [exportStatuses, setExportStatuses] = useState<ExportStatuses>([]);
+	const [downloadUrls, setDownloadUrls] = useState<DownloadUrls | undefined>(
+		undefined,
+	);
+	const [downloadUrlsStatusText, setDownloadUrlsStatusText] = useState<string>(
+		'Fetching direct download urls...',
+	);
 
 	// TODO: once we have some CSS/component library, tidy up this messy error handling
 	if (!token) {
@@ -115,6 +122,28 @@ const ExportForm = () => {
 			/>
 		);
 	}
+	useEffect(() => {
+		authFetch(`/api/export/download-urls?id=${transcriptId}`, token)
+			.then((urls) => urls.json())
+			.then((json) => {
+				const parsedUrls = DownloadUrls.safeParse(json);
+				if (!parsedUrls.success) {
+					console.error(
+						'Failed to parse download URLs response',
+						parsedUrls.error,
+					);
+					throw new Error('Error parsing download URLs response');
+				}
+				setDownloadUrls(parsedUrls.data);
+			})
+			.catch((error) => {
+				console.error('Failed to fetch download URLs', error);
+				setDownloadUrls(undefined);
+				setDownloadUrlsStatusText(
+					'Failed to fetch direct download URLs. You can still export to Google Drive.',
+				);
+			});
+	}, [transcriptId]);
 	if (requestStatus === RequestStatus.Failed) {
 		return (
 			<InfoMessage
@@ -370,6 +399,37 @@ const ExportForm = () => {
 			>
 				Export to Google Drive
 			</button>
+
+			<div className="flex flex-col mt-5">
+				{downloadUrls ? (
+					<p className="font-light">
+						Alternatively, you can directly download the files to your computer:{' '}
+						<a
+							className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+							href={downloadUrls.text}
+						>
+							Transcript text
+						</a>
+						,{' '}
+						<a
+							className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+							href={downloadUrls.srt}
+						>
+							Transcript SRT
+						</a>
+						,{' '}
+						<a
+							className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+							href={downloadUrls.sourceMedia}
+						>
+							Input media
+						</a>
+						.
+					</p>
+				) : (
+					downloadUrlsStatusText
+				)}
+			</div>
 		</>
 	);
 };
