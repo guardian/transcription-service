@@ -77,6 +77,8 @@ export const downloadMedia = async (
 			'yt-dlp',
 			[
 				'-v',
+				'-S',
+				'ext', // prefer mp4 format - see https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#format-selection-examples
 				'--extractor-args',
 				'youtubepot-bgutilscript:script_path=/opt/bgutil-ytdlp-pot-provider/server/build/generate_once.js',
 				'--write-info-json',
