@@ -84,6 +84,7 @@ const TranscriptionOutputBase = OutputBase.extend({
 });
 
 export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
+	// status must be kept in sync with https://github.com/guardian/giant/blob/main/backend/app/extraction/ExternalTranscriptionExtractor.scala#L76
 	status: z.literal('SUCCESS'),
 	languageCode: OutputLanguageCode,
 	outputBucketKeys: OutputBucketKeys,
@@ -93,6 +94,7 @@ export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
 });
 
 export const MediaDownloadFailure = OutputBase.extend({
+	// status must be kept in sync with https://github.com/guardian/giant/blob/main/backend/app/extraction/ExternalTranscriptionExtractor.scala#L76
 	status: z.literal('MEDIA_DOWNLOAD_FAILURE'),
 	url: z.string(),
 });
@@ -100,6 +102,7 @@ export const MediaDownloadFailure = OutputBase.extend({
 export type MediaDownloadFailure = z.infer<typeof MediaDownloadFailure>;
 
 export const TranscriptionOutputFailure = TranscriptionOutputBase.extend({
+	// status must be kept in sync with https://github.com/guardian/giant/blob/main/backend/app/extraction/ExternalTranscriptionExtractor.scala#L76
 	status: z.literal('TRANSCRIPTION_FAILURE'),
 });
 
