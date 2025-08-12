@@ -42,13 +42,46 @@ export type OutputBucketKeys = z.infer<typeof OutputBucketKeys>;
 export const MediaDownloadJob = z.object({
 	id: z.string(),
 	url: z.string(),
+	client: z.string(),
+});
+
+export type MediaDownloadJob = z.infer<typeof MediaDownloadJob>;
+
+export const TranscriptionMediaDownloadJob = MediaDownloadJob.extend({
+	client: z.literal('TRANSCRIPTION_SERVICE'),
 	userEmail: z.string(),
 	languageCode: InputLanguageCode,
 	translationRequested: z.boolean(),
 	diarizationRequested: z.boolean(),
 });
+export type TranscriptionMediaDownloadJob = z.infer<
+	typeof TranscriptionMediaDownloadJob
+>;
 
-export type MediaDownloadJob = z.infer<typeof MediaDownloadJob>;
+export const ExternalMediaDownloadJob = MediaDownloadJob.extend({
+	client: z.literal('EXTERNAL'),
+	outputQueueUrl: z.string(),
+	s3OutputSignedUrl: z.string(),
+});
+export type ExternalMediaDownloadJob = z.infer<typeof ExternalMediaDownloadJob>;
+
+export const isTranscriptionMediaDownloadJob = (
+	job: MediaDownloadJob,
+): job is TranscriptionMediaDownloadJob =>
+	job.client === 'TRANSCRIPTION_SERVICE';
+
+export const isExternalMediaDownloadJob = (
+	job: MediaDownloadJob,
+): job is ExternalMediaDownloadJob => job.client === 'EXTERNAL';
+
+export const ExternalMediaDownloadJobOutput = z.object({
+	id: z.string(),
+	status: z.union([z.literal('SUCCESS'), z.literal('FAILURE')]),
+});
+
+export type ExternalMediaDownloadJobOutput = z.infer<
+	typeof ExternalMediaDownloadJobOutput
+>;
 
 export enum TranscriptionEngine {
 	WHISPER_X = 'whisperx',

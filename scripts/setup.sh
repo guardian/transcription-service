@@ -4,7 +4,7 @@ set -e
 SCRIPT_PATH=$( cd $(dirname $0) ; pwd -P )
 
 
-npm install
+#npm install
 
 dev-nginx setup-app nginx/nginx-mapping.yml
 
@@ -27,6 +27,31 @@ export AWS_REGION=eu-west-1
 APP_NAME="transcription-service"
 
 ./create-local-queues.sh
+
+#########
+##### giant media download output dead letter queue
+#########
+GIANT_MEDIA_DOWNLOAD_OUTPUT_DEAD_LETTER_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=giant-media-download-output-dead-letter-queue-DEV.fifo --attributes "FifoQueue=true,ContentBasedDeduplication=true" | jq .QueueUrl)
+# We don't install the localstack dns so need to replace the endpoint with localhost
+GIANT_MEDIA_DOWNLOAD_OUTPUT_DEAD_LETTER_QUEUE_URL_LOCALHOST=${GIANT_MEDIA_DOWNLOAD_OUTPUT_DEAD_LETTER_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
+
+echo "Created queue in localstack, url: ${GIANT_MEDIA_DOWNLOAD_OUTPUT_DEAD_LETTER_QUEUE_URL_LOCALHOST}"
+
+#########
+##### giant media download output queue
+#########
+GIANT_MEDIA_DOWNLOAD_OUTPUT_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=giant-media-download-output-queue-DEV.fifo \
+  --attributes '{
+  "FifoQueue": "true",
+  "ContentBasedDeduplication": "true",
+  "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:giant-media-download-output-dead-letter-queue-DEV.fifo\",\"maxReceiveCount\":\"3\"}"
+  }' | jq .QueueUrl)
+
+
+# We don't install the localstack dns so need to replace the endpoint with localhost
+GIANT_MEDIA_DOWNLOAD_OUTPUT_QUEUE_URL_LOCALHOST=${GIANT_MEDIA_DOWNLOAD_OUTPUT_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
+
+echo "Created queue in localstack, url: ${GIANT_MEDIA_DOWNLOAD_OUTPUT_QUEUE_URL_LOCALHOST}"
 
 DYNAMODB_ARN=$(aws --endpoint-url=http://localhost:4566 dynamodb create-table \
                                          --table-name ${APP_NAME}-DEV \

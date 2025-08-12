@@ -13,6 +13,9 @@ import axios from 'axios';
 import { logger } from '@guardian/transcription-service-backend-common';
 import { AWSStatus } from './types';
 import { ungzip } from 'node-gzip';
+import { createReadStream } from 'node:fs';
+import { MediaMetadata } from 'media-download/src/yt-dlp';
+import { stat } from 'node:fs/promises';
 
 const ReadableBody = z.instanceof(Readable);
 
@@ -172,6 +175,47 @@ export const getObjectWithPresignedUrl = async (
 	const body = ReadableBody.parse(response.data);
 	await downloadS3Data(body, destinationPath, key);
 	return destinationPath;
+};
+
+export const uploadObjectWithPresignedUrl = async (
+	presignedUrl: string,
+	metadata: MediaMetadata,
+) => {
+	console.log(
+		`Uploading with ${presignedUrl}, metadata ${JSON.stringify(metadata)}`,
+	);
+	const fileStream = createReadStream(metadata.mediaPath);
+
+	try {
+		const webStream = Readable.toWeb(fileStream) as ReadableStream;
+		const fileStats = await stat(metadata.mediaPath);
+		const contentLength = fileStats.size;
+		const response = await fetch(presignedUrl, {
+			method: 'PUT',
+			body: webStream,
+			duplex: 'half',
+			headers: {
+				'Content-Type': 'application/octet-stream',
+				'Content-Length': contentLength.toString(),
+				'x-amz-meta-extension': metadata.extension,
+				'x-amz-meta-title': metadata.title,
+			},
+		} as RequestInit);
+
+		if (response.ok) {
+			const text = await response.text();
+			console.log('File uploaded successfully');
+			console.log(text);
+			return true;
+		} else {
+			throw new Error(
+				`Upload failed with status ${response.status}, message ${response.statusText}`,
+			);
+		}
+	} catch (e) {
+		console.error('Error uploading file:', e);
+		throw e;
+	}
 };
 
 export const downloadObject = async (

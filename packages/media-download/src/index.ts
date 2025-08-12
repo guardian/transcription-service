@@ -8,6 +8,7 @@ import {
 	mediaKey,
 	sendMessage,
 	TranscriptionConfig,
+	uploadObjectWithPresignedUrl,
 } from '@guardian/transcription-service-backend-common';
 import { Upload } from '@aws-sdk/lib-storage';
 import { S3Client } from '@aws-sdk/client-s3';
@@ -16,8 +17,13 @@ import { downloadMedia, MediaMetadata, startProxyTunnel } from './yt-dlp';
 import { SQSClient } from '@aws-sdk/client-sqs';
 import {
 	DestinationService,
+	ExternalMediaDownloadJob,
+	ExternalMediaDownloadJobOutput,
+	isExternalMediaDownloadJob,
+	isTranscriptionMediaDownloadJob,
 	MediaDownloadFailure,
 	MediaDownloadJob,
+	TranscriptionMediaDownloadJob,
 } from '@guardian/transcription-service-common';
 
 // This needs to be kept in sync with CDK downloadVolume
@@ -59,7 +65,7 @@ const uploadToS3 = async (
 const reportDownloadFailure = async (
 	config: TranscriptionConfig,
 	sqsClient: SQSClient,
-	job: MediaDownloadJob,
+	job: TranscriptionMediaDownloadJob,
 ) => {
 	const mediaDownloadFailure: MediaDownloadFailure = {
 		id: job.id,
@@ -79,11 +85,27 @@ const reportDownloadFailure = async (
 	}
 };
 
+const reportExternalJob = async (
+	job: ExternalMediaDownloadJob,
+	sqsClient: SQSClient,
+) => {
+	const output: ExternalMediaDownloadJobOutput = {
+		id: job.id,
+		status: 'SUCCESS',
+	};
+	await sendMessage(
+		sqsClient,
+		job.outputQueueUrl,
+		JSON.stringify(output),
+		job.id,
+	);
+};
+
 const requestTranscription = async (
 	config: TranscriptionConfig,
 	s3Key: string,
 	sqsClient: SQSClient,
-	job: MediaDownloadJob,
+	job: TranscriptionMediaDownloadJob,
 	metadata: MediaMetadata,
 ) => {
 	const signedUrl = await getSignedDownloadUrl(
@@ -118,7 +140,9 @@ const main = async () => {
 		return;
 	}
 
-	const parsedJob = MediaDownloadJob.safeParse(JSON.parse(input));
+	console.log(JSON.parse(input));
+	const parsedInput = JSON.parse(input);
+	const parsedJob = MediaDownloadJob.safeParse(parsedInput);
 	if (!parsedJob.success) {
 		logger.error(
 			`MESSAGE_BODY is not a valid MediaDownloadJob - exiting. MESSAGE_BODY: ${input} Errors: ${parsedJob.error.errors.map((e) => e.message).join(', ')}`,
@@ -126,6 +150,8 @@ const main = async () => {
 		return;
 	}
 	const job = parsedJob.data;
+
+	console.log('JOB NOw', job);
 
 	const config = await getConfig();
 
@@ -157,15 +183,25 @@ const main = async () => {
 		proxyUrl,
 	);
 	if (!metadata) {
-		await reportDownloadFailure(config, sqsClient, job);
+		if (isTranscriptionMediaDownloadJob(job)) {
+			const tJob = TranscriptionMediaDownloadJob.parse(parsedInput);
+			await reportDownloadFailure(config, sqsClient, tJob);
+		}
 	} else {
-		const key = await uploadToS3(
-			s3Client,
-			metadata,
-			config.app.sourceMediaBucket,
-			job.id,
-		);
-		await requestTranscription(config, key, sqsClient, job, metadata);
+		if (isTranscriptionMediaDownloadJob(job)) {
+			const tJob = TranscriptionMediaDownloadJob.parse(parsedInput);
+			const key = await uploadToS3(
+				s3Client,
+				metadata,
+				config.app.sourceMediaBucket,
+				tJob.id,
+			);
+			await requestTranscription(config, key, sqsClient, tJob, metadata);
+		} else if (isExternalMediaDownloadJob(job)) {
+			const eJob = ExternalMediaDownloadJob.parse(parsedInput);
+			await uploadObjectWithPresignedUrl(eJob.s3OutputSignedUrl, metadata);
+			await reportExternalJob(eJob, sqsClient);
+		}
 	}
 };
 
