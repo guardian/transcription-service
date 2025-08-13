@@ -375,7 +375,7 @@ export const runWhisper = async (
 		const result = await runSpawnCommand('transcribe', 'docker', [
 			'exec',
 			containerId,
-			'whisper.cpp/main',
+			'whisper.cpp/build/bin/whisper-cli',
 			'--model',
 			`whisper.cpp/models/ggml-${model}.bin`,
 			'--threads',
