@@ -2,6 +2,8 @@
 	"name": "@guardian/transcription-service-backend-common",
 	"version": "1.0.0",
 	"dependencies": {
+		"archiver": "^7.0.1",
+		"unzipper": "^0.12.3",
 		"@aws-sdk/client-dynamodb": "3.624.0",
 		"@aws-sdk/client-s3": "^3.624.0",
 		"@aws-sdk/client-sqs": "^3.624.0",
@@ -10,6 +12,8 @@
 		"@aws-sdk/client-secrets-manager": "^3.624.0",
 		"@aws-sdk/client-cloudwatch": "^3.624.0",
 		"@aws-sdk/client-auto-scaling": "^3.624.0",
+		"@types/archiver": "^6.0.3",
+		"@types/unzipper": "^0.10.10",
 		"axios": "^1.8.2",
 		"winston": "^3.11.0"
 	},
