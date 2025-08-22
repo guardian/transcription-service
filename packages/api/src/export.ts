@@ -58,7 +58,9 @@ export const getCombinedOutput = async (
 		};
 	}
 
-	const result = TranscriptionResult.safeParse(combinedOutputText);
+	const result = TranscriptionResult.safeParse(
+		JSON.parse(combinedOutputText.text),
+	);
 	if (result.success) {
 		return {
 			status: 'success',
