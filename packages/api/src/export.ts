@@ -44,18 +44,13 @@ export const getCombinedOutput = async (
 		config.app.transcriptionOutputBucket,
 		key,
 	);
+
 	if (isS3Failure(combinedOutputText)) {
-		if (combinedOutputText.failureReason === 'NoSuchKey') {
-			const msg = `Failed to export transcript - file has expired. Please re-upload the file and try again.`;
-			return {
-				status: 'failure',
-				failureReason: msg,
-			};
-		}
-		const msg = `Failed to fetch transcript. Please contact the digital investigations team for support`;
-		logger.error(
-			`Fetching from s3 failed, failure reason: ${combinedOutputText.failureReason}`,
-		);
+		const msg =
+			combinedOutputText.failureReason === 'NoSuchKey'
+				? `Failed to export transcript - file has expired. Please re-upload the file and try again.`
+				: `Failed to fetch transcript. Please contact the digital investigations team for support`;
+		logger.error(msg);
 		return {
 			status: 'failure',
 			failureReason: msg,
