@@ -19,6 +19,7 @@ export const uploadToS3 = async (
 			method: 'PUT',
 			body: blob,
 			headers: {
+				// NOTE: Content-Encoding header MUST match that specified in the presigned url
 				'Content-Encoding': gzipped ? 'gzip' : 'identity',
 			},
 		});

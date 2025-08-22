@@ -35,7 +35,6 @@ export const uploadedCombinedResultsToS3 = async (
 	result: TranscriptionResult,
 ) => {
 	const gzippedResult: Buffer = await gzip(JSON.stringify(result));
-	// const blob = new Blob([gzippedResult as BlobPart]);
 	const response = await uploadToS3(combinedOutputUrl, gzippedResult, true);
 	if (!response.isSuccess) {
 		throw new Error(

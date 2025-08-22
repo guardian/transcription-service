@@ -52,6 +52,7 @@ export const getSignedUploadUrl = (
 			Bucket: bucket,
 			Key: id,
 			Metadata: metadataWithFilename,
+			// NOTE: Content-Encoding header MUST be specified when file is uploaded if it is defined here
 			ContentEncoding: contentEncoding,
 		}),
 		{ expiresIn }, // override default expiration time of 15 minutes
