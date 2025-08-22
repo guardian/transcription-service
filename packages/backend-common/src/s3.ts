@@ -34,6 +34,7 @@ export const getSignedUploadUrl = (
 	useAccelerateEndpoint: boolean,
 	id: string,
 	fileName?: string,
+	contentEncoding?: string,
 ) => {
 	const metadata = {
 		'user-email': userEmail,
@@ -51,6 +52,7 @@ export const getSignedUploadUrl = (
 			Bucket: bucket,
 			Key: id,
 			Metadata: metadataWithFilename,
+			ContentEncoding: contentEncoding,
 		}),
 		{ expiresIn }, // override default expiration time of 15 minutes
 	);
@@ -114,7 +116,7 @@ export const getObjectText = async (
 	client: S3Client,
 	bucket: string,
 	key: string,
-	gzipped?: boolean,
+	gzipped: boolean,
 ): Promise<GetObjectTextResult> => {
 	try {
 		const data = await client.send(

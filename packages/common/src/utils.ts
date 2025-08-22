@@ -12,11 +12,15 @@ type UploadResult = UploadSuccess | UploadFailure;
 export const uploadToS3 = async (
 	url: string,
 	blob: Blob | Buffer,
+	gzipped: boolean = false,
 ): Promise<UploadResult> => {
 	try {
 		const response = await fetch(url, {
 			method: 'PUT',
 			body: blob,
+			headers: {
+				'Content-Encoding': gzipped ? 'gzip' : 'identity',
+			},
 		});
 		const status = response.status;
 		const isSuccess = status === 200;

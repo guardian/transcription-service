@@ -1,8 +1,9 @@
 import { logger } from '@guardian/transcription-service-backend-common';
-import { TranscriptionResult, Transcripts } from './transcribe';
 import {
 	uploadToS3,
 	type OutputBucketUrls,
+	Transcripts,
+	TranscriptionResult,
 } from '@guardian/transcription-service-common';
 import { gzip } from 'node-gzip';
 
@@ -19,7 +20,7 @@ export const uploadAllTranscriptsToS3 = async (
 
 	for (const blobDetail of blobs) {
 		const [fileFormat, url, blob] = blobDetail;
-		const response = await uploadToS3(url, blob);
+		const response = await uploadToS3(url, blob, false);
 		if (!response.isSuccess) {
 			throw new Error(
 				`Could not upload file format: ${fileFormat} to S3! ${response.errorMsg}`,
@@ -35,7 +36,7 @@ export const uploadedCombinedResultsToS3 = async (
 ) => {
 	const gzippedResult: Buffer = await gzip(JSON.stringify(result));
 	// const blob = new Blob([gzippedResult as BlobPart]);
-	const response = await uploadToS3(combinedOutputUrl, gzippedResult);
+	const response = await uploadToS3(combinedOutputUrl, gzippedResult, true);
 	if (!response.isSuccess) {
 		throw new Error(
 			`Could not upload combined results to S3! ${response.errorMsg}`,

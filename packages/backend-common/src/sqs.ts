@@ -86,9 +86,11 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		config.aws.region,
 		config.app.transcriptionOutputBucket,
 		userEmail,
-		7,
+		7 * 24 * 60 * 60,
 		false,
 		combinedOutputKey,
+		undefined,
+		'gzip',
 	);
 
 	// user whisperX if whisperX enabled and...
