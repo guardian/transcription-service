@@ -43,6 +43,7 @@ export const getCombinedOutput = async (
 		s3Client,
 		config.app.transcriptionOutputBucket,
 		key,
+		true,
 	);
 
 	if (isS3Failure(combinedOutputText)) {
@@ -94,6 +95,7 @@ export const exportTranscriptToDoc = async (
 			s3Client,
 			config.app.transcriptionOutputBucket,
 			transcriptS3Key,
+			false,
 		);
 		if (isS3Failure(transcriptText)) {
 			if (transcriptText.failureReason === 'NoSuchKey') {

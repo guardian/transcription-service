@@ -11,7 +11,7 @@ type UploadResult = UploadSuccess | UploadFailure;
 
 export const uploadToS3 = async (
 	url: string,
-	blob: Blob,
+	blob: Blob | Buffer,
 ): Promise<UploadResult> => {
 	try {
 		const response = await fetch(url, {

@@ -366,7 +366,7 @@ const pollTranscriptionQueue = async (
 			process.exit(0);
 		}
 
-		// TODO: combinedOutputUrl won't be optional one day, at which point this if should be removed
+		// TODO: combinedOutputUrl won't be optional one day, at which point this conditional should be removed
 		if (combinedOutputUrl) {
 			await uploadedCombinedResultsToS3(
 				combinedOutputUrl.url,

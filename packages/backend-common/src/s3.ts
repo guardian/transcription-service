@@ -12,6 +12,7 @@ import { z } from 'zod';
 import axios from 'axios';
 import { logger } from '@guardian/transcription-service-backend-common';
 import { AWSStatus } from './types';
+import { ungzip } from 'node-gzip';
 
 const ReadableBody = z.instanceof(Readable);
 
@@ -113,6 +114,7 @@ export const getObjectText = async (
 	client: S3Client,
 	bucket: string,
 	key: string,
+	gzipped?: boolean,
 ): Promise<GetObjectTextResult> => {
 	try {
 		const data = await client.send(
@@ -126,9 +128,17 @@ export const getObjectText = async (
 		for await (const chunk of body) {
 			chunks.push(chunk);
 		}
+		const buffer = Buffer.concat(chunks);
+		if (gzipped) {
+			const dezipped = await ungzip(buffer);
+			return {
+				status: AWSStatus.Success,
+				text: dezipped.toString('utf-8'),
+			};
+		}
 		return {
 			status: AWSStatus.Success,
-			text: Buffer.concat(chunks).toString('utf-8'),
+			text: buffer.toString('utf-8'),
 		};
 	} catch (error: unknown) {
 		if (error instanceof Error) {
