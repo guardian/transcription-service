@@ -47,6 +47,8 @@ import {
 	exportTranscriptToDoc,
 	updateStatuses,
 	getDownloadUrls,
+	getCombinedOutput,
+	combinedOutputResultIsSuccess,
 } from './export';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { invokeLambda } from './services/lambda';
@@ -354,10 +356,29 @@ const getApp = async () => {
 				exportStatuses: exportStatuses,
 			});
 
+			// fetch combined output once rather than once per file type
+			const combinedOutputResult = getItemResult.item.combinedOutputKey
+				? await getCombinedOutput(
+						config,
+						s3Client,
+						getItemResult.item.combinedOutputKey,
+					)
+				: null;
+
 			exportStatuses = await Promise.all(
 				exportStatuses.map((exportStatus: ExportStatus) => {
 					if (exportStatus.exportType == 'source-media') {
 						return exportStatus;
+					}
+					if (
+						combinedOutputResult &&
+						!combinedOutputResultIsSuccess(combinedOutputResult)
+					) {
+						return {
+							status: 'failure',
+							exportType: exportStatus.exportType,
+							message: combinedOutputResult.failureReason,
+						};
 					}
 					return exportTranscriptToDoc(
 						config,
@@ -367,6 +388,7 @@ const getApp = async () => {
 						exportRequest.data.folderId,
 						driveClients.drive,
 						driveClients.docs,
+						combinedOutputResult?.data,
 					);
 				}),
 			);

@@ -7,6 +7,8 @@ import {
 	languageCodes,
 	OutputLanguageCode,
 	TranscriptionEngine,
+	TranscriptionMetadata,
+	TranscriptionResult,
 } from '@guardian/transcription-service-common';
 import { runSpawnCommand } from '@guardian/transcription-service-backend-common/src/process';
 
@@ -15,24 +17,6 @@ interface FfmpegResult {
 }
 
 export type WhisperModel = 'medium' | 'tiny';
-
-export interface Transcripts {
-	srt: string;
-	text: string;
-	json: string;
-}
-
-type TranscriptionMetadata = {
-	detectedLanguageCode: OutputLanguageCode;
-	loadTimeMs?: number;
-	totalTimeMs?: number;
-};
-
-type TranscriptionResult = {
-	transcripts: Transcripts;
-	transcriptTranslations?: Transcripts;
-	metadata: TranscriptionMetadata;
-};
 
 export type WhisperBaseParams = {
 	containerId?: string;

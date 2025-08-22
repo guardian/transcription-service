@@ -63,6 +63,8 @@ export const TranscriptionJob = z.object({
 	userEmail: z.string(),
 	transcriptDestinationService: z.nativeEnum(DestinationService),
 	outputBucketUrls: OutputBucketUrls,
+	// TODO: make this required once giant has been updated accordingly
+	combinedOutputUrl: z.optional(SignedUrl),
 	languageCode: InputLanguageCode,
 	translate: z.boolean(),
 	diarize: z.boolean(),
@@ -87,6 +89,8 @@ export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
 	// status must be kept in sync with https://github.com/guardian/giant/blob/main/backend/app/extraction/ExternalTranscriptionExtractor.scala#L76
 	status: z.literal('SUCCESS'),
 	languageCode: OutputLanguageCode,
+	// TODO: make non optional once we are confident everything has a combinedOutputKey
+	combinedOutputKey: z.optional(z.string()),
 	outputBucketKeys: OutputBucketKeys,
 	// we can get rid of this when we switch to using a zip
 	translationOutputBucketKeys: z.optional(OutputBucketKeys),
@@ -284,6 +288,8 @@ export const TranscriptionDynamoItem = z.object({
 	id: z.string(),
 	originalFilename: z.string(),
 	transcriptKeys: TranscriptKeys,
+	// TODO: make this non optional and deprecate transcriptKeys
+	combinedOutputKey: z.optional(z.string()),
 	userEmail: z.string(),
 	completedAt: z.optional(z.string()), // dynamodb can't handle dates so we need to use an ISO date
 	isTranslation: z.boolean(),
@@ -292,3 +298,24 @@ export const TranscriptionDynamoItem = z.object({
 });
 
 export type TranscriptionDynamoItem = z.infer<typeof TranscriptionDynamoItem>;
+
+export const Transcripts = z.object({
+	srt: z.string(),
+	text: z.string(),
+	json: z.string(),
+});
+export type Transcripts = z.infer<typeof Transcripts>;
+
+export const TranscriptionMetadata = z.object({
+	detectedLanguageCode: OutputLanguageCode,
+	loadTimeMs: z.optional(z.number()),
+	totalTimeMs: z.optional(z.number()),
+});
+export type TranscriptionMetadata = z.infer<typeof TranscriptionMetadata>;
+
+export const TranscriptionResult = z.object({
+	transcripts: Transcripts,
+	transcriptTranslations: z.optional(Transcripts),
+	metadata: TranscriptionMetadata,
+});
+export type TranscriptionResult = z.infer<typeof TranscriptionResult>;

@@ -84,6 +84,7 @@ const handleTranscriptionSuccess = async (
 			text: transcriptionOutput.outputBucketKeys.text,
 			json: transcriptionOutput.outputBucketKeys.json,
 		},
+		combinedOutputKey: transcriptionOutput.combinedOutputKey,
 		userEmail: transcriptionOutput.userEmail,
 		completedAt: new Date().toISOString(),
 		isTranslation: transcriptionOutput.isTranslation,

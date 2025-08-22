@@ -33,7 +33,7 @@ import {
 import path from 'path';
 
 import { getInstanceLifecycleState, updateScaleInProtection } from './asg';
-import { uploadAllTranscriptsToS3 } from './util';
+import { uploadAllTranscriptsToS3, uploadedCombinedResultsToS3 } from './util';
 import {
 	MetricsService,
 	FailureMetric,
@@ -243,7 +243,7 @@ const pollTranscriptionQueue = async (
 		// from this point all worker logs will have id & userEmail in their fields
 		logger.setCommonMetadata(job.id, job.userEmail);
 
-		const { outputBucketUrls, inputSignedUrl } = job;
+		const { outputBucketUrls, inputSignedUrl, combinedOutputUrl } = job;
 
 		logger.info(`Fetched transcription job with id ${job.id}`);
 
@@ -366,6 +366,14 @@ const pollTranscriptionQueue = async (
 			process.exit(0);
 		}
 
+		// TODO: combinedOutputUrl won't be optional one day, at which point this if should be removed
+		if (combinedOutputUrl) {
+			await uploadedCombinedResultsToS3(
+				combinedOutputUrl.url,
+				transcriptResult,
+			);
+		}
+
 		await uploadAllTranscriptsToS3(
 			outputBucketUrls,
 			transcriptResult.transcripts,
@@ -395,6 +403,7 @@ const pollTranscriptionQueue = async (
 			userEmail: job.userEmail,
 			originalFilename: job.originalFilename,
 			outputBucketKeys,
+			combinedOutputKey: combinedOutputUrl?.key,
 			translationOutputBucketKeys: job.translationOutputBucketUrls &&
 				transcriptResult.transcriptTranslations && {
 					srt: job.translationOutputBucketUrls.srt.key,
