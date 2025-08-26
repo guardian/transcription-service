@@ -92,7 +92,7 @@ const uploadFileAndTranscribe = async (
 		return false;
 	}
 
-	const uploadStatus = await uploadToS3(body.data.presignedS3Url, blob);
+	const uploadStatus = await uploadToS3(body.data.presignedS3Url, blob, false);
 	if (!uploadStatus.isSuccess) {
 		console.error('Failed to upload to s3');
 		return false;

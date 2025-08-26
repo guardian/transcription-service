@@ -20,6 +20,7 @@ import {
 	TranscriptionDynamoItem,
 	transcriptionOutputIsMediaDownloadFailure,
 	MediaDownloadFailure,
+	ONE_WEEK_IN_SECONDS,
 } from '@guardian/transcription-service-common';
 import {
 	MetricsService,
@@ -84,6 +85,7 @@ const handleTranscriptionSuccess = async (
 			text: transcriptionOutput.outputBucketKeys.text,
 			json: transcriptionOutput.outputBucketKeys.json,
 		},
+		combinedOutputKey: transcriptionOutput.combinedOutputKey,
 		userEmail: transcriptionOutput.userEmail,
 		completedAt: new Date().toISOString(),
 		isTranslation: transcriptionOutput.isTranslation,
@@ -217,7 +219,7 @@ const processMessage = async (event: unknown) => {
 				config.aws.region,
 				config.app.sourceMediaBucket,
 				transcriptionOutput.id,
-				7 * 24 * 60 * 60,
+				ONE_WEEK_IN_SECONDS,
 				transcriptionOutput.originalFilename,
 			);
 			logger.info(`handling transcription success`);
@@ -236,7 +238,7 @@ const processMessage = async (event: unknown) => {
 				config.aws.region,
 				config.app.sourceMediaBucket,
 				transcriptionOutput.id,
-				7 * 24 * 60 * 60,
+				ONE_WEEK_IN_SECONDS,
 				transcriptionOutput.originalFilename,
 			);
 			await handleTranscriptionFailure(

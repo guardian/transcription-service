@@ -13,6 +13,7 @@ import {
 	TranscriptionOutput,
 	TranscriptionEngine,
 	InputLanguageCode,
+	ONE_WEEK_IN_SECONDS,
 } from '@guardian/transcription-service-common';
 import {
 	getSignedUploadUrl,
@@ -80,6 +81,19 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		7,
 	);
 
+	const combinedOutputKey = `combined/${s3Key}.json`;
+
+	const combinedUrl = await getSignedUploadUrl(
+		config.aws.region,
+		config.app.transcriptionOutputBucket,
+		userEmail,
+		ONE_WEEK_IN_SECONDS,
+		false,
+		combinedOutputKey,
+		undefined,
+		'gzip',
+	);
+
 	// user whisperX if whisperX enabled and...
 	// duration is either unknown or greater than 10 minutes or  diarization has been requested
 	const engine =
@@ -101,6 +115,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		transcriptDestinationService: DestinationService.TranscriptionService,
 		originalFilename,
 		outputBucketUrls: signedUrls,
+		combinedOutputUrl: { key: combinedOutputKey, url: combinedUrl },
 		languageCode,
 		translate: false,
 		diarize: diarizationRequested,
