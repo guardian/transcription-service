@@ -51,6 +51,9 @@ export const checkSpotInterrupt = async (
 				// once the interrupt warning has happened, we don't need to keep checking
 				return;
 			}
+		} else if (result.status === 404) {
+			// No action scheduled, do nothing
+			// (see https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-instance-termination-notices.html#instance-action-metadata)
 		} else {
 			logger.error(
 				`Non-200 response from ${url}: ${result.status} ${result.statusText}`,
