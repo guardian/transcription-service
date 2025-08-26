@@ -88,7 +88,7 @@ export const exportTranscriptToDoc = async (
 ): Promise<ExportStatus> => {
 	logger.info(`Starting export, export type: ${format}`);
 	const transcriptS3Key = item.transcriptKeys[format];
-	// use a mutable variable here as a temporary measure until the old non-combined format is removed
+	// FIXME use a mutable variable here as a temporary measure until the old non-combined format is removed
 	let text: string;
 	if (combinedOutput) {
 		text = combinedOutput.transcripts[format];

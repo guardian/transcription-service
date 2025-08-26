@@ -13,6 +13,7 @@ import {
 	TranscriptionOutput,
 	TranscriptionEngine,
 	InputLanguageCode,
+	ONE_WEEK_IN_SECONDS,
 } from '@guardian/transcription-service-common';
 import {
 	getSignedUploadUrl,
@@ -86,7 +87,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		config.aws.region,
 		config.app.transcriptionOutputBucket,
 		userEmail,
-		7 * 24 * 60 * 60,
+		ONE_WEEK_IN_SECONDS,
 		false,
 		combinedOutputKey,
 		undefined,
