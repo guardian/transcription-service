@@ -209,14 +209,11 @@ export type ExportStatus = z.infer<typeof ExportStatus>;
 export const ExportStatuses = z.array(ExportStatus);
 export type ExportStatuses = z.infer<typeof ExportStatuses>;
 
-export const ExportStatusRequest = z.object({
+export const TranscriptIdentifier = z.object({
 	id: z.string(),
 });
 
-export const DownloadUrlRequest = z.object({
-	id: z.string(),
-});
-export type DownloadUrlRequest = z.infer<typeof DownloadUrlRequest>;
+export type TranscriptIdentifier = z.infer<typeof TranscriptIdentifier>;
 
 export const DownloadUrls = z.object({
 	text: z.string(),
@@ -224,6 +221,14 @@ export const DownloadUrls = z.object({
 	sourceMedia: z.string(),
 });
 export type DownloadUrls = z.infer<typeof DownloadUrls>;
+
+export const TranscriptDownloadRequest = z.object({
+	id: z.string(),
+	format: z.union([z.literal('text'), z.literal('srt')]),
+});
+export type TranscriptDownloadRequest = z.infer<
+	typeof TranscriptDownloadRequest
+>;
 
 export const TranscriptExportRequest = z.object({
 	id: z.string(),

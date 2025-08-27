@@ -31,9 +31,10 @@ import {
 	CreateFolderRequest,
 	signedUrlRequestBody,
 	ExportStatus,
-	ExportStatusRequest,
+	TranscriptIdentifier,
 	ExportStatuses,
-	DownloadUrlRequest,
+	TranscriptDownloadRequest,
+	TWELVE_HOURS_IN_SECONDS,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
@@ -46,7 +47,6 @@ import {
 	initializeExportStatuses,
 	exportTranscriptToDoc,
 	updateStatuses,
-	getDownloadUrls,
 	getCombinedOutput,
 	combinedOutputResultIsSuccess,
 } from './export';
@@ -234,10 +234,56 @@ const getApp = async () => {
 		}),
 	]);
 
+	apiRouter.get('/export/file', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			const downloadRequest = TranscriptDownloadRequest.safeParse(req.query);
+			if (!downloadRequest.success) {
+				res
+					.status(400)
+					.send(
+						'Invalid request - you must provide the transcript id and the exportType (text/srt) in the query string',
+					);
+				return;
+			}
+			const getItemResult = await getTranscriptionItem(
+				dynamoClient,
+				config.app.tableName,
+				downloadRequest.data.id,
+				{ check: true, currentUserEmail: req.user?.email },
+			);
+			if (getItemResult.status === 'failure') {
+				res.status(getItemResult.statusCode).send(getItemResult.errorMessage);
+				return;
+			}
+			if (!getItemResult.item.combinedOutputKey) {
+				res.status(400).send('Transcript does not have a combined output file');
+				return;
+			}
+			const combinedTranscript = await getCombinedOutput(
+				config,
+				s3Client,
+				getItemResult.item.combinedOutputKey,
+			);
+			if (!combinedOutputResultIsSuccess(combinedTranscript)) {
+				res.status(500).send(combinedTranscript.failureReason);
+				return;
+			}
+			const desiredOutput =
+				combinedTranscript.data.transcripts[downloadRequest.data.format];
+			res.setHeader('Content-type', 'text/plain');
+			res.setHeader(
+				'Content-disposition',
+				`attachment; filename=${getItemResult.item.originalFilename}.${downloadRequest.data.format}`,
+			);
+			res.send(desiredOutput);
+		}),
+	]);
+
 	apiRouter.get('/export/download-urls', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
-			const downloadUrlRequest = DownloadUrlRequest.safeParse(req.query);
+			const downloadUrlRequest = TranscriptIdentifier.safeParse(req.query);
 			if (!downloadUrlRequest.success) {
 				res
 					.status(400)
@@ -256,15 +302,27 @@ const getApp = async () => {
 				res.status(getItemResult.statusCode).send(getItemResult.errorMessage);
 				return;
 			}
-			const urls = await getDownloadUrls(config, getItemResult.item);
-			res.send(JSON.stringify(urls));
+			const mediaDownloadUrl = await getSignedDownloadUrl(
+				config.aws.region,
+				config.app.sourceMediaBucket,
+				getItemResult.item.id,
+				TWELVE_HOURS_IN_SECONDS,
+				`${getItemResult.item.originalFilename}`,
+			);
+			res.send(
+				JSON.stringify({
+					sourceMedia: mediaDownloadUrl,
+					text: `/export/file?id=${getItemResult.item.id}&format=text`,
+					srt: `/export/file?id=${getItemResult.item.id}&format=srt`,
+				}),
+			);
 		}),
 	]);
 
 	apiRouter.get('/export/status', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
-			const exportStatusRequest = ExportStatusRequest.safeParse(req.query);
+			const exportStatusRequest = TranscriptIdentifier.safeParse(req.query);
 			if (!exportStatusRequest.success) {
 				res
 					.status(400)
