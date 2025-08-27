@@ -119,7 +119,7 @@ const publishTranscriptionOutputFailure = async (
 	destination: string,
 	job: TranscriptionJob,
 ) => {
-	logger.info('publishing transcription output failed');
+	logger.info(`Sending failure message to ${destination}`);
 	const failureMessage: TranscriptionOutputFailure = {
 		id: job.id,
 		status: 'TRANSCRIPTION_FAILURE',
@@ -130,7 +130,7 @@ const publishTranscriptionOutputFailure = async (
 	try {
 		await publishTranscriptionOutput(sqsClient, destination, failureMessage);
 	} catch (e) {
-		logger.error('error publishing transcription output failed', e);
+		logger.error(`error publishing failure message to ${destination}`, e);
 	}
 };
 
