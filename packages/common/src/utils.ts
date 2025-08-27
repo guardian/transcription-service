@@ -14,13 +14,16 @@ export const uploadToS3 = async (
 	blob: Blob | Buffer,
 	gzipped: boolean = false,
 ): Promise<UploadResult> => {
+	// NOTE: Content-Encoding header MUST match that specified in the presigned url
+	const contentEncodingHeader: Record<string, string> = gzipped
+		? { 'Content-Encoding': 'gzip' }
+		: {};
 	try {
 		const response = await fetch(url, {
 			method: 'PUT',
 			body: blob,
 			headers: {
-				// NOTE: Content-Encoding header MUST match that specified in the presigned url
-				'Content-Encoding': gzipped ? 'gzip' : 'identity',
+				...contentEncodingHeader,
 			},
 		});
 		const status = response.status;
