@@ -157,6 +157,7 @@ const runTranscription = async (
 	} catch (error) {
 		logger.error(
 			`Could not read the transcript result. Params: ${JSON.stringify(whisperBaseParams)}`,
+			error,
 		);
 		throw error;
 	}
@@ -221,6 +222,7 @@ const transcribeAndTranslate = async (
 	} catch (error) {
 		logger.error(
 			`Failed during combined detect language/transcribe/translate process result`,
+			error,
 		);
 		throw error;
 	}
