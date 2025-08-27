@@ -317,7 +317,9 @@ export const moveMessageToDeadLetterQueue = async (
 	);
 	if (sendResult.status == AWSStatus.Failure) {
 		// rethrow exception, let another worker retry
-		throw Error('Failed to send message to dead letter queue');
+		throw Error(
+			`Failed to send message to dead letter queue, error: ${sendResult.errorMsg}`,
+		);
 	}
 	// if the delete command throws an exception, it will be caught by
 	// deleteMessage and logged. Another worker will reprocess the message in
