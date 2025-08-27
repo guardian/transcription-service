@@ -57,6 +57,6 @@ jobs:
           # to add x86: linux/amd64
           platforms: linux/arm64
           push: true
-          tags: ${{ env.GITHUB_REGISTRY }}/${{ env.WHISPER_IMAGE_NAME }},${{ secrets.TRANSCRIPTION_SERVICE_ECR_URI }}:${{ github.ref_name }}
+          tags: ${{ env.GITHUB_REGISTRY }}/${{ env.WHISPER_IMAGE_NAME }}:${{ github.ref_name }},${{ secrets.TRANSCRIPTION_SERVICE_ECR_URI }}:${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
