@@ -4,6 +4,7 @@ import {
 	ExportStatus,
 	ExportStatuses,
 	ExportType,
+	TranscriptionItemWithTranscript,
 } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
 import Script from 'next/script';
@@ -99,12 +100,13 @@ const ExportForm = () => {
 		ExportType[]
 	>(['text']);
 	const [exportStatuses, setExportStatuses] = useState<ExportStatuses>([]);
-	const [downloadUrls, setDownloadUrls] = useState<DownloadUrls | undefined>(
-		undefined,
+	const [sourceMediaDownloadUrl, setSourceMediaDownloadUrl] = useState<
+		string | undefined
+	>(undefined);
+	const [sourceMediaUrlStatus, setsourceMediaUrlStatus] = useState<string>(
+		'Fetching source media download url...',
 	);
-	const [downloadUrlsStatusText, setDownloadUrlsStatusText] = useState<string>(
-		'Fetching direct download urls...',
-	);
+	const [downloadStatus, setDownloadStatus] = useState<string | undefined>('');
 
 	// TODO: once we have some CSS/component library, tidy up this messy error handling
 	if (!token) {
@@ -123,24 +125,16 @@ const ExportForm = () => {
 		);
 	}
 	useEffect(() => {
-		authFetch(`/api/export/download-urls?id=${transcriptId}`, token)
-			.then((urls) => urls.json())
-			.then((json) => {
-				const parsedUrls = DownloadUrls.safeParse(json);
-				if (!parsedUrls.success) {
-					console.error(
-						'Failed to parse download URLs response',
-						parsedUrls.error,
-					);
-					throw new Error('Error parsing download URLs response');
-				}
-				setDownloadUrls(parsedUrls.data);
+		authFetch(`/api/export/source-media-download-url?id=${transcriptId}`, token)
+			.then((resp) => resp.text())
+			.then((url: string) => {
+				setSourceMediaDownloadUrl(url);
 			})
 			.catch((error) => {
-				console.error('Failed to fetch download URLs', error);
-				setDownloadUrls(undefined);
-				setDownloadUrlsStatusText(
-					'Failed to fetch direct download URLs. You can still export to Google Drive.',
+				console.error('Failed to fetch source media download URL', error);
+				setSourceMediaDownloadUrl(undefined);
+				setsourceMediaUrlStatus(
+					'Failed to fetch source media download URL. You can still export to Google Drive.',
 				);
 			});
 	}, [transcriptId]);
@@ -301,6 +295,34 @@ const ExportForm = () => {
 		},
 	};
 
+	const handleTranscriptDownload = async (
+		url: string,
+		format: 'text' | 'srt',
+	) => {
+		setDownloadStatus('Preparing download...');
+		const response = await authFetch(url, token);
+		if (response.status === 200) {
+			const resp = await response.json();
+			const parsedTranscriptResp =
+				TranscriptionItemWithTranscript.safeParse(resp);
+			if (!parsedTranscriptResp.success) {
+				return;
+			}
+			const element = document.createElement('a');
+			const file = new Blob(
+				[parsedTranscriptResp.data.transcript.transcripts[format]],
+				{ type: 'text/plain' },
+			);
+			element.href = URL.createObjectURL(file);
+			element.download = `${parsedTranscriptResp.data.item.originalFilename}.${format === 'text' ? 'txt' : 'srt'}`;
+			document.body.appendChild(element); // Required for this to work in FireFox
+			element.click();
+			setDownloadStatus(undefined);
+		} else {
+			setDownloadStatus('Failed to download transcript');
+		}
+	};
+
 	const atLeastOneExport = () => exportTypesRequested.length > 0;
 
 	return (
@@ -401,33 +423,49 @@ const ExportForm = () => {
 			</button>
 
 			<div className="flex flex-col mt-5">
-				{downloadUrls ? (
-					<p className="font-light">
-						Alternatively, you can directly download the files to your computer:{' '}
-						<a
-							className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
-							href={downloadUrls.text}
-						>
-							Transcript text
-						</a>
-						,{' '}
-						<a
-							className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
-							href={downloadUrls.srt}
-						>
-							Transcript SRT
-						</a>
-						,{' '}
-						<a
-							className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
-							href={downloadUrls.sourceMedia}
-						>
-							Input media
-						</a>
-						.
-					</p>
-				) : (
-					downloadUrlsStatusText
+				<p className="font-light">
+					Alternatively, you can directly download the files to your computer:{' '}
+					<button
+						className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+						onClick={() =>
+							handleTranscriptDownload(
+								`/api/export/transcript?id=${transcriptId}&format=text`,
+								'text',
+							)
+						}
+					>
+						Transcript text
+					</button>
+					,{' '}
+					<button
+						className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+						onClick={() =>
+							handleTranscriptDownload(
+								`/api/export/transcript?id=${transcriptId}&format=srt`,
+								'srt',
+							)
+						}
+					>
+						Transcript SRT
+					</button>
+					{sourceMediaDownloadUrl && (
+						<>
+							,
+							<a
+								className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+								href={sourceMediaDownloadUrl}
+							>
+								Input media
+							</a>
+						</>
+					)}
+					.
+				</p>
+				{!sourceMediaDownloadUrl && (
+					<p className="font-light italic">{sourceMediaUrlStatus}</p>
+				)}
+				{downloadStatus && (
+					<p className="font-light italic">{downloadStatus}</p>
 				)}
 			</div>
 		</>

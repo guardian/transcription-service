@@ -35,6 +35,7 @@ import {
 	ExportStatuses,
 	TranscriptDownloadRequest,
 	TWELVE_HOURS_IN_SECONDS,
+	TranscriptionItemWithTranscript,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
@@ -234,7 +235,7 @@ const getApp = async () => {
 		}),
 	]);
 
-	apiRouter.get('/export/file', [
+	apiRouter.get('/export/transcript', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
 			const downloadRequest = TranscriptDownloadRequest.safeParse(req.query);
@@ -269,18 +270,16 @@ const getApp = async () => {
 				res.status(500).send(combinedTranscript.failureReason);
 				return;
 			}
-			const desiredOutput =
-				combinedTranscript.data.transcripts[downloadRequest.data.format];
-			res.setHeader('Content-type', 'text/plain');
-			res.setHeader(
-				'Content-disposition',
-				`attachment; filename=${getItemResult.item.originalFilename}.${downloadRequest.data.format}`,
-			);
-			res.send(desiredOutput);
+			const response: TranscriptionItemWithTranscript = {
+				item: getItemResult.item,
+				transcript: combinedTranscript.data,
+			};
+			res.setHeader('Content-type', 'application/json');
+			res.send(response);
 		}),
 	]);
 
-	apiRouter.get('/export/download-urls', [
+	apiRouter.get('/export/source-media-download-url', [
 		checkAuth,
 		asyncHandler(async (req, res) => {
 			const downloadUrlRequest = TranscriptIdentifier.safeParse(req.query);
@@ -309,13 +308,7 @@ const getApp = async () => {
 				TWELVE_HOURS_IN_SECONDS,
 				`${getItemResult.item.originalFilename}`,
 			);
-			res.send(
-				JSON.stringify({
-					sourceMedia: mediaDownloadUrl,
-					text: `/export/file?id=${getItemResult.item.id}&format=text`,
-					srt: `/export/file?id=${getItemResult.item.id}&format=srt`,
-				}),
-			);
+			res.send(mediaDownloadUrl);
 		}),
 	]);
 
