@@ -22,7 +22,12 @@ export default function RootLayout({
 						<p className={'italic pt-1 font-light '}>
 							This is a tool developed for GNM by the Investigations and
 							Reporting engineering team. Please email feedback / bug reports to
-							digital.investigations@theguardian.com
+							<a
+								href="https://mail.google.com/mail/?view=cm&fs=1&to=digital.investigations@theguardian.com&su=Guardian%20Transcription%20Tool%20feedback"
+								target="_blank"
+							>
+								digital.investigations@theguardian.com
+							</a>
 						</p>
 					</div>
 				</header>
