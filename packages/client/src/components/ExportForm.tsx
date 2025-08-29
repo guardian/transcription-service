@@ -87,6 +87,16 @@ const exportTypesToStatus = (exportTypes: ExportType[]): ExportStatuses => {
 	}));
 };
 
+const triggerFileDownload = (text: string, filename: string) => {
+	// copied from https://stackoverflow.com/questions/3665115/how-to-create-a-file-in-memory-for-user-to-download-but-not-through-server
+	const element = document.createElement('a');
+	const file = new Blob([text], { type: 'text/plain' });
+	element.href = URL.createObjectURL(file);
+	element.download = filename;
+	document.body.appendChild(element);
+	element.click();
+};
+
 const ExportForm = () => {
 	const { token } = useContext(AuthContext);
 	const searchParams = useSearchParams();
@@ -307,15 +317,10 @@ const ExportForm = () => {
 			if (!parsedTranscriptResp.success) {
 				return;
 			}
-			const element = document.createElement('a');
-			const file = new Blob(
-				[parsedTranscriptResp.data.transcript.transcripts[format]],
-				{ type: 'text/plain' },
-			);
-			element.href = URL.createObjectURL(file);
-			element.download = `${parsedTranscriptResp.data.item.originalFilename}.${format === 'text' ? 'txt' : 'srt'}`;
-			document.body.appendChild(element); // Required for this to work in FireFox
-			element.click();
+			const transcriptText =
+				parsedTranscriptResp.data.transcript.transcripts[format];
+			const filename = `${parsedTranscriptResp.data.item.originalFilename}.${format === 'text' ? 'txt' : 'srt'}`;
+			triggerFileDownload(transcriptText, filename);
 			setDownloadStatus(undefined);
 		} else {
 			setDownloadStatus('Failed to download transcript');
