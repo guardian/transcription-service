@@ -88,10 +88,12 @@ const reportDownloadFailure = async (
 const reportExternalJob = async (
 	job: ExternalMediaDownloadJob,
 	sqsClient: SQSClient,
+	metadata: MediaMetadata,
 ) => {
 	const output: ExternalMediaDownloadJobOutput = {
 		id: job.id,
 		status: 'SUCCESS',
+		metadata,
 	};
 	await sendMessage(
 		sqsClient,
@@ -200,7 +202,7 @@ const main = async () => {
 		} else if (isExternalMediaDownloadJob(job)) {
 			const eJob = ExternalMediaDownloadJob.parse(parsedInput);
 			await uploadObjectWithPresignedUrl(eJob.s3OutputSignedUrl, metadata);
-			await reportExternalJob(eJob, sqsClient);
+			await reportExternalJob(eJob, sqsClient, metadata);
 		}
 	}
 };

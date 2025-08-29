@@ -74,9 +74,18 @@ export const isExternalMediaDownloadJob = (
 	job: MediaDownloadJob,
 ): job is ExternalMediaDownloadJob => job.client === 'EXTERNAL';
 
+export const MediaMetadata = z.object({
+	title: z.string(),
+	extension: z.string(),
+	mediaPath: z.string(),
+	duration: z.number(),
+});
+export type MediaMetadata = z.infer<typeof MediaMetadata>;
+
 export const ExternalMediaDownloadJobOutput = z.object({
 	id: z.string(),
 	status: z.union([z.literal('SUCCESS'), z.literal('FAILURE')]),
+	metadata: z.optional(MediaMetadata),
 });
 
 export type ExternalMediaDownloadJobOutput = z.infer<
