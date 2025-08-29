@@ -146,11 +146,16 @@ const runTranscription = async (
 			path.parse(whisperBaseParams.file).dir,
 			`${fileName}.json`,
 		);
+		const vttPath = path.resolve(
+			path.parse(whisperBaseParams.file).dir,
+			`${fileName}.vtt`,
+		);
 
 		const transcripts = {
 			srt: readFile(srtPath),
 			text: readFile(textPath),
 			json: readFile(jsonPath),
+			vtt: readFile(vttPath),
 		};
 
 		return { transcripts, metadata };
@@ -292,6 +297,7 @@ const whisperParams = (
 			'--output-srt',
 			'--output-txt',
 			'--output-json',
+			'--output-vtt',
 			'--output-file',
 			containerOutputFilePath,
 			'--language',
