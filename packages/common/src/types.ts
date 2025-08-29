@@ -303,6 +303,7 @@ export const Transcripts = z.object({
 	srt: z.string(),
 	text: z.string(),
 	json: z.string(),
+	// TODO: Make non-optional once we can be confident that all jobs in progress are generating webvtt
 	vtt: z.optional(z.string()),
 });
 export type Transcripts = z.infer<typeof Transcripts>;
