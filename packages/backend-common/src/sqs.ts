@@ -7,7 +7,6 @@ import {
 	ChangeMessageVisibilityCommand,
 } from '@aws-sdk/client-sqs';
 import {
-	OutputBucketUrls,
 	DestinationService,
 	TranscriptionJob,
 	TranscriptionOutput,
@@ -73,14 +72,6 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	diarizationRequested: boolean,
 	duration?: number,
 ): Promise<SendResult> => {
-	const signedUrls = await generateOutputSignedUrls(
-		s3Key,
-		config.aws.region,
-		config.app.transcriptionOutputBucket,
-		userEmail,
-		7,
-	);
-
 	const combinedOutputKey = `combined/${s3Key}.json`;
 
 	const combinedUrl = await getSignedUploadUrl(
@@ -114,7 +105,6 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		userEmail,
 		transcriptDestinationService: DestinationService.TranscriptionService,
 		originalFilename,
-		outputBucketUrls: signedUrls,
 		combinedOutputUrl: { key: combinedOutputKey, url: combinedUrl },
 		languageCode,
 		translate: false,
@@ -135,13 +125,6 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	}
 	if (!isSqsFailure(messageResult) && translationRequested) {
 		const translationId = `${s3Key}-translation`;
-		const signedUrlsTranslation = await generateOutputSignedUrls(
-			translationId,
-			config.aws.region,
-			config.app.transcriptionOutputBucket,
-			userEmail,
-			7,
-		);
 		return await sendMessage(
 			client,
 			queue,
@@ -149,7 +132,6 @@ export const generateOutputSignedUrlAndSendMessage = async (
 				...job,
 				id: translationId,
 				translate: true,
-				outputBucketUrls: signedUrlsTranslation,
 			}),
 			translationId,
 		);
@@ -341,47 +323,4 @@ export const parseTranscriptJobMessage = (
 		`Failed to parse message ${message.MessageId}, contents: ${message.Body}, errors: ${JSON.stringify(job.error.errors, null, 2)}`,
 	);
 	return undefined;
-};
-
-const generateOutputSignedUrls = async (
-	id: string,
-	region: string,
-	outputBucket: string,
-	userEmail: string,
-	expiresInDays: number,
-): Promise<OutputBucketUrls> => {
-	const expiresIn = expiresInDays * 24 * 60 * 60;
-	const srtKey = `srt/${id}.srt`;
-	const jsonKey = `json/${id}.json`;
-	const textKey = `text/${id}.txt`;
-	const srtSignedS3Url = await getSignedUploadUrl(
-		region,
-		outputBucket,
-		userEmail,
-		expiresIn,
-		false,
-		srtKey,
-	);
-	const textSignedS3Url = await getSignedUploadUrl(
-		region,
-		outputBucket,
-		userEmail,
-		expiresIn,
-		false,
-		textKey,
-	);
-	const jsonSignedS3Url = await getSignedUploadUrl(
-		region,
-		outputBucket,
-		userEmail,
-		expiresIn,
-		false,
-		jsonKey,
-	);
-
-	return {
-		srt: { url: srtSignedS3Url, key: srtKey },
-		text: { url: textSignedS3Url, key: textKey },
-		json: { url: jsonSignedS3Url, key: jsonKey },
-	};
 };

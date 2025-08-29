@@ -257,10 +257,6 @@ const getApp = async () => {
 				res.status(getItemResult.statusCode).send(getItemResult.errorMessage);
 				return;
 			}
-			if (!getItemResult.item.combinedOutputKey) {
-				res.status(400).send('Transcript does not have a combined output file');
-				return;
-			}
 			const combinedTranscript = await getCombinedOutput(
 				config,
 				s3Client,
