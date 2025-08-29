@@ -334,6 +334,8 @@ export const runWhisperX = async (
 			'True',
 			'--output_dir',
 			path.parse(wavPath).dir,
+			'--output_format',
+			'all',
 			wavPath,
 		]);
 		const metadata = extractWhisperXStderrData(result.stderr);
