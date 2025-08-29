@@ -1,12 +1,10 @@
 import {
 	getObjectText,
-	getSignedDownloadUrl,
 	isS3Failure,
 	logger,
 	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
 import {
-	DownloadUrls,
 	ExportItems,
 	ExportStatus,
 	ExportStatuses,
@@ -162,32 +160,4 @@ export const updateStatuses = (
 	return currentStatuses.map((s) =>
 		s.exportType === updatedStatus.exportType ? updatedStatus : s,
 	);
-};
-
-export const getDownloadUrls = async (
-	config: TranscriptionConfig,
-	item: TranscriptionDynamoItem,
-): Promise<DownloadUrls> => {
-	const text = await getSignedDownloadUrl(
-		config.aws.region,
-		config.app.transcriptionOutputBucket,
-		item.transcriptKeys.text,
-		60 * 60 * 12,
-		`${item.originalFilename}.txt`,
-	);
-	const srt = await getSignedDownloadUrl(
-		config.aws.region,
-		config.app.transcriptionOutputBucket,
-		item.transcriptKeys.srt,
-		60 * 60 * 12,
-		`${item.originalFilename}.srt`,
-	);
-	const sourceMedia = await getSignedDownloadUrl(
-		config.aws.region,
-		config.app.sourceMediaBucket,
-		item.id,
-		60 * 60 * 12,
-		`${item.originalFilename}`,
-	);
-	return { text, srt, sourceMedia };
 };
