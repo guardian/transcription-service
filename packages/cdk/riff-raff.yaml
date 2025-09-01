@@ -32,7 +32,7 @@ deployments:
       amiParametersToTags:
         AMITranscriptionserviceworker:
           BuiltBy: amigo
-          Recipe: investigations-transcription-service
+          Recipe: investigations-transcription-service-cpu-intel
         AMITranscriptionservicegpuworker:
           BuiltBy: amigo
           Recipe: investigations-transcription-service-gpu
