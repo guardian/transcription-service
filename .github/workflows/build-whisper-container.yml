@@ -18,7 +18,7 @@ env:
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
 jobs:
   build-and-push-image:
-    runs-on: 2core-ubuntu-latest-arm
+    runs-on: ubuntu-latest
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
       contents: read
@@ -55,7 +55,7 @@ jobs:
           context: .
           file: containers/whisper.Dockerfile
           # to add x86: linux/amd64
-          platforms: linux/arm64
+          platforms: linux/amd64
           push: true
           tags: ${{ env.GITHUB_REGISTRY }}/${{ env.WHISPER_IMAGE_NAME }}:${{ github.ref_name }},${{ secrets.TRANSCRIPTION_SERVICE_ECR_URI }}:${{ github.ref_name }}
           cache-from: type=gha

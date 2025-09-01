@@ -433,7 +433,7 @@ export class TranscriptionService extends GuStack {
 				machineImage: MachineImage.genericLinux({
 					'eu-west-1': workerAmi.valueAsString,
 				}),
-				instanceType: InstanceType.of(InstanceClass.C7G, InstanceSize.XLARGE4),
+				instanceType: InstanceType.of(InstanceClass.C7I, InstanceSize.XLARGE4),
 				// the size of this block device will determine the max input file size for transcription. In future we could
 				// attach the block device on startup once we know how large the file to be transcribed is, or try some kind
 				// of streaming approach to the transcription so we don't need the whole file on disk
@@ -470,13 +470,13 @@ export class TranscriptionService extends GuStack {
 		// the ASG will start at the top of the list and work down until it manages to launch an instance
 		const acceptableInstanceTypes = isProd
 			? [
-					InstanceType.of(InstanceClass.C7G, InstanceSize.XLARGE4),
-					InstanceType.of(InstanceClass.C6G, InstanceSize.XLARGE4),
-					InstanceType.of(InstanceClass.M7G, InstanceSize.XLARGE4),
-					InstanceType.of(InstanceClass.C7G, InstanceSize.XLARGE8),
-					InstanceType.of(InstanceClass.C6G, InstanceSize.XLARGE8),
+					InstanceType.of(InstanceClass.C7I, InstanceSize.XLARGE4),
+					InstanceType.of(InstanceClass.C6I, InstanceSize.XLARGE4),
+					InstanceType.of(InstanceClass.M7I, InstanceSize.XLARGE4),
+					InstanceType.of(InstanceClass.C7I, InstanceSize.XLARGE8),
+					InstanceType.of(InstanceClass.C6I, InstanceSize.XLARGE8),
 				]
-			: [InstanceType.of(InstanceClass.T4G, InstanceSize.MEDIUM)];
+			: [InstanceType.of(InstanceClass.T3, InstanceSize.MEDIUM)];
 
 		const gpuInstanceTypes = isProd
 			? [
