@@ -53,7 +53,7 @@ export const getOrCreateContainer = async (
 		'whisper',
 		'-v',
 		`${tempDir}:${CONTAINER_FOLDER}`,
-		'ghcr.io/guardian/transcription-service:pm-bump-whispercpp',
+		'ghcr.io/guardian/transcription-service:main',
 	]);
 	return newContainer.stdout.trim();
 };
