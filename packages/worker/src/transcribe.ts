@@ -53,7 +53,7 @@ export const getOrCreateContainer = async (
 		'whisper',
 		'-v',
 		`${tempDir}:${CONTAINER_FOLDER}`,
-		'ghcr.io/guardian/transcription-service:main',
+		'ghcr.io/guardian/transcription-service@sha256:4bf85a1160cbe8e98a634d84119f761663cecdadf8c0b31820671a49e49cbaa9',
 	]);
 	return newContainer.stdout.trim();
 };
