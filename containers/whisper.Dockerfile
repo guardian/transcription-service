@@ -5,7 +5,9 @@ LABEL com.theguardian.transcription-service.whisper-container="Whisper.cpp conta
 RUN apt-get update
 RUN apt-get install -y ffmpeg wget git build-essential cmake
 RUN git clone https://github.com/ggerganov/whisper.cpp
-RUN cd whisper.cpp && git reset --hard v1.7.6 && cmake -B build && cmake --build build -j --config Release
+RUN cd whisper.cpp && git reset --hard v1.7.6
+RUN cd whisper.cpp && cmake -B build  -DWHISPER_NO_AVX=ON -DWHISPER_NO_AVX2=ON -DWHISPER_NO_FMA=ON -DWHISPER_NO_F16C=ON
+RUN cd whisper.cpp cmake --build build -j --config Release
 RUN bash /opt/whisper.cpp/models/download-ggml-model.sh tiny
 RUN bash /opt/whisper.cpp/models/download-ggml-model.sh medium
 
