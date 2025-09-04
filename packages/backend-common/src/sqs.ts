@@ -71,7 +71,6 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	languageCode: InputLanguageCode,
 	translationRequested: boolean,
 	diarizationRequested: boolean,
-	duration?: number,
 ): Promise<SendResult> => {
 	const signedUrls = await generateOutputSignedUrls(
 		s3Key,
@@ -96,11 +95,11 @@ export const generateOutputSignedUrlAndSendMessage = async (
 
 	// user whisperX if whisperX enabled and...
 	// duration is either unknown or greater than 10 minutes or  diarization has been requested
-	const engine =
-		config.app.useWhisperx &&
-		(!duration || duration > 600 || diarizationRequested)
-			? TranscriptionEngine.WHISPER_X
-			: TranscriptionEngine.WHISPER_CPP;
+	// UPDATE: whisper.cpp is being deprecated. Conditional logic here will eventually be removed following a succesful
+	// trial of using whisperx for everything
+	const engine = config.app.useWhisperx
+		? TranscriptionEngine.WHISPER_X
+		: TranscriptionEngine.WHISPER_CPP;
 
 	const queue =
 		engine === TranscriptionEngine.WHISPER_X
