@@ -14,7 +14,7 @@ import { logger } from '@guardian/transcription-service-backend-common';
 import { AWSStatus } from './types';
 import { ungzip } from 'node-gzip';
 import { createReadStream } from 'node:fs';
-import { MediaMetadata } from 'media-download/src/yt-dlp';
+import { MediaMetadata } from '@guardian/transcription-service-common';
 import { stat } from 'node:fs/promises';
 
 const ReadableBody = z.instanceof(Readable);

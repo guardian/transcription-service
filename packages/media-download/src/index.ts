@@ -13,7 +13,9 @@ import {
 import { Upload } from '@aws-sdk/lib-storage';
 import { S3Client } from '@aws-sdk/client-s3';
 import { createReadStream } from 'node:fs';
-import { downloadMedia, MediaMetadata, startProxyTunnel } from './yt-dlp';
+import { downloadMedia, startProxyTunnel } from './yt-dlp';
+import { MediaMetadata } from '@guardian/transcription-service-common';
+
 import { SQSClient } from '@aws-sdk/client-sqs';
 import {
 	DestinationService,
