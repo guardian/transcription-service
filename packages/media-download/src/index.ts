@@ -53,13 +53,13 @@ const uploadToS3 = async (
 		});
 
 		upload.on('httpUploadProgress', (progress) => {
-			console.log(`Uploaded ${progress.loaded} of ${progress.total} bytes`);
+			logger.info(`Uploaded ${progress.loaded} of ${progress.total} bytes`);
 		});
 
 		await upload.done();
 		return key;
 	} catch (e) {
-		console.error(e);
+		logger.error('Error uploading to S3', e);
 		throw e;
 	}
 };
@@ -144,7 +144,6 @@ const main = async () => {
 		return;
 	}
 
-	console.log(JSON.parse(input));
 	const parsedInput = JSON.parse(input);
 	const parsedJob = MediaDownloadJob.safeParse(parsedInput);
 	if (!parsedJob.success) {
@@ -154,8 +153,6 @@ const main = async () => {
 		return;
 	}
 	const job = parsedJob.data;
-
-	console.log('JOB NOw', job);
 
 	const config = await getConfig();
 

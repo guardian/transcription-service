@@ -181,7 +181,7 @@ export const uploadObjectWithPresignedUrl = async (
 	presignedUrl: string,
 	metadata: MediaMetadata,
 ) => {
-	console.log(
+	logger.info(
 		`Uploading with ${presignedUrl}, metadata ${JSON.stringify(metadata)}`,
 	);
 	const fileStream = createReadStream(metadata.mediaPath);
@@ -204,8 +204,7 @@ export const uploadObjectWithPresignedUrl = async (
 
 		if (response.ok) {
 			const text = await response.text();
-			console.log('File uploaded successfully');
-			console.log(text);
+			logger.info(`File uploaded successfully, response: ${text}`);
 			return true;
 		} else {
 			throw new Error(
@@ -213,7 +212,7 @@ export const uploadObjectWithPresignedUrl = async (
 			);
 		}
 	} catch (e) {
-		console.error('Error uploading file:', e);
+		logger.error('Error uploading file:', e);
 		throw e;
 	}
 };
