@@ -10,7 +10,7 @@ huggingface-hub = "*"
 typer = "*"
 torch = "*"
 torchaudio = "*"
-whisperx = {git = "https://github.com/m-bain/whisperX"}
+whisperx = "*"
 
 [dev-packages]
 
