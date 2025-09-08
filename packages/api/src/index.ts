@@ -54,7 +54,6 @@ import {
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { invokeLambda } from './services/lambda';
 import { LambdaClient } from '@aws-sdk/client-lambda';
-import { getFileDuration } from '@guardian/transcription-service-backend-common/src/ffmpeg';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -186,7 +185,6 @@ const getApp = async () => {
 				s3Key,
 				tempPath,
 			);
-			const duration = await getFileDuration(tempPath);
 
 			const signedUrl = await getSignedDownloadUrl(
 				config.aws.region,
@@ -208,7 +206,6 @@ const getApp = async () => {
 				body.data.languageCode,
 				body.data.translationRequested,
 				body.data.diarizationRequested,
-				duration,
 			);
 			if (isSqsFailure(sendResult)) {
 				res.status(500).send(sendResult.errorMsg);
