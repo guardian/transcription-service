@@ -87,6 +87,22 @@ const reportDownloadFailure = async (
 	}
 };
 
+const reportExternalFailure = async (
+	job: ExternalMediaDownloadJob,
+	sqsClient: SQSClient,
+) => {
+	const output: ExternalMediaDownloadJobOutput = {
+		id: job.id,
+		status: 'FAILURE',
+	};
+	await sendMessage(
+		sqsClient,
+		job.outputQueueUrl,
+		JSON.stringify(output),
+		job.id,
+	);
+};
+
 const reportExternalJob = async (
 	job: ExternalMediaDownloadJob,
 	sqsClient: SQSClient,
@@ -187,6 +203,9 @@ const main = async () => {
 		if (isTranscriptionMediaDownloadJob(job)) {
 			const tJob = TranscriptionMediaDownloadJob.parse(parsedInput);
 			await reportDownloadFailure(config, sqsClient, tJob);
+		} else if (isExternalMediaDownloadJob(job)) {
+			const eJob = ExternalMediaDownloadJob.parse(parsedInput);
+			await reportExternalFailure(eJob, sqsClient);
 		}
 	} else {
 		if (isTranscriptionMediaDownloadJob(job)) {
