@@ -197,8 +197,6 @@ export const uploadObjectWithPresignedUrl = async (
 			headers: {
 				'Content-Type': 'application/octet-stream',
 				'Content-Length': contentLength.toString(),
-				'x-amz-meta-extension': metadata.extension,
-				'x-amz-meta-title': metadata.title,
 			},
 		} as RequestInit);
 
