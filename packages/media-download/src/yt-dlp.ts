@@ -1,13 +1,7 @@
 import fs from 'node:fs';
 import { runSpawnCommand } from '@guardian/transcription-service-backend-common/src/process';
 import { logger } from '@guardian/transcription-service-backend-common';
-
-export type MediaMetadata = {
-	title: string;
-	extension: string;
-	mediaPath: string;
-	duration: number;
-};
+import { MediaMetadata } from '@guardian/transcription-service-common';
 
 const extractInfoJson = (
 	infoJsonPath: string,

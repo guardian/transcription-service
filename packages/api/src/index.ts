@@ -27,7 +27,6 @@ import {
 	inputBucketObjectMetadata,
 	transcribeFileRequestBody,
 	transcribeUrlRequestBody,
-	MediaDownloadJob,
 	CreateFolderRequest,
 	signedUrlRequestBody,
 	ExportStatus,
@@ -36,6 +35,7 @@ import {
 	TranscriptDownloadRequest,
 	TWELVE_HOURS_IN_SECONDS,
 	TranscriptionItemWithTranscript,
+	TranscriptionMediaDownloadJob,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
@@ -111,13 +111,14 @@ const getApp = async () => {
 				res.status(403).send('No user email property - is user loged in?');
 				return;
 			}
-			const downloadJob: MediaDownloadJob = {
+			const downloadJob: TranscriptionMediaDownloadJob = {
 				id,
 				url: body.data.url,
 				languageCode: body.data.languageCode,
 				translationRequested: body.data.translationRequested,
 				diarizationRequested: body.data.diarizationRequested,
 				userEmail,
+				client: 'TRANSCRIPTION_SERVICE',
 			};
 
 			const sendResult = await sendMessage(
