@@ -44,7 +44,7 @@ OUTPUT_QUEUE_URL_LOCALHOST=${OUTPUT_QUEUE_URL/sqs.eu-west-1.localhost.localstack
 
 echo "Created output queue in localstack, url: ${OUTPUT_QUEUE_URL_LOCALHOST}"
 
-MEDIA_DOWNLOAD_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-media-download-queue-DEV | jq .QueueUrl)
+MEDIA_DOWNLOAD_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-media-download-queue-DEV.fifo --attributes "FifoQueue=true,ContentBasedDeduplication=true" | jq .QueueUrl)
 # We don't install the localstack dns so need to replace the endpoint with localhost
 MEDIA_DOWNLOAD_QUEUE_URL_LOCALHOST=${MEDIA_DOWNLOAD_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
 
