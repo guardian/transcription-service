@@ -40,13 +40,6 @@ import {
 	GroupMetrics,
 	SpotAllocationStrategy,
 } from 'aws-cdk-lib/aws-autoscaling';
-import {
-	Alarm,
-	ComparisonOperator,
-	Metric,
-	TreatMissingData,
-} from 'aws-cdk-lib/aws-cloudwatch';
-import { SnsAction } from 'aws-cdk-lib/aws-cloudwatch-actions';
 import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
 import {
 	InstanceClass,
@@ -79,10 +72,10 @@ import { LogGroup } from 'aws-cdk-lib/aws-logs';
 import { CfnPipe } from 'aws-cdk-lib/aws-pipes';
 import { Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
-import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { JsonPath } from 'aws-cdk-lib/aws-stepfunctions';
+import { makeAlarms } from './alarms';
 
 const topicArnToName = (topicArn: string) => {
 	const split = topicArn.split(':');
@@ -1030,78 +1023,16 @@ export class TranscriptionService extends GuStack {
 		});
 
 		// alarms
-
 		if (isProd) {
-			const alarms = [
-				// alarm when a message is added to the dead letter queue
-				// note that queue metrics go to 'sleep' if it is empty for more than 6 hours, so it may take up to 16 minutes
-				// for this alarm to trigger - see https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-monitoring-using-cloudwatch.html
-				new Alarm(this, 'DeadLetterQueueAlarm', {
-					alarmName: `transcription-service-dead-letter-queue-${props.stage}`,
-					metric:
-						transcriptionDeadLetterQueue.metricApproximateNumberOfMessagesVisible(
-							{ period: Duration.minutes(1), statistic: 'max' },
-						),
-					threshold: 1,
-					evaluationPeriods: 1,
-					actionsEnabled: true,
-					alarmDescription: `A transcription job has been sent to the dead letter queue. This may be because ffmpeg can't convert the file (maybe it's a JPEG) or because the transcription job has failed multiple times.`,
-					treatMissingData: TreatMissingData.IGNORE,
-					comparisonOperator:
-						ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-				}),
-				// alarm when failure metric is greater than 0
-				new Alarm(this, 'FailureAlarm', {
-					alarmName: `transcription-service-failure-${props.stage}`,
-					//  reference the custom metric created in metrics.ts library
-					metric: new Metric({
-						namespace: 'TranscriptionService',
-						metricName: 'Failure',
-						dimensionsMap: {
-							Stage: props.stage,
-						},
-						statistic: 'sum',
-						period: Duration.minutes(1),
-					}),
-					threshold: 1,
-					comparisonOperator:
-						ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-					evaluationPeriods: 1,
-					actionsEnabled: true,
-					alarmDescription: 'A transcription service failure has occurred',
-					treatMissingData: TreatMissingData.IGNORE,
-				}),
-				// alarm when at least one instance has been running in the worker asg during every 5 minute period for
-				// more than 12 hours
-				new Alarm(this, 'WorkerInstanceAlarm', {
-					alarmName: `transcription-service-worker-instances-${props.stage}`,
-					// this doesn't actually create the metric - just a reference to it
-					metric: new Metric({
-						namespace: 'AWS/AutoScaling',
-						metricName: 'GroupTotalInstances',
-						dimensionsMap: {
-							AutoScalingGroupName: transcriptionWorkerASG.autoScalingGroupName,
-						},
-						statistic: 'min',
-						period: Duration.minutes(5),
-					}),
-					threshold: 1,
-					comparisonOperator:
-						ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-					evaluationPeriods: 12 * 12, // 12 hours as metric has period of 5 minutes
-					actionsEnabled: true,
-					alarmDescription: `There has been at least 1 worker instance running for 12 hours.
-						This could mean that a worker is failing to be scaled in, which could have significant cost implications.
-						Please check that all running workers are doing something useful.`,
-					treatMissingData: TreatMissingData.IGNORE,
-				}),
-			];
-			const snsAction = new SnsAction(
-				Topic.fromTopicArn(this, 'TranscriptionAlarmTopic', alarmTopicArn),
+			makeAlarms(
+				this,
+				transcriptionTaskQueue,
+				transcriptionGpuTaskQueue,
+				transcriptionDeadLetterQueue,
+				transcriptionWorkerASG,
+				transcriptionGpuWorkerASG,
+				alarmTopicArn,
 			);
-			alarms.forEach((alarm) => {
-				alarm.addAlarmAction(snsAction);
-			});
 		}
 	}
 }
