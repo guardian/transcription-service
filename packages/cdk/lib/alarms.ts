@@ -20,6 +20,7 @@ export const makeAlarms = (
 	gpuWorkerAsg: AutoScalingGroup,
 	alarmTopicArn: string,
 ) => {
+	const oldestMessageAlarmThreshold = 60;
 	const alarms = [
 		// alarm when a message is added to the dead letter queue
 		// note that queue metrics go to 'sleep' if it is empty for more than 6 hours, so it may take up to 16 minutes
@@ -34,6 +35,33 @@ export const makeAlarms = (
 			evaluationPeriods: 1,
 			actionsEnabled: true,
 			alarmDescription: `A transcription job has been sent to the dead letter queue. This may be because ffmpeg can't convert the file (maybe it's a JPEG) or because the transcription job has failed multiple times.`,
+			treatMissingData: TreatMissingData.IGNORE,
+			comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+		}),
+		// alarm when there's a really old message in the task queue
+		new Alarm(scope, 'TaskQueueOldMessageAlarm', {
+			alarmName: `transcription-service-task-queue-${scope.stage}`,
+			metric: taskQueue.metricApproximateAgeOfOldestMessage({
+				period: Duration.minutes(5),
+				statistic: 'max',
+			}),
+			threshold: oldestMessageAlarmThreshold,
+			evaluationPeriods: 1,
+			actionsEnabled: true,
+			alarmDescription: `A transcription job has been in the task queue for more than ${oldestMessageAlarmThreshold} seconds`,
+			treatMissingData: TreatMissingData.IGNORE,
+			comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+		}),
+		new Alarm(scope, 'GpuTaskQueueOldMessageAlarm', {
+			alarmName: `transcription-service-gpu-task-queue-${scope.stage}`,
+			metric: gpuTaskQueue.metricApproximateAgeOfOldestMessage({
+				period: Duration.minutes(5),
+				statistic: 'max',
+			}),
+			threshold: oldestMessageAlarmThreshold,
+			evaluationPeriods: 1,
+			actionsEnabled: true,
+			alarmDescription: `A transcription job has been in the gpu task queue for more than ${oldestMessageAlarmThreshold} seconds`,
 			treatMissingData: TreatMissingData.IGNORE,
 			comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
 		}),
