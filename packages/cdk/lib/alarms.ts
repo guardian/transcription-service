@@ -20,7 +20,9 @@ export const makeAlarms = (
 	gpuWorkerAsg: AutoScalingGroup,
 	alarmTopicArn: string,
 ) => {
-	const oldestMessageAlarmThreshold = 60;
+	const oldestMessageAlarmThresholdMinutes = 60;
+	const oldestMessageAlarmThresholdSeconds =
+		oldestMessageAlarmThresholdMinutes * 60;
 	const alarms = [
 		// alarm when a message is added to the dead letter queue
 		// note that queue metrics go to 'sleep' if it is empty for more than 6 hours, so it may take up to 16 minutes
@@ -45,10 +47,10 @@ export const makeAlarms = (
 				period: Duration.minutes(5),
 				statistic: 'max',
 			}),
-			threshold: oldestMessageAlarmThreshold,
+			threshold: oldestMessageAlarmThresholdSeconds,
 			evaluationPeriods: 1,
 			actionsEnabled: true,
-			alarmDescription: `A transcription job has been in the task queue for more than ${oldestMessageAlarmThreshold} seconds`,
+			alarmDescription: `A transcription job has been in the task queue for more than ${oldestMessageAlarmThresholdMinutes} minutes`,
 			treatMissingData: TreatMissingData.IGNORE,
 			comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
 		}),
@@ -58,10 +60,10 @@ export const makeAlarms = (
 				period: Duration.minutes(5),
 				statistic: 'max',
 			}),
-			threshold: oldestMessageAlarmThreshold,
+			threshold: oldestMessageAlarmThresholdSeconds,
 			evaluationPeriods: 1,
 			actionsEnabled: true,
-			alarmDescription: `A transcription job has been in the gpu task queue for more than ${oldestMessageAlarmThreshold} seconds`,
+			alarmDescription: `A transcription job has been in the gpu task queue for more than ${oldestMessageAlarmThresholdMinutes} minutes`,
 			treatMissingData: TreatMissingData.IGNORE,
 			comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
 		}),
