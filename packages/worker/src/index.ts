@@ -245,7 +245,9 @@ const pollTranscriptionQueue = async (
 
 		const { outputBucketUrls, inputSignedUrl, combinedOutputUrl } = job;
 
-		logger.info(`Fetched transcription job with id ${job.id}`);
+		logger.info(
+			`Fetched transcription job with id ${job.id}, engine ${job.engine}`,
+		);
 
 		const destinationDirectory = isDev
 			? `${__dirname}/../../../worker-tmp-files`
