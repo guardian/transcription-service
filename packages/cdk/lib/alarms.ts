@@ -23,26 +23,34 @@ export const makeAlarms = (
 	const oldestMessageAlarmThresholdMinutes = 60;
 	const oldestMessageAlarmThresholdSeconds =
 		oldestMessageAlarmThresholdMinutes * 60;
-	const alarms = [
+
+	// This isn't very nice but since the NumberOfMessagesSent is not accurate for dead letter queues, we create multiple
+	// alarms at different thresholds to ensure we get multiple alarms when there is an ongoing incident
+	// (see https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-available-cloudwatch-metrics.html)
+	const dlQueueAlarms = [1, 5, 10, 20].map((threshold) => {
 		// alarm when a message is added to the dead letter queue
 		// note that queue metrics go to 'sleep' if it is empty for more than 6 hours, so it may take up to 16 minutes
 		// for this alarm to trigger - see https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-monitoring-using-cloudwatch.html
-		new Alarm(scope, 'DeadLetterQueueAlarm', {
-			alarmName: `transcription-service-dead-letter-queue-${scope.stage}`,
+		return new Alarm(scope, 'DeadLetterQueueAlarm', {
+			alarmName: `Transcription service ${scope.stage}: ${threshold} messages in DLQ`,
 			metric: dlQueue.metricApproximateNumberOfMessagesVisible({
 				period: Duration.minutes(1),
 				statistic: 'max',
 			}),
-			threshold: 1,
+			threshold: threshold,
 			evaluationPeriods: 1,
 			actionsEnabled: true,
-			alarmDescription: `A transcription job has been sent to the dead letter queue. This may be because ffmpeg can't convert the file (maybe it's a JPEG) or because the transcription job has failed multiple times.`,
+			alarmDescription: `${threshold} transcription jobs have been sent to the dead letter queue. This may be because ffmpeg can't convert the file (maybe it's a JPEG) or because the transcription job has failed multiple times.`,
 			treatMissingData: TreatMissingData.IGNORE,
 			comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-		}),
+		});
+	});
+
+	const alarms = [
+		...dlQueueAlarms,
 		// alarm when there's a really old message in the task queue
 		new Alarm(scope, 'TaskQueueOldMessageAlarm', {
-			alarmName: `transcription-service-task-queue-${scope.stage}`,
+			alarmName: `Old message in ${scope.stage} transcription service CPU tasks queue.`,
 			metric: taskQueue.metricApproximateAgeOfOldestMessage({
 				period: Duration.minutes(5),
 				statistic: 'max',
@@ -55,7 +63,7 @@ export const makeAlarms = (
 			comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
 		}),
 		new Alarm(scope, 'GpuTaskQueueOldMessageAlarm', {
-			alarmName: `transcription-service-gpu-task-queue-${scope.stage}`,
+			alarmName: `Old message in ${scope.stage} transcription service GPU tasks queue.`,
 			metric: gpuTaskQueue.metricApproximateAgeOfOldestMessage({
 				period: Duration.minutes(5),
 				statistic: 'max',
