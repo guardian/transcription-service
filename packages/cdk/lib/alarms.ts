@@ -31,7 +31,7 @@ export const makeAlarms = (
 		// alarm when a message is added to the dead letter queue
 		// note that queue metrics go to 'sleep' if it is empty for more than 6 hours, so it may take up to 16 minutes
 		// for this alarm to trigger - see https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-monitoring-using-cloudwatch.html
-		return new Alarm(scope, 'DeadLetterQueueAlarm', {
+		return new Alarm(scope, `DeadLetterQueueAlarmThreshold${threshold}`, {
 			alarmName: `Transcription service ${scope.stage}: ${threshold} messages in DLQ`,
 			metric: dlQueue.metricApproximateNumberOfMessagesVisible({
 				period: Duration.minutes(1),
