@@ -44,7 +44,7 @@ OUTPUT_QUEUE_URL_LOCALHOST=${OUTPUT_QUEUE_URL/sqs.eu-west-1.localhost.localstack
 
 echo "Created output queue in localstack, url: ${OUTPUT_QUEUE_URL_LOCALHOST}"
 
-MEDIA_DOWNLOAD_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-media-download-queue-DEV | jq .QueueUrl)
+MEDIA_DOWNLOAD_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-media-download-queue-DEV.fifo --attributes "FifoQueue=true,ContentBasedDeduplication=true" | jq .QueueUrl)
 # We don't install the localstack dns so need to replace the endpoint with localhost
 MEDIA_DOWNLOAD_QUEUE_URL_LOCALHOST=${MEDIA_DOWNLOAD_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
 
@@ -83,3 +83,27 @@ GIANT_OUTPUT_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-que
 GIANT_OUTPUT_QUEUE_URL_LOCALHOST=${GIANT_OUTPUT_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
 
 echo "Created queue in localstack, url: ${GIANT_OUTPUT_QUEUE_URL_LOCALHOST}"
+
+
+#########
+##### giant media download output dead letter queue
+#########
+GIANT_MEDIA_DOWNLOAD_OUTPUT_DEAD_LETTER_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=giant-media-download-output-dead-letter-queue-DEV  | jq .QueueUrl)
+# We don't install the localstack dns so need to replace the endpoint with localhost
+GIANT_MEDIA_DOWNLOAD_OUTPUT_DEAD_LETTER_QUEUE_URL_LOCALHOST=${GIANT_MEDIA_DOWNLOAD_OUTPUT_DEAD_LETTER_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
+
+echo "Created queue in localstack, url: ${GIANT_MEDIA_DOWNLOAD_OUTPUT_DEAD_LETTER_QUEUE_URL_LOCALHOST}"
+
+#########
+##### giant media download output queue
+#########
+GIANT_MEDIA_DOWNLOAD_OUTPUT_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=giant-media-download-output-queue-DEV \
+  --attributes '{
+  "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:giant-media-download-output-dead-letter-queue-DEV\",\"maxReceiveCount\":\"3\"}"
+  }' | jq .QueueUrl)
+
+
+# We don't install the localstack dns so need to replace the endpoint with localhost
+GIANT_MEDIA_DOWNLOAD_OUTPUT_QUEUE_URL_LOCALHOST=${GIANT_MEDIA_DOWNLOAD_OUTPUT_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
+
+echo "Created queue in localstack, url: ${GIANT_MEDIA_DOWNLOAD_OUTPUT_QUEUE_URL_LOCALHOST}"

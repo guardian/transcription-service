@@ -14,7 +14,6 @@ import {
 	GuVpc,
 	SubnetType,
 } from '@guardian/cdk/lib/constructs/ec2';
-import { GuEcsTask } from '@guardian/cdk/lib/constructs/ecs';
 import {
 	GuAllowPolicy,
 	GuInstanceRole,
@@ -29,7 +28,6 @@ import {
 	CfnOutput,
 	Duration,
 	Fn,
-	RemovalPolicy,
 	Size,
 	Tags,
 } from 'aws-cdk-lib';
@@ -59,15 +57,8 @@ import {
 	SpotInstanceInterruption,
 	UserData,
 } from 'aws-cdk-lib/aws-ec2';
-import { Repository } from 'aws-cdk-lib/aws-ecr';
-import { ContainerInsights } from 'aws-cdk-lib/aws-ecs';
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
-import {
-	Effect,
-	PolicyStatement,
-	Role,
-	ServicePrincipal,
-} from 'aws-cdk-lib/aws-iam';
+import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import {
 	Architecture,
 	Code,
@@ -75,14 +66,11 @@ import {
 	Runtime,
 } from 'aws-cdk-lib/aws-lambda';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
-import { LogGroup } from 'aws-cdk-lib/aws-logs';
-import { CfnPipe } from 'aws-cdk-lib/aws-pipes';
 import { Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
-import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
-import { JsonPath } from 'aws-cdk-lib/aws-stepfunctions';
+import { makeMediaDownloadService } from './media-download-service';
 
 const topicArnToName = (topicArn: string) => {
 	const split = topicArn.split(':');
@@ -647,40 +635,6 @@ export class TranscriptionService extends GuStack {
 		transcriptionDeadLetterQueue.grantSendMessages(transcriptionWorkerASG);
 		transcriptionDeadLetterQueue.grantSendMessages(transcriptionGpuWorkerASG);
 
-		const mediaDownloadDeadLetterQueue = new Queue(
-			this,
-			`${APP_NAME}-media-download-dead-letter-queue`,
-			{
-				fifo: true,
-				queueName: `${APP_NAME}-media-download-dead-letter-queue-${this.stage}.fifo`,
-				contentBasedDeduplication: true,
-			},
-		);
-
-		// SQS queue for media download tasks from API lambda to media-download service
-		const mediaDownloadTaskQueue = new Queue(
-			this,
-			`${APP_NAME}-media-download-task-queue`,
-			{
-				fifo: true,
-				queueName: `${APP_NAME}-media-download-task-queue-${this.stage}.fifo`,
-				visibilityTimeout: Duration.seconds(30),
-				contentBasedDeduplication: true,
-				deadLetterQueue: {
-					queue: mediaDownloadDeadLetterQueue,
-					maxReceiveCount: MAX_RECEIVE_COUNT,
-				},
-			},
-		);
-
-		mediaDownloadTaskQueue.grantSendMessages(apiLambda);
-
-		const mediaDownloadApp = 'media-download';
-
-		const sshKeySecret = new Secret(this, 'media-download-ssh-key', {
-			secretName: `media-download-ssh-key-${this.stage}`,
-		});
-
 		const alarmTopicArn = new GuStringParameter(
 			this,
 			'InvestigationsAlarmTopicArn',
@@ -689,185 +643,21 @@ export class TranscriptionService extends GuStack {
 				default: `/${props.stage}/investigations/alarmTopicArn`,
 			},
 		).valueAsString;
-
 		const alarmTopicName = topicArnToName(alarmTopicArn);
 
-		const mediaDownloadTask = new GuEcsTask(this, 'media-download-task', {
-			app: mediaDownloadApp,
+		makeMediaDownloadService(
+			this,
 			vpc,
-			subnets: GuVpc.subnetsFromParameterFixedNumber(
-				this,
-				{
-					type: SubnetType.PRIVATE,
-					app: mediaDownloadApp,
-				},
-				3,
-			),
-			containerInsights: ContainerInsights.DISABLED,
-			containerConfiguration: {
-				repository: Repository.fromRepositoryName(
-					this,
-					'MediaDownloadRepository',
-					`transcription-service-${mediaDownloadApp}`,
-				),
-				type: 'repository',
-				version: process.env['CONTAINER_VERSION'] ?? 'main',
-			},
-			taskTimeoutInMinutes: 120,
-			monitoringConfiguration:
-				this.stage === 'PROD'
-					? {
-							noMonitoring: false,
-							snsTopicArn: alarmTopicArn,
-						}
-					: { noMonitoring: true },
-			securityGroups: [
-				new GuSecurityGroup(this, 'media-download-sg', {
-					vpc,
-					allowAllOutbound: true,
-					app: mediaDownloadApp,
-				}),
-			],
-			customTaskPolicies: [
-				new PolicyStatement({
-					effect: Effect.ALLOW,
-					actions: ['sqs:ReceiveMessage'],
-					resources: [mediaDownloadTaskQueue.queueArn],
-				}),
-				new PolicyStatement({
-					effect: Effect.ALLOW,
-					actions: ['sqs:SendMessage'],
-					resources: [
-						transcriptionTaskQueue.queueArn,
-						transcriptionGpuTaskQueue.queueArn,
-						transcriptionOutputQueue.queueArn,
-					],
-				}),
-				new PolicyStatement({
-					effect: Effect.ALLOW,
-					actions: ['secretsmanager:GetSecretValue'],
-					resources: [sshKeySecret.secretArn],
-				}),
-				new PolicyStatement({
-					effect: Effect.ALLOW,
-					actions: ['s3:PutObject'],
-					resources: [`${outputBucket.bucketArn}/*`],
-				}),
-				new PolicyStatement({
-					effect: Effect.ALLOW,
-					actions: ['s3:PutObject', 's3:GetObject'],
-					resources: [`${sourceMediaBucket.bucketArn}/downloaded-media/*`],
-				}),
-				getParametersPolicy,
-			],
-			storage: 50,
-			enableDistributablePolicy: false,
-			environmentOverrides: [
-				{
-					name: 'MESSAGE_BODY',
-					value: JsonPath.stringAt('$[0].body'),
-				},
-				{
-					name: 'AWS_REGION',
-					value: this.region,
-				},
-				{
-					name: 'STAGE',
-					value: this.stage,
-				},
-				{
-					name: 'APP',
-					value: mediaDownloadApp,
-				},
-			],
-		});
-
-		const downloadVolume = {
-			name: `${mediaDownloadApp}-download-volume`,
-		};
-		const tempVolume = {
-			name: `${mediaDownloadApp}-temp-volume`,
-		};
-		const cacheVolume = {
-			name: `${mediaDownloadApp}-cache-volume`,
-		};
-		const sshVolume = {
-			name: `${mediaDownloadApp}-ssh-volume`,
-		};
-		mediaDownloadTask.taskDefinition.addVolume(downloadVolume);
-		mediaDownloadTask.taskDefinition.addVolume(tempVolume);
-		mediaDownloadTask.taskDefinition.addVolume(cacheVolume);
-		mediaDownloadTask.taskDefinition.addVolume(sshVolume);
-		mediaDownloadTask.containerDefinition.addMountPoints({
-			sourceVolume: downloadVolume.name,
-			containerPath: '/media-download', // needs to match ECS_MEDIA_DOWNLOAD_WORKING_DIRECTORY in media-download index.ts
-			readOnly: false,
-		});
-		mediaDownloadTask.containerDefinition.addMountPoints({
-			sourceVolume: tempVolume.name,
-			containerPath: '/tmp', // needed by yt-dlp
-			readOnly: false,
-		});
-		mediaDownloadTask.containerDefinition.addMountPoints({
-			sourceVolume: cacheVolume.name,
-			containerPath: '/root/.cache', // needed by yt-dlp
-			readOnly: false,
-		});
-		mediaDownloadTask.containerDefinition.addMountPoints({
-			sourceVolume: sshVolume.name,
-			containerPath: '/root/.ssh',
-			readOnly: false,
-		});
-
-		const pipeRole = new Role(this, 'eventbridge-pipe-role', {
-			assumedBy: new ServicePrincipal('pipes.amazonaws.com'),
-		});
-
-		new GuAllowPolicy(this, 'sqs-read', {
-			actions: [
-				'sqs:ReceiveMessage',
-				'sqs:DeleteMessage',
-				'sqs:GetQueueAttributes',
-			],
-			resources: [mediaDownloadTaskQueue.queueArn],
-			roles: [pipeRole],
-		});
-		new GuAllowPolicy(this, 'sfn-start', {
-			actions: ['states:StartExecution'],
-			resources: [mediaDownloadTask.stateMachine.stateMachineArn],
-			roles: [pipeRole],
-		});
-		const logGroup = new LogGroup(this, 'media-download-queue-sfn-pipe-log', {
-			logGroupName: `/aws/pipes/${this.stage}/media-download-queue-sfn-pipe`,
-			retention: 7,
-			removalPolicy: RemovalPolicy.SNAPSHOT,
-		});
-
-		new CfnPipe(this, 'media-download-sqs-sfn', {
-			source: mediaDownloadTaskQueue.queueArn,
-			target: mediaDownloadTask.stateMachine.stateMachineArn,
-			targetParameters: {
-				stepFunctionStateMachineParameters: {
-					invocationType: 'FIRE_AND_FORGET',
-				},
-			},
-			roleArn: pipeRole.roleArn,
-			name: `media-download-queue-sfn-pipe-${this.stage}`,
-			desiredState: 'RUNNING',
-			logConfiguration: {
-				cloudwatchLogsLogDestination: {
-					logGroupArn: logGroup.logGroupArn,
-				},
-				level: 'INFO',
-			},
-			sourceParameters: {
-				sqsQueueParameters: {
-					batchSize: 1,
-				},
-			},
-			description:
-				'Pipe to trigger the media download service from the associated SQS queue.',
-		});
+			APP_NAME,
+			apiLambda,
+			alarmTopicArn,
+			transcriptionTaskQueue,
+			transcriptionGpuTaskQueue,
+			transcriptionOutputQueue,
+			sourceMediaBucket,
+			outputBucket,
+			getParametersPolicy,
+		);
 
 		const transcriptTable = new Table(this, 'TranscriptTable', {
 			tableName: `${APP_NAME}-${this.stage}`,
