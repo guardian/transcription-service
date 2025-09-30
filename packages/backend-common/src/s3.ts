@@ -180,7 +180,7 @@ export const getObjectWithPresignedUrl = async (
 export const uploadObjectWithPresignedUrl = async (
 	presignedUrl: string,
 	metadata: MediaMetadata,
-) => {
+): Promise<void> => {
 	logger.info(
 		`Uploading with ${presignedUrl}, metadata ${JSON.stringify(metadata)}`,
 	);
@@ -203,7 +203,6 @@ export const uploadObjectWithPresignedUrl = async (
 		if (response.ok) {
 			const text = await response.text();
 			logger.info(`File uploaded successfully, response: ${text}`);
-			return true;
 		} else {
 			throw new Error(
 				`Upload failed with status ${response.status}, message ${response.statusText}`,
