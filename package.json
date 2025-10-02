@@ -10,6 +10,8 @@
 		"api::start": "APP=api AWS_REGION=eu-west-1 STAGE=DEV npm run start --workspace api",
 		"output-handler::build": "npm run build --workspace output-handler",
 		"output-handler::start": "APP=output-handler AWS_REGION=eu-west-1 STAGE=DEV npm run start --workspace output-handler",
+		"webpage-snapshot::build": "npm run build --workspace webpage-snapshot",
+		"webpage-snapshot::start": "APP=webpage-snapshot AWS_REGION=eu-west-1 STAGE=DEV npm run start --workspace webpage-snapshot",
 		"media-export::build": "npm run build --workspace media-export",
 		"media-export::start": "APP=media-export AWS_REGION=eu-west-1 STAGE=DEV npm run start --workspace media-export",
 		"worker-capacity-manager::build": "npm run build --workspace worker-capacity-manager",

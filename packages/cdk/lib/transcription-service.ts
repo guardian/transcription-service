@@ -717,6 +717,40 @@ export class TranscriptionService extends GuStack {
 		outputHandlerLambda.addToRolePolicy(getParametersPolicy);
 		outputHandlerLambda.addToRolePolicy(putMetricDataPolicy);
 
+		const webpageSnapshotQueue = new Queue(
+			this,
+			`${APP_NAME}-webpage-snapshot-queue`,
+			{
+				queueName: `${APP_NAME}-webpage-snapshot-queue-${this.stage}`,
+			},
+		);
+
+		const webpageSnapshotLambda = new GuLambdaFunction(
+			this,
+			'transcription-service-webpage-snapshot',
+			{
+				fileName: 'webpage-snapshot.zip',
+				handler: 'index.webpageSnapshot',
+				runtime: Runtime.NODEJS_20_X,
+				app: `${APP_NAME}-webpage-snapshot`,
+				errorPercentageMonitoring:
+					this.stage === 'PROD'
+						? {
+								toleratedErrorPercentage: 0,
+								noMonitoring: false,
+								snsTopicName: alarmTopicName,
+							}
+						: undefined,
+			},
+		);
+
+		webpageSnapshotLambda.addEventSource(
+			new SqsEventSource(webpageSnapshotQueue),
+		);
+
+		webpageSnapshotLambda.addToRolePolicy(getParametersPolicy);
+		webpageSnapshotLambda.addToRolePolicy(putMetricDataPolicy);
+
 		const mediaExportLambda = new GuLambdaFunction(
 			this,
 			'transcription-service-media-export',
