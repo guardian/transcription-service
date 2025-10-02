@@ -219,7 +219,10 @@ const main = async () => {
 			await requestTranscription(config, key, sqsClient, tJob, metadata);
 		} else if (isExternalMediaDownloadJob(job)) {
 			const eJob = ExternalMediaDownloadJob.parse(parsedInput);
-			await uploadObjectWithPresignedUrl(eJob.s3OutputSignedUrl, metadata);
+			await uploadObjectWithPresignedUrl(
+				eJob.s3OutputSignedUrl,
+				metadata.mediaPath,
+			);
 			await reportExternalJob(eJob, sqsClient, metadata);
 		}
 	}
