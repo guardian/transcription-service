@@ -39,13 +39,17 @@ const OutputBucketKeys = z.object({
 
 export type OutputBucketKeys = z.infer<typeof OutputBucketKeys>;
 
-export const MediaDownloadJob = z.object({
+const urlJob = z.object({
 	id: z.string(),
 	url: z.string(),
 	client: z.string(),
 });
 
+export const MediaDownloadJob = urlJob;
+export const WebpageSnapshotJob = urlJob;
+
 export type MediaDownloadJob = z.infer<typeof MediaDownloadJob>;
+export type WebpageSnapshotJob = z.infer<typeof WebpageSnapshotJob>;
 
 export const TranscriptionMediaDownloadJob = MediaDownloadJob.extend({
 	client: z.literal('TRANSCRIPTION_SERVICE'),
@@ -64,6 +68,13 @@ export const ExternalMediaDownloadJob = MediaDownloadJob.extend({
 	s3OutputSignedUrl: z.string(),
 });
 export type ExternalMediaDownloadJob = z.infer<typeof ExternalMediaDownloadJob>;
+
+export const ExternalWebpageSnapshotJob = WebpageSnapshotJob.extend({
+	client: z.literal('EXTERNAL'),
+	outputQueueUrl: z.string(),
+	screenshotSignedUrl: z.string(),
+	htmlSignedUrl: z.string(),
+});
 
 export const isTranscriptionMediaDownloadJob = (
 	job: MediaDownloadJob,
