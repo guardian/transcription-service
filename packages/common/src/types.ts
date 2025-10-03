@@ -72,8 +72,7 @@ export type ExternalMediaDownloadJob = z.infer<typeof ExternalMediaDownloadJob>;
 export const ExternalWebpageSnapshotJob = WebpageSnapshotJob.extend({
 	client: z.literal('EXTERNAL'),
 	outputQueueUrl: z.string(),
-	screenshotSignedUrl: z.string(),
-	htmlSignedUrl: z.string(),
+	s3OutputSignedUrl: z.string(),
 });
 
 export const isTranscriptionMediaDownloadJob = (
