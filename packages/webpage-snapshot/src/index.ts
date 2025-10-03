@@ -35,6 +35,7 @@ const processMessage = async (event: unknown) => {
 		);
 		throw new Error('Failed to parse SQS message');
 	}
+	logger.info(`Preparing puppeteer browser`);
 	const browser = await getBrowser();
 	const page = await browser.newPage();
 
