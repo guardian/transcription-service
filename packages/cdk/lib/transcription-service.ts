@@ -202,18 +202,17 @@ export class TranscriptionService extends GuStack {
 				"Key for the ffmpeg layer's zip file (pushed to layerBucket by publish-ffmpeg-layer.sh script)",
 		});
 
+		const lambdaLayerBucket = Bucket.fromBucketArn(
+			this,
+			'LambdaLayerBucket',
+			layerBucket.valueAsString,
+		);
+
 		const ffmpegLayer = new LayerVersion(
 			this,
 			`FFMpegLayer_x86_64-${this.stage}`,
 			{
-				code: Code.fromBucket(
-					Bucket.fromBucketArn(
-						this,
-						'LambdaLayerBucket',
-						layerBucket.valueAsString,
-					),
-					ffmpegHash.valueAsString,
-				),
+				code: Code.fromBucket(lambdaLayerBucket, ffmpegHash.valueAsString),
 				description: 'FFMpeg Layer',
 				layerVersionName: 'FFMpegLayer',
 				compatibleArchitectures: [Architecture.X86_64],
@@ -737,11 +736,7 @@ export class TranscriptionService extends GuStack {
 			`ChromiumLayer_arm64-${this.stage}`,
 			{
 				code: Code.fromBucket(
-					Bucket.fromBucketArn(
-						this,
-						'LambdaLayerBucket',
-						layerBucket.valueAsString,
-					),
+					lambdaLayerBucket,
 					chromiumLayerKey.valueAsString,
 				),
 				description: 'Chromium Layer',
