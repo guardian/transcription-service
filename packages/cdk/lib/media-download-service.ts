@@ -52,9 +52,7 @@ export const makeMediaDownloadService = (
 		scope,
 		`${APP_NAME}-media-download-dead-letter-queue`,
 		{
-			fifo: true,
-			queueName: `${APP_NAME}-media-download-dead-letter-queue-${scope.stage}.fifo`,
-			contentBasedDeduplication: true,
+			queueName: `${APP_NAME}-media-download-dead-letter-queue-${scope.stage}`,
 		},
 	);
 
