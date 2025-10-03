@@ -18,7 +18,7 @@ const getBrowser = async () => {
 	} else {
 		const puppeteer = await import('puppeteer-core');
 		return puppeteer.launch({
-			args: puppeteer.defaultArgs({ headless: 'shell' }),
+			args: puppeteer.defaultArgs({ args: chromium.args, headless: 'shell' }),
 			executablePath: await chromium.executablePath(),
 			headless: 'shell',
 			dumpio: true,
