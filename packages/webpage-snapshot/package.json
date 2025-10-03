@@ -4,7 +4,7 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"build": "esbuild --bundle --platform=node --target=node20 --external:puppeteer --outfile=dist/index.js src/index.ts",
+		"build": "esbuild --bundle --platform=node --target=node20 --external:puppeteer --external:@sparticuz/chromium --outfile=dist/index.js src/index.ts",
 		"start": "STAGE=DEV nodemon src/index.ts"
 	},
 	"keywords": [],
