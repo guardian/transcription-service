@@ -23,22 +23,6 @@ const SignedUrl = z.object({
 
 export type SignedUrl = z.infer<typeof SignedUrl>;
 
-const OutputBucketUrls = z.object({
-	srt: SignedUrl,
-	text: SignedUrl,
-	json: SignedUrl,
-});
-
-export type OutputBucketUrls = z.infer<typeof OutputBucketUrls>;
-
-const OutputBucketKeys = z.object({
-	srt: z.string(),
-	text: z.string(),
-	json: z.string(),
-});
-
-export type OutputBucketKeys = z.infer<typeof OutputBucketKeys>;
-
 export const MediaDownloadJob = z.object({
 	id: z.string(),
 	url: z.string(),
@@ -104,15 +88,11 @@ export const TranscriptionJob = z.object({
 	sentTimestamp: z.string(),
 	userEmail: z.string(),
 	transcriptDestinationService: z.nativeEnum(DestinationService),
-	outputBucketUrls: OutputBucketUrls,
-	// TODO: make this required once giant has been updated accordingly
-	combinedOutputUrl: z.optional(SignedUrl),
+	combinedOutputUrl: SignedUrl,
 	languageCode: InputLanguageCode,
 	translate: z.boolean(),
 	diarize: z.boolean(),
 	engine: z.nativeEnum(TranscriptionEngine),
-	// we can get rid of this when we switch to using a zip
-	translationOutputBucketUrls: z.optional(OutputBucketUrls),
 });
 
 export type TranscriptionJob = z.infer<typeof TranscriptionJob>;
@@ -131,11 +111,7 @@ export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
 	// status must be kept in sync with https://github.com/guardian/giant/blob/main/backend/app/extraction/ExternalTranscriptionExtractor.scala#L76
 	status: z.literal('SUCCESS'),
 	languageCode: OutputLanguageCode,
-	// TODO: make non optional once we are confident everything has a combinedOutputKey
-	combinedOutputKey: z.optional(z.string()),
-	outputBucketKeys: OutputBucketKeys,
-	// we can get rid of this when we switch to using a zip
-	translationOutputBucketKeys: z.optional(OutputBucketKeys),
+	combinedOutputKey: z.string(),
 	duration: z.optional(z.number()),
 });
 
@@ -316,20 +292,10 @@ export type InputBucketObjectMetadata = z.infer<
 
 export type MediaSourceType = 'file' | 'url';
 
-export const TranscriptKeys = z.object({
-	srt: z.string(),
-	text: z.string(),
-	json: z.string(),
-});
-
-export type TranscriptKeys = z.infer<typeof TranscriptKeys>;
-
 export const TranscriptionDynamoItem = z.object({
 	id: z.string(),
 	originalFilename: z.string(),
-	transcriptKeys: TranscriptKeys,
-	// TODO: make this non optional and deprecate transcriptKeys
-	combinedOutputKey: z.optional(z.string()),
+	combinedOutputKey: z.string(),
 	userEmail: z.string(),
 	completedAt: z.optional(z.string()), // dynamodb can't handle dates so we need to use an ISO date
 	isTranslation: z.boolean(),

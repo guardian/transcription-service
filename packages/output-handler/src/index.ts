@@ -80,11 +80,6 @@ const handleTranscriptionSuccess = async (
 	const dynamoItem: TranscriptionDynamoItem = {
 		id: transcriptionOutput.id,
 		originalFilename: transcriptionOutput.originalFilename,
-		transcriptKeys: {
-			srt: transcriptionOutput.outputBucketKeys.srt,
-			text: transcriptionOutput.outputBucketKeys.text,
-			json: transcriptionOutput.outputBucketKeys.json,
-		},
 		combinedOutputKey: transcriptionOutput.combinedOutputKey,
 		userEmail: transcriptionOutput.userEmail,
 		completedAt: new Date().toISOString(),

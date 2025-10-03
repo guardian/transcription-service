@@ -405,24 +405,18 @@ const getApp = async () => {
 				exportStatuses: exportStatuses,
 			});
 
-			// fetch combined output once rather than once per file type
-			const combinedOutputResult = getItemResult.item.combinedOutputKey
-				? await getCombinedOutput(
-						config,
-						s3Client,
-						getItemResult.item.combinedOutputKey,
-					)
-				: null;
+			const combinedOutputResult = await getCombinedOutput(
+				config,
+				s3Client,
+				getItemResult.item.combinedOutputKey,
+			);
 
 			exportStatuses = await Promise.all(
 				exportStatuses.map((exportStatus: ExportStatus) => {
 					if (exportStatus.exportType == 'source-media') {
 						return exportStatus;
 					}
-					if (
-						combinedOutputResult &&
-						!combinedOutputResultIsSuccess(combinedOutputResult)
-					) {
+					if (!combinedOutputResultIsSuccess(combinedOutputResult)) {
 						return {
 							status: 'failure',
 							exportType: exportStatus.exportType,
@@ -430,14 +424,12 @@ const getApp = async () => {
 						};
 					}
 					return exportTranscriptToDoc(
-						config,
-						s3Client,
 						getItemResult.item,
 						exportStatus.exportType,
 						exportRequest.data.folderId,
 						driveClients.drive,
 						driveClients.docs,
-						combinedOutputResult?.data,
+						combinedOutputResult.data,
 					);
 				}),
 			);

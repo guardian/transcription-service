@@ -75,49 +75,15 @@ export const getCombinedOutput = async (
 };
 
 export const exportTranscriptToDoc = async (
-	config: TranscriptionConfig,
-	s3Client: S3Client,
 	item: TranscriptionDynamoItem,
 	format: 'srt' | 'text',
 	folderId: string,
 	drive: drive_v3.Drive,
 	docs: docs_v1.Docs,
-	combinedOutput?: TranscriptionResult,
+	combinedOutput: TranscriptionResult,
 ): Promise<ExportStatus> => {
 	logger.info(`Starting export, export type: ${format}`);
-	const transcriptS3Key = item.transcriptKeys[format];
-	// FIXME use a mutable variable here as a temporary measure until the old non-combined format is removed
-	let text: string;
-	if (combinedOutput) {
-		text = combinedOutput.transcripts[format];
-	} else {
-		const transcriptText = await getObjectText(
-			s3Client,
-			config.app.transcriptionOutputBucket,
-			transcriptS3Key,
-			false,
-		);
-		if (isS3Failure(transcriptText)) {
-			if (transcriptText.failureReason === 'NoSuchKey') {
-				const msg = `Failed to export transcript - file has expired. Please re-upload the file and try again.`;
-				return {
-					status: 'failure',
-					message: msg,
-					exportType: format,
-				};
-			}
-			const msg = `Failed to fetch transcript. Please contact the digital investigations team for support`;
-			logger.error(
-				`Fetching from s3 failed, failure reason: ${transcriptText.failureReason}`,
-			);
-			return {
-				status: 'failure',
-				message: msg,
-				exportType: format,
-			};
-		}
-		text = transcriptText.text;
-	}
+	const text = combinedOutput.transcripts[format];
 
 	try {
 		const docId = await uploadToGoogleDocs(
