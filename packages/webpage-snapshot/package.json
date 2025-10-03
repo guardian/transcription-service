@@ -14,13 +14,13 @@
 		"@guardian/transcription-service-common": "1.0.0",
 		"@guardian/transcription-service-backend-common": "1.0.0",
 		"@aws-sdk/client-sqs": "^3.624.0",
-		"puppeteer-core": "24.22.3",
-		"@sparticuz/chromium": "140.0.0"
+		"puppeteer-core": "24.22.3"
 	},
 	"devDependencies": {
 		"@types/node": "^20.11.5",
 		"typescript": "^5.3.3",
 		"@types/aws-lambda": "^8.10.133",
+		"@sparticuz/chromium": "140.0.0",
 		"puppeteer": "24.22.3"
 	}
 }
