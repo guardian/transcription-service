@@ -23,6 +23,8 @@ import { LogGroup } from 'aws-cdk-lib/aws-logs';
 import { CfnPipe } from 'aws-cdk-lib/aws-pipes';
 import type { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
+import type { Topic } from 'aws-cdk-lib/aws-sns';
+import { Subscription, SubscriptionProtocol } from 'aws-cdk-lib/aws-sns';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { JsonPath } from 'aws-cdk-lib/aws-stepfunctions';
 
@@ -38,6 +40,7 @@ export const makeMediaDownloadService = (
 	sourceMediaBucket: Bucket,
 	outputBucket: Bucket,
 	getParametersPolicy: PolicyStatement,
+	combinedTaskTopic: Topic,
 ) => {
 	const mediaDownloadGiantOutputQueueArn = new GuStringParameter(
 		scope,
@@ -69,6 +72,12 @@ export const makeMediaDownloadService = (
 			},
 		},
 	);
+
+	new Subscription(scope, 'CombinedTaskTopicMediaDownloadSubscription', {
+		topic: combinedTaskTopic,
+		endpoint: mediaDownloadTaskQueue.queueArn,
+		protocol: SubscriptionProtocol.SQS,
+	});
 
 	mediaDownloadTaskQueue.grantSendMessages(apiLambda);
 
