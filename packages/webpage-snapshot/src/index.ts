@@ -16,6 +16,7 @@ const getBrowser = async () => {
 			args: puppeteer.defaultArgs({ headless: true }),
 		});
 	} else {
+		logger.info(`Preparing puppeteer browser for lambda`);
 		const puppeteer = await import('puppeteer-core');
 		return puppeteer.launch({
 			args: puppeteer.defaultArgs({ args: chromium.args, headless: 'shell' }),
@@ -35,7 +36,6 @@ const processMessage = async (event: unknown) => {
 		);
 		throw new Error('Failed to parse SQS message');
 	}
-	logger.info(`Preparing puppeteer browser`);
 	const browser = await getBrowser();
 	const page = await browser.newPage();
 
