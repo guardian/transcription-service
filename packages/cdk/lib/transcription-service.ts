@@ -759,6 +759,8 @@ export class TranscriptionService extends GuStack {
 				handler: 'index.webpageSnapshot',
 				runtime: Runtime.NODEJS_20_X,
 				architecture: Architecture.ARM_64,
+				timeout: Duration.seconds(900),
+				memorySize: 2048,
 				layers: [chromiumLayer],
 				app: `${APP_NAME}-webpage-snapshot`,
 				errorPercentageMonitoring:
