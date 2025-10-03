@@ -50,6 +50,12 @@ MEDIA_DOWNLOAD_QUEUE_URL_LOCALHOST=${MEDIA_DOWNLOAD_QUEUE_URL/sqs.eu-west-1.loca
 
 echo "Created media download queue in localstack, url: ${MEDIA_DOWNLOAD_QUEUE_URL_LOCALHOST}"
 
+WEBPAGE_SNAPSHOT_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-webpage-snapshot-queue-DEV  | jq .QueueUrl)
+# We don't install the localstack dns so need to replace the endpoint with localhost
+WEBPAGE_SNAPSHOT_QUEUE_URL_LOCALHOST=${WEBPAGE_SNAPSHOT_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
+
+echo "Created webpage snapshot queue in localstack, url: ${WEBPAGE_SNAPSHOT_QUEUE_URL_LOCALHOST}"
+
 # ###########
 # Creating output queue for Giant:
 # Giant is a service that uses transcription service to transcribe its audio/video files.

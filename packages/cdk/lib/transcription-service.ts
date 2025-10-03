@@ -60,6 +60,7 @@ import {
 } from 'aws-cdk-lib/aws-lambda';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
+import { Subscription, SubscriptionProtocol, Topic } from 'aws-cdk-lib/aws-sns';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { makeAlarms } from './alarms';
@@ -637,6 +638,10 @@ export class TranscriptionService extends GuStack {
 		).valueAsString;
 		const alarmTopicName = topicArnToName(alarmTopicArn);
 
+		const combinedTaskTopic = new Topic(this, 'CombinedTaskTopic', {
+			topicName: `transcription-service-combined-task-topic-${this.stage}`,
+		});
+
 		makeMediaDownloadService(
 			this,
 			vpc,
@@ -649,6 +654,7 @@ export class TranscriptionService extends GuStack {
 			sourceMediaBucket,
 			outputBucket,
 			getParametersPolicy,
+			combinedTaskTopic,
 		);
 
 		const transcriptTable = new Table(this, 'TranscriptTable', {
@@ -720,6 +726,12 @@ export class TranscriptionService extends GuStack {
 				queueName: `${APP_NAME}-webpage-snapshot-queue-${this.stage}`,
 			},
 		);
+
+		new Subscription(this, 'CombinedTaskTopicWebpageSnapshotSubscription', {
+			topic: combinedTaskTopic,
+			endpoint: webpageSnapshotQueue.queueArn,
+			protocol: SubscriptionProtocol.SQS,
+		});
 
 		const chromiumLayerKey = new GuStringParameter(
 			this,
