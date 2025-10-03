@@ -23,14 +23,6 @@ const SignedUrl = z.object({
 
 export type SignedUrl = z.infer<typeof SignedUrl>;
 
-const OutputBucketKeys = z.object({
-	srt: z.string(),
-	text: z.string(),
-	json: z.string(),
-});
-
-export type OutputBucketKeys = z.infer<typeof OutputBucketKeys>;
-
 export const MediaDownloadJob = z.object({
 	id: z.string(),
 	url: z.string(),
