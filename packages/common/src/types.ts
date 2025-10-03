@@ -292,18 +292,9 @@ export type InputBucketObjectMetadata = z.infer<
 
 export type MediaSourceType = 'file' | 'url';
 
-export const TranscriptKeys = z.object({
-	srt: z.string(),
-	text: z.string(),
-	json: z.string(),
-});
-
-export type TranscriptKeys = z.infer<typeof TranscriptKeys>;
-
 export const TranscriptionDynamoItem = z.object({
 	id: z.string(),
 	originalFilename: z.string(),
-	transcriptKeys: TranscriptKeys,
 	combinedOutputKey: z.string(),
 	userEmail: z.string(),
 	completedAt: z.optional(z.string()), // dynamodb can't handle dates so we need to use an ISO date
