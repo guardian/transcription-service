@@ -722,6 +722,40 @@ export class TranscriptionService extends GuStack {
 			},
 		);
 
+		const chromiumLayerKey = new GuStringParameter(
+			this,
+			'ChromiumLayerZipKey',
+			{
+				description:
+					"Key for the chromium layer's zip file (pushed to layerBucket by publish-chromium-layer.sh script)",
+				default: 'chromium-v140.0.0-layer.arm64.zip',
+			},
+		);
+
+		const chromiumLayer = new LayerVersion(
+			this,
+			`ChromiumLayer_arm64-${this.stage}`,
+			{
+				code: Code.fromBucket(
+					Bucket.fromBucketArn(
+						this,
+						'LambdaLayerBucket',
+						layerBucket.valueAsString,
+					),
+					chromiumLayerKey.valueAsString,
+				),
+				description: 'Chromium Layer',
+				layerVersionName: 'ChromiumLayer',
+				compatibleArchitectures: [Architecture.ARM_64],
+				compatibleRuntimes: [
+					Runtime.NODEJS_LATEST,
+					Runtime.NODEJS_22_X,
+					Runtime.NODEJS_20_X,
+					Runtime.NODEJS_18_X,
+				],
+			},
+		);
+
 		const webpageSnapshotLambda = new GuLambdaFunction(
 			this,
 			'transcription-service-webpage-snapshot',
@@ -729,6 +763,8 @@ export class TranscriptionService extends GuStack {
 				fileName: 'webpage-snapshot.zip',
 				handler: 'index.webpageSnapshot',
 				runtime: Runtime.NODEJS_20_X,
+				architecture: Architecture.ARM_64,
+				layers: [chromiumLayer],
 				app: `${APP_NAME}-webpage-snapshot`,
 				errorPercentageMonitoring:
 					this.stage === 'PROD'
