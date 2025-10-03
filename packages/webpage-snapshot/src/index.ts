@@ -1,12 +1,21 @@
 import { Handler } from 'aws-lambda';
 import { IncomingSQSEvent } from './sqs-event-types';
-import { logger } from '@guardian/transcription-service-backend-common';
+import {
+	getConfig,
+	getSQSClient,
+	logger,
+	sendMessage,
+} from '@guardian/transcription-service-backend-common';
 import { getTestMessage } from '../test/testMessage';
 
 const runningLocally = !process.env['AWS_EXECUTION_ENV'];
 
 import chromium from '@sparticuz/chromium';
-import { uploadToS3 } from '@guardian/transcription-service-common';
+import {
+	ExternalMediaDownloadJobOutput,
+	uploadToS3,
+} from '@guardian/transcription-service-common';
+import { Page } from 'puppeteer-core';
 
 const getBrowser = async () => {
 	if (runningLocally) {
@@ -27,7 +36,30 @@ const getBrowser = async () => {
 	}
 };
 
+const snapshotPage = async (page: Page, url: string) => {
+	logger.info(`Snapshotting url: ${url}`);
+	await page.goto(url, {
+		waitUntil: 'networkidle2',
+	});
+	const image = await page.screenshot({
+		fullPage: true,
+		encoding: 'base64',
+	});
+	const html = await page.content();
+
+	return {
+		screenshotBase64: image,
+		html,
+	};
+};
+
 const processMessage = async (event: unknown) => {
+	const config = await getConfig();
+
+	const sqsClient = getSQSClient(
+		config.aws.region,
+		config.aws.localstackEndpoint,
+	);
 	const parsedEvent = IncomingSQSEvent.safeParse(event);
 	if (!parsedEvent.success) {
 		logger.error(
@@ -40,31 +72,47 @@ const processMessage = async (event: unknown) => {
 	const page = await browser.newPage();
 
 	for (const record of parsedEvent.data.Records) {
-		const url = record.body.url;
-		// snapshot url using puppeteer
-		logger.info(`Snapshotting url: ${url}`);
-		await page.goto(url, {
-			waitUntil: 'networkidle2',
-		});
-		const screenshotFilename = `${record.body.id}-screenshot`;
-		const image = await page.screenshot({
-			path: `/tmp/${screenshotFilename}.png`,
-			fullPage: true,
-			encoding: 'base64',
-		});
-		const html = await page.content();
-		const output = {
-			screenshotBase64: image,
-			html,
-		};
-		const res = await uploadToS3(
-			record.body.s3OutputSignedUrl,
-			Buffer.from(JSON.stringify(output)),
-			false,
-		);
-		console.log(res);
-		await browser.close();
+		try {
+			const snapshotJson = await snapshotPage(page, record.body.url);
+
+			const s3Result = await uploadToS3(
+				record.body.s3OutputSignedUrl,
+				Buffer.from(JSON.stringify(snapshotJson)),
+				false,
+			);
+
+			if (s3Result.isSuccess) {
+				const output: ExternalMediaDownloadJobOutput = {
+					id: record.body.id,
+					status: 'SUCCESS',
+				};
+				await sendMessage(
+					sqsClient,
+					record.body.outputQueueUrl,
+					JSON.stringify(output),
+					record.body.id,
+				);
+			} else {
+				logger.error(
+					`Failed to upload snapshot to S3 for message ${record.body.id}`,
+					s3Result.errorMsg,
+				);
+				throw new Error('Failed to upload snapshot to S3 for message');
+			}
+		} catch (error) {
+			await sendMessage(
+				sqsClient,
+				record.body.outputQueueUrl,
+				JSON.stringify({
+					id: record.body.id,
+					status: 'FAILURE',
+				}),
+				record.body.id,
+			);
+			logger.error(`Failed to process message ${record.body.id}`, error);
+		}
 	}
+	await browser.close();
 };
 
 const handler: Handler = async (event) => {
