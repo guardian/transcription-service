@@ -37,7 +37,6 @@ const processMessage = async (event: unknown) => {
 	}
 	const browser = await getBrowser();
 	const page = await browser.newPage();
-	console.log('new page time');
 
 	for (const record of parsedEvent.data.Records) {
 		const url = record.body.url;
@@ -76,4 +75,4 @@ const handler: Handler = async (event) => {
 if (!process.env['AWS_EXECUTION_ENV']) {
 	getTestMessage().then((msg) => processMessage(msg));
 }
-export { handler as outputHandler };
+export { handler as webpageSnapshot };

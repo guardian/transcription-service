@@ -3,12 +3,13 @@ import { getSignedUploadUrl } from '@guardian/transcription-service-backend-comm
 export const getTestMessage = async () => {
 	const signedUrl = await getSignedUploadUrl(
 		'eu-west-1',
-		'transcription-service-output-dev',
+		'pfi-playground-remote-ingest-data-rex',
 		'hellier@numanindustries.com',
 		3600,
 		false,
 		'testfile.json',
 	);
+	console.log(signedUrl);
 	return {
 		Records: [
 			{
