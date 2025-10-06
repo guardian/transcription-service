@@ -402,7 +402,7 @@ const pollTranscriptionQueue = async (
 		);
 
 		logger.info(`Deleting message ${taskMessage.MessageId}`);
-		await deleteMessage(sqsClient, taskQueueUrl, receiptHandle);
+		await deleteMessage(sqsClient, taskQueueUrl, receiptHandle, job.id);
 	} catch (error) {
 		const msg = 'Worker failed to complete';
 		logger.error(msg, error);

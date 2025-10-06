@@ -222,7 +222,7 @@ export const getNextMessage = async (
 				QueueUrl: queueUrl,
 				// workers process one transcript at a time
 				MaxNumberOfMessages: 1,
-				VisibilityTimeout: 1500, // 25 minutes
+				VisibilityTimeout: 300, // 	5 minutes
 				// we need to get message attributes so that we can use ApproximateReceiveCount
 				AttributeNames: ['All'],
 			}),
@@ -255,6 +255,7 @@ export const deleteMessage = async (
 	client: SQSClient,
 	queueUrl: string,
 	receiptHandle: string,
+	jobId: string,
 ): Promise<DeleteResult> => {
 	try {
 		await client.send(
@@ -267,7 +268,7 @@ export const deleteMessage = async (
 			status: AWSStatus.Success,
 		};
 	} catch (error) {
-		const errorMsg = `Failed to delete message ${receiptHandle}`;
+		const errorMsg = `Failed to delete message ${receiptHandle} for job ${jobId}`;
 		logger.error(errorMsg, error);
 		return {
 			status: AWSStatus.Failure,
@@ -303,7 +304,7 @@ export const moveMessageToDeadLetterQueue = async (
 	// if the delete command throws an exception, it will be caught by
 	// deleteMessage and logged. Another worker will reprocess the message in
 	// the main task queue and we'll have a duplicate in the dead letter queue.
-	await deleteMessage(client, taskQueueUrl, receiptHandle);
+	await deleteMessage(client, taskQueueUrl, receiptHandle, id);
 };
 
 export const parseTranscriptJobMessage = (
