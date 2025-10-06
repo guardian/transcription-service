@@ -215,7 +215,6 @@ export const changeMessageVisibility = async (
 export const getNextMessage = async (
 	client: SQSClient,
 	queueUrl: string,
-	timeoutOverride?: number,
 ): Promise<ReceiveResult> => {
 	try {
 		const message = await client.send(
@@ -223,8 +222,7 @@ export const getNextMessage = async (
 				QueueUrl: queueUrl,
 				// workers process one transcript at a time
 				MaxNumberOfMessages: 1,
-				// Not sure we need to set this here - could just rely on the queue default
-				VisibilityTimeout: timeoutOverride ?? 300,
+				VisibilityTimeout: 1500, // 25 minutes
 				// we need to get message attributes so that we can use ApproximateReceiveCount
 				AttributeNames: ['All'],
 			}),
