@@ -6,7 +6,7 @@ import {
 	getSQSClient,
 	logger,
 } from '@guardian/transcription-service-backend-common';
-import { getMaxCapacity, setDesiredCapacity } from './asg';
+import { getAsgCapacity, setDesiredCapacity } from './asg';
 import { getSQSQueueLengthIncludingInvisible } from './sqs';
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
@@ -22,16 +22,17 @@ const updateASGCapacity = async (
 		queueUrl,
 	);
 
-	const asgMaxCapacity = await getMaxCapacity(asgClient, asgName);
-	if (asgMaxCapacity === undefined) {
+	const asgCapacity = await getAsgCapacity(asgClient, asgName);
+	if (asgCapacity === undefined) {
 		logger.warn('Failed to get ASG max capacity');
 		return;
 	}
-	logger.info(`ASG ${asgName} max capacity is ${asgMaxCapacity}`);
 
-	const desiredCapacity = Math.min(totalMessagesInQueue, asgMaxCapacity);
+	const desiredCapacity = Math.min(totalMessagesInQueue, asgCapacity.max);
 
-	await setDesiredCapacity(asgClient, asgName, desiredCapacity);
+	if (desiredCapacity !== asgCapacity.desired) {
+		await setDesiredCapacity(asgClient, asgName, desiredCapacity);
+	}
 };
 
 const updateASGsCapacity = async () => {

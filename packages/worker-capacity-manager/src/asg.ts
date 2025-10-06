@@ -26,10 +26,15 @@ export const setDesiredCapacity = async (
 	}
 };
 
-export const getMaxCapacity = async (
+type AsgCapacity = {
+	max: number;
+	desired: number;
+};
+
+export const getAsgCapacity = async (
 	asgClient: AutoScalingClient,
 	asgGroupName: string,
-): Promise<number | undefined> => {
+): Promise<AsgCapacity | undefined> => {
 	try {
 		const command = new DescribeAutoScalingGroupsCommand({
 			AutoScalingGroupNames: [asgGroupName],
@@ -37,7 +42,13 @@ export const getMaxCapacity = async (
 		const asgDescriptions = await asgClient.send(command);
 		const asgs = asgDescriptions.AutoScalingGroups;
 		if (asgs !== undefined && asgs.length > 0) {
-			return asgs[0]!.MaxSize;
+			const firstAsg = asgs[0];
+			return firstAsg
+				? {
+						max: firstAsg.MaxSize,
+						desired: firstAsg.DesiredCapacity,
+					}
+				: undefined;
 		}
 		return undefined;
 	} catch (error) {
