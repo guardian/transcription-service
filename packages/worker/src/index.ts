@@ -312,18 +312,21 @@ const pollTranscriptionQueue = async (
 		const combineTranscribeAndTranslate =
 			job.transcriptDestinationService === DestinationService.Giant &&
 			job.translate;
-		const extraTranslationTimMultiplier = combineTranscribeAndTranslate ? 2 : 1;
+		const extraTranslationTimeMultiplier = combineTranscribeAndTranslate
+			? 2
+			: 1;
 
 		if (ffmpegResult.duration && ffmpegResult.duration !== 0) {
 			// Transcription time is usually slightly longer than file duration.
-			// Update visibility timeout to 2x the file duration plus 10 minutes for the model to load.
+			// Update visibility timeout to 2x the file duration plus 25 minutes for the model to load.
+			// (TODO: investigate whisperx model load time/transcription performance further - it seems to vary)
 			// This should avoid another worker picking up the task and to allow
 			// this worker to delete the message when it's finished.
 			await changeMessageVisibility(
 				sqsClient,
 				taskQueueUrl,
 				receiptHandle,
-				(ffmpegResult.duration * 2 + 600) * extraTranslationTimMultiplier,
+				(ffmpegResult.duration * 2 + 1500) * extraTranslationTimeMultiplier,
 			);
 		}
 
@@ -399,7 +402,7 @@ const pollTranscriptionQueue = async (
 		);
 
 		logger.info(`Deleting message ${taskMessage.MessageId}`);
-		await deleteMessage(sqsClient, taskQueueUrl, receiptHandle);
+		await deleteMessage(sqsClient, taskQueueUrl, receiptHandle, job.id);
 	} catch (error) {
 		const msg = 'Worker failed to complete';
 		logger.error(msg, error);
