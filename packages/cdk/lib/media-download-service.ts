@@ -239,7 +239,7 @@ export const makeMediaDownloadService = (
 			},
 		},
 		roleArn: pipeRole.roleArn,
-		name: `media-download-sfn-pipe-${scope.stage}`,
+		name: `media-download-state-machine-pipe-${scope.stage}`,
 		desiredState: 'RUNNING',
 		logConfiguration: {
 			cloudwatchLogsLogDestination: {
