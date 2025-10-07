@@ -1,4 +1,4 @@
-import type { GuStack} from '@guardian/cdk/lib/constructs/core';
+import type { GuStack } from '@guardian/cdk/lib/constructs/core';
 import { GuStringParameter } from '@guardian/cdk/lib/constructs/core';
 import {
 	GuSecurityGroup,
@@ -52,9 +52,7 @@ export const makeMediaDownloadService = (
 		scope,
 		`${APP_NAME}-media-download-dead-letter-queue`,
 		{
-			fifo: true,
-			queueName: `${APP_NAME}-media-download-dead-letter-queue-${scope.stage}.fifo`,
-			contentBasedDeduplication: true,
+			queueName: `${APP_NAME}-media-download-dead-letter-queue-${scope.stage}`,
 		},
 	);
 
@@ -63,10 +61,8 @@ export const makeMediaDownloadService = (
 		scope,
 		`${APP_NAME}-media-download-task-queue`,
 		{
-			fifo: true,
-			queueName: `${APP_NAME}-media-download-task-queue-${scope.stage}.fifo`,
+			queueName: `${APP_NAME}-media-download-task-queue-${scope.stage}`,
 			visibilityTimeout: Duration.seconds(30),
-			contentBasedDeduplication: true,
 			deadLetterQueue: {
 				queue: mediaDownloadDeadLetterQueue,
 				maxReceiveCount: MAX_RECEIVE_COUNT,
@@ -243,7 +239,7 @@ export const makeMediaDownloadService = (
 			},
 		},
 		roleArn: pipeRole.roleArn,
-		name: `media-download-queue-sfn-pipe-${scope.stage}`,
+		name: `media-download-state-machine-pipe-${scope.stage}`,
 		desiredState: 'RUNNING',
 		logConfiguration: {
 			cloudwatchLogsLogDestination: {
