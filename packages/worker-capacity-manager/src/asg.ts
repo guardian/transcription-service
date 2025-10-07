@@ -43,7 +43,7 @@ export const getAsgCapacity = async (
 		const asgs = asgDescriptions.AutoScalingGroups;
 		if (asgs !== undefined && asgs.length > 0) {
 			const firstAsg = asgs[0];
-			return firstAsg
+			return firstAsg && firstAsg.MaxSize && firstAsg.DesiredCapacity
 				? {
 						max: firstAsg.MaxSize,
 						desired: firstAsg.DesiredCapacity,
