@@ -39,19 +39,15 @@ const OutputBucketKeys = z.object({
 
 export type OutputBucketKeys = z.infer<typeof OutputBucketKeys>;
 
-const urlJob = z.object({
+const UrlJob = z.object({
 	id: z.string(),
 	url: z.string(),
 	client: z.string(),
 });
 
-export const MediaDownloadJob = urlJob;
-export const WebpageSnapshotJob = urlJob;
+export type MediaDownloadJob = z.infer<typeof UrlJob>;
 
-export type MediaDownloadJob = z.infer<typeof MediaDownloadJob>;
-export type WebpageSnapshotJob = z.infer<typeof WebpageSnapshotJob>;
-
-export const TranscriptionMediaDownloadJob = MediaDownloadJob.extend({
+export const TranscriptionMediaDownloadJob = UrlJob.extend({
 	client: z.literal('TRANSCRIPTION_SERVICE'),
 	userEmail: z.string(),
 	languageCode: InputLanguageCode,
@@ -62,18 +58,12 @@ export type TranscriptionMediaDownloadJob = z.infer<
 	typeof TranscriptionMediaDownloadJob
 >;
 
-export const ExternalMediaDownloadJob = MediaDownloadJob.extend({
+export const ExternalUrlJob = UrlJob.extend({
 	client: z.literal('EXTERNAL'),
 	outputQueueUrl: z.string(),
 	s3OutputSignedUrl: z.string(),
 });
-export type ExternalMediaDownloadJob = z.infer<typeof ExternalMediaDownloadJob>;
-
-export const ExternalWebpageSnapshotJob = WebpageSnapshotJob.extend({
-	client: z.literal('EXTERNAL'),
-	outputQueueUrl: z.string(),
-	s3OutputSignedUrl: z.string(),
-});
+export type ExternalUrlJob = z.infer<typeof ExternalUrlJob>;
 
 export const isTranscriptionMediaDownloadJob = (
 	job: MediaDownloadJob,
@@ -82,7 +72,7 @@ export const isTranscriptionMediaDownloadJob = (
 
 export const isExternalMediaDownloadJob = (
 	job: MediaDownloadJob,
-): job is ExternalMediaDownloadJob => job.client === 'EXTERNAL';
+): job is ExternalUrlJob => job.client === 'EXTERNAL';
 
 export const MediaMetadata = z.object({
 	title: z.string(),

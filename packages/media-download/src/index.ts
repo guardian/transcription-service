@@ -19,12 +19,12 @@ import { MediaMetadata } from '@guardian/transcription-service-common';
 import { SQSClient } from '@aws-sdk/client-sqs';
 import {
 	DestinationService,
-	ExternalMediaDownloadJob,
+	ExternalUrlJob,
 	ExternalMediaDownloadJobOutput,
 	isExternalMediaDownloadJob,
 	isTranscriptionMediaDownloadJob,
 	MediaDownloadFailure,
-	MediaDownloadJob,
+	UrlJob,
 	TranscriptionMediaDownloadJob,
 } from '@guardian/transcription-service-common';
 
@@ -88,7 +88,7 @@ const reportDownloadFailure = async (
 };
 
 const reportExternalFailure = async (
-	job: ExternalMediaDownloadJob,
+	job: ExternalUrlJob,
 	sqsClient: SQSClient,
 ) => {
 	const output: ExternalMediaDownloadJobOutput = {
@@ -104,7 +104,7 @@ const reportExternalFailure = async (
 };
 
 const reportExternalJob = async (
-	job: ExternalMediaDownloadJob,
+	job: ExternalUrlJob,
 	sqsClient: SQSClient,
 	metadata: MediaMetadata,
 ) => {
@@ -161,7 +161,7 @@ const main = async () => {
 	}
 
 	const parsedInput = JSON.parse(input);
-	const parsedJob = MediaDownloadJob.safeParse(parsedInput);
+	const parsedJob = UrlJob.safeParse(parsedInput);
 	if (!parsedJob.success) {
 		logger.error(
 			`MESSAGE_BODY is not a valid MediaDownloadJob - exiting. MESSAGE_BODY: ${input} Errors: ${parsedJob.error.errors.map((e) => e.message).join(', ')}`,
@@ -204,7 +204,7 @@ const main = async () => {
 			const tJob = TranscriptionMediaDownloadJob.parse(parsedInput);
 			await reportDownloadFailure(config, sqsClient, tJob);
 		} else if (isExternalMediaDownloadJob(job)) {
-			const eJob = ExternalMediaDownloadJob.parse(parsedInput);
+			const eJob = ExternalUrlJob.parse(parsedInput);
 			await reportExternalFailure(eJob, sqsClient);
 		}
 	} else {
@@ -218,7 +218,7 @@ const main = async () => {
 			);
 			await requestTranscription(config, key, sqsClient, tJob, metadata);
 		} else if (isExternalMediaDownloadJob(job)) {
-			const eJob = ExternalMediaDownloadJob.parse(parsedInput);
+			const eJob = ExternalUrlJob.parse(parsedInput);
 			await uploadObjectWithPresignedUrl(
 				eJob.s3OutputSignedUrl,
 				metadata.mediaPath,
