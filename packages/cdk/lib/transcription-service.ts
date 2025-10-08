@@ -727,6 +727,8 @@ export class TranscriptionService extends GuStack {
 			`${APP_NAME}-webpage-snapshot-queue`,
 			{
 				queueName: `${APP_NAME}-webpage-snapshot-queue-${this.stage}`,
+				// this needs to be greater than the timeout of the webpage snapshot lambda
+				visibilityTimeout: Duration.minutes(15),
 			},
 		);
 
