@@ -56,6 +56,11 @@ WEBPAGE_SNAPSHOT_QUEUE_URL_LOCALHOST=${WEBPAGE_SNAPSHOT_QUEUE_URL/sqs.eu-west-1.
 
 echo "Created webpage snapshot queue in localstack, url: ${WEBPAGE_SNAPSHOT_QUEUE_URL_LOCALHOST}"
 
+# Combined SNS topic to send to webpage snapshot and media download
+REMOTE_INGEST_TOPIC=$(aws sns create-topic --endpoint-url=http://localhost:4566 --name transcription-service-combined-task-topic-DEV | jq -r .TopicArn)
+echo "Created SNS topic in localstack, arn: ${REMOTE_INGEST_TOPIC}"
+
+
 # ###########
 # Creating output queue for Giant:
 # Giant is a service that uses transcription service to transcribe its audio/video files.
