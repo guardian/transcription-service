@@ -1,5 +1,4 @@
 import type { GuStack } from '@guardian/cdk/lib/constructs/core';
-import { GuStringParameter } from '@guardian/cdk/lib/constructs/core';
 import {
 	GuSecurityGroup,
 	GuVpc,
@@ -41,16 +40,8 @@ export const makeMediaDownloadService = (
 	outputBucket: Bucket,
 	getParametersPolicy: PolicyStatement,
 	combinedTaskTopic: Topic,
+	giantRemoteIngestOutputSendPolicy: PolicyStatement,
 ) => {
-	const mediaDownloadGiantOutputQueueArn = new GuStringParameter(
-		scope,
-		'mediaDownloadGiantOutputQueueArn',
-		{
-			fromSSM: true,
-			default: `/${scope.stage}/investigations/transcription-service/mediaDownloadGiantOutputQueueArn`,
-		},
-	).valueAsString;
-
 	const mediaDownloadDeadLetterQueue = new Queue(
 		scope,
 		`${APP_NAME}-media-download-dead-letter-queue`,
@@ -137,9 +128,9 @@ export const makeMediaDownloadService = (
 					transcriptionTaskQueue.queueArn,
 					transcriptionGpuTaskQueue.queueArn,
 					transcriptionOutputQueue.queueArn,
-					mediaDownloadGiantOutputQueueArn,
 				],
 			}),
+			giantRemoteIngestOutputSendPolicy,
 			new PolicyStatement({
 				effect: Effect.ALLOW,
 				actions: ['secretsmanager:GetSecretValue'],
