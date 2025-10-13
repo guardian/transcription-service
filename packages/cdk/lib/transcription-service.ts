@@ -114,6 +114,22 @@ export class TranscriptionService extends GuStack {
 			},
 		).valueAsString;
 
+		const giantRemoteIngestOutputQueueArn = new GuStringParameter(
+			this,
+			'mediaDownloadGiantOutputQueueArn', // TODO: Should be called remote ingest giant output
+			{
+				fromSSM: true,
+				// TODO: Should be called remote ingest giant output
+				default: `/${this.stage}/investigations/transcription-service/mediaDownloadGiantOutputQueueArn`,
+			},
+		).valueAsString;
+
+		const giantRemoteIngestOutputSendPolicy = new PolicyStatement({
+			effect: Effect.ALLOW,
+			actions: ['sqs:SendMessage'],
+			resources: [giantRemoteIngestOutputQueueArn],
+		});
+
 		const ssmPrefix = `arn:aws:ssm:${props.env.region}:${this.account}:parameter`;
 		const ssmPath = `${this.stage}/${this.stack}/${APP_NAME}`;
 		const domainName =
@@ -656,6 +672,7 @@ export class TranscriptionService extends GuStack {
 			outputBucket,
 			getParametersPolicy,
 			combinedTaskTopic,
+			giantRemoteIngestOutputSendPolicy,
 		);
 
 		const transcriptTable = new Table(this, 'TranscriptTable', {
@@ -796,6 +813,8 @@ export class TranscriptionService extends GuStack {
 
 		webpageSnapshotLambda.addToRolePolicy(getParametersPolicy);
 		webpageSnapshotLambda.addToRolePolicy(putMetricDataPolicy);
+
+		webpageSnapshotLambda.addToRolePolicy(giantRemoteIngestOutputSendPolicy);
 
 		const mediaExportLambda = new GuLambdaFunction(
 			this,
