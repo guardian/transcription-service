@@ -14,6 +14,7 @@ export const addSubscription = (
 		topic: topic,
 		endpoint: queue.queueArn,
 		protocol: SubscriptionProtocol.SQS,
+		rawMessageDelivery: true,
 	});
 
 	queue.addToResourcePolicy(
