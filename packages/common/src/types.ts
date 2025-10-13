@@ -39,13 +39,13 @@ const OutputBucketKeys = z.object({
 
 export type OutputBucketKeys = z.infer<typeof OutputBucketKeys>;
 
-const UrlJob = z.object({
+export const UrlJob = z.object({
 	id: z.string(),
 	url: z.string(),
 	client: z.string(),
 });
 
-export type MediaDownloadJob = z.infer<typeof UrlJob>;
+export type UrlJob = z.infer<typeof UrlJob>;
 
 export const TranscriptionMediaDownloadJob = UrlJob.extend({
 	client: z.literal('TRANSCRIPTION_SERVICE'),
@@ -61,17 +61,18 @@ export type TranscriptionMediaDownloadJob = z.infer<
 export const ExternalUrlJob = UrlJob.extend({
 	client: z.literal('EXTERNAL'),
 	outputQueueUrl: z.string(),
-	s3OutputSignedUrl: z.string(),
+	mediaDownloadOutputSignedUrl: z.string(),
+	webpageSnapshotOutputSignedUrl: z.string(),
 });
 export type ExternalUrlJob = z.infer<typeof ExternalUrlJob>;
 
 export const isTranscriptionMediaDownloadJob = (
-	job: MediaDownloadJob,
+	job: UrlJob,
 ): job is TranscriptionMediaDownloadJob =>
 	job.client === 'TRANSCRIPTION_SERVICE';
 
 export const isExternalMediaDownloadJob = (
-	job: MediaDownloadJob,
+	job: UrlJob,
 ): job is ExternalUrlJob => job.client === 'EXTERNAL';
 
 export const MediaMetadata = z.object({
@@ -82,15 +83,24 @@ export const MediaMetadata = z.object({
 });
 export type MediaMetadata = z.infer<typeof MediaMetadata>;
 
-export const ExternalMediaDownloadJobOutput = z.object({
+export const ExternalJobOutput = z.object({
 	id: z.string(),
 	status: z.union([z.literal('SUCCESS'), z.literal('FAILURE')]),
+	outputType: z.union([
+		z.literal('WEBPAGE_SNAPSHOT'),
+		z.literal('MEDIA_DOWNLOAD'),
+	]),
 	metadata: z.optional(MediaMetadata),
 });
 
-export type ExternalMediaDownloadJobOutput = z.infer<
-	typeof ExternalMediaDownloadJobOutput
->;
+export type ExternalJobOutput = z.infer<typeof ExternalJobOutput>;
+
+export const WebpageSnapshot = z.object({
+	html: z.string(),
+	screenshotBase64: z.string(),
+	title: z.string(),
+});
+export type WebpageSnapshot = z.infer<typeof WebpageSnapshot>;
 
 export enum TranscriptionEngine {
 	WHISPER_X = 'whisperx',

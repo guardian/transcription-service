@@ -6,14 +6,15 @@ import {
 	logger,
 	sendMessage,
 } from '@guardian/transcription-service-backend-common';
-import { getTestMessage } from '../test/testMessage';
+import { getTestMessage, sqsMessageToTestMessage } from '../test/testMessage';
 
 const runningLocally = !process.env['AWS_EXECUTION_ENV'];
 
 import chromium from '@sparticuz/chromium';
 import {
-	ExternalMediaDownloadJobOutput,
+	ExternalJobOutput,
 	uploadToS3,
+	WebpageSnapshot,
 } from '@guardian/transcription-service-common';
 import { Page } from 'puppeteer-core';
 
@@ -36,7 +37,10 @@ const getBrowser = async () => {
 	}
 };
 
-const snapshotPage = async (page: Page, url: string) => {
+const snapshotPage = async (
+	page: Page,
+	url: string,
+): Promise<WebpageSnapshot> => {
 	logger.info(`Snapshotting url: ${url}`);
 	await page.goto(url, {
 		waitUntil: 'networkidle2',
@@ -44,17 +48,28 @@ const snapshotPage = async (page: Page, url: string) => {
 	const image = await page.screenshot({
 		fullPage: true,
 		encoding: 'base64',
+		type: 'jpeg',
+		quality: 100,
 	});
 	const html = await page.content();
+
+	const title = await page.title();
+
+	//sanitise title to reduce risk of injection attacks
+	const sanitisedTitle = title
+		.replace(/[^a-zA-Z0-9 \-_]/g, '')
+		.substring(0, 200);
 
 	return {
 		screenshotBase64: image,
 		html,
+		title: sanitisedTitle,
 	};
 };
 
 const processMessage = async (event: unknown) => {
 	const config = await getConfig();
+	console.log(JSON.stringify(event, null, 2));
 
 	const sqsClient = getSQSClient(
 		config.aws.region,
@@ -76,15 +91,16 @@ const processMessage = async (event: unknown) => {
 			const snapshotJson = await snapshotPage(page, record.body.url);
 
 			const s3Result = await uploadToS3(
-				record.body.s3OutputSignedUrl,
+				record.body.webpageSnapshotOutputSignedUrl,
 				Buffer.from(JSON.stringify(snapshotJson)),
 				false,
 			);
 
 			if (s3Result.isSuccess) {
-				const output: ExternalMediaDownloadJobOutput = {
+				const output: ExternalJobOutput = {
 					id: record.body.id,
 					status: 'SUCCESS',
+					outputType: 'WEBPAGE_SNAPSHOT',
 				};
 				await sendMessage(
 					sqsClient,
@@ -122,6 +138,11 @@ const handler: Handler = async (event) => {
 
 // when running locally bypass the handler
 if (!process.env['AWS_EXECUTION_ENV']) {
-	getTestMessage().then((msg) => processMessage(msg));
+	const messageBodyEnv = process.env['MESSAGE_BODY'];
+	if (messageBodyEnv) {
+		processMessage(sqsMessageToTestMessage(messageBodyEnv));
+	} else {
+		getTestMessage().then((msg) => processMessage(msg));
+	}
 }
 export { handler as webpageSnapshot };

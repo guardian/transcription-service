@@ -21,3 +21,16 @@ export const getTestMessage = async () => {
 		],
 	};
 };
+
+export const sqsMessageToTestMessage = (sqsMessage: string) => {
+	return {
+		Records: [
+			{
+				messageId: 'id123',
+				ReceiptHandle: 'abc123',
+				MD5OfBody: 'md5md5',
+				body: JSON.parse(sqsMessage).Message,
+			},
+		],
+	};
+};
