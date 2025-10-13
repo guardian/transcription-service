@@ -14,17 +14,16 @@ import { Upload } from '@aws-sdk/lib-storage';
 import { S3Client } from '@aws-sdk/client-s3';
 import { createReadStream } from 'node:fs';
 import { downloadMedia, startProxyTunnel } from './yt-dlp';
-import { MediaMetadata } from '@guardian/transcription-service-common';
+import { MediaMetadata, UrlJob } from '@guardian/transcription-service-common';
 
 import { SQSClient } from '@aws-sdk/client-sqs';
 import {
 	DestinationService,
 	ExternalUrlJob,
-	ExternalMediaDownloadJobOutput,
+	ExternalJobOutput,
 	isExternalMediaDownloadJob,
 	isTranscriptionMediaDownloadJob,
 	MediaDownloadFailure,
-	UrlJob,
 	TranscriptionMediaDownloadJob,
 } from '@guardian/transcription-service-common';
 
@@ -91,9 +90,10 @@ const reportExternalFailure = async (
 	job: ExternalUrlJob,
 	sqsClient: SQSClient,
 ) => {
-	const output: ExternalMediaDownloadJobOutput = {
+	const output: ExternalJobOutput = {
 		id: job.id,
 		status: 'FAILURE',
+		outputType: 'MEDIA_DOWNLOAD',
 	};
 	await sendMessage(
 		sqsClient,
@@ -108,9 +108,10 @@ const reportExternalJob = async (
 	sqsClient: SQSClient,
 	metadata: MediaMetadata,
 ) => {
-	const output: ExternalMediaDownloadJobOutput = {
+	const output: ExternalJobOutput = {
 		id: job.id,
 		status: 'SUCCESS',
+		outputType: 'MEDIA_DOWNLOAD',
 		metadata,
 	};
 	await sendMessage(

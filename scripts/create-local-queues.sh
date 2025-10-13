@@ -58,6 +58,12 @@ echo "Created webpage snapshot queue in localstack, url: ${WEBPAGE_SNAPSHOT_QUEU
 
 # Combined SNS topic to send to webpage snapshot and media download
 REMOTE_INGEST_TOPIC=$(aws sns create-topic --endpoint-url=http://localhost:4566 --name transcription-service-combined-task-topic-DEV | jq -r .TopicArn)
+
+# subscribe media download and webpage snapshot queues to the topic
+echo $WEBPAGE_SNAPSHOT_QUEUE_ARN
+aws sns subscribe --endpoint-url=http://localhost:4566 --topic-arn $REMOTE_INGEST_TOPIC --protocol sqs --notification-endpoint "arn:aws:sqs:eu-west-1:000000000000:transcription-service-webpage-snapshot-queue-DEV"
+aws sns subscribe --endpoint-url=http://localhost:4566 --topic-arn $REMOTE_INGEST_TOPIC --protocol sqs --notification-endpoint "arn:aws:sqs:eu-west-1:000000000000:transcription-service-media-download-queue-DEV"
+
 echo "Created SNS topic in localstack, arn: ${REMOTE_INGEST_TOPIC}"
 
 
