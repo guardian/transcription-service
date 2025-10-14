@@ -83,9 +83,18 @@ export const MediaMetadata = z.object({
 });
 export type MediaMetadata = z.infer<typeof MediaMetadata>;
 
+export const isMediaMetadata = (obj: unknown): obj is MediaMetadata => {
+	const mediaMetadata = obj as MediaMetadata;
+	return typeof mediaMetadata.title === 'string';
+};
+
 export const ExternalJobOutput = z.object({
 	id: z.string(),
-	status: z.union([z.literal('SUCCESS'), z.literal('FAILURE')]),
+	status: z.union([
+		z.literal('SUCCESS'),
+		z.literal('FAILURE'),
+		z.literal('INVALID_URL'),
+	]),
 	outputType: z.union([
 		z.literal('WEBPAGE_SNAPSHOT'),
 		z.literal('MEDIA_DOWNLOAD'),

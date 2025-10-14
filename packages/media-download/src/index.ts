@@ -13,7 +13,7 @@ import {
 import { Upload } from '@aws-sdk/lib-storage';
 import { S3Client } from '@aws-sdk/client-s3';
 import { createReadStream } from 'node:fs';
-import { downloadMedia, startProxyTunnel } from './yt-dlp';
+import { downloadMedia, isFailure, startProxyTunnel } from './yt-dlp';
 import { MediaMetadata, UrlJob } from '@guardian/transcription-service-common';
 
 import { SQSClient } from '@aws-sdk/client-sqs';
@@ -89,10 +89,11 @@ const reportDownloadFailure = async (
 const reportExternalFailure = async (
 	job: ExternalUrlJob,
 	sqsClient: SQSClient,
+	errorType: 'INVALID_URL' | 'FAILURE',
 ) => {
 	const output: ExternalJobOutput = {
 		id: job.id,
-		status: 'FAILURE',
+		status: errorType,
 		outputType: 'MEDIA_DOWNLOAD',
 	};
 	await sendMessage(
@@ -194,37 +195,43 @@ const main = async () => {
 			)
 		: undefined;
 
-	const metadata = await downloadMedia(
+	const ytDlpResult = await downloadMedia(
 		job.url,
 		workingDirectory,
 		job.id,
 		proxyUrl,
 	);
-	if (!metadata) {
+	if (isFailure(ytDlpResult)) {
 		if (isTranscriptionMediaDownloadJob(job)) {
 			const tJob = TranscriptionMediaDownloadJob.parse(parsedInput);
 			await reportDownloadFailure(config, sqsClient, tJob);
 		} else if (isExternalMediaDownloadJob(job)) {
 			const eJob = ExternalUrlJob.parse(parsedInput);
-			await reportExternalFailure(eJob, sqsClient);
+			await reportExternalFailure(eJob, sqsClient, ytDlpResult.errorType);
 		}
 	} else {
 		if (isTranscriptionMediaDownloadJob(job)) {
 			const tJob = TranscriptionMediaDownloadJob.parse(parsedInput);
 			const key = await uploadToS3(
 				s3Client,
-				metadata,
+				ytDlpResult.metadata,
 				config.app.sourceMediaBucket,
 				tJob.id,
 			);
-			await requestTranscription(config, key, sqsClient, tJob, metadata);
+			await requestTranscription(
+				config,
+				key,
+				sqsClient,
+				tJob,
+				ytDlpResult.metadata,
+			);
 		} else if (isExternalMediaDownloadJob(job)) {
 			const eJob = ExternalUrlJob.parse(parsedInput);
 			await uploadObjectWithPresignedUrl(
 				eJob.mediaDownloadOutputSignedUrl,
-				metadata.mediaPath,
+				ytDlpResult.metadata.mediaPath,
 			);
-			await reportExternalJob(eJob, sqsClient, metadata);
+			await reportExternalJob(eJob, sqsClient, ytDlpResult.metadata);
 		}
 	}
 };
