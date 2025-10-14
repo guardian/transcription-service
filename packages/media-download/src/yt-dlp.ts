@@ -3,6 +3,24 @@ import { runSpawnCommand } from '@guardian/transcription-service-backend-common/
 import { logger } from '@guardian/transcription-service-backend-common';
 import { MediaMetadata } from '@guardian/transcription-service-common';
 
+type YtDlpSuccess = {
+	status: 'SUCCESS';
+	metadata: MediaMetadata;
+};
+
+type YtDlpFailure = {
+	errorType: 'INVALID_URL' | 'FAILURE';
+	status: 'FAILURE';
+};
+
+export const isSuccess = (
+	result: YtDlpSuccess | YtDlpFailure,
+): result is YtDlpSuccess => result.status === 'SUCCESS';
+
+export const isFailure = (
+	result: YtDlpSuccess | YtDlpFailure,
+): result is YtDlpFailure => result.status === 'FAILURE';
+
 const extractInfoJson = (
 	infoJsonPath: string,
 	outputFilePath: string,
@@ -60,13 +78,13 @@ export const downloadMedia = async (
 	workingDirectory: string,
 	id: string,
 	proxyUrl?: string,
-) => {
+): Promise<YtDlpSuccess | YtDlpFailure> => {
 	const proxyParams = proxyUrl ? ['--proxy', proxyUrl] : [];
 	try {
 		const filepathLocation = `${workingDirectory}/${id}.txt`;
 		// yt-dlp --print-to-file appends to the file, so wipe it first
 		fs.writeFileSync(filepathLocation, '');
-		await runSpawnCommand(
+		const result = await runSpawnCommand(
 			'downloadMedia',
 			'yt-dlp',
 			[
@@ -90,6 +108,15 @@ export const downloadMedia = async (
 			],
 			true,
 		);
+		if (result.code !== 0) {
+			logger.error(
+				`yt-dlp failed with code ${result.code}, stderr: ${result.stderr}`,
+			);
+			if (result.stderr.includes('ERROR: Unsupported URL')) {
+				return { errorType: 'invalid_url', status: 'FAILURE' };
+			}
+		}
+
 		const outputPath = fs.readFileSync(filepathLocation, 'utf8').trim();
 		const metadata = extractInfoJson(
 			`${workingDirectory}/${id}.info.json`,
@@ -99,9 +126,12 @@ export const downloadMedia = async (
 			`Download complete, extracted metadata: ${JSON.stringify(metadata)}`,
 		);
 
-		return metadata;
+		return {
+			metadata,
+			status: 'SUCCESS',
+		};
 	} catch (error) {
 		logger.error(`Failed to download ${url}`, error);
-		return null;
+		return { errorType: 'FAILURE', status: 'FAILURE' };
 	}
 };
