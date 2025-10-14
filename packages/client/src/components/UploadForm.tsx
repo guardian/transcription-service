@@ -310,217 +310,245 @@ export const UploadForm = () => {
 
 	return (
 		<>
+			<div
+				className="flex items-center p-4 mb-4 text-sm text-red-800 border border-red-300 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-800"
+				role="alert"
+			>
+				<svg
+					className="shrink-0 inline w-4 h-4 me-3"
+					aria-hidden="true"
+					xmlns="http://www.w3.org/2000/svg"
+					fill="currentColor"
+					viewBox="0 0 20 20"
+				>
+					<path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+				</svg>
+				<span className="sr-only">Info</span>
+				<div>
+					Sorry, the transcription tool is currently out of service. We hope to
+					have it working again shortly, please check back in an hour. Please
+					contact digital.investigations@theguardian.com for any urgent
+					transcription jobs.
+				</div>
+			</div>
 			<p className={' pb-3 font-light'}>
 				This tool can transcribe both audio and video. You will receive an email
 				when the transcription is ready.
 			</p>
+			{false && (
+				<form id="media-upload-form" onSubmit={handleSubmit}>
+					<div className={'mb-1'}>
+						<Label className="text-base">I want to transcribe a...</Label>
+					</div>
+					<div className="flex items-center gap-2 mb-3 ml-3">
+						<Radio
+							id="file-radio"
+							name="media-type"
+							value="file"
+							checked={mediaSource === 'file'}
+							onClick={() => setMediaSource('file')}
+						/>
+						<Label htmlFor="file-radio">File</Label>
+						<Radio
+							id="url-radio"
+							name="media-type"
+							value="url"
+							checked={mediaSource === 'url'}
+							onClick={() => setMediaSource('url')}
+						/>
+						<Label htmlFor="url-radio">URL</Label>
+					</div>
+					{mediaSource === 'url' && (
+						<>
+							<div className="mb-4"></div>
 
-			<form id="media-upload-form" onSubmit={handleSubmit}>
-				<div className={'mb-1'}>
-					<Label className="text-base">I want to transcribe a...</Label>
-				</div>
-				<div className="flex items-center gap-2 mb-3 ml-3">
-					<Radio
-						id="file-radio"
-						name="media-type"
-						value="file"
-						checked={mediaSource === 'file'}
-						onClick={() => setMediaSource('file')}
-					/>
-					<Label htmlFor="file-radio">File</Label>
-					<Radio
-						id="url-radio"
-						name="media-type"
-						value="url"
-						checked={mediaSource === 'url'}
-						onClick={() => setMediaSource('url')}
-					/>
-					<Label htmlFor="url-radio">URL</Label>
-				</div>
-				{mediaSource === 'url' && (
-					<>
-						<div className="mb-4"></div>
-
+							<div className="mb-4">
+								<div className={'mb-1'}>
+									<Label
+										className="text-base"
+										htmlFor="media-url"
+										value="URL(s) for transcription"
+									/>
+									<p className="font-light">
+										Paste the URL of a webpage or social media post containing
+										the video or audio that you wish to save/transcribe. Click
+										‘+ Add URL’ to add multiple URLs.
+									</p>
+								</div>
+								<div className={'ml-3'}>
+									{mediaUrlInputs.map((input, index) => (
+										<>
+											<TextInput
+												id={`media-url-${index}`}
+												placeholder="e.g. https://www.youtube.com?v=abc123"
+												className={'mt-1 mb-1'}
+												color={getStatusColor(input)}
+												helperText={
+													input.status === 'invalid' ? input.reason : ''
+												}
+												onChange={(e) => {
+													const newInputs = [...mediaUrlInputs];
+													newInputs[index] = checkUrlValid(e.target.value);
+													setMediaUrlInputs(newInputs);
+												}}
+											/>
+											<hr className="h-0.5 my-2 bg-gray-200 border-0 dark:bg-gray-700" />
+										</>
+									))}
+									<Button
+										size={'sm'}
+										className={'mt-2'}
+										onClick={addUrlInput}
+										color={'light'}
+									>
+										<PlusIcon className="mr-2 h-5 w-5" />
+										Add URL
+									</Button>
+								</div>
+							</div>
+							<div className={'mb-4'}>
+								<Alert color="info">
+									Material may be protected by copyright. Please only use this
+									service to get a download for legitimate journalistic
+									purposes.
+								</Alert>
+							</div>
+						</>
+					)}
+					{mediaSource === 'file' && (
 						<div className="mb-4">
 							<div className={'mb-1'}>
 								<Label
 									className="text-base"
-									htmlFor="media-url"
-									value="URL(s) for transcription"
+									htmlFor="multiple-file-upload"
+									value="File(s) for transcription"
+								/>
+							</div>
+							<div className={'ml-3'}>
+								<FileInput
+									id="files"
+									required={true}
+									multiple
+									onChange={(e) => {
+										setFiles(e.target.files);
+									}}
+								/>
+							</div>
+						</div>
+					)}
+					<div className="mb-4">
+						<div className={'mb-1'}>
+							<Label
+								className="text-base"
+								htmlFor="language-selector"
+								value="Audio language"
+							/>
+							<p className="font-light">
+								Choosing a specific language may give you more accurate results.
+							</p>
+						</div>
+						<div className={'ml-3'}>
+							<Select
+								id="language-selector"
+								style={{
+									color: languageSelectColor,
+									borderColor: languageSelectColor,
+								}}
+								onChange={(e) => {
+									setMediaFileLanguageCode(e.target.value as InputLanguageCode);
+									setLanguageCodeValid(true);
+								}}
+							>
+								<option disabled selected>
+									Select a language
+								</option>
+								{languageCodes.map((languageCode: InputLanguageCode) => (
+									<option key={languageCode} value={languageCode}>
+										{languageCodeToLanguageWithAuto[languageCode]}
+									</option>
+								))}
+							</Select>
+						</div>
+					</div>
+					{mediaFileLanguageCode !== 'en' && (
+						<div className="mb-4">
+							<div className={'mb-1'}>
+								<Label
+									className="text-base"
+									htmlFor="translation-checkbox"
+									value="English translation"
 								/>
 								<p className="font-light">
-									Paste the URL of a webpage or social media post containing the
-									video or audio that you wish to save/transcribe. Click ‘+ Add
-									URL’ to add multiple URLs.
+									If you request a translation, you will receive two emails -
+									one with the transcript in the original language, and another
+									with the translation into English. Translation quality varies.
 								</p>
 							</div>
 							<div className={'ml-3'}>
-								{mediaUrlInputs.map((input, index) => (
-									<>
-										<TextInput
-											id={`media-url-${index}`}
-											placeholder="e.g. https://www.youtube.com?v=abc123"
-											className={'mt-1 mb-1'}
-											color={getStatusColor(input)}
-											helperText={
-												input.status === 'invalid' ? input.reason : ''
-											}
-											onChange={(e) => {
-												const newInputs = [...mediaUrlInputs];
-												newInputs[index] = checkUrlValid(e.target.value);
-												setMediaUrlInputs(newInputs);
-											}}
-										/>
-										<hr className="h-0.5 my-2 bg-gray-200 border-0 dark:bg-gray-700" />
-									</>
-								))}
-								<Button
-									size={'sm'}
-									className={'mt-2'}
-									onClick={addUrlInput}
-									color={'light'}
-								>
-									<PlusIcon className="mr-2 h-5 w-5" />
-									Add URL
-								</Button>
+								<div className="flex h-5 items-center gap-2">
+									<Checkbox
+										id="translation"
+										checked={translationRequested}
+										onChange={() =>
+											setTranslationRequested(!translationRequested)
+										}
+									/>
+									<div className="flex flex-col">
+										<Label
+											htmlFor="translation"
+											className="font-light text-base"
+										>
+											Request translation
+										</Label>
+									</div>
+								</div>
 							</div>
 						</div>
-						<div className={'mb-4'}>
-							<Alert color="info">
-								Material may be protected by copyright. Please only use this
-								service to get a download for legitimate journalistic purposes.
-							</Alert>
-						</div>
-					</>
-				)}
-				{mediaSource === 'file' && (
+					)}
+
 					<div className="mb-4">
 						<div className={'mb-1'}>
 							<Label
 								className="text-base"
-								htmlFor="multiple-file-upload"
-								value="File(s) for transcription"
-							/>
-						</div>
-						<div className={'ml-3'}>
-							<FileInput
-								id="files"
-								required={true}
-								multiple
-								onChange={(e) => {
-									setFiles(e.target.files);
-								}}
-							/>
-						</div>
-					</div>
-				)}
-				<div className="mb-4">
-					<div className={'mb-1'}>
-						<Label
-							className="text-base"
-							htmlFor="language-selector"
-							value="Audio language"
-						/>
-						<p className="font-light">
-							Choosing a specific language may give you more accurate results.
-						</p>
-					</div>
-					<div className={'ml-3'}>
-						<Select
-							id="language-selector"
-							style={{
-								color: languageSelectColor,
-								borderColor: languageSelectColor,
-							}}
-							onChange={(e) => {
-								setMediaFileLanguageCode(e.target.value as InputLanguageCode);
-								setLanguageCodeValid(true);
-							}}
-						>
-							<option disabled selected>
-								Select a language
-							</option>
-							{languageCodes.map((languageCode: InputLanguageCode) => (
-								<option key={languageCode} value={languageCode}>
-									{languageCodeToLanguageWithAuto[languageCode]}
-								</option>
-							))}
-						</Select>
-					</div>
-				</div>
-				{mediaFileLanguageCode !== 'en' && (
-					<div className="mb-4">
-						<div className={'mb-1'}>
-							<Label
-								className="text-base"
-								htmlFor="translation-checkbox"
-								value="English translation"
+								htmlFor="diarization-checkbox"
+								value="Speaker identification"
 							/>
 							<p className="font-light">
-								If you request a translation, you will receive two emails - one
-								with the transcript in the original language, and another with
-								the translation into English. Translation quality varies.
+								Speaker identification is a new feature - please share any
+								feedback with us.
 							</p>
 						</div>
 						<div className={'ml-3'}>
 							<div className="flex h-5 items-center gap-2">
 								<Checkbox
-									id="translation"
-									checked={translationRequested}
+									id="diarization"
+									checked={diarizationRequested}
 									onChange={() =>
-										setTranslationRequested(!translationRequested)
+										setDiarizationRequested(!diarizationRequested)
 									}
 								/>
 								<div className="flex flex-col">
-									<Label htmlFor="translation" className="font-light text-base">
-										Request translation
+									<Label htmlFor="diarization" className="font-light text-base">
+										Request speaker identification
 									</Label>
 								</div>
 							</div>
 						</div>
 					</div>
-				)}
 
-				<div className="mb-4">
-					<div className={'mb-1'}>
-						<Label
-							className="text-base"
-							htmlFor="diarization-checkbox"
-							value="Speaker identification"
-						/>
-						<p className="font-light">
-							Speaker identification is a new feature - please share any
-							feedback with us.
-						</p>
-					</div>
-					<div className={'ml-3'}>
-						<div className="flex h-5 items-center gap-2">
-							<Checkbox
-								id="diarization"
-								checked={diarizationRequested}
-								onChange={() => setDiarizationRequested(!diarizationRequested)}
-							/>
-							<div className="flex flex-col">
-								<Label htmlFor="diarization" className="font-light text-base">
-									Request speaker identification
-								</Label>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<button
-					type="submit"
-					className={`text-white px-5 py-2.5 text-center rounded-lg text-sm font-medium ${
-						disableSubmitButton()
-							? 'bg-blue-400 dark:bg-blue-500 cursor-not-allowed'
-							: 'bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'
-					}`}
-					disabled={disableSubmitButton()}
-				>
-					Submit
-				</button>
-			</form>
+					<button
+						type="submit"
+						className={`text-white px-5 py-2.5 text-center rounded-lg text-sm font-medium ${
+							disableSubmitButton()
+								? 'bg-blue-400 dark:bg-blue-500 cursor-not-allowed'
+								: 'bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'
+						}`}
+						disabled={disableSubmitButton()}
+					>
+						Submit
+					</button>
+				</form>
+			)}
 		</>
 	);
 };
