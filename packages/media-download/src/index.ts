@@ -221,7 +221,7 @@ const main = async () => {
 		} else if (isExternalMediaDownloadJob(job)) {
 			const eJob = ExternalUrlJob.parse(parsedInput);
 			await uploadObjectWithPresignedUrl(
-				eJob.s3OutputSignedUrl,
+				eJob.mediaDownloadOutputSignedUrl,
 				metadata.mediaPath,
 			);
 			await reportExternalJob(eJob, sqsClient, metadata);
