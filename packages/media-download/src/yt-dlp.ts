@@ -77,6 +77,8 @@ export const downloadMedia = async (
 				'youtubepot-bgutilscript:script_path=/opt/bgutil-ytdlp-pot-provider/server/build/generate_once.js',
 				'--write-info-json',
 				'--no-clean-info-json',
+				'--progress-delta',
+				'10', //seconds
 				'--print-to-file',
 				'after_move:filepath',
 				`${filepathLocation}`,
