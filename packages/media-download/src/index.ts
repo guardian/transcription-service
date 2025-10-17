@@ -14,17 +14,16 @@ import { Upload } from '@aws-sdk/lib-storage';
 import { S3Client } from '@aws-sdk/client-s3';
 import { createReadStream } from 'node:fs';
 import { downloadMedia, startProxyTunnel } from './yt-dlp';
-import { MediaMetadata } from '@guardian/transcription-service-common';
+import { MediaMetadata, UrlJob } from '@guardian/transcription-service-common';
 
 import { SQSClient } from '@aws-sdk/client-sqs';
 import {
 	DestinationService,
-	ExternalMediaDownloadJob,
-	ExternalMediaDownloadJobOutput,
+	ExternalUrlJob,
+	ExternalJobOutput,
 	isExternalMediaDownloadJob,
 	isTranscriptionMediaDownloadJob,
 	MediaDownloadFailure,
-	MediaDownloadJob,
 	TranscriptionMediaDownloadJob,
 } from '@guardian/transcription-service-common';
 
@@ -88,12 +87,13 @@ const reportDownloadFailure = async (
 };
 
 const reportExternalFailure = async (
-	job: ExternalMediaDownloadJob,
+	job: ExternalUrlJob,
 	sqsClient: SQSClient,
 ) => {
-	const output: ExternalMediaDownloadJobOutput = {
+	const output: ExternalJobOutput = {
 		id: job.id,
 		status: 'FAILURE',
+		outputType: 'MEDIA_DOWNLOAD',
 	};
 	await sendMessage(
 		sqsClient,
@@ -104,13 +104,14 @@ const reportExternalFailure = async (
 };
 
 const reportExternalJob = async (
-	job: ExternalMediaDownloadJob,
+	job: ExternalUrlJob,
 	sqsClient: SQSClient,
 	metadata: MediaMetadata,
 ) => {
-	const output: ExternalMediaDownloadJobOutput = {
+	const output: ExternalJobOutput = {
 		id: job.id,
 		status: 'SUCCESS',
+		outputType: 'MEDIA_DOWNLOAD',
 		metadata,
 	};
 	await sendMessage(
@@ -161,7 +162,7 @@ const main = async () => {
 	}
 
 	const parsedInput = JSON.parse(input);
-	const parsedJob = MediaDownloadJob.safeParse(parsedInput);
+	const parsedJob = UrlJob.safeParse(parsedInput);
 	if (!parsedJob.success) {
 		logger.error(
 			`MESSAGE_BODY is not a valid MediaDownloadJob - exiting. MESSAGE_BODY: ${input} Errors: ${parsedJob.error.errors.map((e) => e.message).join(', ')}`,
@@ -204,7 +205,7 @@ const main = async () => {
 			const tJob = TranscriptionMediaDownloadJob.parse(parsedInput);
 			await reportDownloadFailure(config, sqsClient, tJob);
 		} else if (isExternalMediaDownloadJob(job)) {
-			const eJob = ExternalMediaDownloadJob.parse(parsedInput);
+			const eJob = ExternalUrlJob.parse(parsedInput);
 			await reportExternalFailure(eJob, sqsClient);
 		}
 	} else {
@@ -218,8 +219,11 @@ const main = async () => {
 			);
 			await requestTranscription(config, key, sqsClient, tJob, metadata);
 		} else if (isExternalMediaDownloadJob(job)) {
-			const eJob = ExternalMediaDownloadJob.parse(parsedInput);
-			await uploadObjectWithPresignedUrl(eJob.s3OutputSignedUrl, metadata);
+			const eJob = ExternalUrlJob.parse(parsedInput);
+			await uploadObjectWithPresignedUrl(
+				eJob.mediaDownloadOutputSignedUrl,
+				metadata.mediaPath,
+			);
 			await reportExternalJob(eJob, sqsClient, metadata);
 		}
 	}
