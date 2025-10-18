@@ -99,6 +99,7 @@ const processMessage = async (event: unknown) => {
 			if (s3Result.isSuccess) {
 				const output: ExternalJobOutput = {
 					id: record.body.id,
+					taskId: record.body.webpageSnapshotId,
 					status: 'SUCCESS',
 					outputType: 'WEBPAGE_SNAPSHOT',
 				};
