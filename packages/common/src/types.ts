@@ -61,6 +61,8 @@ export type TranscriptionMediaDownloadJob = z.infer<
 export const ExternalUrlJob = UrlJob.extend({
 	client: z.literal('EXTERNAL'),
 	outputQueueUrl: z.string(),
+	mediaDownloadId: z.string(),
+	webpageSnapshotId: z.string(),
 	mediaDownloadOutputSignedUrl: z.string(),
 	webpageSnapshotOutputSignedUrl: z.string(),
 });
@@ -90,6 +92,7 @@ export const isMediaMetadata = (obj: unknown): obj is MediaMetadata => {
 
 export const ExternalJobOutput = z.object({
 	id: z.string(),
+	taskId: z.string(),
 	status: z.union([
 		z.literal('SUCCESS'),
 		z.literal('FAILURE'),

@@ -93,6 +93,7 @@ const reportExternalFailure = async (
 ) => {
 	const output: ExternalJobOutput = {
 		id: job.id,
+		taskId: job.mediaDownloadId,
 		status: errorType,
 		outputType: 'MEDIA_DOWNLOAD',
 	};
@@ -111,6 +112,7 @@ const reportExternalJob = async (
 ) => {
 	const output: ExternalJobOutput = {
 		id: job.id,
+		taskId: job.mediaDownloadId,
 		status: 'SUCCESS',
 		outputType: 'MEDIA_DOWNLOAD',
 		metadata,
