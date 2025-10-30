@@ -493,7 +493,7 @@ export class TranscriptionService extends GuStack {
 			// 0 is the default, including this here just to make it more obvious what's happening
 			onDemandBaseCapacity: 0,
 			// if this value is set to 100, then we won't use spot instances at all, if it is 0 then we use 100% spot
-			onDemandPercentageAboveBaseCapacity: 10,
+			onDemandPercentageAboveBaseCapacity: 100,
 			spotAllocationStrategy: SpotAllocationStrategy.CAPACITY_OPTIMIZED,
 		};
 
