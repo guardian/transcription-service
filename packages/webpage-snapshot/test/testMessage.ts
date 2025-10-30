@@ -29,7 +29,7 @@ export const sqsMessageToTestMessage = (sqsMessage: string) => {
 				messageId: 'id123',
 				ReceiptHandle: 'abc123',
 				MD5OfBody: 'md5md5',
-				body: JSON.parse(sqsMessage).Message,
+				body: sqsMessage,
 			},
 		],
 	};

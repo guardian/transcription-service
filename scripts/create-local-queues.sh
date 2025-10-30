@@ -61,8 +61,8 @@ REMOTE_INGEST_TOPIC=$(aws sns create-topic --endpoint-url=http://localhost:4566 
 
 # subscribe media download and webpage snapshot queues to the topic
 echo $WEBPAGE_SNAPSHOT_QUEUE_ARN
-aws sns subscribe --endpoint-url=http://localhost:4566 --topic-arn $REMOTE_INGEST_TOPIC --protocol sqs --notification-endpoint "arn:aws:sqs:eu-west-1:000000000000:transcription-service-webpage-snapshot-queue-DEV"
-aws sns subscribe --endpoint-url=http://localhost:4566 --topic-arn $REMOTE_INGEST_TOPIC --protocol sqs --notification-endpoint "arn:aws:sqs:eu-west-1:000000000000:transcription-service-media-download-queue-DEV"
+aws sns subscribe --endpoint-url=http://localhost:4566 --attributes RawMessageDelivery=true --topic-arn $REMOTE_INGEST_TOPIC --protocol sqs --notification-endpoint "arn:aws:sqs:eu-west-1:000000000000:transcription-service-webpage-snapshot-queue-DEV"
+aws sns subscribe --endpoint-url=http://localhost:4566 --attributes RawMessageDelivery=true --topic-arn $REMOTE_INGEST_TOPIC --protocol sqs --notification-endpoint "arn:aws:sqs:eu-west-1:000000000000:transcription-service-media-download-queue-DEV"
 
 echo "Created SNS topic in localstack, arn: ${REMOTE_INGEST_TOPIC}"
 
