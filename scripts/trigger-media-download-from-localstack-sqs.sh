@@ -5,7 +5,7 @@ set -e
 # Read the top message in "http://localhost:4566/000000000000/transcription-service-media-download-queue-DEV.fifo" and store
 # in variable MESSAGE_BODY, delete that item from the queue
 
-QUEUE_URL="http://localhost:4566/000000000000/transcription-service-media-download-queue-DEV.fifo"
+QUEUE_URL="http://localhost:4566/000000000000/transcription-service-media-download-queue-DEV"
 
 export MESSAGE_BODY=$(aws sqs receive-message --queue-url $QUEUE_URL --max-number-of-messages 1 --wait-time-seconds 10 --endpoint-url http://localhost:4566 | jq -r '.Messages[0].Body')
 echo $MESSAGE_BODY

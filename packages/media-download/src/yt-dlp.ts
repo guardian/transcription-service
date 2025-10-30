@@ -113,7 +113,7 @@ export const downloadMedia = async (
 				`yt-dlp failed with code ${result.code}, stderr: ${result.stderr}`,
 			);
 			if (result.stderr.includes('ERROR: Unsupported URL')) {
-				return { errorType: 'invalid_url', status: 'FAILURE' };
+				return { errorType: 'INVALID_URL', status: 'FAILURE' };
 			}
 		}
 
