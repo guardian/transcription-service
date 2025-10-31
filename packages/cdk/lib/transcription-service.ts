@@ -332,6 +332,9 @@ export class TranscriptionService extends GuStack {
 		const userDataCommands = [
 			`export STAGE=${props.stage}`,
 			`export AWS_REGION=${props.env.region}`,
+			// set cuda version needed by whisperx - see https://docs.aws.amazon.com/dlami/latest/devguide/tutorial-base.html
+			`rm /usr/local/cuda`,
+			`ln -s /usr/local/cuda-12.8 /usr/local/cuda`,
 			`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
 			`dpkg -i transcription-service-worker_1.0.0_all.deb`,
 			`service transcription-service-worker start`,
