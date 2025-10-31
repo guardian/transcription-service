@@ -23,15 +23,31 @@ const SignedUrl = z.object({
 
 export type SignedUrl = z.infer<typeof SignedUrl>;
 
-export const MediaDownloadJob = z.object({
+const OutputBucketUrls = z.object({
+	srt: SignedUrl,
+	text: SignedUrl,
+	json: SignedUrl,
+});
+
+export type OutputBucketUrls = z.infer<typeof OutputBucketUrls>;
+
+const OutputBucketKeys = z.object({
+	srt: z.string(),
+	text: z.string(),
+	json: z.string(),
+});
+
+export type OutputBucketKeys = z.infer<typeof OutputBucketKeys>;
+
+export const UrlJob = z.object({
 	id: z.string(),
 	url: z.string(),
 	client: z.string(),
 });
 
-export type MediaDownloadJob = z.infer<typeof MediaDownloadJob>;
+export type UrlJob = z.infer<typeof UrlJob>;
 
-export const TranscriptionMediaDownloadJob = MediaDownloadJob.extend({
+export const TranscriptionMediaDownloadJob = UrlJob.extend({
 	client: z.literal('TRANSCRIPTION_SERVICE'),
 	userEmail: z.string(),
 	languageCode: InputLanguageCode,
@@ -42,21 +58,24 @@ export type TranscriptionMediaDownloadJob = z.infer<
 	typeof TranscriptionMediaDownloadJob
 >;
 
-export const ExternalMediaDownloadJob = MediaDownloadJob.extend({
+export const ExternalUrlJob = UrlJob.extend({
 	client: z.literal('EXTERNAL'),
 	outputQueueUrl: z.string(),
-	s3OutputSignedUrl: z.string(),
+	mediaDownloadId: z.string(),
+	webpageSnapshotId: z.string(),
+	mediaDownloadOutputSignedUrl: z.string(),
+	webpageSnapshotOutputSignedUrl: z.string(),
 });
-export type ExternalMediaDownloadJob = z.infer<typeof ExternalMediaDownloadJob>;
+export type ExternalUrlJob = z.infer<typeof ExternalUrlJob>;
 
 export const isTranscriptionMediaDownloadJob = (
-	job: MediaDownloadJob,
+	job: UrlJob,
 ): job is TranscriptionMediaDownloadJob =>
 	job.client === 'TRANSCRIPTION_SERVICE';
 
 export const isExternalMediaDownloadJob = (
-	job: MediaDownloadJob,
-): job is ExternalMediaDownloadJob => job.client === 'EXTERNAL';
+	job: UrlJob,
+): job is ExternalUrlJob => job.client === 'EXTERNAL';
 
 export const MediaMetadata = z.object({
 	title: z.string(),
@@ -66,15 +85,34 @@ export const MediaMetadata = z.object({
 });
 export type MediaMetadata = z.infer<typeof MediaMetadata>;
 
-export const ExternalMediaDownloadJobOutput = z.object({
+export const isMediaMetadata = (obj: unknown): obj is MediaMetadata => {
+	const mediaMetadata = obj as MediaMetadata;
+	return typeof mediaMetadata.title === 'string';
+};
+
+export const ExternalJobOutput = z.object({
 	id: z.string(),
-	status: z.union([z.literal('SUCCESS'), z.literal('FAILURE')]),
+	taskId: z.string(),
+	status: z.union([
+		z.literal('SUCCESS'),
+		z.literal('FAILURE'),
+		z.literal('INVALID_URL'),
+	]),
+	outputType: z.union([
+		z.literal('WEBPAGE_SNAPSHOT'),
+		z.literal('MEDIA_DOWNLOAD'),
+	]),
 	metadata: z.optional(MediaMetadata),
 });
 
-export type ExternalMediaDownloadJobOutput = z.infer<
-	typeof ExternalMediaDownloadJobOutput
->;
+export type ExternalJobOutput = z.infer<typeof ExternalJobOutput>;
+
+export const WebpageSnapshot = z.object({
+	html: z.string(),
+	screenshotBase64: z.string(),
+	title: z.string(),
+});
+export type WebpageSnapshot = z.infer<typeof WebpageSnapshot>;
 
 export enum TranscriptionEngine {
 	WHISPER_X = 'whisperx',
