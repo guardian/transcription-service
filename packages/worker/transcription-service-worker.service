@@ -8,7 +8,9 @@ Type=simple
 User=ubuntu
 ExecStart=/usr/bin/node /opt/transcription-service/index.js
 Restart=on-failure
-Environment="LD_LIBRARY_PATH=/usr/local/cuda-12.4/lib:/usr/local/cuda-12.4/lib64"
+Environment="LD_LIBRARY_PATH=/usr/local/cuda/lib:/usr/local/cuda/lib64"
+Environment="PATH=/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+Environment="CUDA_HOME=/usr/local/cuda"
 
 [Install]
 WantedBy=multi-user.target
