@@ -81,7 +81,7 @@ const main = async () => {
 	if (config.app.stage !== 'DEV') {
 		// start job to regularly check the instance interruption (Note: deliberately not using await here so the job
 		// runs in the background)
-		checkSpotInterrupt(sqsClient, config.app.taskQueueUrl);
+		checkSpotInterrupt(sqsClient, queueUrl);
 	}
 
 	let pollCount = 0;
