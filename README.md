@@ -81,3 +81,19 @@ transcript performance, these are baked into the AMI used for the transcription 
 Currently we are trialling whisperx, with the hope of improved performance and speaker diarization support. There is an
 intention, assuming whisperx has satisfactory performance, cost and transcript quality, to remove whisper.cpp,
 thereby significantly simplifying our current infrastructure and the worker app.
+
+## Notes on WhisperX, CUDA and the AWS Deep Learning AMI
+
+WhisperX depends on a specific version of the Nvidia CUDA toolkit and associated drivers. Currently, you can see the
+required version in the readme here: https://github.com/m-bain/whisperX?tab=readme-ov-file#0-cuda-installation
+
+We are using the AWS Deep Learning Base GPU AMI at the time of writing. This comes with multiple versions of cuda
+installed - you can see them by sshing onto an instance - they get logged out in the session welcome message. We then
+set the specific version of cuda that we require in the userdata of the transcription service worker instances by
+setting a symlink as documented [here](https://docs.aws.amazon.com/dlami/latest/devguide/tutorial-base.html) - see the
+cdk for this. To ensure this symlink is used, we set the PATH, LD_LIBRARY_PATH and CUDA_HOME environment variables in
+in the systemd service file for the transcription service.
+
+Here's the web page for the DLAMI that we are using: https://docs.aws.amazon.com/dlami/latest/devguide/aws-deep-learning-x86-base-gpu-ami-ubuntu-22-04.html
+This is set in the [deep learning base image in AMIgo](https://amigo.gutools.co.uk/base-images/deep-learning-base-ami-ubuntu-2204)
+and may need to be periodically updated in case we need a more recent version of cuda for whisperx.
