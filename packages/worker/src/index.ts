@@ -345,6 +345,7 @@ const pollTranscriptionQueue = async (
 			stage: config.app.stage,
 		};
 
+		const transcriptionStartTime = new Date();
 		const transcriptResult = await getTranscriptionText(
 			whisperBaseParams,
 			job.languageCode,
@@ -352,6 +353,13 @@ const pollTranscriptionQueue = async (
 			combineTranscribeAndTranslate,
 			job.engine === 'whisperx',
 		);
+		const transcriptionEndTime = new Date();
+		const transcriptionTimeSeconds = Math.round(
+			(transcriptionEndTime.getTime() - transcriptionStartTime.getTime()) /
+				1000,
+		);
+		const transcriptionRate =
+			ffmpegResult.duration && ffmpegResult.duration / transcriptionTimeSeconds;
 
 		const languageCode: OutputLanguageCode =
 			job.languageCode === 'auto'
@@ -396,6 +404,9 @@ const pollTranscriptionQueue = async (
 				filename: transcriptionOutput.originalFilename,
 				userEmail: transcriptionOutput.userEmail,
 				mediaDurationSeconds: ffmpegResult.duration || 0,
+				transcriptionTimeSeconds,
+				transcriptionRate: transcriptionRate || '',
+				engine: job.engine,
 				specifiedLanguageCode: job.languageCode,
 				...transcriptResult.metadata,
 			},
