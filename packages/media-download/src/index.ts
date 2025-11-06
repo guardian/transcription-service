@@ -208,8 +208,12 @@ const main = async () => {
 			const tJob = TranscriptionMediaDownloadJob.parse(parsedInput);
 			await reportDownloadFailure(config, sqsClient, tJob);
 		} else if (isExternalMediaDownloadJob(job)) {
-			const eJob = ExternalUrlJob.parse(parsedInput);
-			await reportExternalFailure(eJob, sqsClient, ytDlpResult.errorType);
+			const externalJob = ExternalUrlJob.parse(parsedInput);
+			await reportExternalFailure(
+				externalJob,
+				sqsClient,
+				ytDlpResult.errorType,
+			);
 		}
 	} else {
 		if (isTranscriptionMediaDownloadJob(job)) {
@@ -228,12 +232,12 @@ const main = async () => {
 				ytDlpResult.metadata,
 			);
 		} else if (isExternalMediaDownloadJob(job)) {
-			const eJob = ExternalUrlJob.parse(parsedInput);
+			const externalJob = ExternalUrlJob.parse(parsedInput);
 			await uploadObjectWithPresignedUrl(
-				eJob.mediaDownloadOutputSignedUrl,
+				externalJob.mediaDownloadOutputSignedUrl,
 				ytDlpResult.metadata.mediaPath,
 			);
-			await reportExternalJob(eJob, sqsClient, ytDlpResult.metadata);
+			await reportExternalJob(externalJob, sqsClient, ytDlpResult.metadata);
 		}
 	}
 };
