@@ -1,5 +1,4 @@
 import type { GuStack } from '@guardian/cdk/lib/constructs/core';
-import { GuStringParameter } from '@guardian/cdk/lib/constructs/core';
 import {
 	GuSecurityGroup,
 	GuVpc,
@@ -23,8 +22,10 @@ import { LogGroup } from 'aws-cdk-lib/aws-logs';
 import { CfnPipe } from 'aws-cdk-lib/aws-pipes';
 import type { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
+import type { Topic } from 'aws-cdk-lib/aws-sns';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { JsonPath } from 'aws-cdk-lib/aws-stepfunctions';
+import { addSubscription } from './util';
 
 export const makeMediaDownloadService = (
 	scope: GuStack,
@@ -38,16 +39,9 @@ export const makeMediaDownloadService = (
 	sourceMediaBucket: Bucket,
 	outputBucket: Bucket,
 	getParametersPolicy: PolicyStatement,
+	combinedTaskTopic: Topic,
+	giantRemoteIngestOutputSendPolicy: PolicyStatement,
 ) => {
-	const mediaDownloadGiantOutputQueueArn = new GuStringParameter(
-		scope,
-		'mediaDownloadGiantOutputQueueArn',
-		{
-			fromSSM: true,
-			default: `/${scope.stage}/investigations/transcription-service/mediaDownloadGiantOutputQueueArn`,
-		},
-	).valueAsString;
-
 	const mediaDownloadDeadLetterQueue = new Queue(
 		scope,
 		`${APP_NAME}-media-download-dead-letter-queue`,
@@ -68,6 +62,13 @@ export const makeMediaDownloadService = (
 				maxReceiveCount: MAX_RECEIVE_COUNT,
 			},
 		},
+	);
+
+	addSubscription(
+		scope,
+		'MediaDownload',
+		mediaDownloadTaskQueue,
+		combinedTaskTopic,
 	);
 
 	mediaDownloadTaskQueue.grantSendMessages(apiLambda);
@@ -127,9 +128,9 @@ export const makeMediaDownloadService = (
 					transcriptionTaskQueue.queueArn,
 					transcriptionGpuTaskQueue.queueArn,
 					transcriptionOutputQueue.queueArn,
-					mediaDownloadGiantOutputQueueArn,
 				],
 			}),
+			giantRemoteIngestOutputSendPolicy,
 			new PolicyStatement({
 				effect: Effect.ALLOW,
 				actions: ['secretsmanager:GetSecretValue'],

@@ -50,6 +50,23 @@ MEDIA_DOWNLOAD_QUEUE_URL_LOCALHOST=${MEDIA_DOWNLOAD_QUEUE_URL/sqs.eu-west-1.loca
 
 echo "Created media download queue in localstack, url: ${MEDIA_DOWNLOAD_QUEUE_URL_LOCALHOST}"
 
+WEBPAGE_SNAPSHOT_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-webpage-snapshot-queue-DEV  | jq .QueueUrl)
+# We don't install the localstack dns so need to replace the endpoint with localhost
+WEBPAGE_SNAPSHOT_QUEUE_URL_LOCALHOST=${WEBPAGE_SNAPSHOT_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
+
+echo "Created webpage snapshot queue in localstack, url: ${WEBPAGE_SNAPSHOT_QUEUE_URL_LOCALHOST}"
+
+# Combined SNS topic to send to webpage snapshot and media download
+REMOTE_INGEST_TOPIC=$(aws sns create-topic --endpoint-url=http://localhost:4566 --name transcription-service-combined-task-topic-DEV | jq -r .TopicArn)
+
+# subscribe media download and webpage snapshot queues to the topic
+echo $WEBPAGE_SNAPSHOT_QUEUE_ARN
+aws sns subscribe --endpoint-url=http://localhost:4566 --attributes RawMessageDelivery=true --topic-arn $REMOTE_INGEST_TOPIC --protocol sqs --notification-endpoint "arn:aws:sqs:eu-west-1:000000000000:transcription-service-webpage-snapshot-queue-DEV"
+aws sns subscribe --endpoint-url=http://localhost:4566 --attributes RawMessageDelivery=true --topic-arn $REMOTE_INGEST_TOPIC --protocol sqs --notification-endpoint "arn:aws:sqs:eu-west-1:000000000000:transcription-service-media-download-queue-DEV"
+
+echo "Created SNS topic in localstack, arn: ${REMOTE_INGEST_TOPIC}"
+
+
 # ###########
 # Creating output queue for Giant:
 # Giant is a service that uses transcription service to transcribe its audio/video files.

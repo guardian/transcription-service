@@ -14,7 +14,6 @@ import { logger } from '@guardian/transcription-service-backend-common';
 import { AWSStatus } from './types';
 import { ungzip } from 'node-gzip';
 import { createReadStream } from 'node:fs';
-import { MediaMetadata } from '@guardian/transcription-service-common';
 import { stat } from 'node:fs/promises';
 
 const ReadableBody = z.instanceof(Readable);
@@ -179,16 +178,14 @@ export const getObjectWithPresignedUrl = async (
 
 export const uploadObjectWithPresignedUrl = async (
 	presignedUrl: string,
-	metadata: MediaMetadata,
+	path: string,
 ): Promise<void> => {
-	logger.info(
-		`Uploading with ${presignedUrl}, metadata ${JSON.stringify(metadata)}`,
-	);
-	const fileStream = createReadStream(metadata.mediaPath);
+	logger.info(`Uploading file ${path} to s3 using presigned url`);
+	const fileStream = createReadStream(path);
 
 	try {
 		const webStream = Readable.toWeb(fileStream) as ReadableStream;
-		const fileStats = await stat(metadata.mediaPath);
+		const fileStats = await stat(path);
 		const contentLength = fileStats.size;
 		const response = await fetch(presignedUrl, {
 			method: 'PUT',

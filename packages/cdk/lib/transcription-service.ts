@@ -60,10 +60,12 @@ import {
 } from 'aws-cdk-lib/aws-lambda';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
+import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { makeAlarms } from './alarms';
 import { makeMediaDownloadService } from './media-download-service';
+import { addSubscription } from './util';
 
 const topicArnToName = (topicArn: string) => {
 	const split = topicArn.split(':');
@@ -111,6 +113,21 @@ export class TranscriptionService extends GuStack {
 				default: `/${props.stage}/investigations/GiantTranscriptionOutputQueueArn`,
 			},
 		).valueAsString;
+
+		const giantRemoteIngestOutputQueueArn = new GuStringParameter(
+			this,
+			'remoteIngestGiantOutputQueueArn',
+			{
+				fromSSM: true,
+				default: `/${this.stage}/investigations/transcription-service/remoteIngestGiantOutputQueueArn`,
+			},
+		).valueAsString;
+
+		const giantRemoteIngestOutputSendPolicy = new PolicyStatement({
+			effect: Effect.ALLOW,
+			actions: ['sqs:SendMessage'],
+			resources: [giantRemoteIngestOutputQueueArn],
+		});
 
 		const ssmPrefix = `arn:aws:ssm:${props.env.region}:${this.account}:parameter`;
 		const ssmPath = `${this.stage}/${this.stack}/${APP_NAME}`;
@@ -202,23 +219,21 @@ export class TranscriptionService extends GuStack {
 				"Key for the ffmpeg layer's zip file (pushed to layerBucket by publish-ffmpeg-layer.sh script)",
 		});
 
+		const lambdaLayerBucket = Bucket.fromBucketArn(
+			this,
+			'LambdaLayerBucket',
+			layerBucket.valueAsString,
+		);
+
 		const ffmpegLayer = new LayerVersion(
 			this,
 			`FFMpegLayer_x86_64-${this.stage}`,
 			{
-				code: Code.fromBucket(
-					Bucket.fromBucketArn(
-						this,
-						'LambdaLayerBucket',
-						layerBucket.valueAsString,
-					),
-					ffmpegHash.valueAsString,
-				),
+				code: Code.fromBucket(lambdaLayerBucket, ffmpegHash.valueAsString),
 				description: 'FFMpeg Layer',
 				layerVersionName: 'FFMpegLayer',
 				compatibleArchitectures: [Architecture.X86_64],
 				compatibleRuntimes: [
-					Runtime.NODEJS_LATEST,
 					Runtime.NODEJS_22_X,
 					Runtime.NODEJS_20_X,
 					Runtime.NODEJS_18_X,
@@ -641,6 +656,10 @@ export class TranscriptionService extends GuStack {
 		).valueAsString;
 		const alarmTopicName = topicArnToName(alarmTopicArn);
 
+		const combinedTaskTopic = new Topic(this, 'CombinedTaskTopic', {
+			topicName: `transcription-service-combined-task-topic-${this.stage}`,
+		});
+
 		makeMediaDownloadService(
 			this,
 			vpc,
@@ -653,6 +672,8 @@ export class TranscriptionService extends GuStack {
 			sourceMediaBucket,
 			outputBucket,
 			getParametersPolicy,
+			combinedTaskTopic,
+			giantRemoteIngestOutputSendPolicy,
 		);
 
 		const transcriptTable = new Table(this, 'TranscriptTable', {
@@ -684,6 +705,7 @@ export class TranscriptionService extends GuStack {
 								snsTopicName: alarmTopicName,
 							}
 						: undefined,
+				initialPolicy: [getParametersPolicy, putMetricDataPolicy],
 			},
 		);
 
@@ -714,8 +736,87 @@ export class TranscriptionService extends GuStack {
 			}),
 		);
 
-		outputHandlerLambda.addToRolePolicy(getParametersPolicy);
-		outputHandlerLambda.addToRolePolicy(putMetricDataPolicy);
+		const webpageSnapshotLambdaTimeout = Duration.minutes(15);
+
+		const webpageSnapshotQueue = new Queue(
+			this,
+			`${APP_NAME}-webpage-snapshot-queue`,
+			{
+				queueName: `${APP_NAME}-webpage-snapshot-queue-${this.stage}`,
+				// this needs to be greater than the timeout of the webpage snapshot lambda
+				visibilityTimeout: webpageSnapshotLambdaTimeout.plus(
+					Duration.minutes(1),
+				),
+			},
+		);
+
+		addSubscription(
+			this,
+			`WebpageSnapshot`,
+			webpageSnapshotQueue,
+			combinedTaskTopic,
+		);
+
+		const chromiumLayerKey = new GuStringParameter(
+			this,
+			'ChromiumLayerZipKey',
+			{
+				description:
+					"Key for the chromium layer's zip file (pushed to layerBucket by publish-chromium-layer.sh script)",
+				default: 'chromium-v140.0.0-layer.arm64.zip',
+			},
+		);
+
+		const chromiumLayer = new LayerVersion(
+			this,
+			`ChromiumLayer_arm64-${this.stage}`,
+			{
+				code: Code.fromBucket(
+					lambdaLayerBucket,
+					chromiumLayerKey.valueAsString,
+				),
+				description: 'Chromium Layer',
+				layerVersionName: 'ChromiumLayer',
+				compatibleArchitectures: [Architecture.ARM_64],
+				compatibleRuntimes: [
+					Runtime.NODEJS_22_X,
+					Runtime.NODEJS_20_X,
+					Runtime.NODEJS_18_X,
+				],
+			},
+		);
+
+		const webpageSnapshotLambda = new GuLambdaFunction(
+			this,
+			'transcription-service-webpage-snapshot',
+			{
+				fileName: 'webpage-snapshot.zip',
+				handler: 'index.webpageSnapshot',
+				runtime: Runtime.NODEJS_20_X,
+				architecture: Architecture.ARM_64,
+				timeout: webpageSnapshotLambdaTimeout,
+				memorySize: 2048,
+				layers: [chromiumLayer],
+				app: `${APP_NAME}-webpage-snapshot`,
+				errorPercentageMonitoring:
+					this.stage === 'PROD'
+						? {
+								toleratedErrorPercentage: 0,
+								noMonitoring: false,
+								snsTopicName: alarmTopicName,
+							}
+						: undefined,
+				initialPolicy: [
+					getParametersPolicy,
+					putMetricDataPolicy,
+					giantRemoteIngestOutputSendPolicy,
+				],
+			},
+		);
+
+		webpageSnapshotLambda.addEventSource(
+			new SqsEventSource(webpageSnapshotQueue),
+		);
 
 		const mediaExportLambda = new GuLambdaFunction(
 			this,

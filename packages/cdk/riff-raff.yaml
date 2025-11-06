@@ -39,6 +39,7 @@ deployments:
     dependencies:
       - lambda-upload-eu-west-1-investigations-transcription-service
       - lambda-upload-eu-west-1-investigations-transcription-service-output-handler
+      - lambda-upload-eu-west-1-investigations-transcription-service-webpage-snapshot
       - lambda-upload-eu-west-1-investigations-transcription-service-media-export
       - lambda-upload-eu-west-1-investigations-transcription-service-worker-capacity-manager
   lambda-update-eu-west-1-investigations-transcription-service:
@@ -97,6 +98,36 @@ deployments:
       bucketSsmLookup: true
       lookupByTags: true
       fileName: output-handler.zip
+    actions:
+      - updateLambda
+    dependencies:
+      - cfn-eu-west-1-investigations-transcription-service
+  lambda-upload-eu-west-1-investigations-transcription-service-webpage-snapshot:
+    type: aws-lambda
+    stacks:
+      - investigations
+    regions:
+      - eu-west-1
+    app: transcription-service-webpage-snapshot
+    contentDirectory: transcription-service-webpage-snapshot
+    parameters:
+      bucketSsmLookup: true
+      lookupByTags: true
+      fileName: webpage-snapshot.zip
+    actions:
+      - uploadLambda
+  lambda-update-eu-west-1-investigations-transcription-service-webpage-snapshot:
+    type: aws-lambda
+    stacks:
+      - investigations
+    regions:
+      - eu-west-1
+    app: transcription-service-webpage-snapshot
+    contentDirectory: transcription-service-webpage-snapshot
+    parameters:
+      bucketSsmLookup: true
+      lookupByTags: true
+      fileName: webpage-snapshot.zip
     actions:
       - updateLambda
     dependencies:
