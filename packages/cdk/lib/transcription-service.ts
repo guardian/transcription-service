@@ -116,11 +116,10 @@ export class TranscriptionService extends GuStack {
 
 		const giantRemoteIngestOutputQueueArn = new GuStringParameter(
 			this,
-			'mediaDownloadGiantOutputQueueArn', // TODO: Should be called remote ingest giant output
+			'remoteIngestGiantOutputQueueArn',
 			{
 				fromSSM: true,
-				// TODO: Should be called remote ingest giant output
-				default: `/${this.stage}/investigations/transcription-service/mediaDownloadGiantOutputQueueArn`,
+				default: `/${this.stage}/investigations/transcription-service/remoteIngestGiantOutputQueueArn`,
 			},
 		).valueAsString;
 
@@ -235,7 +234,6 @@ export class TranscriptionService extends GuStack {
 				layerVersionName: 'FFMpegLayer',
 				compatibleArchitectures: [Architecture.X86_64],
 				compatibleRuntimes: [
-					Runtime.NODEJS_LATEST,
 					Runtime.NODEJS_22_X,
 					Runtime.NODEJS_20_X,
 					Runtime.NODEJS_18_X,
@@ -707,6 +705,7 @@ export class TranscriptionService extends GuStack {
 								snsTopicName: alarmTopicName,
 							}
 						: undefined,
+				initialPolicy: [getParametersPolicy, putMetricDataPolicy],
 			},
 		);
 
@@ -737,8 +736,7 @@ export class TranscriptionService extends GuStack {
 			}),
 		);
 
-		outputHandlerLambda.addToRolePolicy(getParametersPolicy);
-		outputHandlerLambda.addToRolePolicy(putMetricDataPolicy);
+		const webpageSnapshotLambdaTimeout = Duration.minutes(15);
 
 		const webpageSnapshotQueue = new Queue(
 			this,
@@ -746,7 +744,9 @@ export class TranscriptionService extends GuStack {
 			{
 				queueName: `${APP_NAME}-webpage-snapshot-queue-${this.stage}`,
 				// this needs to be greater than the timeout of the webpage snapshot lambda
-				visibilityTimeout: Duration.minutes(15),
+				visibilityTimeout: webpageSnapshotLambdaTimeout.plus(
+					Duration.minutes(1),
+				),
 			},
 		);
 
@@ -779,7 +779,6 @@ export class TranscriptionService extends GuStack {
 				layerVersionName: 'ChromiumLayer',
 				compatibleArchitectures: [Architecture.ARM_64],
 				compatibleRuntimes: [
-					Runtime.NODEJS_LATEST,
 					Runtime.NODEJS_22_X,
 					Runtime.NODEJS_20_X,
 					Runtime.NODEJS_18_X,
@@ -795,7 +794,7 @@ export class TranscriptionService extends GuStack {
 				handler: 'index.webpageSnapshot',
 				runtime: Runtime.NODEJS_20_X,
 				architecture: Architecture.ARM_64,
-				timeout: Duration.seconds(900),
+				timeout: webpageSnapshotLambdaTimeout,
 				memorySize: 2048,
 				layers: [chromiumLayer],
 				app: `${APP_NAME}-webpage-snapshot`,
@@ -807,17 +806,17 @@ export class TranscriptionService extends GuStack {
 								snsTopicName: alarmTopicName,
 							}
 						: undefined,
+				initialPolicy: [
+					getParametersPolicy,
+					putMetricDataPolicy,
+					giantRemoteIngestOutputSendPolicy,
+				],
 			},
 		);
 
 		webpageSnapshotLambda.addEventSource(
 			new SqsEventSource(webpageSnapshotQueue),
 		);
-
-		webpageSnapshotLambda.addToRolePolicy(getParametersPolicy);
-		webpageSnapshotLambda.addToRolePolicy(putMetricDataPolicy);
-
-		webpageSnapshotLambda.addToRolePolicy(giantRemoteIngestOutputSendPolicy);
 
 		const mediaExportLambda = new GuLambdaFunction(
 			this,
