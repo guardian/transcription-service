@@ -180,7 +180,7 @@ export const uploadObjectWithPresignedUrl = async (
 	presignedUrl: string,
 	path: string,
 ): Promise<void> => {
-	logger.info(`Uploading with ${presignedUrl}, file ${path}`);
+	logger.info(`Uploading file ${path} to s3 using presigned url`);
 	const fileStream = createReadStream(path);
 
 	try {
