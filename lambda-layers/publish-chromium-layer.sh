@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 set +x
 set -e
 
@@ -6,9 +8,11 @@ mkdir -p $WORKING_DIRECTORY
 
 pushd $WORKING_DIRECTORY
 
-ZIP_NAME="chromium-v140.0.0-layer.arm64.zip"
+VERSION="v140.0.0"
 
-wget https://github.com/Sparticuz/chromium/releases/download/v140.0.0/$ZIP_NAME
+ZIP_NAME="chromium-${VERSION}-layer.arm64.zip"
+
+wget https://github.com/Sparticuz/chromium/releases/download/$VERSION/$ZIP_NAME
 
 
 aws s3 cp $ZIP_NAME "s3://transcription-service-lambda-layers/${ZIP_NAME}"
