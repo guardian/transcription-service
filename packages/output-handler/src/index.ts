@@ -21,6 +21,7 @@ import {
 	transcriptionOutputIsMediaDownloadFailure,
 	MediaDownloadFailure,
 	ONE_WEEK_IN_SECONDS,
+	TranscriptionEngine,
 } from '@guardian/transcription-service-common';
 import {
 	MetricsService,
@@ -29,15 +30,13 @@ import {
 import { SESClient } from '@aws-sdk/client-ses';
 
 const successMessageBody = (
-	transcriptId: string,
-	originalFilename: string,
 	rootUrl: string,
-	isTranslation: boolean,
 	sourceMediaDownloadUrl: string,
+	output: TranscriptionOutputSuccess,
 ): string => {
-	const exportUrl = `${rootUrl}/export?transcriptId=${transcriptId}`;
+	const exportUrl = `${rootUrl}/export?transcriptId=${output.id}`;
 	return `
-		<h1>${isTranslation ? 'English translation ' : 'Transcription'} for ${originalFilename} ready</h1>
+		<h1>${resultType(output)} for ${output.originalFilename} ready</h1>
 		<p>Click <a href="${exportUrl}">here</a> to download or export transcript/input media to Google drive.</p>
 		<p>Click <a href="${sourceMediaDownloadUrl}">here</a> to download the input media.</p>
 		<p><b>Note:</b> transcripts and input media will be deleted from this service after 7 days. Export your data now if you want to keep it.</p>
@@ -70,6 +69,13 @@ const mediaDownloadFailureMessageBody = (url: string) => {
         `;
 };
 
+const resultType = (transcriptOutput: TranscriptionOutputSuccess) => {
+	if (transcriptOutput.engine === TranscriptionEngine.PARAKEET) {
+		return 'Transcript preview';
+	}
+	return `${transcriptOutput.isTranslation ? 'English translation' : 'Transcription'}`;
+};
+
 const handleTranscriptionSuccess = async (
 	config: TranscriptionConfig,
 	transcriptionOutput: TranscriptionOutputSuccess,
@@ -94,17 +100,17 @@ const handleTranscriptionSuccess = async (
 			dynamoItem,
 		);
 
+		const subject = `${resultType(transcriptionOutput)} complete for ${transcriptionOutput.originalFilename}`;
+
 		await sendEmail(
 			sesClient,
 			config.app.emailNotificationFromAddress,
 			transcriptionOutput.userEmail,
-			`${transcriptionOutput.isTranslation ? 'English translation' : 'Transcription'} complete for ${transcriptionOutput.originalFilename}`,
+			subject,
 			successMessageBody(
-				transcriptionOutput.id,
-				transcriptionOutput.originalFilename,
 				config.app.rootUrl,
-				transcriptionOutput.isTranslation,
 				sourceMediaDownloadUrl,
+				transcriptionOutput,
 			),
 		);
 
@@ -226,6 +232,10 @@ const processMessage = async (event: unknown) => {
 				sourceMediaDownloadUrl,
 			);
 		} else if (transcriptionOutputIsTranscriptionFailure(transcriptionOutput)) {
+			if (transcriptionOutput.engine === TranscriptionEngine.PARAKEET) {
+				logger.info(`Ignoring transcription failure from Parakeet engine.`);
+				continue;
+			}
 			logger.info(
 				`Handling transcription failure. Transcription output: ${JSON.stringify(transcriptionOutput)}`,
 			);

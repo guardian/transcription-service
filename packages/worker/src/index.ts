@@ -8,28 +8,17 @@ import {
 	changeMessageVisibility,
 	getObjectWithPresignedUrl,
 	TranscriptionConfig,
-	moveMessageToDeadLetterQueue,
 	logger,
 	publishTranscriptionOutput,
 	readFile,
 	getASGClient,
 } from '@guardian/transcription-service-backend-common';
 import {
-	DestinationService,
 	OutputLanguageCode,
-	TranscriptionJob,
-	TranscriptionOutputFailure,
+	TranscriptionEngine,
 	type TranscriptionOutputSuccess,
 } from '@guardian/transcription-service-common';
-import {
-	getTranscriptionText,
-	runFfmpeg,
-	getOrCreateContainer,
-	WhisperBaseParams,
-	CONTAINER_FOLDER,
-	getFfmpegParams,
-} from './transcribe';
-import path from 'path';
+import { whisperTranscription, getParakeetTranscription } from './transcribe';
 
 import { getInstanceLifecycleState, updateScaleInProtection } from './asg';
 import { uploadedCombinedResultsToS3 } from './util';
@@ -42,6 +31,8 @@ import { setTimeout } from 'timers/promises';
 import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import { checkSpotInterrupt } from './spot-termination';
 import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
+import { getFileDuration } from '@guardian/transcription-service-backend-common/src/ffmpeg';
+import { publishTranscriptionOutputFailure } from './sqs';
 
 const POLLING_INTERVAL_SECONDS = 15;
 
@@ -113,26 +104,6 @@ const main = async () => {
 	}
 };
 
-const publishTranscriptionOutputFailure = async (
-	sqsClient: SQSClient,
-	destination: string,
-	job: TranscriptionJob,
-) => {
-	logger.info(`Sending failure message to ${destination}`);
-	const failureMessage: TranscriptionOutputFailure = {
-		id: job.id,
-		status: 'TRANSCRIPTION_FAILURE',
-		userEmail: job.userEmail,
-		originalFilename: job.originalFilename,
-		isTranslation: job.translate,
-	};
-	try {
-		await publishTranscriptionOutput(sqsClient, destination, failureMessage);
-	} catch (e) {
-		logger.error(`error publishing failure message to ${destination}`, e);
-	}
-};
-
 const pollTranscriptionQueue = async (
 	pollCount: number,
 	sqsClient: SQSClient,
@@ -144,7 +115,7 @@ const pollTranscriptionQueue = async (
 	instanceId: string,
 ) => {
 	const stage = config.app.stage;
-	const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
+
 	const isDev = config.app.stage === 'DEV';
 
 	logger.info(
@@ -258,45 +229,26 @@ const pollTranscriptionQueue = async (
 			destinationDirectory,
 		);
 
-		const useContainer = job.engine !== 'whisperx';
+		const fileDuration = await getFileDuration(fileToTranscribe);
 
-		const ffmpegDir = useContainer ? CONTAINER_FOLDER : destinationDirectory;
+		const transcriptionStartTime = new Date();
+		const transcriptResult =
+			job.engine === TranscriptionEngine.PARAKEET
+				? await getParakeetTranscription({
+						mediaPath: fileToTranscribe,
+					})
+				: await whisperTranscription(
+						job,
+						config,
+						destinationDirectory,
+						fileToTranscribe,
+						sqsClient,
+						taskQueueUrl,
+						taskMessage,
+						receiptHandle,
+					);
 
-		const fileName = path.basename(fileToTranscribe);
-		const filePath = `${ffmpegDir}/${fileName}`;
-		const wavPath = `${ffmpegDir}/${fileName}-converted.wav`;
-		logger.info(`Input file path: ${filePath}, Output file path: ${wavPath}`);
-
-		const ffmpegParams = getFfmpegParams(filePath, wavPath);
-
-		// docker container to run ffmpeg and whisper on file
-		const containerId = useContainer
-			? await getOrCreateContainer(path.parse(fileToTranscribe).dir)
-			: undefined;
-
-		const ffmpegResult = await runFfmpeg(ffmpegParams, containerId);
-
-		if (ffmpegResult === undefined) {
-			// when ffmpeg fails to transcribe, move message to the dead letter
-			// queue
-			if (!isDev && config.app.deadLetterQueueUrl) {
-				logger.error(
-					`'ffmpeg failed, moving message with message id ${taskMessage.MessageId} to dead letter queue`,
-				);
-				await moveMessageToDeadLetterQueue(
-					sqsClient,
-					taskQueueUrl,
-					config.app.deadLetterQueueUrl,
-					taskMessage.Body,
-					receiptHandle,
-					job.id,
-				);
-				logger.info(
-					`moved message with message id ${taskMessage.MessageId} to dead letter queue.`,
-				);
-			} else {
-				logger.info('skip moving message to dead letter queue in DEV');
-			}
+		if (transcriptResult === null) {
 			await publishTranscriptionOutputFailure(
 				sqsClient,
 				config.app.destinationQueueUrls[job.transcriptDestinationService],
@@ -305,67 +257,17 @@ const pollTranscriptionQueue = async (
 			return;
 		}
 
-		// Giant doesn't know the language of files uploaded to it, so for Giant files we first run language detection
-		// then based on the output, either run transcription or run transcription and translation, and return the output
-		// of both to the user. This is different from the transcription-service, where transcription and translation are
-		// two separate jobs
-		const combineTranscribeAndTranslate =
-			job.transcriptDestinationService === DestinationService.Giant &&
-			job.translate;
-		const extraTranslationTimeMultiplier = combineTranscribeAndTranslate
-			? 2
-			: 1;
-
-		if (ffmpegResult.duration && ffmpegResult.duration !== 0) {
-			// Transcription time is usually slightly longer than file duration.
-			// Update visibility timeout to 2x the file duration plus 25 minutes for the model to load.
-			// (TODO: investigate whisperx model load time/transcription performance further - it seems to vary)
-			// This should avoid another worker picking up the task and to allow
-			// this worker to delete the message when it's finished.
-			await changeMessageVisibility(
-				sqsClient,
-				taskQueueUrl,
-				receiptHandle,
-				(ffmpegResult.duration * 2 + 1500) * extraTranslationTimeMultiplier,
-			);
-		}
-
-		const whisperBaseParams: WhisperBaseParams = {
-			containerId,
-			wavPath: wavPath,
-			file: fileToTranscribe,
-			numberOfThreads,
-			// whisperx always runs on powerful gpu instances so let's always use the medium model
-			model:
-				job.engine !== 'whisperx' && config.app.stage !== 'PROD'
-					? 'tiny'
-					: 'medium',
-			engine: job.engine,
-			diarize: job.diarize,
-			stage: config.app.stage,
-		};
-
-		const transcriptionStartTime = new Date();
-		const transcriptResult = await getTranscriptionText(
-			whisperBaseParams,
-			job.languageCode,
-			job.translate,
-			combineTranscribeAndTranslate,
-			job.engine === 'whisperx',
-		);
+		const languageCode: OutputLanguageCode =
+			job.languageCode === 'auto'
+				? transcriptResult.metadata.detectedLanguageCode
+				: job.languageCode;
 		const transcriptionEndTime = new Date();
 		const transcriptionTimeSeconds = Math.round(
 			(transcriptionEndTime.getTime() - transcriptionStartTime.getTime()) /
 				1000,
 		);
 		const transcriptionRate =
-			ffmpegResult.duration && ffmpegResult.duration / transcriptionTimeSeconds;
-
-		const languageCode: OutputLanguageCode =
-			job.languageCode === 'auto'
-				? transcriptResult.metadata.detectedLanguageCode
-				: job.languageCode;
-
+			fileDuration && fileDuration / transcriptionTimeSeconds;
 		// if we've received an interrupt signal we don't want to perform a half-finished transcript upload/publish as
 		// this may, for example, result in duplicate emails to the user. Here we assume that we can upload some text
 		// files to s3 and make a single request to SNS and SQS within 20 seconds
@@ -388,7 +290,8 @@ const pollTranscriptionQueue = async (
 			originalFilename: job.originalFilename,
 			combinedOutputKey: combinedOutputUrl?.key,
 			isTranslation: job.translate,
-			duration: ffmpegResult.duration,
+			duration: fileDuration,
+			engine: job.engine,
 		};
 
 		await publishTranscriptionOutput(
@@ -403,7 +306,7 @@ const pollTranscriptionQueue = async (
 				id: transcriptionOutput.id,
 				filename: transcriptionOutput.originalFilename,
 				userEmail: transcriptionOutput.userEmail,
-				mediaDurationSeconds: ffmpegResult.duration || 0,
+				mediaDurationSeconds: fileDuration || 0,
 				transcriptionTimeSeconds,
 				transcriptionRate: transcriptionRate || '',
 				engine: job.engine,

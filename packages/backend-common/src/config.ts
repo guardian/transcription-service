@@ -15,6 +15,7 @@ export interface TranscriptionConfig {
 		rootUrl: string;
 		taskQueueUrl: string;
 		gpuTaskQueueUrl: string;
+		macTaskQueueUrl: string;
 		deadLetterQueueUrl?: string;
 		mediaDownloadQueueUrl: string;
 		stage: string;
@@ -118,6 +119,11 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		paramPath,
 		'gpuTaskQueueUrl',
 	);
+	const macTaskQueueUrl = findParameter(
+		parameters,
+		paramPath,
+		'macTaskQueueUrl',
+	);
 	const mediaDownloadQueueUrl = findParameter(
 		parameters,
 		paramPath,
@@ -214,6 +220,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			gpuTaskQueueUrl,
 			deadLetterQueueUrl,
 			mediaDownloadQueueUrl,
+			macTaskQueueUrl,
 			stage,
 			app,
 			sourceMediaBucket,

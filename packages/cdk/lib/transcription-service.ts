@@ -51,7 +51,7 @@ import {
 	UserData,
 } from 'aws-cdk-lib/aws-ec2';
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
-import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { Effect, PolicyStatement, User } from 'aws-cdk-lib/aws-iam';
 import {
 	Architecture,
 	Code,
@@ -634,17 +634,39 @@ export class TranscriptionService extends GuStack {
 			stringValue: transcriptionGpuTaskQueue.queueUrl,
 		});
 
+		const macIamUser = new User(this, 'MacIAMUser', {
+			userName: `transcription-service-mac-user-${this.stage}`,
+		});
+
+		const transcriptionMacTaskQueue = new Queue(
+			this,
+			`${APP_NAME}-mac-task-queue`,
+			{
+				...taskQueueProps,
+				queueName: `${APP_NAME}-mac-task-queue-${this.stage}.fifo`,
+			},
+		);
+		new StringParameter(this, 'AppleTaskQueueUrlParameter', {
+			parameterName: `/${ssmPath}/macTaskQueueUrl`,
+			stringValue: transcriptionMacTaskQueue.queueUrl,
+		});
+
 		// allow API lambda to write to queue
 		transcriptionTaskQueue.grantSendMessages(apiLambda);
 		transcriptionGpuTaskQueue.grantSendMessages(apiLambda);
+		transcriptionMacTaskQueue.grantSendMessages(apiLambda);
 
 		// allow worker to receive message from queue
 		transcriptionTaskQueue.grantConsumeMessages(transcriptionWorkerASG);
 		transcriptionGpuTaskQueue.grantConsumeMessages(transcriptionGpuWorkerASG);
+		transcriptionMacTaskQueue.grantConsumeMessages(macIamUser);
 
 		// allow worker to write messages to the dead letter queue
 		transcriptionDeadLetterQueue.grantSendMessages(transcriptionWorkerASG);
 		transcriptionDeadLetterQueue.grantSendMessages(transcriptionGpuWorkerASG);
+		transcriptionDeadLetterQueue.grantSendMessages(macIamUser);
+
+		transcriptionOutputQueue.grantSendMessages(macIamUser);
 
 		const alarmTopicArn = new GuStringParameter(
 			this,

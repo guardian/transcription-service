@@ -117,6 +117,7 @@ export type WebpageSnapshot = z.infer<typeof WebpageSnapshot>;
 export enum TranscriptionEngine {
 	WHISPER_X = 'whisperx',
 	WHISPER_CPP = 'whispercpp',
+	PARAKEET = 'parakeet',
 }
 
 export const TranscriptionJob = z.object({
@@ -143,6 +144,7 @@ const OutputBase = z.object({
 const TranscriptionOutputBase = OutputBase.extend({
 	originalFilename: z.string(),
 	isTranslation: z.boolean(),
+	engine: z.nativeEnum(TranscriptionEngine),
 });
 
 export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({

@@ -72,6 +72,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	diarizationRequested: boolean,
 ): Promise<SendResult> => {
 	const combinedOutputKey = `combined/${s3Key}.json`;
+	const parakeetKey = `parakeet/${s3Key}.json`;
 
 	const combinedUrl = await getSignedUploadUrl(
 		config.aws.region,
@@ -80,6 +81,17 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		ONE_WEEK_IN_SECONDS,
 		false,
 		combinedOutputKey,
+		undefined,
+		'gzip',
+	);
+
+	const parakeetUrl = await getSignedUploadUrl(
+		config.aws.region,
+		config.app.transcriptionOutputBucket,
+		userEmail,
+		ONE_WEEK_IN_SECONDS,
+		false,
+		parakeetKey,
 		undefined,
 		'gzip',
 	);
@@ -110,6 +122,17 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		diarize: diarizationRequested,
 		engine,
 	};
+	// send to parakeet worker. Parakeet is currently beta feature so no error handling
+	await sendMessage(
+		client,
+		config.app.macTaskQueueUrl,
+		JSON.stringify({
+			...job,
+			engine: TranscriptionEngine.PARAKEET,
+			combinedOutputUrl: { key: parakeetKey, url: parakeetUrl },
+		}),
+		s3Key,
+	);
 	const messageResult = await sendMessage(
 		client,
 		queue,
@@ -292,7 +315,7 @@ export const moveMessageToDeadLetterQueue = async (
 	const sendResult = await sendMessage(
 		client,
 		deadLetterQueueUrl,
-		messageBody,
+		messageBody || '',
 		id,
 	);
 	if (sendResult.status == AWSStatus.Failure) {

@@ -1,16 +1,24 @@
 import path from 'path';
-import { readFile } from '@guardian/transcription-service-backend-common';
-import { logger } from '@guardian/transcription-service-backend-common';
 import {
+	changeMessageVisibility,
+	logger,
+	moveMessageToDeadLetterQueue,
+	readFile,
+	TranscriptionConfig,
+} from '@guardian/transcription-service-backend-common';
+import {
+	DestinationService,
 	InputLanguageCode,
 	inputToOutputLanguageCode,
 	languageCodes,
 	OutputLanguageCode,
 	TranscriptionEngine,
+	TranscriptionJob,
 	TranscriptionMetadata,
 	TranscriptionResult,
 } from '@guardian/transcription-service-common';
 import { runSpawnCommand } from '@guardian/transcription-service-backend-common/src/process';
+import { Message, SQSClient } from '@aws-sdk/client-sqs';
 
 interface FfmpegResult {
 	duration?: number;
@@ -117,11 +125,27 @@ const getDuration = (ffmpegOutput: string) => {
 	return duration;
 };
 
+export const getOutputFilePaths = (
+	sourceFilePath: string,
+	fileName: string,
+) => {
+	const directory = path.parse(sourceFilePath).dir;
+	const srtPath = path.resolve(directory, `${fileName}.srt`);
+	const textPath = path.resolve(directory, `${fileName}.txt`);
+	const jsonPath = path.resolve(directory, `${fileName}.json`);
+
+	return {
+		srt: readFile(srtPath),
+		text: readFile(textPath),
+		json: readFile(jsonPath),
+	};
+};
+
 const runTranscription = async (
 	whisperBaseParams: WhisperBaseParams,
 	languageCode: InputLanguageCode,
 	translate: boolean,
-	whisperX: boolean,
+	engine: TranscriptionEngine,
 ) => {
 	try {
 		const params = whisperParams(
@@ -130,30 +154,22 @@ const runTranscription = async (
 			languageCode,
 			translate,
 		);
-		const { fileName, metadata } = whisperX
-			? await runWhisperX(whisperBaseParams, languageCode, translate)
-			: await runWhisper(whisperBaseParams, params);
 
-		const srtPath = path.resolve(
-			path.parse(whisperBaseParams.file).dir,
-			`${fileName}.srt`,
-		);
-		const textPath = path.resolve(
-			path.parse(whisperBaseParams.file).dir,
-			`${fileName}.txt`,
-		);
-		const jsonPath = path.resolve(
-			path.parse(whisperBaseParams.file).dir,
-			`${fileName}.json`,
-		);
+		const { fileName, metadata } = await (async () => {
+			switch (engine) {
+				case TranscriptionEngine.WHISPER_CPP:
+					return runWhisper(whisperBaseParams, params);
+				case TranscriptionEngine.WHISPER_X:
+					return runWhisperX(whisperBaseParams, languageCode, translate);
+				default:
+					throw new Error(`Engine ${engine} not supported here`);
+			}
+		})();
 
-		const transcripts = {
-			srt: readFile(srtPath),
-			text: readFile(textPath),
-			json: readFile(jsonPath),
+		return {
+			transcripts: getOutputFilePaths(whisperBaseParams.file, fileName),
+			metadata,
 		};
-
-		return { transcripts, metadata };
 	} catch (error) {
 		logger.error(
 			`Could not read the transcript result. Params: ${JSON.stringify(whisperBaseParams)}`,
@@ -188,15 +204,18 @@ const getLanguageCode = async (
 // (see generateOutputSignedUrlAndSendMessage in sqs.ts)
 const transcribeAndTranslate = async (
 	whisperBaseParams: WhisperBaseParams,
-	whisperX: boolean,
+	engine: TranscriptionEngine,
 ): Promise<TranscriptionResult> => {
 	try {
-		const languageCode = await getLanguageCode(whisperBaseParams, whisperX);
+		const languageCode = await getLanguageCode(
+			whisperBaseParams,
+			engine === TranscriptionEngine.WHISPER_X,
+		);
 		const transcription = await runTranscription(
 			whisperBaseParams,
 			languageCode,
 			false,
-			whisperX,
+			engine,
 		);
 
 		// we only run language detection once,
@@ -206,12 +225,7 @@ const transcribeAndTranslate = async (
 		const translation =
 			languageCode === 'en'
 				? null
-				: await runTranscription(
-						whisperBaseParams,
-						languageCode,
-						true,
-						whisperX,
-					);
+				: await runTranscription(whisperBaseParams, languageCode, true, engine);
 		return {
 			transcripts: transcription.transcripts,
 			transcriptTranslations: translation?.transcripts,
@@ -233,12 +247,12 @@ export const getTranscriptionText = async (
 	languageCode: InputLanguageCode,
 	translate: boolean,
 	combineTranscribeAndTranslate: boolean,
-	whisperX: boolean,
+	engine: TranscriptionEngine,
 ): Promise<TranscriptionResult> => {
 	if (combineTranscribeAndTranslate) {
-		return transcribeAndTranslate(whisperBaseParams, whisperX);
+		return transcribeAndTranslate(whisperBaseParams, engine);
 	}
-	return runTranscription(whisperBaseParams, languageCode, translate, whisperX);
+	return runTranscription(whisperBaseParams, languageCode, translate, engine);
 };
 
 const regexExtract = (text: string, regex: RegExp): string | undefined => {
@@ -298,6 +312,45 @@ const whisperParams = (
 			languageCode,
 		].concat(translateParam);
 	}
+};
+
+type PatakeetParams = {
+	mediaPath: string;
+};
+
+export const runParakeet = async (params: PatakeetParams) => {
+	const fileName = path.parse(params.mediaPath).name;
+	const model = 'mlx-community/parakeet-tdt-0.6b-v3';
+	try {
+		await runSpawnCommand('transcribe-parakeet', 'parakeet-mlx', [
+			'--model',
+			model,
+			'--output-dir',
+			path.parse(params.mediaPath).dir,
+			params.mediaPath,
+		]);
+		logger.info('Parakeet finished successfully');
+		return {
+			fileName,
+			metadata: undefined,
+		};
+	} catch (error) {
+		logger.error(`Parakeet failed due to `, error);
+		throw error;
+	}
+};
+
+export const getParakeetTranscription = async (
+	params: PatakeetParams,
+): Promise<TranscriptionResult> => {
+	const res = await runParakeet(params);
+	const transcripts = getOutputFilePaths(params.mediaPath, res.fileName);
+	return {
+		transcripts,
+		metadata: {
+			detectedLanguageCode: 'UNKNOWN',
+		},
+	};
 };
 
 export const runWhisperX = async (
@@ -380,4 +433,106 @@ export const runWhisper = async (
 		logger.error(`Whisper failed due to `, error);
 		throw error;
 	}
+};
+
+export const whisperTranscription = async (
+	job: TranscriptionJob,
+	config: TranscriptionConfig,
+	destinationDirectory: string,
+	fileToTranscribe: string,
+	sqsClient: SQSClient,
+	taskQueueUrl: string,
+	taskMessage: Message,
+	receiptHandle: string,
+): Promise<TranscriptionResult | null> => {
+	const isDev = config.app.stage === 'DEV';
+	const useContainer = job.engine !== TranscriptionEngine.WHISPER_X;
+
+	const ffmpegDir = useContainer ? CONTAINER_FOLDER : destinationDirectory;
+
+	const fileName = path.basename(fileToTranscribe);
+	const filePath = `${ffmpegDir}/${fileName}`;
+	const wavPath = `${ffmpegDir}/${fileName}-converted.wav`;
+	logger.info(`Input file path: ${filePath}, Output file path: ${wavPath}`);
+
+	const ffmpegParams = getFfmpegParams(filePath, wavPath);
+
+	// docker container to run ffmpeg and whisper on file
+	const containerId = useContainer
+		? await getOrCreateContainer(path.parse(fileToTranscribe).dir)
+		: undefined;
+
+	const ffmpegResult = await runFfmpeg(ffmpegParams, containerId);
+
+	if (ffmpegResult === undefined) {
+		// when ffmpeg fails to transcribe, move message to the dead letter
+		// queue
+		if (!isDev && config.app.deadLetterQueueUrl) {
+			logger.error(
+				`'ffmpeg failed, moving message with message id ${taskMessage.MessageId} to dead letter queue`,
+			);
+			await moveMessageToDeadLetterQueue(
+				sqsClient,
+				taskQueueUrl,
+				config.app.deadLetterQueueUrl,
+				taskMessage.Body || '',
+				receiptHandle,
+				job.id,
+			);
+			logger.info(
+				`moved message with message id ${taskMessage.MessageId} to dead letter queue.`,
+			);
+		} else {
+			logger.info('skip moving message to dead letter queue in DEV');
+		}
+		return null;
+	}
+
+	// Giant doesn't know the language of files uploaded to it, so for Giant files we first run language detection
+	// then based on the output, either run transcription or run transcription and translation, and return the output
+	// of both to the user. This is different from the transcription-service, where transcription and translation are
+	// two separate jobs
+	const combineTranscribeAndTranslate =
+		job.transcriptDestinationService === DestinationService.Giant &&
+		job.translate;
+	const extraTranslationTimeMultiplier = combineTranscribeAndTranslate ? 2 : 1;
+
+	if (ffmpegResult.duration && ffmpegResult.duration !== 0) {
+		// Transcription time is usually slightly longer than file duration.
+		// Update visibility timeout to 2x the file duration plus 25 minutes for the model to load.
+		// (TODO: investigate whisperx model load time/transcription performance further - it seems to vary)
+		// This should avoid another worker picking up the task and to allow
+		// this worker to delete the message when it's finished.
+		await changeMessageVisibility(
+			sqsClient,
+			taskQueueUrl,
+			receiptHandle,
+			(ffmpegResult.duration * 2 + 1500) * extraTranslationTimeMultiplier,
+		);
+	}
+
+	const whisperBaseParams: WhisperBaseParams = {
+		containerId,
+		wavPath: wavPath,
+		file: fileToTranscribe,
+		numberOfThreads: config.app.stage === 'PROD' ? 16 : 2,
+		// whisperx always runs on powerful gpu instances so let's always use the medium model
+		model:
+			job.engine !== 'whisperx' && config.app.stage !== 'PROD'
+				? 'tiny'
+				: 'medium',
+		engine: job.engine,
+		diarize: job.diarize,
+		stage: config.app.stage,
+	};
+
+	const transcriptResult = await getTranscriptionText(
+		whisperBaseParams,
+		job.languageCode,
+		job.translate,
+		combineTranscribeAndTranslate,
+		job.engine,
+	);
+
+	return transcriptResult;
 };
