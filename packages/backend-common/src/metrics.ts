@@ -1,17 +1,22 @@
-import {
-	CloudWatchClient,
-	PutMetricDataInput,
-} from '@aws-sdk/client-cloudwatch';
+import { CloudWatchClient } from '@aws-sdk/client-cloudwatch';
 import { getCloudwatchClient, putMetricData } from './cloudwatch';
 
 type Metric = {
 	name: string;
-	unit: 'Count';
+	value: number;
 };
 export const FailureMetric: Metric = {
 	name: 'Failure',
-	unit: 'Count',
+	value: 1, // effectively a count
 };
+export const secondsFromEnqueueToStartMetric = (value: number): Metric => ({
+	name: `SecondsFromEnqueueToStart`,
+	value,
+});
+export const attemptNumberMetric = (value: number): Metric => ({
+	name: `AttemptNumber`,
+	value,
+});
 
 export class MetricsService {
 	private readonly cloudwatchClient: CloudWatchClient;
@@ -25,7 +30,7 @@ export class MetricsService {
 	}
 
 	async putMetric(metric: Metric) {
-		const metricData: PutMetricDataInput = {
+		await putMetricData(this.cloudwatchClient, {
 			Namespace: `TranscriptionService`,
 			MetricData: [
 				{
@@ -40,11 +45,10 @@ export class MetricsService {
 						},
 					],
 					MetricName: metric.name,
-					Value: 1,
+					Value: metric.value,
 					Timestamp: new Date(),
 				},
 			],
-		};
-		await putMetricData(this.cloudwatchClient, metricData);
+		});
 	}
 }

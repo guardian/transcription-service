@@ -36,6 +36,8 @@ import { uploadedCombinedResultsToS3 } from './util';
 import {
 	MetricsService,
 	FailureMetric,
+	secondsFromEnqueueToStartMetric,
+	attemptNumberMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { setTimeout } from 'timers/promises';
@@ -183,6 +185,23 @@ const pollTranscriptionQueue = async (
 			asgName,
 		);
 		return;
+	}
+
+	const attemptNumber = parseInt(
+		message.message.Attributes?.ApproximateReceiveCount ?? '0',
+	);
+	await metrics.putMetric(attemptNumberMetric(attemptNumber));
+
+	const maybeSentTimestamp = message.message.Attributes?.SentTimestamp;
+	if (attemptNumber < 2 && maybeSentTimestamp) {
+		const enqueueTimestamp = new Date(maybeSentTimestamp);
+		const now = new Date();
+
+		await metrics.putMetric(
+			secondsFromEnqueueToStartMetric(
+				(now.getTime() - enqueueTimestamp.getTime()) / 1000,
+			),
+		);
 	}
 
 	const taskMessage = message.message;
