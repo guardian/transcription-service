@@ -346,7 +346,7 @@ const pollTranscriptionQueue = async (
 
 		if (ffmpegResult.duration && ffmpegResult.duration !== 0) {
 			// Transcription time is usually slightly longer than file duration.
-			// Update visibility timeout to 2x the file duration plus 25 minutes for the model to load.
+			// Update visibility timeout to 2x the file duration plus 1 hour for the model to load.
 			// (TODO: investigate whisperx model load time/transcription performance further - it seems to vary)
 			// This should avoid another worker picking up the task and to allow
 			// this worker to delete the message when it's finished.
@@ -354,7 +354,7 @@ const pollTranscriptionQueue = async (
 				sqsClient,
 				taskQueueUrl,
 				receiptHandle,
-				(ffmpegResult.duration * 2 + 1500) * extraTranslationTimeMultiplier,
+				(ffmpegResult.duration * 2 + 3_600) * extraTranslationTimeMultiplier,
 			);
 		}
 
