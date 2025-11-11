@@ -193,14 +193,14 @@ const pollTranscriptionQueue = async (
 	await metrics.putMetric(attemptNumberMetric(attemptNumber));
 
 	const maybeSentTimestamp = message.message.Attributes?.SentTimestamp;
-	if (attemptNumber < 2 && maybeSentTimestamp) {
-		const enqueueTimestamp = new Date(maybeSentTimestamp);
-		const now = new Date();
+	const enqueueTimestamp = maybeSentTimestamp && new Date(maybeSentTimestamp);
+	const now = new Date();
+	const maybeSecondsFromEnqueueToStartMetric =
+		enqueueTimestamp && (now.getTime() - enqueueTimestamp.getTime()) / 1000;
 
+	if (attemptNumber < 2 && maybeSecondsFromEnqueueToStartMetric) {
 		await metrics.putMetric(
-			secondsFromEnqueueToStartMetric(
-				(now.getTime() - enqueueTimestamp.getTime()) / 1000,
-			),
+			secondsFromEnqueueToStartMetric(maybeSecondsFromEnqueueToStartMetric),
 		);
 	}
 
@@ -259,7 +259,13 @@ const pollTranscriptionQueue = async (
 
 	try {
 		// from this point all worker logs will have id & userEmail in their fields
-		logger.setCommonMetadata(job.id, job.userEmail);
+		// (plus the attempt number and how long it was in seconds between when the item entered the queue to when it was picked up)
+		logger.setCommonMetadata(
+			job.id,
+			job.userEmail,
+			attemptNumber,
+			maybeSecondsFromEnqueueToStartMetric,
+		);
 
 		const { inputSignedUrl, combinedOutputUrl } = job;
 

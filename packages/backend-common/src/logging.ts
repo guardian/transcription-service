@@ -1,7 +1,12 @@
 import winston from 'winston';
 
 export interface LoggerFunctions {
-	setCommonMetadata(id: string, userEmail: string): void;
+	setCommonMetadata(
+		id: string,
+		userEmail: string,
+		attemptNumber: number,
+		maybeSecondsFromEnqueueToStartMetric: '' | undefined | number,
+	): void;
 	resetCommonMetadata(): void;
 	debug(message: string): void;
 	info(message: string, meta?: Record<string, string | number>): void;
@@ -22,6 +27,8 @@ class ServerLogger {
 	underlyingLogger: winston.Logger;
 	id: string | undefined;
 	userEmail: string | undefined;
+	attemptNumber: number = 0; // zero means we don't know what the attempt number is
+	maybeSecondsFromEnqueueToStartMetric: '' | undefined | number;
 
 	constructor() {
 		const winstonConfig: winston.LoggerOptions = {
@@ -46,6 +53,9 @@ class ServerLogger {
 			stack_trace: logObject.stack_trace,
 			id: this.id,
 			userEmail: this.userEmail,
+			attemptNumber: this.attemptNumber,
+			maybeSecondsFromEnqueueToStartMetric:
+				this.maybeSecondsFromEnqueueToStartMetric,
 			...logObject.meta,
 		});
 	}
@@ -53,11 +63,21 @@ class ServerLogger {
 	resetCommonMetadata(): void {
 		this.userEmail = undefined;
 		this.id = undefined;
+		this.attemptNumber = 0;
+		this.maybeSecondsFromEnqueueToStartMetric = undefined;
 	}
 
-	setCommonMetadata(id: string, userEmail: string): void {
+	setCommonMetadata(
+		id: string,
+		userEmail: string,
+		attemptNumber: number,
+		maybeSecondsFromEnqueueToStartMetric: '' | undefined | number,
+	): void {
 		this.userEmail = userEmail;
 		this.id = id;
+		this.attemptNumber = attemptNumber;
+		this.maybeSecondsFromEnqueueToStartMetric =
+			maybeSecondsFromEnqueueToStartMetric;
 	}
 
 	debug(message: string): void {
