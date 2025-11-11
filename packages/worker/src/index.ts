@@ -192,11 +192,14 @@ const pollTranscriptionQueue = async (
 	);
 	await metrics.putMetric(attemptNumberMetric(attemptNumber));
 
-	const maybeSentTimestamp = message.message.Attributes?.SentTimestamp;
-	const enqueueTimestamp = maybeSentTimestamp && new Date(maybeSentTimestamp);
+	const maybeSentTimestamp: string | undefined | null =
+		message.message.Attributes?.SentTimestamp;
+	const enqueueTimestampInMillis =
+		maybeSentTimestamp && parseInt(maybeSentTimestamp);
 	const now = new Date();
 	const maybeSecondsFromEnqueueToStartMetric =
-		enqueueTimestamp && (now.getTime() - enqueueTimestamp.getTime()) / 1000;
+		enqueueTimestampInMillis &&
+		(now.getTime() - enqueueTimestampInMillis) / 1000;
 
 	if (attemptNumber < 2 && maybeSecondsFromEnqueueToStartMetric) {
 		await metrics.putMetric(

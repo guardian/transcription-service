@@ -224,7 +224,7 @@ export const getNextMessage = async (
 				MaxNumberOfMessages: 1,
 				VisibilityTimeout: 300, // 	5 minutes
 				// we need to get message attributes so that we can use ApproximateReceiveCount
-				AttributeNames: ['All'],
+				MessageSystemAttributeNames: ['All'],
 			}),
 		);
 		const messages = message.Messages;
