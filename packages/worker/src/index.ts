@@ -36,6 +36,8 @@ import { uploadedCombinedResultsToS3 } from './util';
 import {
 	MetricsService,
 	FailureMetric,
+	secondsFromEnqueueToStartMetric,
+	attemptNumberMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { setTimeout } from 'timers/promises';
@@ -185,6 +187,26 @@ const pollTranscriptionQueue = async (
 		return;
 	}
 
+	const attemptNumber = parseInt(
+		message.message.Attributes?.ApproximateReceiveCount ?? '0',
+	);
+	await metrics.putMetric(attemptNumberMetric(attemptNumber));
+
+	const maybeSentTimestamp: string | undefined | null =
+		message.message.Attributes?.SentTimestamp;
+	const enqueueTimestampInMillis =
+		maybeSentTimestamp && parseInt(maybeSentTimestamp);
+	const now = new Date();
+	const maybeSecondsFromEnqueueToStartMetric =
+		enqueueTimestampInMillis &&
+		(now.getTime() - enqueueTimestampInMillis) / 1000;
+
+	if (attemptNumber < 2 && maybeSecondsFromEnqueueToStartMetric) {
+		await metrics.putMetric(
+			secondsFromEnqueueToStartMetric(maybeSecondsFromEnqueueToStartMetric),
+		);
+	}
+
 	const taskMessage = message.message;
 	if (!taskMessage.Body) {
 		logger.error('message missing body');
@@ -240,7 +262,13 @@ const pollTranscriptionQueue = async (
 
 	try {
 		// from this point all worker logs will have id & userEmail in their fields
-		logger.setCommonMetadata(job.id, job.userEmail);
+		// (plus the attempt number and how long it was in seconds between when the item entered the queue to when it was picked up)
+		logger.setCommonMetadata(
+			job.id,
+			job.userEmail,
+			attemptNumber,
+			maybeSecondsFromEnqueueToStartMetric,
+		);
 
 		const { inputSignedUrl, combinedOutputUrl } = job;
 
