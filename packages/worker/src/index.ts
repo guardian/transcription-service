@@ -194,12 +194,12 @@ const pollTranscriptionQueue = async (
 
 	const maybeSentTimestamp: string | undefined | null =
 		message.message.Attributes?.SentTimestamp;
-	const enqueueTimestampInMillis =
+	const enqueuedAtEpochMillis =
 		maybeSentTimestamp && parseInt(maybeSentTimestamp);
-	const now = new Date();
+	const messageReceivedAtEpochMillis = Date.now();
 	const maybeSecondsFromEnqueueToStartMetric =
-		enqueueTimestampInMillis &&
-		(now.getTime() - enqueueTimestampInMillis) / 1000;
+		enqueuedAtEpochMillis &&
+		(messageReceivedAtEpochMillis - enqueuedAtEpochMillis) / 1000;
 
 	if (attemptNumber < 2 && maybeSecondsFromEnqueueToStartMetric) {
 		await metrics.putMetric(
@@ -380,6 +380,7 @@ const pollTranscriptionQueue = async (
 			job.translate,
 			combineTranscribeAndTranslate,
 			job.engine === 'whisperx',
+			metrics,
 		);
 		const transcriptionEndTime = new Date();
 		const transcriptionTimeSeconds = Math.round(
