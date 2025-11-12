@@ -11,6 +11,10 @@ import {
 	TranscriptionResult,
 } from '@guardian/transcription-service-common';
 import { runSpawnCommand } from '@guardian/transcription-service-backend-common/src/process';
+import {
+	MetricsService,
+	secondsForWhisperXStartupMetric,
+} from '@guardian/transcription-service-backend-common/src/metrics';
 
 interface FfmpegResult {
 	duration?: number;
@@ -122,6 +126,7 @@ const runTranscription = async (
 	languageCode: InputLanguageCode,
 	translate: boolean,
 	whisperX: boolean,
+	metrics: MetricsService,
 ) => {
 	try {
 		const params = whisperParams(
@@ -131,7 +136,7 @@ const runTranscription = async (
 			translate,
 		);
 		const { fileName, metadata } = whisperX
-			? await runWhisperX(whisperBaseParams, languageCode, translate)
+			? await runWhisperX(whisperBaseParams, languageCode, translate, metrics)
 			: await runWhisper(whisperBaseParams, params);
 
 		const srtPath = path.resolve(
@@ -189,6 +194,7 @@ const getLanguageCode = async (
 const transcribeAndTranslate = async (
 	whisperBaseParams: WhisperBaseParams,
 	whisperX: boolean,
+	metrics: MetricsService,
 ): Promise<TranscriptionResult> => {
 	try {
 		const languageCode = await getLanguageCode(whisperBaseParams, whisperX);
@@ -197,6 +203,7 @@ const transcribeAndTranslate = async (
 			languageCode,
 			false,
 			whisperX,
+			metrics,
 		);
 
 		// we only run language detection once,
@@ -211,6 +218,7 @@ const transcribeAndTranslate = async (
 						languageCode,
 						true,
 						whisperX,
+						metrics,
 					);
 		return {
 			transcripts: transcription.transcripts,
@@ -234,11 +242,18 @@ export const getTranscriptionText = async (
 	translate: boolean,
 	combineTranscribeAndTranslate: boolean,
 	whisperX: boolean,
+	metrics: MetricsService,
 ): Promise<TranscriptionResult> => {
 	if (combineTranscribeAndTranslate) {
-		return transcribeAndTranslate(whisperBaseParams, whisperX);
+		return transcribeAndTranslate(whisperBaseParams, whisperX, metrics);
 	}
-	return runTranscription(whisperBaseParams, languageCode, translate, whisperX);
+	return runTranscription(
+		whisperBaseParams,
+		languageCode,
+		translate,
+		whisperX,
+		metrics,
+	);
 };
 
 const regexExtract = (text: string, regex: RegExp): string | undefined => {
@@ -304,6 +319,7 @@ export const runWhisperX = async (
 	whisperBaseParams: WhisperBaseParams,
 	languageCode: InputLanguageCode,
 	translate: boolean,
+	metrics: MetricsService,
 ) => {
 	const { wavPath, diarize, stage } = whisperBaseParams;
 	const fileName = path.parse(wavPath).name;
@@ -316,20 +332,46 @@ export const runWhisperX = async (
 	const computeParam = stage === 'DEV' ? ['--compute', 'int8'] : [];
 	try {
 		const diarizeParam = diarize ? [`--diarize`] : [];
-		const result = await runSpawnCommand('transcribe-whisperx', 'whisperx', [
-			'--model',
-			model,
-			...languageCodeParam,
-			...translateParam,
-			...diarizeParam,
-			...computeParam,
-			'--no_align',
-			'--model_cache_only',
-			'True',
-			'--output_dir',
-			path.parse(wavPath).dir,
-			wavPath,
-		]);
+		let secondsForWhisperXStartup: number | undefined = undefined;
+		const startEpochMillis = Date.now();
+		const result = await runSpawnCommand(
+			'transcribe-whisperx',
+			'whisperx',
+			[
+				'--model',
+				model,
+				...languageCodeParam,
+				...translateParam,
+				...diarizeParam,
+				...computeParam,
+				'--no_align',
+				'--model_cache_only',
+				'True',
+				'--output_dir',
+				path.parse(wavPath).dir,
+				wavPath,
+			],
+			false,
+			() => {
+				if (!secondsForWhisperXStartup) {
+					secondsForWhisperXStartup = (Date.now() - startEpochMillis) / 1000;
+					logger.info(
+						`WhisperX has started actually doing something, after ${secondsForWhisperXStartup}s`,
+						{ secondsForWhisperXStartup },
+					);
+					metrics.putMetric(
+						secondsForWhisperXStartupMetric(secondsForWhisperXStartup),
+					);
+				}
+			},
+		);
+		if (!secondsForWhisperXStartup) {
+			secondsForWhisperXStartup = (Date.now() - startEpochMillis) / 1000;
+			logger.warn(
+				`WhisperX did not log anything, so startup time is really total duration: ${secondsForWhisperXStartup}s`,
+				{ secondsForWhisperXStartup },
+			);
+		}
 		const metadata = extractWhisperXStderrData(result.stderr);
 		logger.info('Whisper finished successfully', metadata);
 		return {

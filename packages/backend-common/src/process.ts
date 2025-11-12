@@ -22,6 +22,9 @@ export const runSpawnCommand = (
 	cmd: string,
 	args: ReadonlyArray<string>,
 	logImmediately: boolean = false,
+	maybeLoggingCallback?: (
+		data: { stdout: string } | { stderr: string },
+	) => void,
 ): Promise<ProcessResult> => {
 	logger.info(
 		`Running process ${processName} with command: ${cmd} ${args.join(' ')}`,
@@ -32,18 +35,22 @@ export const runSpawnCommand = (
 		const stdout: string[] = [];
 		const stderr: string[] = [];
 		cp.stdout.on('data', (data) => {
-			stdout.push(data.toString());
+			const str = data.toString();
+			stdout.push(str);
 			if (logImmediately && logStdout) {
-				logger.info(data.toString());
+				logger.info(str);
 			}
+			maybeLoggingCallback?.({ stdout: str });
 		});
 
 		cp.stderr.on('data', (data) => {
-			stderr.push(data.toString());
+			const str = data.toString();
+			stderr.push(str);
 			if (logImmediately) {
 				// ffmpeg sends all text output to stderr even when it's successful
-				logger.info(data.toString());
+				logger.info(str);
 			}
+			maybeLoggingCallback?.({ stderr: str });
 		});
 
 		cp.on('error', (e) => {
