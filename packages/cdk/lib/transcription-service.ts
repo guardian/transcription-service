@@ -498,7 +498,6 @@ export class TranscriptionService extends GuStack {
 		});
 
 		const commonAsgProps = {
-			minCapacity: 0,
 			maxCapacity: isProd ? 20 : 4,
 			vpc,
 			vpcSubnets: {
@@ -521,6 +520,7 @@ export class TranscriptionService extends GuStack {
 			'TranscriptionWorkerASG',
 			{
 				...commonAsgProps,
+				minCapacity: 0,
 				autoScalingGroupName: workerAutoscalingGroupName,
 				mixedInstancesPolicy: {
 					launchTemplate: cpuWorkerLaunchTemplate,
@@ -540,6 +540,7 @@ export class TranscriptionService extends GuStack {
 			'TranscriptionGpuWorkerASG',
 			{
 				...commonAsgProps,
+				minCapacity: 1,
 				autoScalingGroupName: gpuWorkerAutoscalingGroupName,
 				mixedInstancesPolicy: {
 					launchTemplate: gpuWorkerLaunchTemplate,

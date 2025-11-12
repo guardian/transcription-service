@@ -29,7 +29,11 @@ const updateASGCapacity = async (
 	}
 	logger.info(`ASG ${asgName} max capacity is ${asgMaxCapacity}`);
 
-	const desiredCapacity = Math.min(totalMessagesInQueue, asgMaxCapacity);
+	const desiredCapacity = Math.min(
+		totalMessagesInQueue,
+		asgMaxCapacity,
+		1, // always have at least 1 worker
+	);
 
 	await setDesiredCapacity(asgClient, asgName, desiredCapacity);
 };
