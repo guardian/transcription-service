@@ -540,7 +540,7 @@ export class TranscriptionService extends GuStack {
 			'TranscriptionGpuWorkerASG',
 			{
 				...commonAsgProps,
-				minCapacity: 1,
+				minCapacity: this.stage === 'PROD' ? 1 : 0,
 				autoScalingGroupName: gpuWorkerAutoscalingGroupName,
 				mixedInstancesPolicy: {
 					launchTemplate: gpuWorkerLaunchTemplate,

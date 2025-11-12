@@ -713,7 +713,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             "Granularity": "1Minute",
           },
         ],
-        "MinSize": "1",
+        "MinSize": "0",
         "MixedInstancesPolicy": {
           "InstancesDistribution": {
             "OnDemandBaseCapacity": 0,

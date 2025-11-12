@@ -16,6 +16,7 @@ const updateASGCapacity = async (
 	sqsClient: SQSClient,
 	queueUrl: string,
 	asgName: string,
+	absoluteMinCapacity: number = 0,
 ) => {
 	const totalMessagesInQueue = await getSQSQueueLengthIncludingInvisible(
 		sqsClient,
@@ -32,7 +33,7 @@ const updateASGCapacity = async (
 	const desiredCapacity = Math.min(
 		totalMessagesInQueue,
 		asgMaxCapacity,
-		1, // always have at least 1 worker
+		absoluteMinCapacity,
 	);
 
 	await setDesiredCapacity(asgClient, asgName, desiredCapacity);
@@ -58,6 +59,7 @@ const updateASGsCapacity = async () => {
 		sqsClient,
 		config.app.gpuTaskQueueUrl,
 		gpuAsgName,
+		config.app.stage === 'PROD' ? 1 : 0, // always have at least 1 GPU worker in PROD
 	);
 };
 const handler: Handler = async () => {
