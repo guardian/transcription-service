@@ -17,6 +17,13 @@ export const secondsFromEnqueueToStartMetric = (value: number): Metric => ({
 	value,
 	unit: 'Seconds',
 });
+export const secondsFromEnqueueToCompleteEmailSentMetric = (
+	value: number,
+): Metric => ({
+	name: `SecondsFromEnqueueToCompleteEmailSent`,
+	value,
+	unit: 'Seconds',
+});
 export const secondsForWhisperXStartupMetric = (value: number): Metric => ({
 	name: `SecondsForWhisperXStartup`,
 	value,

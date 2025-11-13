@@ -195,12 +195,12 @@ const pollTranscriptionQueue = async (
 
 	const maybeSentTimestamp: string | undefined | null =
 		message.message.Attributes?.SentTimestamp;
-	const enqueuedAtEpochMillis =
+	const maybeEnqueuedAtEpochMillis =
 		maybeSentTimestamp && parseInt(maybeSentTimestamp);
 	const messageReceivedAtEpochMillis = Date.now();
 	const maybeSecondsFromEnqueueToStartMetric =
-		enqueuedAtEpochMillis &&
-		(messageReceivedAtEpochMillis - enqueuedAtEpochMillis) / 1000;
+		maybeEnqueuedAtEpochMillis &&
+		(messageReceivedAtEpochMillis - maybeEnqueuedAtEpochMillis) / 1000;
 
 	if (attemptNumber < 2 && maybeSecondsFromEnqueueToStartMetric) {
 		await metrics.putMetric(
@@ -423,6 +423,7 @@ const pollTranscriptionQueue = async (
 			combinedOutputKey: combinedOutputUrl?.key,
 			isTranslation: job.translate,
 			duration: ffmpegResult.duration,
+			maybeEnqueuedAtEpochMillis: maybeEnqueuedAtEpochMillis || undefined,
 		};
 
 		await publishTranscriptionOutput(
