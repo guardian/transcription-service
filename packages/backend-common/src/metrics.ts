@@ -26,6 +26,10 @@ export const attemptNumberMetric = (value: number): Metric => ({
 	name: `AttemptNumber`,
 	value,
 });
+export const transcriptionRateMetric = (value: number): Metric => ({
+	name: `TranscriptionRate`,
+	value,
+});
 
 export class MetricsService {
 	private readonly cloudwatchClient: CloudWatchClient;

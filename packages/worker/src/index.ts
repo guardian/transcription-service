@@ -38,6 +38,7 @@ import {
 	FailureMetric,
 	secondsFromEnqueueToStartMetric,
 	attemptNumberMetric,
+	transcriptionRateMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { setTimeout } from 'timers/promises';
@@ -389,6 +390,10 @@ const pollTranscriptionQueue = async (
 		);
 		const transcriptionRate =
 			ffmpegResult.duration && ffmpegResult.duration / transcriptionTimeSeconds;
+
+		if (transcriptionRate) {
+			await metrics.putMetric(transcriptionRateMetric(transcriptionRate));
+		}
 
 		const languageCode: OutputLanguageCode =
 			job.languageCode === 'auto'
