@@ -151,6 +151,7 @@ export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
 	languageCode: OutputLanguageCode,
 	combinedOutputKey: z.string(),
 	duration: z.optional(z.number()),
+	maybeEnqueuedAtEpochMillis: z.optional(z.number()),
 });
 
 export const MediaDownloadFailure = OutputBase.extend({

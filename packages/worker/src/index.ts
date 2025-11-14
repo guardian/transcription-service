@@ -38,6 +38,7 @@ import {
 	FailureMetric,
 	secondsFromEnqueueToStartMetric,
 	attemptNumberMetric,
+	transcriptionRateMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { setTimeout } from 'timers/promises';
@@ -194,12 +195,12 @@ const pollTranscriptionQueue = async (
 
 	const maybeSentTimestamp: string | undefined | null =
 		message.message.Attributes?.SentTimestamp;
-	const enqueuedAtEpochMillis =
+	const maybeEnqueuedAtEpochMillis =
 		maybeSentTimestamp && parseInt(maybeSentTimestamp);
 	const messageReceivedAtEpochMillis = Date.now();
 	const maybeSecondsFromEnqueueToStartMetric =
-		enqueuedAtEpochMillis &&
-		(messageReceivedAtEpochMillis - enqueuedAtEpochMillis) / 1000;
+		maybeEnqueuedAtEpochMillis &&
+		(messageReceivedAtEpochMillis - maybeEnqueuedAtEpochMillis) / 1000;
 
 	if (attemptNumber < 2 && maybeSecondsFromEnqueueToStartMetric) {
 		await metrics.putMetric(
@@ -390,6 +391,10 @@ const pollTranscriptionQueue = async (
 		const transcriptionRate =
 			ffmpegResult.duration && ffmpegResult.duration / transcriptionTimeSeconds;
 
+		if (transcriptionRate) {
+			await metrics.putMetric(transcriptionRateMetric(transcriptionRate));
+		}
+
 		const languageCode: OutputLanguageCode =
 			job.languageCode === 'auto'
 				? transcriptResult.metadata.detectedLanguageCode
@@ -418,6 +423,7 @@ const pollTranscriptionQueue = async (
 			combinedOutputKey: combinedOutputUrl?.key,
 			isTranslation: job.translate,
 			duration: ffmpegResult.duration,
+			maybeEnqueuedAtEpochMillis: maybeEnqueuedAtEpochMillis || undefined,
 		};
 
 		await publishTranscriptionOutput(

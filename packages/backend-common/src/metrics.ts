@@ -17,6 +17,13 @@ export const secondsFromEnqueueToStartMetric = (value: number): Metric => ({
 	value,
 	unit: 'Seconds',
 });
+export const secondsFromEnqueueToCompleteEmailSentMetric = (
+	value: number,
+): Metric => ({
+	name: `SecondsFromEnqueueToCompleteEmailSent`,
+	value,
+	unit: 'Seconds',
+});
 export const secondsForWhisperXStartupMetric = (value: number): Metric => ({
 	name: `SecondsForWhisperXStartup`,
 	value,
@@ -24,6 +31,10 @@ export const secondsForWhisperXStartupMetric = (value: number): Metric => ({
 });
 export const attemptNumberMetric = (value: number): Metric => ({
 	name: `AttemptNumber`,
+	value,
+});
+export const transcriptionRateMetric = (value: number): Metric => ({
+	name: `TranscriptionRate`,
 	value,
 });
 

@@ -25,6 +25,7 @@ import {
 import {
 	MetricsService,
 	FailureMetric,
+	secondsFromEnqueueToCompleteEmailSentMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
 import { SESClient } from '@aws-sdk/client-ses';
 
@@ -107,6 +108,14 @@ const handleTranscriptionSuccess = async (
 				sourceMediaDownloadUrl,
 			),
 		);
+
+		if (transcriptionOutput.maybeEnqueuedAtEpochMillis) {
+			await metrics.putMetric(
+				secondsFromEnqueueToCompleteEmailSentMetric(
+					(Date.now() - transcriptionOutput.maybeEnqueuedAtEpochMillis) / 1000,
+				),
+			);
+		}
 
 		logger.info('Output handler sent success email notification', {
 			id: transcriptionOutput.id,
