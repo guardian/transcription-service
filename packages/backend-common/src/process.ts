@@ -22,6 +22,7 @@ export const runSpawnCommand = (
 	cmd: string,
 	args: ReadonlyArray<string>,
 	logImmediately: boolean = false,
+	rejectOnFailure: boolean = true,
 	maybeLoggingCallback?: (
 		data: { stdout: string } | { stderr: string },
 	) => void,
@@ -80,7 +81,11 @@ export const runSpawnCommand = (
 				logger.error(
 					`process ${processName} failed with code ${result.code} due to: ${result.stderr}`,
 				);
-				reject(result);
+				if (rejectOnFailure) {
+					reject(result);
+				} else {
+					resolve(result);
+				}
 			}
 		});
 	});

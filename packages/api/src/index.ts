@@ -18,7 +18,7 @@ import {
 	logger,
 	getS3Client,
 	sendMessage,
-	writeTranscriptionItem,
+	writeDynamoItem,
 	downloadObject,
 } from '@guardian/transcription-service-backend-common';
 import {
@@ -400,7 +400,7 @@ const getApp = async () => {
 			let exportStatuses: ExportStatuses = initializeExportStatuses(
 				exportRequest.data.items,
 			);
-			await writeTranscriptionItem(dynamoClient, config.app.tableName, {
+			await writeDynamoItem(dynamoClient, config.app.tableName, {
 				...getItemResult.item,
 				exportStatuses: exportStatuses,
 			});
@@ -434,7 +434,7 @@ const getApp = async () => {
 				}),
 			);
 
-			await writeTranscriptionItem(dynamoClient, config.app.tableName, {
+			await writeDynamoItem(dynamoClient, config.app.tableName, {
 				...getItemResult.item,
 				exportStatuses: exportStatuses,
 			});
@@ -459,7 +459,7 @@ const getApp = async () => {
 						message: msg,
 					};
 					exportStatuses = updateStatuses(mediaFailedStatus, exportStatuses);
-					await writeTranscriptionItem(dynamoClient, config.app.tableName, {
+					await writeDynamoItem(dynamoClient, config.app.tableName, {
 						...getItemResult.item,
 						exportStatuses: updateStatuses(mediaFailedStatus, exportStatuses),
 					});

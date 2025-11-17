@@ -1,6 +1,7 @@
 import {
 	generateOutputSignedUrlAndSendMessage,
 	getConfig,
+	getDynamoClient,
 	getSignedDownloadUrl,
 	getSQSClient,
 	isSqsFailure,
@@ -9,12 +10,22 @@ import {
 	sendMessage,
 	TranscriptionConfig,
 	uploadObjectWithPresignedUrl,
+	writeDynamoItem,
 } from '@guardian/transcription-service-backend-common';
 import { Upload } from '@aws-sdk/lib-storage';
 import { S3Client } from '@aws-sdk/client-s3';
 import { createReadStream } from 'node:fs';
-import { downloadMedia, isFailure, startProxyTunnel } from './yt-dlp';
-import { MediaMetadata, UrlJob } from '@guardian/transcription-service-common';
+import {
+	downloadMedia,
+	getYoutubeEvent,
+	isFailure,
+	startProxyTunnel,
+} from './yt-dlp';
+import {
+	MediaDownloadFailureReason,
+	MediaMetadata,
+	UrlJob,
+} from '@guardian/transcription-service-common';
 
 import { SQSClient } from '@aws-sdk/client-sqs';
 import {
@@ -26,6 +37,10 @@ import {
 	MediaDownloadFailure,
 	TranscriptionMediaDownloadJob,
 } from '@guardian/transcription-service-common';
+import {
+	mediaDownloadJobMetric,
+	MetricsService,
+} from '@guardian/transcription-service-backend-common/src/metrics';
 
 // This needs to be kept in sync with CDK downloadVolume
 export const ECS_MEDIA_DOWNLOAD_WORKING_DIRECTORY = '/media-download';
@@ -67,10 +82,12 @@ const reportDownloadFailure = async (
 	config: TranscriptionConfig,
 	sqsClient: SQSClient,
 	job: TranscriptionMediaDownloadJob,
+	failureReason: MediaDownloadFailureReason,
 ) => {
 	const mediaDownloadFailure: MediaDownloadFailure = {
 		id: job.id,
 		status: 'MEDIA_DOWNLOAD_FAILURE',
+		failureReason: failureReason,
 		url: job.url,
 		userEmail: job.userEmail,
 	};
@@ -89,7 +106,7 @@ const reportDownloadFailure = async (
 const reportExternalFailure = async (
 	job: ExternalUrlJob,
 	sqsClient: SQSClient,
-	errorType: 'INVALID_URL' | 'FAILURE',
+	errorType: MediaDownloadFailureReason,
 ) => {
 	const output: ExternalJobOutput = {
 		id: job.id,
@@ -176,6 +193,17 @@ const main = async () => {
 
 	const config = await getConfig();
 
+	const metrics = new MetricsService(
+		config.app.stage,
+		config.aws.region,
+		'media-download',
+	);
+
+	const dynamoClient = getDynamoClient(
+		config.aws.region,
+		config.aws.localstackEndpoint,
+	);
+
 	const s3Client = new S3Client({ region: config.aws.region });
 	const sqsClient = getSQSClient(
 		config.aws.region,
@@ -203,10 +231,39 @@ const main = async () => {
 		job.id,
 		proxyUrl,
 	);
+
+	const successOrErrorType = isFailure(ytDlpResult)
+		? ytDlpResult.errorType
+		: ytDlpResult.status;
+	await metrics.putMetric(mediaDownloadJobMetric, [
+		{
+			Name: 'status',
+			Value: successOrErrorType,
+		},
+	]);
+
+	const youtubeEvent = getYoutubeEvent(
+		job.url,
+		successOrErrorType,
+		config.app.youtubeEventId,
+	);
+	if (youtubeEvent) {
+		await writeDynamoItem(
+			dynamoClient,
+			config.app.eventsTableName,
+			youtubeEvent,
+		);
+	}
+
 	if (isFailure(ytDlpResult)) {
 		if (isTranscriptionMediaDownloadJob(job)) {
 			const tJob = TranscriptionMediaDownloadJob.parse(parsedInput);
-			await reportDownloadFailure(config, sqsClient, tJob);
+			await reportDownloadFailure(
+				config,
+				sqsClient,
+				tJob,
+				ytDlpResult.errorType,
+			);
 		} else if (isExternalMediaDownloadJob(job)) {
 			const externalJob = ExternalUrlJob.parse(parsedInput);
 			await reportExternalFailure(

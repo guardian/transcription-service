@@ -9,6 +9,7 @@ import { GuAllowPolicy } from '@guardian/cdk/lib/constructs/iam';
 import type { GuLambdaFunction } from '@guardian/cdk/lib/constructs/lambda';
 import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import { Duration, RemovalPolicy } from 'aws-cdk-lib';
+import type { Table } from 'aws-cdk-lib/aws-dynamodb';
 import type { IVpc } from 'aws-cdk-lib/aws-ec2';
 import { Repository } from 'aws-cdk-lib/aws-ecr';
 import { ContainerInsights } from 'aws-cdk-lib/aws-ecs';
@@ -41,6 +42,8 @@ export const makeMediaDownloadService = (
 	getParametersPolicy: PolicyStatement,
 	combinedTaskTopic: Topic,
 	giantRemoteIngestOutputSendPolicy: PolicyStatement,
+	putMetricDataPolicy: PolicyStatement,
+	eventsTable: Table,
 ) => {
 	const mediaDownloadDeadLetterQueue = new Queue(
 		scope,
@@ -146,7 +149,13 @@ export const makeMediaDownloadService = (
 				actions: ['s3:PutObject', 's3:GetObject'],
 				resources: [`${sourceMediaBucket.bucketArn}/downloaded-media/*`],
 			}),
+			new PolicyStatement({
+				effect: Effect.ALLOW,
+				actions: ['dynamodb:PutItem', 'dynamodb:UpdateItem'],
+				resources: [eventsTable.tableArn],
+			}),
 			getParametersPolicy,
+			putMetricDataPolicy,
 		],
 		storage: 50,
 		enableDistributablePolicy: false,

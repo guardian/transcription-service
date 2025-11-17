@@ -23,22 +23,6 @@ const SignedUrl = z.object({
 
 export type SignedUrl = z.infer<typeof SignedUrl>;
 
-const OutputBucketUrls = z.object({
-	srt: SignedUrl,
-	text: SignedUrl,
-	json: SignedUrl,
-});
-
-export type OutputBucketUrls = z.infer<typeof OutputBucketUrls>;
-
-const OutputBucketKeys = z.object({
-	srt: z.string(),
-	text: z.string(),
-	json: z.string(),
-});
-
-export type OutputBucketKeys = z.infer<typeof OutputBucketKeys>;
-
 export const UrlJob = z.object({
 	id: z.string(),
 	url: z.string(),
@@ -90,6 +74,8 @@ export const isMediaMetadata = (obj: unknown): obj is MediaMetadata => {
 	return typeof mediaMetadata.title === 'string';
 };
 
+const botBlocked = z.literal('BOT_BLOCKED');
+
 export const ExternalJobOutput = z.object({
 	id: z.string(),
 	taskId: z.string(),
@@ -97,6 +83,7 @@ export const ExternalJobOutput = z.object({
 		z.literal('SUCCESS'),
 		z.literal('FAILURE'),
 		z.literal('INVALID_URL'),
+		botBlocked,
 	]),
 	outputType: z.union([
 		z.literal('WEBPAGE_SNAPSHOT'),
@@ -154,9 +141,18 @@ export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
 	maybeEnqueuedAtEpochMillis: z.optional(z.number()),
 });
 
+export const MediaDownloadFailureReason = z.union([
+	z.literal('FAILURE'),
+	z.literal('INVALID_URL'),
+	botBlocked,
+]);
+export type MediaDownloadFailureReason = z.infer<
+	typeof MediaDownloadFailureReason
+>;
+
 export const MediaDownloadFailure = OutputBase.extend({
-	// status must be kept in sync with https://github.com/guardian/giant/blob/main/backend/app/extraction/ExternalTranscriptionExtractor.scala#L76
 	status: z.literal('MEDIA_DOWNLOAD_FAILURE'),
+	failureReason: MediaDownloadFailureReason,
 	url: z.string(),
 });
 
@@ -343,6 +339,21 @@ export const TranscriptionDynamoItem = z.object({
 });
 
 export type TranscriptionDynamoItem = z.infer<typeof TranscriptionDynamoItem>;
+
+export const YoutubeEventDynamoItem = z.object({
+	id: z.string(),
+	eventTime: z.string(),
+	status: z.union([z.literal('SUCCESS'), botBlocked]),
+});
+
+export type YoutubeEventDynamoItem = z.infer<typeof YoutubeEventDynamoItem>;
+
+export const YoutubeStatus = z.union([
+	z.literal('LIVE'),
+	z.literal('WARN'),
+	z.literal('ERROR'),
+]);
+export type YoutubeStatus = z.infer<typeof YoutubeStatus>;
 
 export const Transcripts = z.object({
 	srt: z.string(),

@@ -26,7 +26,7 @@ docker-compose up -d
 export AWS_REGION=eu-west-1
 APP_NAME="transcription-service"
 
-./create-local-queues.sh
+#$SCRIPT_PATH/create-local-queues.sh
 
 DYNAMODB_ARN=$(aws --endpoint-url=http://localhost:4566 dynamodb create-table \
                                          --table-name ${APP_NAME}-DEV \
@@ -35,6 +35,14 @@ DYNAMODB_ARN=$(aws --endpoint-url=http://localhost:4566 dynamodb create-table \
                                          --key-schema AttributeName=id,KeyType=HASH | jq .TableDescription.TableArn)
 
 echo "Created table, arn: ${DYNAMODB_ARN}"
+
+DYNAMODB_EVENTS_ARN=$(aws --endpoint-url=http://localhost:4566 dynamodb create-table \
+                                         --table-name ${APP_NAME}-events-DEV \
+                                         --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
+                                         --attribute-definitions AttributeName=id,AttributeType=S \
+                                         --key-schema AttributeName=id,KeyType=HASH | jq .TableDescription.TableArn)
+
+echo "Created events table, arn: ${DYNAMODB_EVENTS_ARN}"
 
 echo ""
 echo "Installing whisperX dependencies (required to run gpu worker locally)"

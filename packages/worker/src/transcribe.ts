@@ -352,6 +352,7 @@ export const runWhisperX = async (
 				wavPath,
 			],
 			false,
+			true,
 			(data) => {
 				if (!secondsForWhisperXStartup && 'stdout' in data) {
 					secondsForWhisperXStartup = (Date.now() - startEpochMillis) / 1000;

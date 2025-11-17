@@ -9,7 +9,7 @@ import {
 } from '@guardian/transcription-service-backend-common';
 import {
 	getDynamoClient,
-	writeTranscriptionItem,
+	writeDynamoItem,
 } from '@guardian/transcription-service-backend-common/src/dynamodb';
 import { testMessage } from '../test/testMessage';
 import {
@@ -89,7 +89,7 @@ const handleTranscriptionSuccess = async (
 	};
 
 	try {
-		await writeTranscriptionItem(
+		await writeDynamoItem(
 			getDynamoClient(config.aws.region, config.aws.localstackEndpoint),
 			config.app.tableName,
 			dynamoItem,

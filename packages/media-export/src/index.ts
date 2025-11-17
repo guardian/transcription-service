@@ -8,7 +8,7 @@ import {
 	logger,
 	TranscriptionConfig,
 	TranscriptionDynamoItem,
-	writeTranscriptionItem,
+	writeDynamoItem,
 } from '@guardian/transcription-service-backend-common';
 import { S3Client } from '@aws-sdk/client-s3';
 import {
@@ -103,7 +103,7 @@ const processExport = async (exportRequest: TranscriptExportRequest) => {
 		throw new Error('No existing export status - cannot update export status');
 	}
 	const newStatuses = updateStatuses(result, getItemResult.item.exportStatuses);
-	await writeTranscriptionItem(dynamoClient, config.app.tableName, {
+	await writeDynamoItem(dynamoClient, config.app.tableName, {
 		...getItemResult.item,
 		exportStatuses: newStatuses,
 	});
