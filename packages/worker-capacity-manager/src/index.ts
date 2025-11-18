@@ -29,12 +29,13 @@ const updateASGCapacity = async (
 		return;
 	}
 	logger.info(`ASG ${asgName} max capacity is ${asgMaxCapacity}`);
+	if (absoluteMinCapacity > asgMaxCapacity) {
+		throw new Error("absoluteMinCapacity can't be greater than asgMaxCapacity");
+	}
 
-	const desiredCapacity = Math.min(
-		totalMessagesInQueue,
-		asgMaxCapacity,
-		absoluteMinCapacity,
-	);
+	const minCapacity = Math.min(totalMessagesInQueue, asgMaxCapacity);
+
+	const desiredCapacity = Math.max(minCapacity, absoluteMinCapacity);
 
 	await setDesiredCapacity(asgClient, asgName, desiredCapacity);
 };
