@@ -30,11 +30,10 @@ const updateASGCapacity = async (
 	}
 	logger.info(`ASG ${asgName} max capacity is ${asgMaxCapacity}`);
 
-	const desiredCapacity = Math.min(
-		totalMessagesInQueue,
-		asgMaxCapacity,
-		absoluteMinCapacity,
-	);
+	const minCapacity = Math.min(totalMessagesInQueue, asgMaxCapacity);
+
+	const desiredCapacity =
+		minCapacity > absoluteMinCapacity ? minCapacity : absoluteMinCapacity;
 
 	await setDesiredCapacity(asgClient, asgName, desiredCapacity);
 };
