@@ -20,6 +20,7 @@ import {
 	sendMessage,
 	writeDynamoItem,
 	downloadObject,
+	getYoutubeEventItem,
 } from '@guardian/transcription-service-backend-common';
 import {
 	ClientConfig,
@@ -494,6 +495,32 @@ const getApp = async () => {
 			res.set('Cache-Control', 'no-cache');
 			const responseBody: SignedUrlResponseBody = { presignedS3Url, s3Key };
 			res.send(responseBody);
+		}),
+	]);
+
+	apiRouter.get('/youtube-status', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			if (config.app.youtubeBlocked) {
+				res.send({ status: 'ERROR' });
+				return;
+			}
+			const item = await getYoutubeEventItem(
+				dynamoClient,
+				config.app.eventsTableName,
+				config.app.youtubeEventId,
+			);
+			if (!item) {
+				res.status(500).send('A youtube event has not been recorded yet');
+				return;
+			}
+
+			if (item.status === 'SUCCESS') {
+				res.send({ status: 'LIVE' });
+				return;
+			}
+			res.send({ status: 'WARN' });
+			return;
 		}),
 	]);
 
