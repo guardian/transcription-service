@@ -1,6 +1,7 @@
 import { CloudWatchClient } from '@aws-sdk/client-cloudwatch';
 import { getCloudwatchClient, putMetricData } from './cloudwatch';
 import { StandardUnit } from '@aws-sdk/client-cloudwatch';
+import { Dimension } from '@aws-sdk/client-cloudwatch/dist-types/models/models_0';
 
 type Metric = {
 	name: string;
@@ -38,6 +39,12 @@ export const transcriptionRateMetric = (value: number): Metric => ({
 	value,
 });
 
+export const mediaDownloadJobMetric: Metric = {
+	name: `MediaDownloadJob`,
+	value: 1,
+	unit: 'Count',
+};
+
 export class MetricsService {
 	private readonly cloudwatchClient: CloudWatchClient;
 	private readonly stage: string;
@@ -49,7 +56,7 @@ export class MetricsService {
 		this.app = app;
 	}
 
-	async putMetric(metric: Metric) {
+	async putMetric(metric: Metric, extraDimensions: Dimension[] = []) {
 		await putMetricData(this.cloudwatchClient, {
 			Namespace: `TranscriptionService`,
 			MetricData: [
@@ -63,6 +70,7 @@ export class MetricsService {
 							Name: 'App',
 							Value: this.app,
 						},
+						...extraDimensions,
 					],
 					MetricName: metric.name,
 					Value: metric.value,

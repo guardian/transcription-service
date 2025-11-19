@@ -661,6 +661,19 @@ export class TranscriptionService extends GuStack {
 			topicName: `transcription-service-combined-task-topic-${this.stage}`,
 		});
 
+		const eventsTable = new Table(this, 'EventsTable', {
+			tableName: `${APP_NAME}-events-${this.stage}`,
+			partitionKey: {
+				name: 'id',
+				type: AttributeType.STRING,
+			},
+			readCapacity: 1,
+			writeCapacity: 1,
+		});
+
+		// Enable nightly backups (via https://github.com/guardian/aws-backup)
+		Tags.of(eventsTable).add('devx-backup-enabled', 'true');
+
 		makeMediaDownloadService(
 			this,
 			vpc,
@@ -675,6 +688,8 @@ export class TranscriptionService extends GuStack {
 			getParametersPolicy,
 			combinedTaskTopic,
 			giantRemoteIngestOutputSendPolicy,
+			putMetricDataPolicy,
+			eventsTable,
 		);
 
 		const transcriptTable = new Table(this, 'TranscriptTable', {
@@ -712,6 +727,7 @@ export class TranscriptionService extends GuStack {
 
 		transcriptTable.grantReadWriteData(outputHandlerLambda);
 		transcriptTable.grantReadWriteData(apiLambda);
+		eventsTable.grantReadWriteData(apiLambda);
 
 		// trigger output-handler lambda from queue
 		outputHandlerLambda.addEventSource(

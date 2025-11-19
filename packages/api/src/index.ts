@@ -18,8 +18,9 @@ import {
 	logger,
 	getS3Client,
 	sendMessage,
-	writeTranscriptionItem,
+	writeDynamoItem,
 	downloadObject,
+	getYoutubeEventItem,
 } from '@guardian/transcription-service-backend-common';
 import {
 	ClientConfig,
@@ -400,7 +401,7 @@ const getApp = async () => {
 			let exportStatuses: ExportStatuses = initializeExportStatuses(
 				exportRequest.data.items,
 			);
-			await writeTranscriptionItem(dynamoClient, config.app.tableName, {
+			await writeDynamoItem(dynamoClient, config.app.tableName, {
 				...getItemResult.item,
 				exportStatuses: exportStatuses,
 			});
@@ -434,7 +435,7 @@ const getApp = async () => {
 				}),
 			);
 
-			await writeTranscriptionItem(dynamoClient, config.app.tableName, {
+			await writeDynamoItem(dynamoClient, config.app.tableName, {
 				...getItemResult.item,
 				exportStatuses: exportStatuses,
 			});
@@ -459,7 +460,7 @@ const getApp = async () => {
 						message: msg,
 					};
 					exportStatuses = updateStatuses(mediaFailedStatus, exportStatuses);
-					await writeTranscriptionItem(dynamoClient, config.app.tableName, {
+					await writeDynamoItem(dynamoClient, config.app.tableName, {
 						...getItemResult.item,
 						exportStatuses: updateStatuses(mediaFailedStatus, exportStatuses),
 					});
@@ -494,6 +495,32 @@ const getApp = async () => {
 			res.set('Cache-Control', 'no-cache');
 			const responseBody: SignedUrlResponseBody = { presignedS3Url, s3Key };
 			res.send(responseBody);
+		}),
+	]);
+
+	apiRouter.get('/youtube-status', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			if (config.app.youtubeBlocked) {
+				res.send({ status: 'ERROR' });
+				return;
+			}
+			const item = await getYoutubeEventItem(
+				dynamoClient,
+				config.app.eventsTableName,
+				config.app.youtubeEventId,
+			);
+			if (!item) {
+				res.status(500).send('A youtube event has not been recorded yet');
+				return;
+			}
+
+			if (item.status === 'SUCCESS') {
+				res.send({ status: 'LIVE' });
+				return;
+			}
+			res.send({ status: 'WARN' });
+			return;
 		}),
 	]);
 

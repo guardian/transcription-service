@@ -29,6 +29,9 @@ export interface TranscriptionConfig {
 		mediaDownloadProxyPort: number;
 		mediaExportFunctionName: string;
 		useWhisperx: boolean;
+		eventsTableName: string;
+		youtubeEventId: string;
+		youtubeBlocked: boolean;
 	};
 	aws: {
 		region: string;
@@ -202,6 +205,15 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 	);
 	const useWhisperx = useWhisperxParam === 'true';
 
+	const eventsTableName = findParameter(
+		parameters,
+		paramPath,
+		'app/eventsTableName',
+	);
+
+	const youtubeBlocked =
+		findParameter(parameters, paramPath, 'app/youtubeBlocked') === 'true';
+
 	return {
 		auth: {
 			clientId: authClientId,
@@ -229,6 +241,9 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			mediaDownloadProxyPort: 1337,
 			mediaExportFunctionName,
 			useWhisperx,
+			eventsTableName,
+			youtubeEventId: 'media-download/youtube',
+			youtubeBlocked,
 		},
 		aws: {
 			region,

@@ -1,7 +1,11 @@
 import fs from 'node:fs';
 import { runSpawnCommand } from '@guardian/transcription-service-backend-common/src/process';
 import { logger } from '@guardian/transcription-service-backend-common';
-import { MediaMetadata } from '@guardian/transcription-service-common';
+import {
+	MediaDownloadFailureReason,
+	MediaMetadata,
+	YoutubeEventDynamoItem,
+} from '@guardian/transcription-service-common';
 
 type YtDlpSuccess = {
 	status: 'SUCCESS';
@@ -9,7 +13,7 @@ type YtDlpSuccess = {
 };
 
 type YtDlpFailure = {
-	errorType: 'INVALID_URL' | 'FAILURE';
+	errorType: MediaDownloadFailureReason;
 	status: 'FAILURE';
 };
 
@@ -73,6 +77,24 @@ export const startProxyTunnel = async (
 	}
 };
 
+// We store success/bot block youtube events to indicate the likelihood of future
+// youtube jobs succeeding
+export const getYoutubeEvent = (
+	url: string,
+	status: 'SUCCESS' | MediaDownloadFailureReason,
+	id: string,
+): YoutubeEventDynamoItem | undefined => {
+	const youtubeMatch = url.includes('youtube.com');
+	if (youtubeMatch && (status === 'SUCCESS' || status === 'BOT_BLOCKED')) {
+		return {
+			id,
+			eventTime: `${new Date().toISOString()}`,
+			status,
+		};
+	}
+	return undefined;
+};
+
 export const downloadMedia = async (
 	url: string,
 	workingDirectory: string,
@@ -107,13 +129,19 @@ export const downloadMedia = async (
 				url,
 			],
 			true,
+			false,
 		);
-		if (result.code !== 0) {
+		if (result.code && result.code !== 0) {
 			logger.error(
 				`yt-dlp failed with code ${result.code}, stderr: ${result.stderr}`,
 			);
 			if (result.stderr.includes('ERROR: Unsupported URL')) {
 				return { errorType: 'INVALID_URL', status: 'FAILURE' };
+			}
+			if (result.stderr.includes('LOGIN_REQUIRED') && url.includes('youtube')) {
+				return { errorType: 'BOT_BLOCKED', status: 'FAILURE' };
+			} else {
+				return { errorType: 'FAILURE', status: 'FAILURE' };
 			}
 		}
 

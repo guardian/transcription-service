@@ -9,7 +9,7 @@ import {
 } from '@guardian/transcription-service-backend-common';
 import {
 	getDynamoClient,
-	writeTranscriptionItem,
+	writeDynamoItem,
 } from '@guardian/transcription-service-backend-common/src/dynamodb';
 import { testMessage } from '../test/testMessage';
 import {
@@ -21,6 +21,7 @@ import {
 	transcriptionOutputIsMediaDownloadFailure,
 	MediaDownloadFailure,
 	ONE_WEEK_IN_SECONDS,
+	MediaDownloadFailureReason,
 } from '@guardian/transcription-service-common';
 import {
 	MetricsService,
@@ -60,15 +61,31 @@ const transcriptionFailureMessageBody = (
 	`;
 };
 
-const mediaDownloadFailureMessageBody = (url: string) => {
+const failureDescription = (failureReason: MediaDownloadFailureReason) => {
+	switch (failureReason) {
+		case 'INVALID_URL':
+			return `
+					<p>Unfortunately, the tool doesn't currently support downloading media from this URL. For a list of supported sites, see
+          <a href="https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md">here</a>.</p>
+					`;
+		case 'BOT_BLOCKED':
+			return `<p>Unfortunately, youtube blocked the download of this video. You will need to download the media manually
+				and then upload it using the 'File' upload option in the transcription tool.</p> `;
+		default:
+			return `<p>Unfortunately, an error occurred when trying to download the media from this URL for transcription.</p>`;
+	}
+};
+
+const mediaDownloadFailureMessageBody = (
+	url: string,
+	failureReason: MediaDownloadFailureReason,
+) => {
 	return `
 		<h1>Media download failed for ${url}</h1>
-		<p>You recently requested a transcription of the media at this url ${url}. Unfortunately, the transcription service
-        was unable to download the media for transcription.</p> 
-        <p>This might be because the url is for an unsupported website. For a list of supported sites, see 
-        <a href="https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md">here</a>.</p>
-        <p>Please contact digital.investigations@theguardian.com for further assistance.</p>
-        `;
+		<p>You recently requested a transcription of the media at this url ${url}.
+		${failureDescription(failureReason)}
+		<p>Please contact digital.investigations@theguardian.com for further assistance.</p>
+		`;
 };
 
 const handleTranscriptionSuccess = async (
@@ -89,7 +106,7 @@ const handleTranscriptionSuccess = async (
 	};
 
 	try {
-		await writeTranscriptionItem(
+		await writeDynamoItem(
 			getDynamoClient(config.aws.region, config.aws.localstackEndpoint),
 			config.app.tableName,
 			dynamoItem,
@@ -180,7 +197,7 @@ const handleMediaDownloadFailure = async (
 			config.app.emailNotificationFromAddress,
 			failure.userEmail,
 			`Media download failed for ${failure.url}`,
-			mediaDownloadFailureMessageBody(failure.url),
+			mediaDownloadFailureMessageBody(failure.url, failure.failureReason),
 		);
 
 		logger.info(

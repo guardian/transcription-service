@@ -1,5 +1,5 @@
 import { addHttpsProtocol, authFetch } from '@/helpers';
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
 	SignedUrlResponseBody,
 	uploadToS3,
@@ -8,6 +8,7 @@ import {
 	MediaSourceType,
 	InputLanguageCode,
 	languageCodeToLanguageWithAuto,
+	YoutubeStatus,
 } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
 import {
@@ -23,7 +24,7 @@ import {
 import { MediaUrlInput, RequestStatus } from '@/types';
 import { InfoMessage } from '@/components/InfoMessage';
 import { SubmitResult } from '@/components/SubmitResult';
-import { PlusIcon } from '@heroicons/react/16/solid';
+import { ExclamationTriangleIcon, PlusIcon } from '@heroicons/react/16/solid';
 
 const getStatusColor = (input: MediaUrlInput) => {
 	switch (input.status) {
@@ -158,6 +159,31 @@ const checkUrlValid = (url_input: string): MediaUrlInput => {
 	}
 };
 
+const renderYoutubeStatus = (status?: YoutubeStatus) => {
+	if (!status || status === 'LIVE') {
+		return null;
+	} else
+		return (
+			<div className="mb-4">
+				{status === 'WARN' && (
+					<Alert color="warning" icon={ExclamationTriangleIcon}>
+						Youtube recently blocked a request from the transcription service.
+						There is a high chance youtube urls may fail, in which case you'll
+						need to manually download the media from youtube rather than using
+						this service. Other sites are unaffected.
+					</Alert>
+				)}
+				{status === 'ERROR' && (
+					<Alert color="failure" icon={ExclamationTriangleIcon}>
+						Youtube downloads are currently not working. You will need to
+						manually download the media from youtube and use the file upload
+						option rather than using this service. Other sites are unaffected.
+					</Alert>
+				)}
+			</div>
+		);
+};
+
 export const UploadForm = () => {
 	const [status, setStatus] = useState<RequestStatus>(RequestStatus.Ready);
 	const [files, setFiles] = useState<FileList | null>(null);
@@ -178,6 +204,24 @@ export const UploadForm = () => {
 		{ status: 'empty', value: '' },
 	]);
 	const { token } = useContext(AuthContext);
+	const [youtubeStatus, setYoutubeStatus] = useState<YoutubeStatus | undefined>(
+		undefined,
+	);
+
+	useEffect(() => {
+		if (token) {
+			authFetch('/api/youtube-status', token).then((response) => {
+				if (response.status === 200) {
+					response.json().then((json) => {
+						const parsed = YoutubeStatus.safeParse(json.status);
+						if (parsed.success) {
+							setYoutubeStatus(parsed.data);
+						}
+					});
+				}
+			});
+		}
+	}, [youtubeStatus]);
 
 	const reset = () => {
 		setStatus(RequestStatus.Ready);
@@ -340,7 +384,7 @@ export const UploadForm = () => {
 				{mediaSource === 'url' && (
 					<>
 						<div className="mb-4"></div>
-
+						{renderYoutubeStatus(youtubeStatus)}
 						<div className="mb-4">
 							<div className={'mb-1'}>
 								<Label

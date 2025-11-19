@@ -6,7 +6,10 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 
 import { logger } from '@guardian/transcription-service-backend-common';
-import { TranscriptionDynamoItem } from '@guardian/transcription-service-common';
+import {
+	TranscriptionDynamoItem,
+	YoutubeEventDynamoItem,
+} from '@guardian/transcription-service-common';
 
 export const getDynamoClient = (
 	region: string,
@@ -24,10 +27,10 @@ export const getDynamoClient = (
 	return DynamoDBDocumentClient.from(client);
 };
 
-export const writeTranscriptionItem = async (
+export const writeDynamoItem = async (
 	client: DynamoDBDocumentClient,
 	tableName: string,
-	item: TranscriptionDynamoItem,
+	item: TranscriptionDynamoItem | YoutubeEventDynamoItem,
 ) => {
 	const command = new PutCommand({
 		TableName: tableName,
@@ -62,6 +65,24 @@ const getItem = async (
 		logger.error(`Failed to get item ${itemId} from dynamodb`, error);
 		return undefined;
 	}
+};
+
+export const getYoutubeEventItem = async (
+	client: DynamoDBDocumentClient,
+	tableName: string,
+	itemId: string,
+): Promise<YoutubeEventDynamoItem | undefined> => {
+	const item = await getItem(client, tableName, itemId);
+	if (!item) {
+		return undefined;
+	}
+	const parsedItem = YoutubeEventDynamoItem.safeParse(item);
+	if (!parsedItem.success) {
+		const msg = `Failed to parse Youtube event item ${itemId} from dynamodb. Error: ${parsedItem.error.message}`;
+		logger.error(msg);
+		return undefined;
+	}
+	return parsedItem.data;
 };
 
 export type OwnershipCheck = {
