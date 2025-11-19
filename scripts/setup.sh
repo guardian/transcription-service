@@ -26,7 +26,7 @@ docker-compose up -d
 export AWS_REGION=eu-west-1
 APP_NAME="transcription-service"
 
-#$SCRIPT_PATH/create-local-queues.sh
+$SCRIPT_PATH/create-local-queues.sh
 
 DYNAMODB_ARN=$(aws --endpoint-url=http://localhost:4566 dynamodb create-table \
                                          --table-name ${APP_NAME}-DEV \
