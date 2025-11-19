@@ -71,7 +71,9 @@ const failureDescription = (failureReason: MediaDownloadFailureReason) => {
 					`;
 		case 'BOT_BLOCKED':
 			return `<p>Unfortunately, youtube blocked the download of this video. You will need to download the media manually
-				and then upload it using the 'File' upload option in the transcription tool.</p> `;
+				and then upload it using the 'File' upload option in the transcription tool.
+				 <a href="https://downloadyoutube.app/" target="_blank">This website</a> should help you download the file,
+				or search google for 'youtube video download'.</p> `;
 		default:
 			return `<p>Unfortunately, an error occurred when trying to download the media from this URL for transcription.</p>`;
 	}
