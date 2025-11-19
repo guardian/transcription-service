@@ -141,7 +141,6 @@ export const downloadMedia = async (
 			if (result.stderr.includes('LOGIN_REQUIRED') && url.includes('youtube')) {
 				return { errorType: 'BOT_BLOCKED', status: 'FAILURE' };
 			} else {
-				logger.info(`stuff ${url} ${result.stderr}`);
 				return { errorType: 'FAILURE', status: 'FAILURE' };
 			}
 		}
