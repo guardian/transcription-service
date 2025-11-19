@@ -170,14 +170,24 @@ const renderYoutubeStatus = (status?: YoutubeStatus) => {
 						Youtube recently blocked a request from the transcription service.
 						There is a high chance youtube urls may fail, in which case you'll
 						need to manually download the media from youtube rather than using
-						this service. Other sites are unaffected.
+						this service. Other sites are unaffected.{' '}
+						<a href="https://downloadyoutube.app/" target="_blank">
+							This website
+						</a>{' '}
+						should help you download the file, or search google for 'youtube
+						video download'.
 					</Alert>
 				)}
 				{status === 'ERROR' && (
 					<Alert color="failure" icon={ExclamationTriangleIcon}>
 						Youtube downloads are currently not working. You will need to
 						manually download the media from youtube and use the file upload
-						option rather than using this service. Other sites are unaffected.
+						option rather than using this service. Other sites are unaffected.{' '}
+						<a href="https://downloadyoutube.app/" target="_blank">
+							This website
+						</a>{' '}
+						should help you download the file, or search google for 'youtube
+						video download'.
 					</Alert>
 				)}
 			</div>
