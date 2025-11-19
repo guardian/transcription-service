@@ -39,38 +39,46 @@ const extractInfoJson = (
 	};
 };
 
-export const startProxyTunnel = async (
+export type ProxyData = {
+	ip: string;
+	port: number;
+};
+
+export const startProxyTunnels = async (
 	key: string,
-	ip: string,
-	port: number,
+	proxyData: ProxyData[],
 	workingDirectory: string,
-): Promise<string> => {
+): Promise<string[]> => {
 	try {
 		fs.writeFileSync(`${workingDirectory}/media_download`, key + '\n', {
 			mode: 0o600,
 		});
-		const result = await runSpawnCommand(
-			'startProxyTunnel',
-			'ssh',
-			[
-				'-o',
-				'IdentitiesOnly=yes',
-				'-o',
-				'StrictHostKeyChecking=no',
-				'-D',
-				port.toString(),
-				// '-q',
-				'-C',
-				'-N',
-				'-f',
-				'-i',
-				`${workingDirectory}/media_download`,
-				`media_download@${ip}`,
-			],
-			true,
-		);
-		console.log('Proxy result code: ', result.code);
-		return `socks5h://localhost:${port}`;
+		const startedProxies: string[] = [];
+		for (const proxy of proxyData) {
+			const result = await runSpawnCommand(
+				'startProxyTunnel',
+				'ssh',
+				[
+					'-o',
+					'IdentitiesOnly=yes',
+					'-o',
+					'StrictHostKeyChecking=no',
+					'-D',
+					proxy.port.toString(),
+					// '-q',
+					'-C',
+					'-N',
+					'-f',
+					'-i',
+					`${workingDirectory}/media_download`,
+					`media_download@${proxy.ip}`,
+				],
+				true,
+			);
+			console.log(`Proxy result code for ${proxy.ip}: `, result.code);
+			startedProxies.push(`socks5h://localhost:${proxy.port}`);
+		}
+		return startedProxies;
 	} catch (error) {
 		logger.error('Failed to start proxy tunnel', error);
 		throw error;
@@ -99,9 +107,11 @@ export const downloadMedia = async (
 	url: string,
 	workingDirectory: string,
 	id: string,
-	proxyUrl?: string,
+	proxyUrls?: string[],
 ): Promise<YtDlpSuccess | YtDlpFailure> => {
-	const proxyParams = proxyUrl ? ['--proxy', proxyUrl] : [];
+	const nextProxy =
+		proxyUrls && proxyUrls.length > 0 ? proxyUrls[0] : undefined;
+	const proxyParams = nextProxy ? ['--proxy', nextProxy] : [];
 	try {
 		const filepathLocation = `${workingDirectory}/${id}.txt`;
 		// yt-dlp --print-to-file appends to the file, so wipe it first
@@ -139,6 +149,9 @@ export const downloadMedia = async (
 				return { errorType: 'INVALID_URL', status: 'FAILURE' };
 			}
 			if (result.stderr.includes('LOGIN_REQUIRED') && url.includes('youtube')) {
+				if (proxyUrls && proxyUrls.length > 1) {
+					return downloadMedia(url, workingDirectory, id, proxyUrls?.slice(1));
+				}
 				return { errorType: 'BOT_BLOCKED', status: 'FAILURE' };
 			} else {
 				return { errorType: 'FAILURE', status: 'FAILURE' };
