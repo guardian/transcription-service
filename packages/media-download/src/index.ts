@@ -19,7 +19,8 @@ import {
 	downloadMedia,
 	getYoutubeEvent,
 	isFailure,
-	startProxyTunnel,
+	ProxyData,
+	startProxyTunnels,
 } from './yt-dlp';
 import {
 	MediaDownloadFailureReason,
@@ -216,11 +217,17 @@ const main = async () => {
 	const workingDirectory =
 		config.app.stage === 'DEV' ? '/tmp' : ECS_MEDIA_DOWNLOAD_WORKING_DIRECTORY;
 
-	const proxyUrl = useProxy
-		? await startProxyTunnel(
+	const proxyData: ProxyData[] = config.app.mediaDownloadProxyIpAddresses.map(
+		(ip, index) => ({
+			ip: ip,
+			port: config.app.mediaDownloadProxyPort + index,
+		}),
+	);
+
+	const proxyUrls = useProxy
+		? await startProxyTunnels(
 				await config.app.mediaDownloadProxySSHKey(),
-				config.app.mediaDownloadProxyIpAddress,
-				config.app.mediaDownloadProxyPort,
+				proxyData,
 				workingDirectory,
 			)
 		: undefined;
@@ -229,7 +236,7 @@ const main = async () => {
 		job.url,
 		workingDirectory,
 		job.id,
-		proxyUrl,
+		proxyUrls,
 	);
 
 	const successOrErrorType = isFailure(ytDlpResult)

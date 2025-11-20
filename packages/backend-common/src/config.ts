@@ -25,7 +25,7 @@ export interface TranscriptionConfig {
 		destinationQueueUrls: DestinationQueueUrls;
 		tableName: string;
 		mediaDownloadProxySSHKey: () => Promise<string>;
-		mediaDownloadProxyIpAddress: string;
+		mediaDownloadProxyIpAddresses: string[];
 		mediaDownloadProxyPort: number;
 		mediaExportFunctionName: string;
 		useWhisperx: boolean;
@@ -192,11 +192,14 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 	const mediaDownloadProxySSHKey = () =>
 		getSecret(mediaDownloadProxySSHKeySecretArn, secretsManagerClient);
 
-	const mediaDownloadProxyIpAddress = findParameter(
+	const mediaDownloadProxyIpAddressParam = findParameter(
 		parameters,
 		paramPath,
 		'media-download/proxy-ip-address',
 	);
+	const mediaDownloadProxyIpAddresses = mediaDownloadProxyIpAddressParam
+		.split(',')
+		.map((ip) => ip.trim());
 
 	const useWhisperxParam = findParameter(
 		parameters,
@@ -237,7 +240,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			tableName,
 			transcriptionOutputBucket,
 			mediaDownloadProxySSHKey,
-			mediaDownloadProxyIpAddress,
+			mediaDownloadProxyIpAddresses,
 			mediaDownloadProxyPort: 1337,
 			mediaExportFunctionName,
 			useWhisperx,
