@@ -442,7 +442,7 @@ const ExportForm = () => {
 					</button>
 					,{' '}
 					<button
-						className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+						className="font-medium text-cyan-600 hover:underline dark:text-cyan-500"
 						onClick={() =>
 							handleTranscriptDownload(
 								`/api/export/transcript?id=${transcriptId}&format=srt`,
@@ -456,7 +456,7 @@ const ExportForm = () => {
 						<>
 							,
 							<a
-								className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+								className="font-medium text-cyan-600 hover:underline dark:text-cyan-500"
 								href={sourceMediaDownloadUrl}
 							>
 								Input media
@@ -471,6 +471,16 @@ const ExportForm = () => {
 				{downloadStatus && (
 					<p className="font-light italic">{downloadStatus}</p>
 				)}
+				<p className="font-light pt-2">
+					To play back your transcript interactively, click{' '}
+					<a
+						href={`/viewer?transcriptId=${transcriptId}`}
+						className="font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+					>
+						here
+					</a>
+					.
+				</p>
 			</div>
 		</>
 	);
