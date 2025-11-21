@@ -38,9 +38,11 @@ const successMessageBody = (
 	sourceMediaDownloadUrl: string,
 ): string => {
 	const exportUrl = `${rootUrl}/export?transcriptId=${transcriptId}`;
+	const viewerUrl = `${rootUrl}/viewer?transcriptId=${transcriptId}`;
 	return `
 		<h1>${isTranslation ? 'English translation ' : 'Transcription'} for ${originalFilename} ready</h1>
 		<p>Click <a href="${exportUrl}">here</a> to download or export transcript/input media to Google drive.</p>
+		<p>Click <a href="${viewerUrl}">here</a> to view and playback your transcript.</p>
 		<p>Click <a href="${sourceMediaDownloadUrl}">here</a> to download the input media.</p>
 		<p><b>Note:</b> transcripts and input media will be deleted from this service after 7 days. Export your data now if you want to keep it.</p>
 	`;

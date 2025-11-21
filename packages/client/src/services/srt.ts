@@ -5,6 +5,19 @@ export type TranscriptSegment = {
 	text: string;
 };
 
+const oneHourInSeconds = 3600;
+const oneMinuteInSeconds = 60;
+const oneSecondMilliseconds = 1000;
+
+const timeSegmentToSeconds = (timeSegments: string[]): number => {
+	return (
+		parseInt(timeSegments[0]!) * oneHourInSeconds +
+		parseInt(timeSegments[1]!) * oneMinuteInSeconds +
+		parseInt(timeSegments[2]!) +
+		parseInt(timeSegments[3]!) / oneSecondMilliseconds
+	);
+};
+
 export const parseSRT = (srtText: string): TranscriptSegment[] => {
 	const segments: TranscriptSegment[] = [];
 	const blocks = srtText.trim().split('\n\n');
@@ -21,17 +34,9 @@ export const parseSRT = (srtText: string): TranscriptSegment[] => {
 
 		if (!timeMatch || timeMatch.length < 9) continue;
 
-		const startTime =
-			parseInt(timeMatch[1]!) * 3600 +
-			parseInt(timeMatch[2]!) * 60 +
-			parseInt(timeMatch[3]!) +
-			parseInt(timeMatch[4]!) / 1000;
+		const startTime = timeSegmentToSeconds(timeMatch.slice(1, 5));
 
-		const endTime =
-			parseInt(timeMatch[5]!) * 3600 +
-			parseInt(timeMatch[6]!) * 60 +
-			parseInt(timeMatch[7]!) +
-			parseInt(timeMatch[8]!) / 1000;
+		const endTime = timeSegmentToSeconds(timeMatch.slice(5, 9));
 
 		const text = lines.slice(2).join('\n');
 
@@ -41,10 +46,11 @@ export const parseSRT = (srtText: string): TranscriptSegment[] => {
 	return segments;
 };
 
+// TODO: Replace with library if we introduce any other time formatting
 export const formatTime = (seconds: number): string => {
-	const hours = Math.floor(seconds / 3600);
-	const minutes = Math.floor((seconds % 3600) / 60);
-	const secs = Math.floor(seconds % 60);
+	const hours = Math.floor(seconds / oneHourInSeconds);
+	const minutes = Math.floor((seconds % oneHourInSeconds) / oneMinuteInSeconds);
+	const secs = Math.floor(seconds % oneMinuteInSeconds);
 
 	if (hours > 0) {
 		return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
