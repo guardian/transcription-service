@@ -35,13 +35,14 @@ const successMessageBody = (
 	originalFilename: string,
 	rootUrl: string,
 	isTranslation: boolean,
-	sourceMediaDownloadUrl: string,
 ): string => {
 	const exportUrl = `${rootUrl}/export?transcriptId=${transcriptId}`;
+	const viewerUrl = `${rootUrl}/viewer?transcriptId=${transcriptId}`;
 	return `
 		<h1>${isTranslation ? 'English translation ' : 'Transcription'} for ${originalFilename} ready</h1>
 		<p>Click <a href="${exportUrl}">here</a> to download or export transcript/input media to Google drive.</p>
-		<p>Click <a href="${sourceMediaDownloadUrl}">here</a> to download the input media.</p>
+		<p>Click <a href="${viewerUrl}">here</a> to view and play back your transcript.</p>
+		<p>You may wish to open the playback view and the Google Document side by side to review the transcript and make corrections.</p>
 		<p><b>Note:</b> transcripts and input media will be deleted from this service after 7 days. Export your data now if you want to keep it.</p>
 	`;
 };
@@ -93,7 +94,6 @@ const handleTranscriptionSuccess = async (
 	transcriptionOutput: TranscriptionOutputSuccess,
 	sesClient: SESClient,
 	metrics: MetricsService,
-	sourceMediaDownloadUrl: string,
 ) => {
 	const dynamoItem: TranscriptionDynamoItem = {
 		id: transcriptionOutput.id,
@@ -122,7 +122,6 @@ const handleTranscriptionSuccess = async (
 				transcriptionOutput.originalFilename,
 				config.app.rootUrl,
 				transcriptionOutput.isTranslation,
-				sourceMediaDownloadUrl,
 			),
 		);
 
@@ -236,20 +235,12 @@ const processMessage = async (event: unknown) => {
 	for (const record of parsedEvent.data.Records) {
 		const transcriptionOutput = record.body;
 		if (transcriptionOutputIsSuccess(transcriptionOutput)) {
-			const sourceMediaDownloadUrl = await getSignedDownloadUrl(
-				config.aws.region,
-				config.app.sourceMediaBucket,
-				transcriptionOutput.id,
-				ONE_WEEK_IN_SECONDS,
-				transcriptionOutput.originalFilename,
-			);
 			logger.info(`handling transcription success`);
 			await handleTranscriptionSuccess(
 				config,
 				transcriptionOutput,
 				sesClient,
 				metrics,
-				sourceMediaDownloadUrl,
 			);
 		} else if (transcriptionOutputIsTranscriptionFailure(transcriptionOutput)) {
 			logger.info(
