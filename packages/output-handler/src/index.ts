@@ -41,7 +41,8 @@ const successMessageBody = (
 	return `
 		<h1>${isTranslation ? 'English translation ' : 'Transcription'} for ${originalFilename} ready</h1>
 		<p>Click <a href="${exportUrl}">here</a> to download or export transcript/input media to Google drive.</p>
-		<p>Click <a href="${viewerUrl}">here</a> to view and playback your transcript.</p>
+		<p>Click <a href="${viewerUrl}">here</a> to view and play back your transcript.</p>
+		<p>You may wish to open the playback view and the Google Document side by side to review the transcript and make corrections.</p>
 		<p><b>Note:</b> transcripts and input media will be deleted from this service after 7 days. Export your data now if you want to keep it.</p>
 	`;
 };
