@@ -9,23 +9,39 @@ import { InfoMessage } from '@/components/InfoMessage';
 import { RequestStatus } from '@/types';
 import { Alert } from 'flowbite-react';
 
+const errorInfo = (message: string) => {
+	return <InfoMessage message={message} status={RequestStatus.Failed} />;
+};
+
 const errorCheck = (
 	token: string | undefined,
 	transcriptId: string | null,
 	error: string | null,
 	mediaUrl: string | null,
-): string | null => {
+	loading: boolean,
+) => {
 	if (!token) {
-		return 'You must be logged in to view transcripts';
+		return errorInfo('You must be logged in to view transcripts');
 	}
 	if (!transcriptId) {
-		return 'No transcript ID provided. Please provide a transcriptId in the URL.';
+		return errorInfo(
+			'No transcript ID provided. Please provide a transcriptId in the URL.',
+		);
+	}
+	if (loading) {
+		return (
+			<div className="flex justify-center items-center py-12">
+				<div className="text-lg">Loading transcript...</div>
+			</div>
+		);
 	}
 	if (error) {
-		return `Error: ${error}`;
+		return errorInfo(`Error: ${error}`);
 	}
 	if (!mediaUrl) {
-		return 'Failed to fetch source media, cannot show viewer - please export your transcript instead';
+		return errorInfo(
+			'Failed to fetch source media, cannot show viewer - please export your transcript instead',
+		);
 	}
 	return null;
 };
@@ -49,7 +65,6 @@ const ViewerPage = () => {
 
 		const fetchData = async () => {
 			try {
-				// Fetch transcript data
 				const transcriptResponse = await authFetch(
 					`/api/export/transcript?id=${transcriptId}&format=text`,
 					token,
@@ -67,7 +82,6 @@ const ViewerPage = () => {
 				}
 				setTranscriptData(parsedTranscript.data);
 
-				// Fetch media URL
 				const mediaResponse = await authFetch(
 					`/api/export/source-media-download-url?id=${transcriptId}`,
 					token,
@@ -92,17 +106,15 @@ const ViewerPage = () => {
 		fetchData();
 	}, [token, transcriptId]);
 
-	const errorMessage = errorCheck(token, transcriptId, error, mediaUrl);
+	const errorMessage = errorCheck(
+		token,
+		transcriptId,
+		error,
+		mediaUrl,
+		loading,
+	);
 	if (errorMessage) {
-		return <InfoMessage message={errorMessage} status={RequestStatus.Failed} />;
-	}
-
-	if (loading) {
-		return (
-			<div className="flex justify-center items-center py-12">
-				<div className="text-lg">Loading transcript...</div>
-			</div>
-		);
+		return errorMessage;
 	}
 
 	if (!transcriptData) {
