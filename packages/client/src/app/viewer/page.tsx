@@ -9,6 +9,23 @@ import { InfoMessage } from '@/components/InfoMessage';
 import { RequestStatus } from '@/types';
 import { Alert } from 'flowbite-react';
 
+const errorCheck = (
+	token: string | undefined,
+	transcriptId: string | null,
+	error: string | null,
+): string | null => {
+	if (!token) {
+		return 'You must be logged in to view transcripts';
+	}
+	if (!transcriptId) {
+		return 'No transcript ID provided. Please provide a transcriptId in the URL.';
+	}
+	if (error) {
+		return `Error: ${error}`;
+	}
+	return null;
+};
+
 const ViewerPage = () => {
 	const { token } = useContext(AuthContext);
 	const searchParams = useSearchParams();
@@ -33,7 +50,6 @@ const ViewerPage = () => {
 					`/api/export/transcript?id=${transcriptId}&format=text`,
 					token,
 				);
-
 				if (!transcriptResponse.ok) {
 					throw new Error('Failed to fetch transcript');
 				}
@@ -45,7 +61,6 @@ const ViewerPage = () => {
 				if (!parsedTranscript.success) {
 					throw new Error('Invalid transcript data');
 				}
-
 				setTranscriptData(parsedTranscript.data);
 
 				// Fetch media URL
@@ -73,22 +88,9 @@ const ViewerPage = () => {
 		fetchData();
 	}, [token, transcriptId]);
 
-	if (!token) {
-		return (
-			<InfoMessage
-				message="You must be logged in to view transcripts"
-				status={RequestStatus.Failed}
-			/>
-		);
-	}
-
-	if (!transcriptId) {
-		return (
-			<InfoMessage
-				message="No transcript ID provided. Please provide a transcriptId in the URL."
-				status={RequestStatus.Failed}
-			/>
-		);
+	const errorMessage = errorCheck(token, transcriptId, error);
+	if (errorMessage) {
+		return <InfoMessage message={errorMessage} status={RequestStatus.Failed} />;
 	}
 
 	if (loading) {
@@ -96,12 +98,6 @@ const ViewerPage = () => {
 			<div className="flex justify-center items-center py-12">
 				<div className="text-lg">Loading transcript...</div>
 			</div>
-		);
-	}
-
-	if (error) {
-		return (
-			<InfoMessage message={`Error: ${error}`} status={RequestStatus.Failed} />
 		);
 	}
 

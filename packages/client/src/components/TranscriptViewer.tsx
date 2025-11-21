@@ -8,6 +8,12 @@ type TranscriptViewerProps = {
 	filename: string;
 };
 
+const isAudioFile = (filename: string): boolean => {
+	const extension = filename.split('.').pop()?.toLowerCase();
+	const audioExtensions = ['mp3', 'wav', 'ogg', 'aac', 'm4a', 'flac'];
+	return extension ? audioExtensions.includes(extension) : false;
+};
+
 export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
 	transcript,
 	mediaUrl,
@@ -70,16 +76,6 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
 		}
 	};
 
-	const getFileExtension = (filename: string): string => {
-		const ext = filename.split('.').pop()?.toLowerCase();
-		return ext || '';
-	};
-
-	const isAudioFile = (filename: string): boolean => {
-		const audioExtensions = ['mp3', 'wav', 'ogg', 'aac', 'm4a', 'flac'];
-		return audioExtensions.includes(getFileExtension(filename));
-	};
-
 	return (
 		<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 			{/* Media Player */}
@@ -124,10 +120,10 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
 					</div>
 				)}
 
-				{/* Plain text transcript for reference */}
+				{/* Plain text transcript*/}
 				<div className="bg-gray-50 rounded-lg p-4">
 					<h3 className="font-semibold text-gray-900 mb-2">
-						Full Transcript (Text)
+						Full Transcript Text
 					</h3>
 					<div className="max-h-96 overflow-y-auto">
 						<p className="text-sm text-gray-700 whitespace-pre-wrap">
