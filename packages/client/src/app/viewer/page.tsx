@@ -13,6 +13,7 @@ const errorCheck = (
 	token: string | undefined,
 	transcriptId: string | null,
 	error: string | null,
+	mediaUrl: string | null,
 ): string | null => {
 	if (!token) {
 		return 'You must be logged in to view transcripts';
@@ -22,6 +23,9 @@ const errorCheck = (
 	}
 	if (error) {
 		return `Error: ${error}`;
+	}
+	if (!mediaUrl) {
+		return 'Failed to fetch source media, cannot show viewer - please export your transcript instead';
 	}
 	return null;
 };
@@ -88,7 +92,7 @@ const ViewerPage = () => {
 		fetchData();
 	}, [token, transcriptId]);
 
-	const errorMessage = errorCheck(token, transcriptId, error);
+	const errorMessage = errorCheck(token, transcriptId, error, mediaUrl);
 	if (errorMessage) {
 		return <InfoMessage message={errorMessage} status={RequestStatus.Failed} />;
 	}
@@ -129,12 +133,6 @@ const ViewerPage = () => {
 				</a>
 				.
 			</Alert>
-
-			{!mediaUrl && (
-				<Alert color="warning" className="font-light">
-					Source media is not available. Only the transcript text will be shown.
-				</Alert>
-			)}
 
 			<TranscriptViewer
 				transcript={transcriptData.transcript}
