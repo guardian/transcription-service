@@ -26,6 +26,7 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
 	);
 	const [segments, setSegments] = useState<TranscriptSegment[]>([]);
 	const activeSegmentRef = useRef<HTMLDivElement>(null);
+	const transcriptContainerRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		if (transcript.transcripts.srt) {
@@ -60,11 +61,25 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
 		);
 		setActiveSegmentIndex(activeIndex !== -1 ? activeIndex : null);
 
-		// Auto-scroll to active segment
-		if (activeSegmentRef.current) {
-			activeSegmentRef.current.scrollIntoView({
+		// Auto-scroll to active segment within the transcript container only
+		if (
+			activeSegmentRef.current &&
+			transcriptContainerRef.current &&
+			activeIndex !== -1
+		) {
+			const container = transcriptContainerRef.current;
+			const segment = activeSegmentRef.current;
+
+			// Calculate the position to scroll to (center the segment in the container)
+			const containerHeight = container.clientHeight;
+			const segmentTop = segment.offsetTop;
+			const segmentHeight = segment.clientHeight;
+			const scrollPosition =
+				segmentTop - containerHeight / 2 + segmentHeight / 2;
+
+			container.scrollTo({
+				top: scrollPosition,
 				behavior: 'smooth',
-				block: 'center',
 			});
 		}
 	}, [currentTime, segments]);
@@ -126,7 +141,10 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
 				<h3 className="font-semibold text-gray-900 mb-3">
 					Interactive Transcript
 				</h3>
-				<div className="bg-white border border-gray-200 rounded-lg max-h-[600px] overflow-y-auto">
+				<div
+					ref={transcriptContainerRef}
+					className="bg-white border border-gray-200 rounded-lg max-h-[600px] overflow-y-auto"
+				>
 					{segments.length > 0 ? (
 						<div className="divide-y divide-gray-100">
 							{segments.map((segment, index) => (
