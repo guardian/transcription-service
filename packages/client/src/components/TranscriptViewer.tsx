@@ -78,8 +78,8 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
 
 	return (
 		<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-			{/* Media Player */}
-			<div className="space-y-4">
+			{/* Media Player - Order 1 on mobile, 1 on desktop */}
+			<div className="order-1">
 				{mediaUrl ? (
 					<div className="bg-black rounded-lg overflow-hidden">
 						{isAudioFile(filename) ? (
@@ -119,22 +119,10 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
 						</div>
 					</div>
 				)}
-
-				{/* Plain text transcript*/}
-				<div className="bg-gray-50 rounded-lg p-4">
-					<h3 className="font-semibold text-gray-900 mb-2">
-						Full Transcript Text
-					</h3>
-					<div className="max-h-96 overflow-y-auto">
-						<p className="text-sm text-gray-700 whitespace-pre-wrap">
-							{transcript.transcripts.text}
-						</p>
-					</div>
-				</div>
 			</div>
 
-			{/* Transcript with timestamps */}
-			<div>
+			{/* Interactive Transcript - Order 2 on mobile, 2 on desktop */}
+			<div className="order-2">
 				<h3 className="font-semibold text-gray-900 mb-3">
 					Interactive Transcript
 				</h3>
@@ -183,6 +171,20 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
 							</p>
 						</div>
 					)}
+				</div>
+			</div>
+
+			{/* Plain text transcript - Order 3 on mobile, spans full width */}
+			<div className="order-3 lg:col-span-2">
+				<div className="bg-gray-50 rounded-lg p-4">
+					<h3 className="font-semibold text-gray-900 mb-2">
+						Full Transcript Text
+					</h3>
+					<div className="max-h-96 overflow-y-auto">
+						<p className="text-sm text-gray-700 whitespace-pre-wrap">
+							{transcript.transcripts.text}
+						</p>
+					</div>
 				</div>
 			</div>
 		</div>
