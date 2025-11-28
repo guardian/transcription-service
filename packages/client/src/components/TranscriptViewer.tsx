@@ -51,7 +51,6 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
 				}
 			};
 		}
-		return undefined;
 	}, [mediaUrl]);
 
 	useEffect(() => {
