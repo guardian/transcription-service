@@ -9,6 +9,7 @@ import {
 	InputLanguageCode,
 	languageCodeToLanguageWithAuto,
 	YoutubeStatus,
+	ABOUT_THIS_TOOL_YOUTUBE,
 } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
 import {
@@ -160,8 +161,6 @@ const checkUrlValid = (url_input: string): MediaUrlInput => {
 };
 
 const renderYoutubeStatus = (status?: YoutubeStatus) => {
-	const aboutThisToolDoc =
-		'https://docs.google.com/document/d/1e224Fe5tJJNeLBNvYLVJ4FWd_O-1nwrJcqKyEXI03lA';
 	if (!status || status === 'LIVE') {
 		return null;
 	} else
@@ -172,7 +171,7 @@ const renderYoutubeStatus = (status?: YoutubeStatus) => {
 						YouTube is currently blocking the transcription tool. The block is
 						temporary but can last several days. You will need to manually
 						download the media from youtube (guide{' '}
-						<a href={aboutThisToolDoc} target="_blank">
+						<a href={ABOUT_THIS_TOOL_YOUTUBE} target="_blank">
 							here
 						</a>
 						) and use the file upload option rather than using this service.
@@ -184,7 +183,7 @@ const renderYoutubeStatus = (status?: YoutubeStatus) => {
 						YouTube recently blocked a request from the transcription service.
 						If your download fails then we recommend downloading the file
 						manually following the instructions{' '}
-						<a href={aboutThisToolDoc} target="_blank">
+						<a href={ABOUT_THIS_TOOL_YOUTUBE} target="_blank">
 							here
 						</a>{' '}
 						before uploading to the transcription service. Other sites are
