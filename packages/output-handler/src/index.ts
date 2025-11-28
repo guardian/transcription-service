@@ -70,10 +70,9 @@ const failureDescription = (failureReason: MediaDownloadFailureReason) => {
           <a href="https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md">here</a>.</p>
 					`;
 		case 'BOT_BLOCKED':
-			return `<p>Unfortunately, youtube blocked the download of this video. You will need to download the media manually
-				and then upload it using the 'File' upload option in the transcription tool.
-				 <a href="https://downloadyoutube.app/" target="_blank">This website</a> should help you download the file,
-				or search google for 'youtube video download'.</p> `;
+			return `<p>Unfortunately, YouTube blocked the download of this video. You will need to download the media 
+manually (instructions <a href="https://docs.google.com/document/d/1e224Fe5tJJNeLBNvYLVJ4FWd_O-1nwrJcqKyEXI03lA/edit?" target="_blank"> here</a>)
+ and then upload it using the 'File' upload option in the transcription tool.</p> `;
 		default:
 			return `<p>Unfortunately, an error occurred when trying to download the media from this URL for transcription.</p>`;
 	}
