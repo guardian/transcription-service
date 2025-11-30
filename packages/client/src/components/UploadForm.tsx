@@ -9,6 +9,7 @@ import {
 	InputLanguageCode,
 	languageCodeToLanguageWithAuto,
 	YoutubeStatus,
+	ABOUT_THIS_TOOL_YOUTUBE,
 } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
 import {
@@ -167,17 +168,26 @@ const renderYoutubeStatus = (status?: YoutubeStatus) => {
 			<div className="mb-4">
 				{status === 'WARN' && (
 					<Alert color="warning" icon={ExclamationTriangleIcon}>
-						Youtube recently blocked a request from the transcription service.
-						There is a high chance youtube urls may fail, in which case you'll
-						need to manually download the media from youtube rather than using
-						this service. Other sites are unaffected.
+						YouTube is currently blocking the transcription tool. The block is
+						temporary but can last several days. You will need to manually
+						download the media from youtube (guide{' '}
+						<a href={ABOUT_THIS_TOOL_YOUTUBE} target="_blank">
+							here
+						</a>
+						) and use the file upload option rather than using this service.
+						Other sites are unaffected.
 					</Alert>
 				)}
 				{status === 'ERROR' && (
 					<Alert color="failure" icon={ExclamationTriangleIcon}>
-						Youtube downloads are currently not working. You will need to
-						manually download the media from youtube and use the file upload
-						option rather than using this service. Other sites are unaffected.
+						YouTube recently blocked a request from the transcription service.
+						If your download fails then we recommend downloading the file
+						manually following the instructions{' '}
+						<a href={ABOUT_THIS_TOOL_YOUTUBE} target="_blank">
+							here
+						</a>{' '}
+						before uploading to the transcription service. Other sites are
+						unaffected.
 					</Alert>
 				)}
 			</div>
