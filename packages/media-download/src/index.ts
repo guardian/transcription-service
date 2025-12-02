@@ -16,7 +16,7 @@ import { Upload } from '@aws-sdk/lib-storage';
 import { S3Client } from '@aws-sdk/client-s3';
 import { createReadStream } from 'node:fs';
 import {
-	downloadMedia,
+	downloadMediaWithRetry,
 	getYoutubeEvent,
 	isFailure,
 	ProxyData,
@@ -232,10 +232,11 @@ const main = async () => {
 			)
 		: undefined;
 
-	const ytDlpResult = await downloadMedia(
+	const ytDlpResult = await downloadMediaWithRetry(
 		job.url,
 		workingDirectory,
 		job.id,
+		config.app.mediaDownloadCookies,
 		proxyUrls,
 	);
 
