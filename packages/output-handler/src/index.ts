@@ -22,6 +22,7 @@ import {
 	MediaDownloadFailure,
 	ONE_WEEK_IN_SECONDS,
 	MediaDownloadFailureReason,
+	ABOUT_THIS_TOOL_YOUTUBE,
 } from '@guardian/transcription-service-common';
 import {
 	MetricsService,
@@ -70,8 +71,9 @@ const failureDescription = (failureReason: MediaDownloadFailureReason) => {
           <a href="https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md">here</a>.</p>
 					`;
 		case 'BOT_BLOCKED':
-			return `<p>Unfortunately, youtube blocked the download of this video. You will need to download the media manually
-				and then upload it using the 'File' upload option in the transcription tool.</p> `;
+			return `<p>Unfortunately, YouTube blocked the download of this video. You will need to download the media 
+manually (instructions <a href="${ABOUT_THIS_TOOL_YOUTUBE}" target="_blank"> here</a>)
+ and then upload it using the 'File' upload option in the transcription tool.</p> `;
 		default:
 			return `<p>Unfortunately, an error occurred when trying to download the media from this URL for transcription.</p>`;
 	}
