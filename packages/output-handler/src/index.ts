@@ -30,6 +30,7 @@ import {
 	secondsFromEnqueueToCompleteEmailSentMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
 import { SESClient } from '@aws-sdk/client-ses';
+import { sqsMessageToTestMessage } from 'webpage-snapshot/test/testMessage';
 
 const successMessageBody = (
 	transcriptId: string,
@@ -283,6 +284,11 @@ const handler: Handler = async (event) => {
 
 // when running locally bypass the handler
 if (!process.env['AWS_EXECUTION_ENV']) {
-	processMessage(testMessage);
+	const messageBodyEnv = process.env['MESSAGE_BODY'];
+	if (messageBodyEnv) {
+		processMessage(sqsMessageToTestMessage(messageBodyEnv));
+	} else {
+		processMessage(testMessage);
+	}
 }
 export { handler as outputHandler };
