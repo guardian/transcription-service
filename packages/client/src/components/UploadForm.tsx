@@ -167,18 +167,6 @@ const renderYoutubeStatus = (status?: YoutubeStatus) => {
 		return (
 			<div className="mb-4">
 				{status === 'WARN' && (
-					<Alert color="warning" icon={ExclamationTriangleIcon}>
-						YouTube is currently blocking the transcription tool. The block is
-						temporary but can last several days. You will need to manually
-						download the media from youtube (guide{' '}
-						<a href={ABOUT_THIS_TOOL_YOUTUBE} target="_blank">
-							here
-						</a>
-						) and use the file upload option rather than using this service.
-						Other sites are unaffected.
-					</Alert>
-				)}
-				{status === 'ERROR' && (
 					<Alert color="failure" icon={ExclamationTriangleIcon}>
 						YouTube recently blocked a request from the transcription service.
 						If your download fails then we recommend downloading the file
@@ -188,6 +176,18 @@ const renderYoutubeStatus = (status?: YoutubeStatus) => {
 						</a>{' '}
 						before uploading to the transcription service. Other sites are
 						unaffected.
+					</Alert>
+				)}
+				{status === 'ERROR' && (
+					<Alert color="warning" icon={ExclamationTriangleIcon}>
+						YouTube is currently blocking the transcription tool. The block is
+						temporary but can last several days. You will need to manually
+						download the media from youtube (guide{' '}
+						<a href={ABOUT_THIS_TOOL_YOUTUBE} target="_blank">
+							here
+						</a>
+						) and use the file upload option rather than using this service.
+						Other sites are unaffected.
 					</Alert>
 				)}
 			</div>
