@@ -44,6 +44,14 @@ const snapshotPage = async (
 	url: string,
 ): Promise<WebpageSnapshot> => {
 	logger.info(`Snapshotting url: ${url}`);
+
+	const blocker = await PuppeteerBlocker.fromLists(crossFetch, [
+		'https://secure.fanboy.co.nz/fanboy-cookiemonster.txt',
+		'https://raw.githubusercontent.com/uBlockOrigin/uAssets/4248839208994e389687cd966f871c5b900840d1/filters/annoyances-cookies.txt',
+	]);
+
+	await blocker.enableBlockingInPage(page);
+
 	await page.goto(url, {
 		waitUntil: 'networkidle2',
 	});
@@ -88,12 +96,6 @@ const processMessage = async (event: unknown) => {
 	}
 	const browser = await getBrowser();
 	const page = await browser.newPage();
-	const blocker = await PuppeteerBlocker.fromLists(crossFetch, [
-		'https://secure.fanboy.co.nz/fanboy-cookiemonster.txt',
-		'https://raw.githubusercontent.com/uBlockOrigin/uAssets/4248839208994e389687cd966f871c5b900840d1/filters/annoyances-cookies.txt',
-	]);
-
-	await blocker.enableBlockingInPage(page);
 
 	for (const record of parsedEvent.data.Records) {
 		try {
