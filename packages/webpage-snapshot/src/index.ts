@@ -39,6 +39,30 @@ const getBrowser = async () => {
 	}
 };
 
+const acceptCookies = async (page: Page) => {
+	const elements = await page.$$('a, button');
+	const acceptAllElements = [];
+	for (const el of elements) {
+		const text = await page.evaluate(
+			(e) => e.innerText.trim().toLowerCase(),
+			el,
+		);
+		if (text === 'accept all') {
+			acceptAllElements.push(el);
+		}
+	}
+	if (acceptAllElements.length === 1) {
+		logger.info(
+			"Found a single element with text 'accept all' as inner html. Clicking it.",
+		);
+		await acceptAllElements[0]?.click();
+	} else {
+		logger.warn(
+			`Found ${acceptAllElements.length} 'accept all' elements. Doing nothing.`,
+		);
+	}
+};
+
 const snapshotPage = async (
 	page: Page,
 	url: string,
@@ -63,6 +87,10 @@ const snapshotPage = async (
 		quality: 100,
 	});
 	const html = await page.content();
+
+	await acceptCookies(page);
+
+	await page.waitForNetworkIdle();
 
 	const title = await page.title();
 
