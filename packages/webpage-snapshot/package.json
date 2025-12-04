@@ -14,7 +14,9 @@
 		"@guardian/transcription-service-common": "1.0.0",
 		"@guardian/transcription-service-backend-common": "1.0.0",
 		"@aws-sdk/client-sqs": "^3.624.0",
-		"puppeteer-core": "24.22.3"
+		"puppeteer-core": "24.22.3",
+		"@ghostery/adblocker-puppeteer": "^2.12.5",
+		"cross-fetch": "^4.1.0"
 	},
 	"devDependencies": {
 		"@types/node": "^20.11.5",
