@@ -37,6 +37,13 @@ const getBrowser = async () => {
 	}
 };
 
+const ACCEPT_COOKIES_TEXT = [
+	'accept all',
+	'accept all cookies',
+	'allow all cookies',
+	'allow all',
+];
+
 const acceptCookies = async (page: Page) => {
 	const frames = page.frames();
 	for (const frame of frames) {
@@ -47,7 +54,7 @@ const acceptCookies = async (page: Page) => {
 				element,
 			);
 			console.log(text);
-			if (text === 'accept all') {
+			if (ACCEPT_COOKIES_TEXT.includes(text)) {
 				logger.info(`Found accept all button, clicking it.`);
 				await element.click();
 				return;
