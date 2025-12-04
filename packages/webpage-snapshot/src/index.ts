@@ -38,26 +38,21 @@ const getBrowser = async () => {
 };
 
 const acceptCookies = async (page: Page) => {
-	const elements = await page.$$('a, button');
-	const acceptAllElements = [];
-	for (const el of elements) {
-		const text = await page.evaluate(
-			(e) => e.innerText.trim().toLowerCase(),
-			el,
-		);
-		if (text === 'accept all') {
-			acceptAllElements.push(el);
+	const frames = page.frames();
+	for (const frame of frames) {
+		const elements = await frame.$$('button');
+		for (const element of elements) {
+			const text = await frame.evaluate(
+				(e) => e.innerText.trim().toLowerCase(),
+				element,
+			);
+			console.log(text);
+			if (text === 'accept all') {
+				logger.info(`Found accept all button, clicking it.`);
+				await element.click();
+				return;
+			}
 		}
-	}
-	if (acceptAllElements.length === 1) {
-		logger.info(
-			"Found a single element with text 'accept all' as inner html. Clicking it.",
-		);
-		await acceptAllElements[0]?.click();
-	} else {
-		logger.warn(
-			`Found ${acceptAllElements.length} 'accept all' elements. Doing nothing.`,
-		);
 	}
 };
 
@@ -69,6 +64,12 @@ const snapshotPage = async (
 	await page.goto(url, {
 		waitUntil: 'networkidle2',
 	});
+	await page.waitForNetworkIdle({ idleTime: 3000 });
+
+	await acceptCookies(page);
+
+	await page.waitForNetworkIdle({ idleTime: 3000 });
+
 	const image = await page.screenshot({
 		fullPage: true,
 		encoding: 'base64',
