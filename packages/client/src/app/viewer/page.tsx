@@ -50,6 +50,7 @@ const ViewerPage = () => {
 	const { token } = useContext(AuthContext);
 	const searchParams = useSearchParams();
 	const transcriptId = searchParams.get('transcriptId');
+	const transcriptIdNoTranslate = transcriptId?.replace('-translation', '');
 
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -83,7 +84,7 @@ const ViewerPage = () => {
 				setTranscriptData(parsedTranscript.data);
 
 				const mediaResponse = await authFetch(
-					`/api/export/source-media-download-url?id=${transcriptId}`,
+					`/api/export/source-media-download-url?id=${transcriptIdNoTranslate}`,
 					token,
 				);
 
