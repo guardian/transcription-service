@@ -7,8 +7,8 @@ import {
 	sendMessage,
 } from '@guardian/transcription-service-backend-common';
 import { getTestMessage, sqsMessageToTestMessage } from '../test/testMessage';
-
-const runningLocally = !process.env['AWS_EXECUTION_ENV'];
+import { PuppeteerBlocker } from '@ghostery/adblocker-puppeteer';
+import crossFetch from 'cross-fetch';
 
 import chromium from '@sparticuz/chromium';
 import {
@@ -17,6 +17,8 @@ import {
 	WebpageSnapshot,
 } from '@guardian/transcription-service-common';
 import { Page } from 'puppeteer-core';
+
+const runningLocally = !process.env['AWS_EXECUTION_ENV'];
 
 const getBrowser = async () => {
 	if (runningLocally) {
@@ -42,9 +44,18 @@ const snapshotPage = async (
 	url: string,
 ): Promise<WebpageSnapshot> => {
 	logger.info(`Snapshotting url: ${url}`);
+
+	const blocker = await PuppeteerBlocker.fromLists(crossFetch, [
+		'https://secure.fanboy.co.nz/fanboy-cookiemonster.txt',
+		'https://raw.githubusercontent.com/uBlockOrigin/uAssets/4248839208994e389687cd966f871c5b900840d1/filters/annoyances-cookies.txt',
+	]);
+
+	await blocker.enableBlockingInPage(page);
+
 	await page.goto(url, {
 		waitUntil: 'networkidle2',
 	});
+
 	const image = await page.screenshot({
 		fullPage: true,
 		encoding: 'base64',
