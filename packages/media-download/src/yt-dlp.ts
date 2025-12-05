@@ -152,9 +152,13 @@ export const downloadMedia = async (
 			if (result.stderr.includes('ERROR: Unsupported URL')) {
 				return { errorType: 'INVALID_URL', status: 'FAILURE' };
 			}
-			if (result.stderr.includes('LOGIN_REQUIRED') && url.includes('youtube')) {
+			if (
+				url.includes('youtube') &&
+				(result.stderr.includes('LOGIN_REQUIRED') ||
+					result.stderr.includes('HTTP Error 403'))
+			) {
 				if (proxyUrls && proxyUrls.length > 1) {
-					console.log('Got blocked. Retrying yt-dlp with next proxy...');
+					logger.info('Got blocked. Retrying yt-dlp with next proxy...');
 					return downloadMedia(url, workingDirectory, id, proxyUrls?.slice(1));
 				}
 				return { errorType: 'BOT_BLOCKED', status: 'FAILURE' };
