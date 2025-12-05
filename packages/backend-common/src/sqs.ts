@@ -124,6 +124,17 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	}
 	if (!isSqsFailure(messageResult) && translationRequested) {
 		const translationId = `${s3Key}-translation`;
+		const translationCombinedOutputKey = `combined/${translationId}.json`;
+		const translationCombinedUrl = await getSignedUploadUrl(
+			config.aws.region,
+			config.app.transcriptionOutputBucket,
+			userEmail,
+			ONE_WEEK_IN_SECONDS,
+			false,
+			translationCombinedOutputKey,
+			undefined,
+			'gzip',
+		);
 		return await sendMessage(
 			client,
 			queue,
@@ -131,6 +142,10 @@ export const generateOutputSignedUrlAndSendMessage = async (
 				...job,
 				id: translationId,
 				translate: true,
+				combinedOutputUrl: {
+					key: translationCombinedOutputKey,
+					url: translationCombinedUrl,
+				},
 			}),
 			translationId,
 		);
