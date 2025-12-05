@@ -6,7 +6,6 @@ import {
 	MediaMetadata,
 	YoutubeEventDynamoItem,
 } from '@guardian/transcription-service-common';
-import { generateUserAgent } from '@imaginerlabs/user-agent-generator';
 
 type YtDlpSuccess = {
 	status: 'SUCCESS';
@@ -113,7 +112,6 @@ export const downloadMedia = async (
 	const nextProxy =
 		proxyUrls && proxyUrls.length > 0 ? proxyUrls[0] : undefined;
 	const proxyParams = nextProxy ? ['--proxy', nextProxy] : [];
-	const userAgent = generateUserAgent();
 	try {
 		const filepathLocation = `${workingDirectory}/${id}.txt`;
 		// yt-dlp --print-to-file appends to the file, so wipe it first
@@ -137,8 +135,6 @@ export const downloadMedia = async (
 				'--newline',
 				'-o',
 				`${workingDirectory}/${id}.%(ext)s`,
-				'--user-agent',
-				userAgent,
 				...proxyParams,
 				url,
 			],
