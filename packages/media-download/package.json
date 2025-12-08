@@ -13,8 +13,7 @@
 	"dependencies": {
 		"@guardian/transcription-service-common": "1.0.0",
 		"@guardian/transcription-service-backend-common": "1.0.0",
-		"@aws-sdk/lib-storage": "3.658.1",
-		"@imaginerlabs/user-agent-generator": "1.0.2"
+		"@aws-sdk/lib-storage": "3.658.1"
 	},
 	"devDependencies": {
 		"@types/node": "^20.11.5",
