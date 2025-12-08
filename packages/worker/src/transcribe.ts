@@ -186,13 +186,20 @@ const transcribeAndTranslate = async (
 			metrics,
 		);
 
+		// translation only works in whisperx if we know the language code. Also, we don't want to translate files that
+		// are already in english. If there is a user provided language, trust that. Otherwise, rely on the detected
+		// language from the transcript job
+		const languageCodeOrDetected =
+			languageCode !== 'auto'
+				? languageCode
+				: transcription.metadata.detectedLanguageCode;
+
 		const translation =
-			languageCode === 'en' ||
-			transcription.metadata.detectedLanguageCode === 'en'
+			languageCodeOrDetected === 'UNKNOWN' || languageCodeOrDetected === 'en'
 				? null
 				: await runTranscription(
 						whisperBaseParams,
-						languageCode,
+						languageCodeOrDetected,
 						true,
 						whisperX,
 						metrics,
