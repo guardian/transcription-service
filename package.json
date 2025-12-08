@@ -20,7 +20,7 @@
 		"media-download::start": "APP=media-download AWS_REGION=eu-west-1 STAGE=DEV npm run start --workspace media-download",
 		"worker::build": "npm run build --workspace worker; npm run build --workspace worker",
 		"worker::package": "npm run package --workspace worker",
-		"gpu-worker::start": "APP=transcription-service-gpu-worker AWS_REGION=eu-west-1 STAGE=DEV pipenv run npm run start --workspace worker",
+		"gpu-worker::start": "APP=transcription-service-gpu-worker AWS_REGION=eu-west-1 STAGE=DEV TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=true pipenv run npm run start --workspace worker",
 		"cpu-worker::start": "APP=transcription-service-worker AWS_REGION=eu-west-1 STAGE=DEV npm run start --workspace worker",
 		"client::build": "npm run build --workspace client",
 		"client::start": "npm run dev --workspace client",
