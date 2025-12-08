@@ -4,13 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-requests = "*"
-pyannote-audio = "*"
-huggingface-hub = "*"
-typer = "*"
-torch = "*"
-torchaudio = "*"
-whisperx = {git = "https://github.com/m-bain/whisperX"}
+whisperx = "3.7.4"
 
 [dev-packages]
 
