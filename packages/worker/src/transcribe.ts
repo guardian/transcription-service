@@ -253,10 +253,10 @@ const regexExtract = (text: string, regex: RegExp): string | undefined => {
 const parseLanguageCodeString = (languageCode?: string): OutputLanguageCode =>
 	languageCodes.find((c) => c === languageCode) || 'UNKNOWN';
 
-const extractWhisperXStderrData = (stderr: string): TranscriptionMetadata => {
+const extractWhisperXStdoutData = (stdout: string): TranscriptionMetadata => {
 	//Detected language: en (0.99) in first 30s of audio...
 	const languageRegex = /Detected language: ([a-zA-Z]{2})/;
-	const detectedLanguageCode = regexExtract(stderr, languageRegex);
+	const detectedLanguageCode = regexExtract(stdout, languageRegex);
 	return {
 		detectedLanguageCode: parseLanguageCodeString(detectedLanguageCode),
 	};
@@ -362,7 +362,7 @@ export const runWhisperX = async (
 				{ secondsForWhisperXStartup },
 			);
 		}
-		const metadata = extractWhisperXStderrData(result.stderr);
+		const metadata = extractWhisperXStdoutData(result.stdout);
 		logger.info('Whisper finished successfully', metadata);
 		return {
 			fileName,
