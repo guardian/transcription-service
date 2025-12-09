@@ -14,7 +14,7 @@ import {
 	MetricsService,
 	secondsForWhisperXStartupMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
-import { DEV_SKIP_TRANSCRIPTION_RESULT } from './util';
+import { SHAKIRA } from './shakira';
 
 interface FfmpegResult {
 	duration?: number;
@@ -230,8 +230,9 @@ export const getTranscriptionText = async (
 	whisperX: boolean,
 	metrics: MetricsService,
 ): Promise<TranscriptionResult> => {
-	if (process.env.DEV_SKIP_TRANSCRIPTION) {
-		return DEV_SKIP_TRANSCRIPTION_RESULT;
+	if (process.env.SHAKIRA_MODE) {
+		// in shakira mode, all input transcribes to shakira
+		return SHAKIRA;
 	}
 	if (combineTranscribeAndTranslate) {
 		return transcribeAndTranslate(
