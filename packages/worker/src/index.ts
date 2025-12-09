@@ -382,8 +382,7 @@ const pollTranscriptionQueue = async (
 			job.engine === 'whisperx',
 			metrics,
 		);
-		console.log('INCOMING SHAKIRA');
-		console.log(transcriptResult);
+
 		const transcriptionEndTime = new Date();
 		const transcriptionTimeSeconds = Math.round(
 			(transcriptionEndTime.getTime() - transcriptionStartTime.getTime()) /
