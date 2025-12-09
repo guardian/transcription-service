@@ -39,6 +39,31 @@ const getBrowser = async () => {
 	}
 };
 
+const ACCEPT_COOKIES_TEXT = [
+	'accept all',
+	'accept all cookies',
+	'allow all cookies',
+	'allow all',
+];
+
+const acceptCookies = async (page: Page) => {
+	const frames = page.frames();
+	for (const frame of frames) {
+		const elements = await frame.$$('button');
+		for (const element of elements) {
+			const text = await frame.evaluate(
+				(e) => e.innerText.trim().toLowerCase(),
+				element,
+			);
+			if (ACCEPT_COOKIES_TEXT.includes(text)) {
+				logger.info(`Found accept all button, clicking it.`);
+				await element.click();
+				return;
+			}
+		}
+	}
+};
+
 const snapshotPage = async (
 	page: Page,
 	url: string,
@@ -55,6 +80,13 @@ const snapshotPage = async (
 	await page.goto(url, {
 		waitUntil: 'networkidle2',
 	});
+	// wait for cookie banner to load
+	await page.waitForNetworkIdle({ idleTime: 3000 });
+
+	await acceptCookies(page);
+
+	// wait for page to reload after cookie banner accepted
+	await page.waitForNetworkIdle({ idleTime: 3000 });
 
 	const image = await page.screenshot({
 		fullPage: true,
@@ -63,6 +95,10 @@ const snapshotPage = async (
 		quality: 100,
 	});
 	const html = await page.content();
+
+	await acceptCookies(page);
+
+	await page.waitForNetworkIdle();
 
 	const title = await page.title();
 
