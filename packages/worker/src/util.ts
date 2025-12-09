@@ -18,3 +18,19 @@ export const uploadedCombinedResultsToS3 = async (
 	}
 	logger.info(`Successfully uploaded combined results to S3`);
 };
+
+export const DEV_SKIP_TRANSCRIPTION_RESULT: TranscriptionResult = {
+	transcripts: {
+		srt: 'srt content here',
+		text: 'txt content here',
+		json: 'json blah blah',
+	},
+	transcriptTranslations: {
+		srt: 'srt est ici',
+		text: 'txt est ici',
+		json: 'json blah blah en francais',
+	},
+	metadata: {
+		detectedLanguageCode: 'en',
+	},
+};

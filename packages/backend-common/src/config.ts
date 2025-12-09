@@ -36,7 +36,10 @@ export interface TranscriptionConfig {
 	};
 	aws: {
 		region: string;
-		localstackEndpoint?: string;
+	};
+	dev?: {
+		huggingfaceToken: string;
+		localstackEndpoint: string;
 	};
 }
 
@@ -94,6 +97,24 @@ const getEnvVarOrMetadata = async (
 	return clean ? clean(metadataValue) : metadataValue;
 };
 
+const devConfig = (
+	parameters: Parameter[],
+	paramPath: string,
+	sqsTaskQueueUrl: string,
+): TranscriptionConfig['dev'] => {
+	const huggingfaceToken = findParameter(
+		parameters,
+		paramPath,
+		'dev/huggingfaceToken',
+	);
+	// AWS clients take an optional 'endpoint' property that is only needed by localstack. Here we infer the endpoint (http://localhost:4566) from the sqs url
+	const localstackEndpoint = new URL(sqsTaskQueueUrl).origin;
+	return {
+		huggingfaceToken,
+		localstackEndpoint,
+	};
+};
+
 export const getConfig = async (): Promise<TranscriptionConfig> => {
 	const region = await getEnvVarOrMetadata(
 		'AWS_REGION',
@@ -142,10 +163,6 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		paramPath,
 		'destinationQueueUrls/giant',
 	);
-	// AWS clients take an optional 'endpoint' property that is only needed by localstack - on code/prod you don't need
-	// to set it. Here we inder the endpoint (http://localhost:4566) from the sqs url
-	const localstackEndpoint =
-		stage === 'DEV' ? new URL(taskQueueUrl).origin : undefined;
 
 	const authClientId = findParameter(parameters, paramPath, 'auth/clientId');
 	const authClientSecret = findParameter(
@@ -226,6 +243,11 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		'media-download/gts-cookie',
 	);
 
+	const devConfiguration =
+		stage === 'DEV'
+			? devConfig(parameters, paramPath, taskQueueUrl)
+			: undefined;
+
 	return {
 		auth: {
 			clientId: authClientId,
@@ -260,7 +282,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		},
 		aws: {
 			region,
-			localstackEndpoint,
 		},
+		dev: devConfiguration,
 	};
 };

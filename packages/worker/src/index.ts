@@ -69,7 +69,7 @@ const main = async () => {
 
 	const sqsClient = getSQSClient(
 		config.aws.region,
-		config.aws.localstackEndpoint,
+		config.dev?.localstackEndpoint,
 	);
 
 	const autoScalingClient = getASGClient(config.aws.region);
@@ -365,16 +365,15 @@ const pollTranscriptionQueue = async (
 			file: fileToTranscribe,
 			numberOfThreads,
 			// whisperx always runs on powerful gpu instances so let's always use the medium model
-			model:
-				job.engine !== 'whisperx' && config.app.stage !== 'PROD'
-					? 'tiny'
-					: 'medium',
+			model: config.app.stage === 'DEV' ? 'tiny' : 'medium',
 			engine: job.engine,
 			diarize: job.diarize,
 			stage: config.app.stage,
+			huggingFaceToken: config.dev?.huggingfaceToken,
 		};
 
 		const transcriptionStartTime = new Date();
+
 		const transcriptResult = await getTranscriptionText(
 			whisperBaseParams,
 			job.languageCode,
@@ -383,13 +382,17 @@ const pollTranscriptionQueue = async (
 			job.engine === 'whisperx',
 			metrics,
 		);
+		console.log('INCOMING SHAKIRA');
+		console.log(transcriptResult);
 		const transcriptionEndTime = new Date();
 		const transcriptionTimeSeconds = Math.round(
 			(transcriptionEndTime.getTime() - transcriptionStartTime.getTime()) /
 				1000,
 		);
 		const transcriptionRate =
-			ffmpegResult.duration && ffmpegResult.duration / transcriptionTimeSeconds;
+			ffmpegResult.duration &&
+			transcriptionTimeSeconds > 0 &&
+			ffmpegResult.duration / transcriptionTimeSeconds;
 
 		if (transcriptionRate) {
 			await metrics.putMetric(transcriptionRateMetric(transcriptionRate));

@@ -110,7 +110,7 @@ const handleTranscriptionSuccess = async (
 
 	try {
 		await writeDynamoItem(
-			getDynamoClient(config.aws.region, config.aws.localstackEndpoint),
+			getDynamoClient(config.aws.region, config.dev?.localstackEndpoint),
 			config.app.tableName,
 			dynamoItem,
 		);
