@@ -202,13 +202,13 @@ const main = async () => {
 
 	const dynamoClient = getDynamoClient(
 		config.aws.region,
-		config.aws.localstackEndpoint,
+		config.dev?.localstackEndpoint,
 	);
 
 	const s3Client = new S3Client({ region: config.aws.region });
 	const sqsClient = getSQSClient(
 		config.aws.region,
-		config.aws.localstackEndpoint,
+		config.dev?.localstackEndpoint,
 	);
 
 	const useProxy =

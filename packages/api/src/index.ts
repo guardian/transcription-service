@@ -69,13 +69,13 @@ const getApp = async () => {
 
 	const sqsClient = getSQSClient(
 		config.aws.region,
-		config.aws.localstackEndpoint,
+		config.dev?.localstackEndpoint,
 	);
 
 	const s3Client = getS3Client(config.aws.region);
 	const dynamoClient: DynamoDBDocumentClient = getDynamoClient(
 		config.aws.region,
-		config.aws.localstackEndpoint,
+		config.dev?.localstackEndpoint,
 	);
 	const lambdaClient = new LambdaClient({ region: config.aws.region });
 

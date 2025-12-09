@@ -79,7 +79,7 @@ const processExport = async (exportRequest: TranscriptExportRequest) => {
 
 	const dynamoClient = getDynamoClient(
 		config.aws.region,
-		config.aws.localstackEndpoint,
+		config.dev?.localstackEndpoint,
 	);
 	const getItemResult = await getTranscriptionItem(
 		dynamoClient,
