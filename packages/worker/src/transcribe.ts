@@ -3,7 +3,6 @@ import { readFile } from '@guardian/transcription-service-backend-common';
 import { logger } from '@guardian/transcription-service-backend-common';
 import {
 	InputLanguageCode,
-	inputToOutputLanguageCode,
 	languageCodes,
 	OutputLanguageCode,
 	TranscriptionEngine,
@@ -168,25 +167,6 @@ const runTranscription = async (
 	}
 };
 
-// This function is currently only used in the transcribeAndTranslate path (which at present is only used by giant).
-// Giant doesn't have a UI component to provide the language of files uploaded, so we always need to detech the language
-const getLanguageCode = async (
-	whisperBaseParams: WhisperBaseParams,
-	whisperX: boolean,
-): Promise<InputLanguageCode> => {
-	// whisperx is so slow to start up let's not even bother pre-detecting the language and just let it run detection
-	// for both transcription and translation
-	if (whisperX) {
-		return Promise.resolve('auto');
-	}
-	// run whisper.cpp in 'detect language' mode
-	const dlParams = whisperParams(true, whisperBaseParams.wavPath);
-	const { metadata } = await runWhisper(whisperBaseParams, dlParams);
-	return (
-		languageCodes.find((c) => c === metadata.detectedLanguageCode) || 'auto'
-	);
-};
-
 // Note: this functionality is only for transcription jobs coming from giant at the moment, though it could be good
 // to make it the standard approach for the transcription tool too (rather than what happens currently, where the
 // transcription API sends two messages to the worker - one for transcription, another for transcription with translation
@@ -195,9 +175,9 @@ const transcribeAndTranslate = async (
 	whisperBaseParams: WhisperBaseParams,
 	whisperX: boolean,
 	metrics: MetricsService,
+	languageCode: InputLanguageCode,
 ): Promise<TranscriptionResult> => {
 	try {
-		const languageCode = await getLanguageCode(whisperBaseParams, whisperX);
 		const transcription = await runTranscription(
 			whisperBaseParams,
 			languageCode,
@@ -206,16 +186,20 @@ const transcribeAndTranslate = async (
 			metrics,
 		);
 
-		// we only run language detection once,
-		// so need to override the detected language of future whisper runs
-		transcription.metadata.detectedLanguageCode =
-			inputToOutputLanguageCode(languageCode);
+		// translation only works in whisperx if we know the language code. Also, we don't want to translate files that
+		// are already in english. If there is a user provided language, trust that. Otherwise, rely on the detected
+		// language from the transcript job
+		const languageCodeOrDetected =
+			languageCode !== 'auto'
+				? languageCode
+				: transcription.metadata.detectedLanguageCode;
+
 		const translation =
-			languageCode === 'en'
+			languageCodeOrDetected === 'UNKNOWN' || languageCodeOrDetected === 'en'
 				? null
 				: await runTranscription(
 						whisperBaseParams,
-						languageCode,
+						languageCodeOrDetected,
 						true,
 						whisperX,
 						metrics,
@@ -245,7 +229,12 @@ export const getTranscriptionText = async (
 	metrics: MetricsService,
 ): Promise<TranscriptionResult> => {
 	if (combineTranscribeAndTranslate) {
-		return transcribeAndTranslate(whisperBaseParams, whisperX, metrics);
+		return transcribeAndTranslate(
+			whisperBaseParams,
+			whisperX,
+			metrics,
+			languageCode,
+		);
 	}
 	return runTranscription(
 		whisperBaseParams,
@@ -264,10 +253,10 @@ const regexExtract = (text: string, regex: RegExp): string | undefined => {
 const parseLanguageCodeString = (languageCode?: string): OutputLanguageCode =>
 	languageCodes.find((c) => c === languageCode) || 'UNKNOWN';
 
-const extractWhisperXStderrData = (stderr: string): TranscriptionMetadata => {
+const extractWhisperXStdoutData = (stdout: string): TranscriptionMetadata => {
 	//Detected language: en (0.99) in first 30s of audio...
 	const languageRegex = /Detected language: ([a-zA-Z]{2})/;
-	const detectedLanguageCode = regexExtract(stderr, languageRegex);
+	const detectedLanguageCode = regexExtract(stdout, languageRegex);
 	return {
 		detectedLanguageCode: parseLanguageCodeString(detectedLanguageCode),
 	};
@@ -373,7 +362,7 @@ export const runWhisperX = async (
 				{ secondsForWhisperXStartup },
 			);
 		}
-		const metadata = extractWhisperXStderrData(result.stderr);
+		const metadata = extractWhisperXStdoutData(result.stdout);
 		logger.info('Whisper finished successfully', metadata);
 		return {
 			fileName,
