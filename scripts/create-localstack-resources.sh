@@ -128,3 +128,19 @@ GIANT_MEDIA_DOWNLOAD_OUTPUT_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566
 GIANT_MEDIA_DOWNLOAD_OUTPUT_QUEUE_URL_LOCALHOST=${GIANT_MEDIA_DOWNLOAD_OUTPUT_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
 
 echo "Created queue in localstack, url: ${GIANT_MEDIA_DOWNLOAD_OUTPUT_QUEUE_URL_LOCALHOST}"
+
+DYNAMODB_ARN=$(aws --endpoint-url=http://localhost:4566 dynamodb create-table \
+                                         --table-name ${APP_NAME}-DEV \
+                                         --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
+                                         --attribute-definitions AttributeName=id,AttributeType=S \
+                                         --key-schema AttributeName=id,KeyType=HASH | jq .TableDescription.TableArn)
+
+echo "Created table, arn: ${DYNAMODB_ARN}"
+
+DYNAMODB_EVENTS_ARN=$(aws --endpoint-url=http://localhost:4566 dynamodb create-table \
+                                         --table-name ${APP_NAME}-events-DEV \
+                                         --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
+                                         --attribute-definitions AttributeName=id,AttributeType=S \
+                                         --key-schema AttributeName=id,KeyType=HASH | jq .TableDescription.TableArn)
+
+echo "Created events table, arn: ${DYNAMODB_EVENTS_ARN}"
