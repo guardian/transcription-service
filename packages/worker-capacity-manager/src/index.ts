@@ -44,7 +44,7 @@ const updateASGsCapacity = async () => {
 	const config = await getConfig();
 	const sqsClient = getSQSClient(
 		config.aws.region,
-		config.aws.localstackEndpoint,
+		config.dev?.localstackEndpoint,
 	);
 	const asgClient = getASGClient(config.aws.region);
 	const asgName = `transcription-service-workers-${config.app.stage}`;

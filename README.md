@@ -44,8 +44,17 @@ environment and run the worker. We use [pipenv](https://pipenv.pypa.io) to manag
 
 The same python environment can be used to test changes to the model download python script.
 
-NOTE: To get the API to actually send messages to the gpu queue, you'll need to update the useWhisperX property in
-`config.ts` - either by hard coding it or modifying the value in parameter store.
+## Testing the integration with giant
+
+To perform and end to end test locally:
+
+- Run giant
+- Make sure you have started localstack and run ./scripts/create-local-queues.sh (see above)
+- Run the transcription service gpu worker: npm run gpu-worker::start
+
+If you're finding the end to end testing painful due to how long it takes whisperx to transcribe anything, then you're
+looking for SHAKIRA MODE: npm run gpu-worker::shakira. This skips tedious transcription and just returns shakira lyrics,
+which is all anyone really needs.
 
 ## Emulating a production deployment
 

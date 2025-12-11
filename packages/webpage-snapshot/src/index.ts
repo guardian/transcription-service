@@ -120,7 +120,7 @@ const processMessage = async (event: unknown) => {
 
 	const sqsClient = getSQSClient(
 		config.aws.region,
-		config.aws.localstackEndpoint,
+		config.dev?.localstackEndpoint,
 	);
 	const parsedEvent = IncomingSQSEvent.safeParse(event);
 	if (!parsedEvent.success) {
