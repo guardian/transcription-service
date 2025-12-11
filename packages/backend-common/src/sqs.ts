@@ -227,10 +227,15 @@ export const changeMessageVisibility = async (
 	}
 };
 
-export const getNextMessage = async (
-	client: SQSClient,
-	queueUrl: string,
-): Promise<ReceiveResult> => {
+export const getNextMessage = async ({
+	client,
+	queueUrl,
+	WaitTimeSeconds,
+}: {
+	client: SQSClient;
+	queueUrl: string;
+	WaitTimeSeconds?: number;
+}): Promise<ReceiveResult> => {
 	try {
 		const message = await client.send(
 			new ReceiveMessageCommand({
@@ -240,6 +245,7 @@ export const getNextMessage = async (
 				VisibilityTimeout: 300, // 	5 minutes
 				// we need to get message attributes so that we can use ApproximateReceiveCount
 				MessageSystemAttributeNames: ['All'],
+				WaitTimeSeconds, // long polling
 			}),
 		);
 		const messages = message.Messages;

@@ -41,12 +41,11 @@ import {
 	transcriptionRateMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
 import { SQSClient } from '@aws-sdk/client-sqs';
-import { setTimeout } from 'timers/promises';
 import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import { checkSpotInterrupt } from './spot-termination';
 import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
 
-const POLLING_INTERVAL_SECONDS = 15;
+const LONG_POLLING_INTERVAL_SECONDS = 30;
 
 // Mutable variable is needed here to get feedback from checkSpotInterrupt
 let INTERRUPTION_TIME: Date | undefined = undefined;
@@ -97,7 +96,7 @@ const main = async () => {
 			instanceId,
 		);
 		if (config.app.stage === 'DEV' || lifecycleState === 'InService') {
-			await pollTranscriptionQueue(
+			pollTranscriptionQueue(
 				pollCount,
 				sqsClient,
 				queueUrl,
@@ -106,13 +105,18 @@ const main = async () => {
 				metrics,
 				config,
 				instanceId,
-			);
+			)
+				.then(() => {
+					console.log(`finished another poll cycle, poll count ${pollCount}`);
+				})
+				.catch((e) => {
+					throw e;
+				});
 		} else {
 			logger.warn(
 				`instance in state ${lifecycleState} - waiting until it goes to InService.`,
 			);
 		}
-		await setTimeout(POLLING_INTERVAL_SECONDS * 1000);
 	}
 };
 
@@ -162,7 +166,11 @@ const pollTranscriptionQueue = async (
 		asgName,
 	);
 
-	const message = await getNextMessage(sqsClient, taskQueueUrl);
+	const message = await getNextMessage({
+		client: sqsClient,
+		queueUrl: taskQueueUrl,
+		WaitTimeSeconds: LONG_POLLING_INTERVAL_SECONDS,
+	});
 
 	if (isSqsFailure(message)) {
 		logger.error(`Failed to fetch message due to ${message.errorMsg}`);
