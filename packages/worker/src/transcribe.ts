@@ -169,10 +169,6 @@ const runTranscription = async (
 	}
 };
 
-// Note: this functionality is only for transcription jobs coming from giant at the moment, though it could be good
-// to make it the standard approach for the transcription tool too (rather than what happens currently, where the
-// transcription API sends two messages to the worker - one for transcription, another for transcription with translation
-// (see generateOutputSignedUrlAndSendMessage in sqs.ts)
 const transcribeAndTranslate = async (
 	whisperBaseParams: WhisperBaseParams,
 	whisperX: boolean,
@@ -243,7 +239,6 @@ export const getTranscriptionText = async (
 	whisperBaseParams: WhisperBaseParams,
 	languageCode: InputLanguageCode,
 	translate: boolean,
-	combineTranscribeAndTranslate: boolean,
 	whisperX: boolean,
 	metrics: MetricsService,
 ): Promise<TranscriptionResult> => {
@@ -251,7 +246,7 @@ export const getTranscriptionText = async (
 		// in shakira mode, all input transcribes to shakira
 		return SHAKIRA;
 	}
-	if (combineTranscribeAndTranslate) {
+	if (translate) {
 		return transcribeAndTranslate(
 			whisperBaseParams,
 			whisperX,

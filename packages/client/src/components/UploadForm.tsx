@@ -511,9 +511,8 @@ export const UploadForm = () => {
 								value="English translation"
 							/>
 							<p className="font-light">
-								If you request a translation, you will receive two emails - one
-								with the transcript in the original language, and another with
-								the translation into English. Translation quality varies.
+								Translation results are now included in the same email.
+								Translation quality varies
 							</p>
 						</div>
 						<div className={'ml-3'}>

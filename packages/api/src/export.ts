@@ -5,10 +5,13 @@ import {
 	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
 import {
+	DocExportType,
 	ExportItems,
 	ExportStatus,
 	ExportStatuses,
 	ExportType,
+	getTranscriptDoc,
+	isTranslationExport,
 	TranscriptionDynamoItem,
 	TranscriptionResult,
 } from '@guardian/transcription-service-common';
@@ -76,28 +79,37 @@ export const getCombinedOutput = async (
 
 export const exportTranscriptToDoc = async (
 	item: TranscriptionDynamoItem,
-	format: 'srt' | 'text',
+	exportType: DocExportType,
 	folderId: string,
 	drive: drive_v3.Drive,
 	docs: docs_v1.Docs,
 	combinedOutput: TranscriptionResult,
 ): Promise<ExportStatus> => {
-	logger.info(`Starting export, export type: ${format}`);
-	const text = combinedOutput.transcripts[format];
+	logger.info(`Starting export, export type: ${exportType}`);
+	const text = getTranscriptDoc(exportType, combinedOutput);
+	if (!text) {
+		const msg = `Couldn't find ${exportType} in transcript result}`;
+		logger.error(msg);
+		return {
+			status: 'failure',
+			message: msg,
+			exportType: exportType,
+		};
+	}
 
 	try {
 		const docId = await uploadToGoogleDocs(
 			drive,
 			docs,
 			folderId,
-			`${item.originalFilename} transcript${format === 'srt' ? ' with timecodes' : ''} ${item.isTranslation ? ' (English translation)' : ''}`,
+			`${item.originalFilename} transcript${exportType === 'srt' ? ' with timecodes' : ''} ${isTranslationExport(exportType) ? ' (English translation)' : ''}`,
 			text,
 		);
-		logger.info(`Export of ${format} complete, file id: ${docId}`);
+		logger.info(`Export of ${exportType} complete, file id: ${docId}`);
 		return {
 			status: 'success',
 			id: docId,
-			exportType: format,
+			exportType: exportType,
 		};
 	} catch (error) {
 		const msg = `Failed to create google document for item with id ${item.id}`;
@@ -105,7 +117,7 @@ export const exportTranscriptToDoc = async (
 		return {
 			status: 'failure',
 			message: msg,
-			exportType: format,
+			exportType: exportType,
 		};
 	}
 };

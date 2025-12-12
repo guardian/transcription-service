@@ -1,8 +1,12 @@
 import React, { useContext, useEffect, useState } from 'react';
 import {
+	DocExportType,
 	ExportStatus,
 	ExportStatuses,
 	ExportType,
+	exportTypeLiterals,
+	getTranscriptDoc,
+	isTranslationExport,
 	TranscriptionItemWithTranscript,
 } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
@@ -37,6 +41,10 @@ const getExportTypeText = (exportType: ExportType) => {
 			return 'Input media';
 		case 'text':
 			return 'Transcript text';
+		case 'translation-text':
+			return 'English translation text';
+		case 'translation-srt':
+			return 'English translation text with timecodes (SRT)';
 		case 'srt':
 			return 'Transcript text with timecodes (SRT)';
 		default:
@@ -125,6 +133,12 @@ const ExportForm = () => {
 	}
 
 	const transcriptId = searchParams.get('transcriptId');
+	const translationFailure = searchParams.get('translationFailure') === 'true';
+	const includesTranslation =
+		searchParams.get('includesTranslation') === 'true';
+	const availableExports = includesTranslation
+		? exportTypeLiterals
+		: exportTypeLiterals.filter((et: ExportType) => !isTranslationExport(et));
 	if (!transcriptId) {
 		return (
 			<InfoMessage
@@ -306,7 +320,7 @@ const ExportForm = () => {
 
 	const handleTranscriptDownload = async (
 		url: string,
-		format: 'text' | 'srt',
+		format: DocExportType,
 	) => {
 		setDownloadStatus('Preparing download...');
 		const response = await authFetch(url, token);
@@ -317,17 +331,43 @@ const ExportForm = () => {
 			if (!parsedTranscriptResp.success) {
 				return;
 			}
-			const transcriptText =
-				parsedTranscriptResp.data.transcript.transcripts[format];
-			const filename = `${parsedTranscriptResp.data.item.originalFilename}.${format === 'text' ? 'txt' : 'srt'}`;
-			triggerFileDownload(transcriptText, filename);
-			setDownloadStatus(undefined);
+			const transcriptText = getTranscriptDoc(
+				format,
+				parsedTranscriptResp.data.transcript,
+			);
+			if (transcriptText) {
+				const filename = `${parsedTranscriptResp.data.item.originalFilename}.${format === 'text' ? 'txt' : 'srt'}`;
+				triggerFileDownload(transcriptText, filename);
+				setDownloadStatus(undefined);
+			} else {
+				setDownloadStatus(`Failed to download ${getExportTypeText(format)}`);
+			}
 		} else {
 			setDownloadStatus('Failed to download transcript');
 		}
 	};
 
 	const atLeastOneExport = () => exportTypesRequested.length > 0;
+
+	const exportCheckboxLabel = (exportType: ExportType) => {
+		if (exportType === 'source-media') {
+			return (
+				<div className="flex flex-col ">
+					<Label htmlFor="source-media">Input media</Label>
+					<div className="text-gray-500 dark:text-gray-300">
+						<span className="text-xs font-normal">
+							Max 10GB (roughly 3 hours of video)
+						</span>
+					</div>
+				</div>
+			);
+		}
+		return (
+			<Label htmlFor={`transcript-${exportType}`}>
+				{getExportTypeText(exportType)}
+			</Label>
+		);
+	};
 
 	return (
 		<>
@@ -344,67 +384,33 @@ const ExportForm = () => {
 					Exported items will be saved in the same folder in Google Drive
 				</p>
 
-				<div className="flex items-center gap-2">
-					<Checkbox
-						id="transcript-text"
-						checked={exportTypesRequested.includes('text')}
-						onChange={(e) =>
-							setExportTypesRequested(
-								updateExportTypes(
-									'text',
-									e.target.checked,
-									exportTypesRequested,
-								),
-							)
-						}
-					/>
-					<Label htmlFor="transcript-text">Transcript text</Label>
-				</div>
-				<div className="flex items-center gap-2">
-					<Checkbox
-						id="transcript-srt"
-						checked={exportTypesRequested.includes('srt')}
-						onChange={(e) =>
-							setExportTypesRequested(
-								updateExportTypes(
-									'srt',
-									e.target.checked,
-									exportTypesRequested,
-								),
-							)
-						}
-					/>
-					<Label htmlFor="transcript-srt">
-						Transcript text with timecodes (SRT)
-					</Label>
-				</div>
-				<div className="flex gap-2">
-					<div className="flex h-5 items-center">
-						<Checkbox
-							id="source-media"
-							checked={exportTypesRequested.includes('source-media')}
-							onChange={(e) =>
-								setExportTypesRequested(
-									updateExportTypes(
-										'source-media',
-										e.target.checked,
-										exportTypesRequested,
-									),
-								)
-							}
-						/>
-					</div>
-					<div className="flex flex-col">
-						<Label htmlFor="source-media">Input media</Label>
-						<div className="text-gray-500 dark:text-gray-300">
-							<span className="text-xs font-normal">
-								Max 10GB (roughly 3 hours of video)
-							</span>
+				{availableExports.map((exportType: ExportType) => (
+					<>
+						<div className="flex items-center gap-2">
+							<Checkbox
+								id={`transcript-${exportType}`}
+								checked={exportTypesRequested.includes(exportType)}
+								onChange={(e) =>
+									setExportTypesRequested(
+										updateExportTypes(
+											exportType,
+											e.target.checked,
+											exportTypesRequested,
+										),
+									)
+								}
+							/>
+							{exportCheckboxLabel(exportType)}
 						</div>
-					</div>
-				</div>
+					</>
+				))}
 
 				<Flowbite theme={{ theme: customTheme }}>
+					{translationFailure && (
+						<Alert className="font-light text-sm align-middle" color="yellow">
+							Unfortunately the english translation of your transcript failed
+						</Alert>
+					)}
 					{!atLeastOneExport() ? (
 						<Alert className="font-light text-sm align-middle" color="red">
 							Please select at least one item for export
