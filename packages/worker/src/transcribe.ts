@@ -142,18 +142,13 @@ const runTranscription = async (
 			? await runWhisperX(whisperBaseParams, languageCode, translate, metrics)
 			: await runWhisper(whisperBaseParams, params);
 
-		const srtPath = path.resolve(
-			path.parse(whisperBaseParams.file).dir,
-			`${fileName}.srt`,
-		);
-		const textPath = path.resolve(
-			path.parse(whisperBaseParams.file).dir,
-			`${fileName}.txt`,
-		);
-		const jsonPath = path.resolve(
-			path.parse(whisperBaseParams.file).dir,
-			`${fileName}.json`,
-		);
+		const outputDir = translate
+			? whisperBaseParams.translationDirectory
+			: whisperBaseParams.baseDirectory;
+
+		const srtPath = path.resolve(outputDir, `${fileName}.srt`);
+		const textPath = path.resolve(outputDir, `${fileName}.txt`);
+		const jsonPath = path.resolve(outputDir, `${fileName}.json`);
 
 		const transcripts = {
 			srt: readFile(srtPath),
