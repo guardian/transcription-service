@@ -36,14 +36,17 @@ const successMessageBody = (
 	transcriptId: string,
 	originalFilename: string,
 	rootUrl: string,
-	isTranslation: boolean,
+	includesTranslation: boolean,
+	translationRequested: boolean,
 ): string => {
-	const exportUrl = `${rootUrl}/export?transcriptId=${transcriptId}`;
+	const translationFailure = translationRequested && !includesTranslation;
+	const exportUrl = `${rootUrl}/export?transcriptId=${transcriptId}&translationFailure=${translationFailure}&includesTranslation=${includesTranslation}`;
 	const viewerUrl = `${rootUrl}/viewer?transcriptId=${transcriptId}`;
 	return `
-		<h1>${isTranslation ? 'English translation ' : 'Transcription'} for ${originalFilename} ready</h1>
+		<h1>${includesTranslation ? 'Transcription and english translation ' : 'Transcription'} for ${originalFilename} ready</h1>
 		<p>Click <a href="${exportUrl}">here</a> to download or export transcript/input media to Google drive.</p>
 		<p>Click <a href="${viewerUrl}">here</a> to view and play back your transcript.</p>
+		<p>${translationFailure && 'Unfortunately the translation job failed. Please contact digital.investigations@theguardian.com for support.'}</p>
 		<p>You may wish to open the playback view and the Google Document side by side to review the transcript and make corrections.</p>
 		<p><b>Note:</b> transcripts and input media will be deleted from this service after 7 days. Export your data now if you want to keep it.</p>
 	`;
@@ -52,11 +55,10 @@ const successMessageBody = (
 const transcriptionFailureMessageBody = (
 	originalFilename: string,
 	id: string,
-	isTranslation: boolean,
 	sourceMediaDownloadUrl: string,
 ): string => {
 	return `
-		<h1>${isTranslation ? 'English translation ' : 'Transcription'}for ${originalFilename} has failed.</h1>
+		<h1>Transcription for ${originalFilename} has failed.</h1>
 		<p>Please make sure that the file is a valid audio or video file.</p>
 		<p>Click <a href="${sourceMediaDownloadUrl}">here</a> to download the input media.</p>
 		<p>Contact digital.investigations@theguardian.com for support.</p>
@@ -104,7 +106,7 @@ const handleTranscriptionSuccess = async (
 		combinedOutputKey: transcriptionOutput.combinedOutputKey,
 		userEmail: transcriptionOutput.userEmail,
 		completedAt: new Date().toISOString(),
-		isTranslation: transcriptionOutput.isTranslation,
+		includesTranslation: transcriptionOutput.includesTranslation,
 		languageCode: transcriptionOutput.languageCode,
 	};
 
@@ -119,12 +121,13 @@ const handleTranscriptionSuccess = async (
 			sesClient,
 			config.app.emailNotificationFromAddress,
 			transcriptionOutput.userEmail,
-			`${transcriptionOutput.isTranslation ? 'English translation' : 'Transcription'} complete for ${transcriptionOutput.originalFilename}`,
+			`Transcription complete for ${transcriptionOutput.originalFilename}`,
 			successMessageBody(
 				transcriptionOutput.id,
 				transcriptionOutput.originalFilename,
 				config.app.rootUrl,
-				transcriptionOutput.isTranslation,
+				transcriptionOutput.includesTranslation,
+				transcriptionOutput.translationRequested,
 			),
 		);
 
@@ -164,11 +167,10 @@ const handleTranscriptionFailure = async (
 			sesClient,
 			config.app.emailNotificationFromAddress,
 			transcriptionOutput.userEmail,
-			`${transcriptionOutput.isTranslation ? 'English translation ' : 'Transcription'} failed for ${transcriptionOutput.originalFilename}`,
+			`Transcription failed for ${transcriptionOutput.originalFilename}`,
 			transcriptionFailureMessageBody(
 				transcriptionOutput.originalFilename,
 				transcriptionOutput.id,
-				transcriptionOutput.isTranslation,
 				sourceMediaDownloadUrl,
 			),
 		);

@@ -129,7 +129,6 @@ const OutputBase = z.object({
 
 const TranscriptionOutputBase = OutputBase.extend({
 	originalFilename: z.string(),
-	isTranslation: z.boolean(),
 });
 
 export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
@@ -139,6 +138,8 @@ export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
 	combinedOutputKey: z.string(),
 	duration: z.optional(z.number()),
 	maybeEnqueuedAtEpochMillis: z.optional(z.number()),
+	includesTranslation: z.boolean(),
+	translationRequested: z.boolean(),
 });
 
 export const MediaDownloadFailureReason = z.union([
@@ -224,12 +225,23 @@ export const ZTokenResponse = z.object({
 
 export type ZTokenResponse = z.infer<typeof ZTokenResponse>;
 
-const ExportType = z.union([
-	z.literal('text'),
-	z.literal('srt'),
-	z.literal('source-media'),
-]);
+const docTypeLiterals = [
+	'text',
+	'srt',
+	'translation-text',
+	'translation-srt',
+] as const;
+
+export const exportTypeLiterals = [...docTypeLiterals, 'source-media'] as const;
+
+const DocExportType = z.enum(docTypeLiterals);
+export type DocExportType = z.infer<typeof DocExportType>;
+
+const ExportType = z.enum(exportTypeLiterals);
 export type ExportType = z.infer<typeof ExportType>;
+
+export const isTranslationExport = (exportType: ExportType): boolean =>
+	exportType === 'translation-text' || exportType === 'translation-srt';
 
 export const ExportItems = z.array(ExportType);
 
@@ -333,7 +345,7 @@ export const TranscriptionDynamoItem = z.object({
 	combinedOutputKey: z.string(),
 	userEmail: z.string(),
 	completedAt: z.optional(z.string()), // dynamodb can't handle dates so we need to use an ISO date
-	isTranslation: z.boolean(),
+	includesTranslation: z.boolean(),
 	languageCode: z.optional(OutputLanguageCode),
 	exportStatuses: z.optional(ExportStatuses),
 });

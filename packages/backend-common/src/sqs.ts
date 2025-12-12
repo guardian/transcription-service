@@ -105,7 +105,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		originalFilename,
 		combinedOutputUrl: { key: combinedOutputKey, url: combinedUrl },
 		languageCode,
-		translate: false,
+		translate: translationRequested,
 		diarize: diarizationRequested,
 		engine,
 	};
@@ -115,38 +115,9 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		JSON.stringify(job),
 		s3Key,
 	);
-	if (isSqsFailure(messageResult) && translationRequested) {
-		logger.info(
+	if (isSqsFailure(messageResult)) {
+		logger.error(
 			`Failed to send message, error message: ${messageResult.errorMsg}`,
-		);
-		return messageResult;
-	}
-	if (!isSqsFailure(messageResult) && translationRequested) {
-		const translationId = `${s3Key}-translation`;
-		const translationCombinedOutputKey = `combined/${translationId}.json`;
-		const translationCombinedUrl = await getSignedUploadUrl(
-			config.aws,
-			config.app.transcriptionOutputBucket,
-			userEmail,
-			ONE_WEEK_IN_SECONDS,
-			false,
-			translationCombinedOutputKey,
-			undefined,
-			'gzip',
-		);
-		return await sendMessage(
-			client,
-			queue,
-			JSON.stringify({
-				...job,
-				id: translationId,
-				translate: true,
-				combinedOutputUrl: {
-					key: translationCombinedOutputKey,
-					url: translationCombinedUrl,
-				},
-			}),
-			translationId,
 		);
 	}
 	return messageResult;
