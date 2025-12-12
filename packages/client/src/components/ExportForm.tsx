@@ -133,7 +133,6 @@ const ExportForm = () => {
 	}
 
 	const transcriptId = searchParams.get('transcriptId');
-	const translationFailure = searchParams.get('translationFailure') === 'true';
 	const includesTranslation =
 		searchParams.get('includesTranslation') === 'true';
 	const availableExports = includesTranslation
@@ -406,11 +405,6 @@ const ExportForm = () => {
 				))}
 
 				<Flowbite theme={{ theme: customTheme }}>
-					{translationFailure && (
-						<Alert className="font-light text-sm align-middle" color="yellow">
-							Unfortunately the english translation of your transcript failed
-						</Alert>
-					)}
 					{!atLeastOneExport() ? (
 						<Alert className="font-light text-sm align-middle" color="red">
 							Please select at least one item for export
