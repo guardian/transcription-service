@@ -37,19 +37,13 @@ const successMessageBody = (
 	originalFilename: string,
 	rootUrl: string,
 	includesTranslation: boolean,
-	translationRequested: boolean,
 ): string => {
-	const translationFailure = translationRequested && !includesTranslation;
-	const exportUrl = `${rootUrl}/export?transcriptId=${transcriptId}&translationFailure=${translationFailure}&includesTranslation=${includesTranslation}`;
+	const exportUrl = `${rootUrl}/export?transcriptId=${transcriptId}&includesTranslation=${includesTranslation}`;
 	const viewerUrl = `${rootUrl}/viewer?transcriptId=${transcriptId}`;
-	const transcriptionError = translationFailure
-		? `<p>Unfortunately the translation job failed. Please contact digital.investigations@theguardian.com for support.</p>`
-		: '';
 	return `
 		<h1>${includesTranslation ? 'Transcription and english translation ' : 'Transcription'} for ${originalFilename} ready</h1>
 		<p>Click <a href="${exportUrl}">here</a> to download or export transcript/input media to Google drive.</p>
 		<p>Click <a href="${viewerUrl}">here</a> to view and play back your transcript.</p>
-		${transcriptionError}
 		<p>You may wish to open the playback view and the Google Document side by side to review the transcript and make corrections.</p>
 		<p><b>Note:</b> transcripts and input media will be deleted from this service after 7 days. Export your data now if you want to keep it.</p>
 	`;
@@ -130,7 +124,6 @@ const handleTranscriptionSuccess = async (
 				transcriptionOutput.originalFilename,
 				config.app.rootUrl,
 				transcriptionOutput.includesTranslation,
-				transcriptionOutput.translationRequested,
 			),
 		);
 

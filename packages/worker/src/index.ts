@@ -44,6 +44,7 @@ import { setTimeout } from 'timers/promises';
 import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import { checkSpotInterrupt } from './spot-termination';
 import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
+import fs from 'node:fs';
 
 const POLLING_INTERVAL_SECONDS = 15;
 
@@ -271,6 +272,14 @@ const pollTranscriptionQueue = async (
 		const destinationDirectory = isDev
 			? `${__dirname}/../../../worker-tmp-files`
 			: '/tmp';
+		const translationDirectory = `${destinationDirectory}/translation/`;
+
+		// ensure destination directory exists
+		logger.info(
+			`Ensuring ${destinationDirectory} and ${translationDirectory} exist`,
+		);
+		fs.mkdirSync(destinationDirectory, { recursive: true });
+		fs.mkdirSync(translationDirectory, { recursive: true });
 
 		const fileToTranscribe = await getObjectWithPresignedUrl(
 			inputSignedUrl,
@@ -352,6 +361,8 @@ const pollTranscriptionQueue = async (
 			diarize: job.diarize,
 			stage: config.app.stage,
 			huggingFaceToken: config.dev?.huggingfaceToken,
+			baseDirectory: destinationDirectory,
+			translationDirectory,
 		};
 
 		const transcriptionStartTime = new Date();

@@ -32,6 +32,8 @@ export type WhisperBaseParams = {
 	diarize: boolean;
 	stage: string;
 	huggingFaceToken?: string;
+	translationDirectory: string;
+	baseDirectory: string;
 };
 
 export const CONTAINER_FOLDER = '/input';
@@ -140,18 +142,13 @@ const runTranscription = async (
 			? await runWhisperX(whisperBaseParams, languageCode, translate, metrics)
 			: await runWhisper(whisperBaseParams, params);
 
-		const srtPath = path.resolve(
-			path.parse(whisperBaseParams.file).dir,
-			`${fileName}.srt`,
-		);
-		const textPath = path.resolve(
-			path.parse(whisperBaseParams.file).dir,
-			`${fileName}.txt`,
-		);
-		const jsonPath = path.resolve(
-			path.parse(whisperBaseParams.file).dir,
-			`${fileName}.json`,
-		);
+		const outputDir = translate
+			? whisperBaseParams.translationDirectory
+			: whisperBaseParams.baseDirectory;
+
+		const srtPath = path.resolve(outputDir, `${fileName}.srt`);
+		const textPath = path.resolve(outputDir, `${fileName}.txt`);
+		const jsonPath = path.resolve(outputDir, `${fileName}.json`);
 
 		const transcripts = {
 			srt: readFile(srtPath),
@@ -349,6 +346,10 @@ export const runWhisperX = async (
 	const huggingfaceTokenParam =
 		stage === 'DEV' && huggingFaceToken ? ['--hf_token', huggingFaceToken] : [];
 
+	const outputDir = translate
+		? whisperBaseParams.translationDirectory
+		: whisperBaseParams.baseDirectory;
+
 	try {
 		let secondsForWhisperXStartup: number | undefined = undefined;
 		const startEpochMillis = Date.now();
@@ -366,7 +367,7 @@ export const runWhisperX = async (
 				...useCachedModelsParam,
 				...huggingfaceTokenParam,
 				'--output_dir',
-				path.parse(wavPath).dir,
+				outputDir,
 				wavPath,
 			],
 			false,
