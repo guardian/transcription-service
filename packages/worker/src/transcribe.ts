@@ -179,39 +179,56 @@ const transcribeAndTranslate = async (
 	metrics: MetricsService,
 	languageCode: InputLanguageCode,
 ): Promise<TranscriptionResult> => {
-	try {
-		const transcription = await runTranscription(
+	const run = (translate: boolean) =>
+		runTranscription(
 			whisperBaseParams,
 			languageCode,
-			false,
+			translate,
 			whisperX,
 			metrics,
 		);
+	try {
+		const transcription = run(false);
 
-		// translation only works in whisperx if we know the language code. Also, we don't want to translate files that
-		// are already in english. If there is a user provided language, trust that. Otherwise, rely on the detected
-		// language from the transcript job
-		const languageCodeOrDetected =
-			languageCode !== 'auto'
-				? languageCode
-				: transcription.metadata.detectedLanguageCode;
+		// if we don't know the language code then run transcription and decide whether to run translation based off the
+		// detected language code
+		if (languageCode === 'auto') {
+			const finishedTranscription = await transcription;
+			if (
+				finishedTranscription.metadata.detectedLanguageCode !== 'UNKNOWN' &&
+				finishedTranscription.metadata.detectedLanguageCode !== 'en'
+			) {
+				const translation = await run(true);
+				return {
+					transcripts: finishedTranscription.transcripts,
+					transcriptTranslations: translation?.transcripts,
+					metadata: finishedTranscription.metadata,
+				};
+			}
+		}
 
-		const translation =
-			languageCodeOrDetected === 'UNKNOWN' || languageCodeOrDetected === 'en'
-				? null
-				: await runTranscription(
-						whisperBaseParams,
-						languageCodeOrDetected,
-						true,
-						whisperX,
-						metrics,
-					);
+		// if we have a language code and it's not English, run translation in parallel
+		if (languageCode !== 'en') {
+			const translation = run(true);
+			const [finishedTranscription, finishedTranslation] = await Promise.all([
+				transcription,
+				translation,
+			]);
+			return {
+				transcripts: finishedTranscription.transcripts,
+				transcriptTranslations: finishedTranslation.transcripts,
+				metadata: finishedTranscription.metadata,
+			};
+		}
+
+		// otherwise, skip translation
+		const finishedTranscription = await transcription;
+
 		return {
-			transcripts: transcription.transcripts,
-			transcriptTranslations: translation?.transcripts,
+			transcripts: finishedTranscription.transcripts,
 			// we only return one metadata field here even though we might have two (one from the translation) - a
 			// bit messy but I can't think of much use for the translation metadata at the moment
-			metadata: transcription.metadata,
+			metadata: finishedTranscription.metadata,
 		};
 	} catch (error) {
 		logger.error(
