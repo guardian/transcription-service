@@ -32,6 +32,8 @@ export type WhisperBaseParams = {
 	diarize: boolean;
 	stage: string;
 	huggingFaceToken?: string;
+	translationDirectory: string;
+	baseDirectory: string;
 };
 
 export const CONTAINER_FOLDER = '/input';
@@ -349,6 +351,10 @@ export const runWhisperX = async (
 	const huggingfaceTokenParam =
 		stage === 'DEV' && huggingFaceToken ? ['--hf_token', huggingFaceToken] : [];
 
+	const outputDir = translate
+		? whisperBaseParams.translationDirectory
+		: whisperBaseParams.baseDirectory;
+
 	try {
 		let secondsForWhisperXStartup: number | undefined = undefined;
 		const startEpochMillis = Date.now();
@@ -366,7 +372,7 @@ export const runWhisperX = async (
 				...useCachedModelsParam,
 				...huggingfaceTokenParam,
 				'--output_dir',
-				path.parse(wavPath).dir,
+				outputDir,
 				wavPath,
 			],
 			false,
