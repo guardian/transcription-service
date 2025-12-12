@@ -207,5 +207,6 @@ export const downloadMediaWithRetry = async (
 			return result;
 		}
 	}
+	// if all else fails, try downloading with no proxies or cookies
 	return downloadMedia(url, workingDirectory, id, []);
 };
