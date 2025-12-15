@@ -68,6 +68,6 @@ export const getTranscriptDoc = (
 		case 'translation-text':
 			return transcriptResult.transcriptTranslations?.['text'];
 		default:
-			throw new Error();
+			throw new Error('Invalid doc export type');
 	}
 };
