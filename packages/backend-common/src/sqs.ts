@@ -42,7 +42,7 @@ interface SQSFailure {
 }
 
 type SendResult = SendSuccess | SQSFailure;
-type ReceiveResult = ReceiveSuccess | SQSFailure;
+export type ReceiveResult = ReceiveSuccess | SQSFailure;
 type DeleteResult = DeleteSuccess | SQSFailure;
 
 export const getSQSClient = (region: string, localstackEndpoint?: string) => {

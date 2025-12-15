@@ -13,6 +13,7 @@ import {
 	publishTranscriptionOutput,
 	readFile,
 	getASGClient,
+	ReceiveResult,
 } from '@guardian/transcription-service-backend-common';
 import {
 	DestinationService,
@@ -96,7 +97,12 @@ const main = async () => {
 			instanceId,
 		);
 		if (config.app.stage === 'DEV' || lifecycleState === 'InService') {
-			pollTranscriptionQueue(
+			const message = await getNextMessage({
+				client: sqsClient,
+				queueUrl: queueUrl,
+				WaitTimeSeconds: LONG_POLLING_INTERVAL_SECONDS,
+			});
+			processPollResult(
 				pollCount,
 				sqsClient,
 				queueUrl,
@@ -105,6 +111,7 @@ const main = async () => {
 				metrics,
 				config,
 				instanceId,
+				message,
 			)
 				.then(() => {
 					console.log(`finished another poll cycle, poll count ${pollCount}`);
@@ -140,7 +147,7 @@ const publishTranscriptionOutputFailure = async (
 	}
 };
 
-const pollTranscriptionQueue = async (
+const processPollResult = async (
 	pollCount: number,
 	sqsClient: SQSClient,
 	taskQueueUrl: string,
@@ -149,6 +156,7 @@ const pollTranscriptionQueue = async (
 	metrics: MetricsService,
 	config: TranscriptionConfig,
 	instanceId: string,
+	message: ReceiveResult,
 ) => {
 	const stage = config.app.stage;
 	const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
@@ -165,12 +173,6 @@ const pollTranscriptionQueue = async (
 		instanceId,
 		asgName,
 	);
-
-	const message = await getNextMessage({
-		client: sqsClient,
-		queueUrl: taskQueueUrl,
-		WaitTimeSeconds: LONG_POLLING_INTERVAL_SECONDS,
-	});
 
 	if (isSqsFailure(message)) {
 		logger.error(`Failed to fetch message due to ${message.errorMsg}`);
