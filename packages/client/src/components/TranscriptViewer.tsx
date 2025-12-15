@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { TranscriptionResult } from '@guardian/transcription-service-common';
 import { formatTime, parseSRT, TranscriptSegment } from '@/services/srt';
-import { ToggleSwitch } from 'flowbite-react';
+import { Label, Radio } from 'flowbite-react';
 
 type TranscriptViewerProps = {
 	transcript: TranscriptionResult;
@@ -136,16 +136,39 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
 
 			{/* Interactive Transcript - Order 2 on mobile, 2 on desktop */}
 			<div className="order-2">
-				<h3 className="font-semibold text-gray-900 mb-3">
-					Interactive Transcript
-				</h3>
-				{transcript.transcriptTranslations && (
-					<ToggleSwitch
-						checked={showTranslation}
-						label="Show translation"
-						onChange={setShowTranslation}
-					/>
-				)}
+				<div className="mb-4">
+					{transcript.transcriptTranslations && (
+						<fieldset>
+							<div className="flex items-center gap-4">
+								<legend className="font-semibold text-gray-900">
+									Transcript version:
+								</legend>
+								<div className="flex items-center gap-2">
+									<Radio
+										id="show-transcript"
+										name="transcript-view"
+										value="original"
+										checked={!showTranslation}
+										onChange={() => setShowTranslation(false)}
+									/>
+									<Label htmlFor="show-transcript">Original</Label>
+								</div>
+								<div className="flex items-center gap-2">
+									<Radio
+										id="show-english-translation"
+										name="transcript-view"
+										value="translation"
+										checked={showTranslation}
+										onChange={() => setShowTranslation(true)}
+									/>
+									<Label htmlFor="show-english-translation">
+										English translation
+									</Label>
+								</div>
+							</div>
+						</fieldset>
+					)}
+				</div>
 				<div
 					ref={transcriptContainerRef}
 					className="bg-white border border-gray-200 rounded-lg max-h-[600px] overflow-y-auto"
