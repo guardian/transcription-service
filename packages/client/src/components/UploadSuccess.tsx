@@ -30,14 +30,12 @@ export const UploadSuccess = ({
 				{mediaDownloadText}
 				<p>
 					{' '}
-					The transcription service can take a few minutes to start up, but
-					thereafter the transcription process is typically shorter than the
-					duration of the media file.{' '}
+					The transcription process is typically shorter than the duration of
+					the media file.{' '}
 				</p>
 				<p>
-					If you have requested a translation, you will receive two emails: one
-					for the transcription in the original language; another for the
-					English translation. The emails will arrive at different times.
+					English translations are now included in the same email as the
+					transcript in the original language.
 				</p>
 			</div>
 			<button

@@ -15,7 +15,6 @@ import {
 	getASGClient,
 } from '@guardian/transcription-service-backend-common';
 import {
-	DestinationService,
 	OutputLanguageCode,
 	TranscriptionJob,
 	TranscriptionOutputFailure,
@@ -45,6 +44,7 @@ import { setTimeout } from 'timers/promises';
 import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import { checkSpotInterrupt } from './spot-termination';
 import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
+import fs from 'node:fs';
 
 const POLLING_INTERVAL_SECONDS = 15;
 
@@ -127,7 +127,6 @@ const publishTranscriptionOutputFailure = async (
 		status: 'TRANSCRIPTION_FAILURE',
 		userEmail: job.userEmail,
 		originalFilename: job.originalFilename,
-		isTranslation: job.translate,
 	};
 	try {
 		await publishTranscriptionOutput(sqsClient, destination, failureMessage);
@@ -280,6 +279,13 @@ const pollTranscriptionQueue = async (
 		const destinationDirectory = isDev
 			? `${__dirname}/../../../worker-tmp-files`
 			: '/tmp';
+		const translationDirectory = `${destinationDirectory}/translation/`;
+
+		logger.info(
+			`Ensuring ${destinationDirectory} and ${translationDirectory} exist`,
+		);
+		fs.mkdirSync(destinationDirectory, { recursive: true });
+		fs.mkdirSync(translationDirectory, { recursive: true });
 
 		const fileToTranscribe = await getObjectWithPresignedUrl(
 			inputSignedUrl,
@@ -334,16 +340,7 @@ const pollTranscriptionQueue = async (
 			return;
 		}
 
-		// Giant doesn't know the language of files uploaded to it, so for Giant files we first run language detection
-		// then based on the output, either run transcription or run transcription and translation, and return the output
-		// of both to the user. This is different from the transcription-service, where transcription and translation are
-		// two separate jobs
-		const combineTranscribeAndTranslate =
-			job.transcriptDestinationService === DestinationService.Giant &&
-			job.translate;
-		const extraTranslationTimeMultiplier = combineTranscribeAndTranslate
-			? 2
-			: 1;
+		const extraTranslationTimeMultiplier = job.translate ? 2 : 1;
 
 		if (ffmpegResult.duration && ffmpegResult.duration !== 0) {
 			// Transcription time is usually slightly longer than file duration.
@@ -370,6 +367,8 @@ const pollTranscriptionQueue = async (
 			diarize: job.diarize,
 			stage: config.app.stage,
 			huggingFaceToken: config.dev?.huggingfaceToken,
+			baseDirectory: destinationDirectory,
+			translationDirectory,
 		};
 
 		const transcriptionStartTime = new Date();
@@ -378,7 +377,6 @@ const pollTranscriptionQueue = async (
 			whisperBaseParams,
 			job.languageCode,
 			job.translate,
-			combineTranscribeAndTranslate,
 			job.engine === 'whisperx',
 			metrics,
 		);
@@ -423,7 +421,9 @@ const pollTranscriptionQueue = async (
 			userEmail: job.userEmail,
 			originalFilename: job.originalFilename,
 			combinedOutputKey: combinedOutputUrl?.key,
-			isTranslation: job.translate,
+			translationRequested: job.translate,
+			includesTranslation:
+				transcriptResult.transcriptTranslations !== undefined,
 			duration: ffmpegResult.duration,
 			maybeEnqueuedAtEpochMillis: maybeEnqueuedAtEpochMillis || undefined,
 		};
