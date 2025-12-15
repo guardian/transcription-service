@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { TranscriptionResult } from '@guardian/transcription-service-common';
 import { formatTime, parseSRT, TranscriptSegment } from '@/services/srt';
+import { ToggleSwitch } from 'flowbite-react';
 
 type TranscriptViewerProps = {
 	transcript: TranscriptionResult;
@@ -27,13 +28,17 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
 	const [segments, setSegments] = useState<TranscriptSegment[]>([]);
 	const activeSegmentRef = useRef<HTMLDivElement>(null);
 	const transcriptContainerRef = useRef<HTMLDivElement>(null);
+	const [showTranslation, setShowTranslation] = useState(false);
 
 	useEffect(() => {
-		if (transcript.transcripts.srt) {
-			const parsed = parseSRT(transcript.transcripts.srt);
+		const srt = showTranslation
+			? transcript.transcriptTranslations?.srt
+			: transcript.transcripts.srt;
+		if (srt) {
+			const parsed = parseSRT(srt);
 			setSegments(parsed);
 		}
-	}, [transcript]);
+	}, [transcript, showTranslation]);
 
 	useEffect(() => {
 		const handleTimeUpdate = () => {
@@ -134,6 +139,13 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
 				<h3 className="font-semibold text-gray-900 mb-3">
 					Interactive Transcript
 				</h3>
+				{transcript.transcriptTranslations && (
+					<ToggleSwitch
+						checked={showTranslation}
+						label="Show translation"
+						onChange={setShowTranslation}
+					/>
+				)}
 				<div
 					ref={transcriptContainerRef}
 					className="bg-white border border-gray-200 rounded-lg max-h-[600px] overflow-y-auto"

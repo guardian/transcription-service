@@ -281,7 +281,6 @@ const pollTranscriptionQueue = async (
 			: '/tmp';
 		const translationDirectory = `${destinationDirectory}/translation/`;
 
-		// ensure destination directory exists
 		logger.info(
 			`Ensuring ${destinationDirectory} and ${translationDirectory} exist`,
 		);
