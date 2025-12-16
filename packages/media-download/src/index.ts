@@ -17,10 +17,13 @@ import { S3Client } from '@aws-sdk/client-s3';
 import { createReadStream } from 'node:fs';
 import {
 	downloadMediaWithRetry,
-	getYoutubeEvent,
+	getYtDlpMetricDimension,
 	isFailure,
 	ProxyData,
 	startProxyTunnels,
+	isSuccess,
+	YtDlpFailure,
+	YtDlpSuccess,
 } from './yt-dlp';
 import {
 	MediaDownloadFailureReason,
@@ -42,6 +45,7 @@ import {
 	mediaDownloadJobMetric,
 	MetricsService,
 } from '@guardian/transcription-service-backend-common/src/metrics';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
 // This needs to be kept in sync with CDK downloadVolume
 export const ECS_MEDIA_DOWNLOAD_WORKING_DIRECTORY = '/media-download';
@@ -172,6 +176,27 @@ const requestTranscription = async (
 	}
 };
 
+// We store success/bot block youtube events to indicate the likelihood of future
+// youtube jobs succeeding
+const updateYoutubeEvent = async (
+	id: string,
+	client: DynamoDBDocumentClient,
+	tableName: string,
+	result: YtDlpSuccess | YtDlpFailure,
+) => {
+	const statusOrErrorType = isSuccess(result)
+		? result.status
+		: result.errorType;
+	if (statusOrErrorType === 'SUCCESS' || statusOrErrorType === 'BOT_BLOCKED') {
+		const youtubeEvent = {
+			id,
+			eventTime: `${new Date().toISOString()}`,
+			status: statusOrErrorType,
+		};
+		await writeDynamoItem(client, tableName, youtubeEvent);
+	}
+};
+
 const main = async () => {
 	logger.info('Starting media download service');
 	const input = process.env.MESSAGE_BODY;
@@ -240,69 +265,51 @@ const main = async () => {
 		proxyUrls,
 	);
 
-	const successOrErrorType = isFailure(ytDlpResult)
-		? ytDlpResult.errorType
-		: ytDlpResult.status;
+	const { result, failures } = ytDlpResult;
+
+	logger.info(
+		`Finished download attempts with yt-dlp. Final status: ${result.status}, failures: ${failures.join(', ')}`,
+	);
+
 	await metrics.putMetric(mediaDownloadJobMetric, [
 		{
 			Name: 'status',
-			Value: successOrErrorType,
+			Value: getYtDlpMetricDimension(ytDlpResult),
 		},
 	]);
 
-	const youtubeEvent = getYoutubeEvent(
-		job.url,
-		successOrErrorType,
-		config.app.youtubeEventId,
+	await updateYoutubeEvent(
+		job.id,
+		dynamoClient,
+		config.app.eventsTableName,
+		result,
 	);
-	if (youtubeEvent) {
-		await writeDynamoItem(
-			dynamoClient,
-			config.app.eventsTableName,
-			youtubeEvent,
-		);
-	}
 
-	if (isFailure(ytDlpResult)) {
+	if (isFailure(result)) {
 		if (isTranscriptionMediaDownloadJob(job)) {
 			const tJob = TranscriptionMediaDownloadJob.parse(parsedInput);
-			await reportDownloadFailure(
-				config,
-				sqsClient,
-				tJob,
-				ytDlpResult.errorType,
-			);
+			await reportDownloadFailure(config, sqsClient, tJob, result.errorType);
 		} else if (isExternalMediaDownloadJob(job)) {
 			const externalJob = ExternalUrlJob.parse(parsedInput);
-			await reportExternalFailure(
-				externalJob,
-				sqsClient,
-				ytDlpResult.errorType,
-			);
+			await reportExternalFailure(externalJob, sqsClient, result.errorType);
 		}
 	} else {
 		if (isTranscriptionMediaDownloadJob(job)) {
 			const tJob = TranscriptionMediaDownloadJob.parse(parsedInput);
 			const key = await uploadToS3(
 				s3Client,
-				ytDlpResult.metadata,
+				result.metadata,
 				config.app.sourceMediaBucket,
 				tJob.id,
 			);
-			await requestTranscription(
-				config,
-				key,
-				sqsClient,
-				tJob,
-				ytDlpResult.metadata,
-			);
+			await requestTranscription(config, key, sqsClient, tJob, result.metadata);
 		} else if (isExternalMediaDownloadJob(job)) {
 			const externalJob = ExternalUrlJob.parse(parsedInput);
 			await uploadObjectWithPresignedUrl(
 				externalJob.mediaDownloadOutputSignedUrl,
-				ytDlpResult.metadata.mediaPath,
+				result.metadata.mediaPath,
 			);
-			await reportExternalJob(externalJob, sqsClient, ytDlpResult.metadata);
+			await reportExternalJob(externalJob, sqsClient, result.metadata);
 		}
 	}
 };
