@@ -13,6 +13,7 @@ import {
 	publishTranscriptionOutput,
 	readFile,
 	getASGClient,
+	ReceiveResult,
 } from '@guardian/transcription-service-backend-common';
 import {
 	DestinationService,
@@ -41,12 +42,11 @@ import {
 	transcriptionRateMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
 import { SQSClient } from '@aws-sdk/client-sqs';
-import { setTimeout } from 'timers/promises';
 import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import { checkSpotInterrupt } from './spot-termination';
 import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
 
-const POLLING_INTERVAL_SECONDS = 15;
+const LONG_POLLING_INTERVAL_SECONDS = 20;
 
 // Mutable variable is needed here to get feedback from checkSpotInterrupt
 let INTERRUPTION_TIME: Date | undefined = undefined;
@@ -97,7 +97,12 @@ const main = async () => {
 			instanceId,
 		);
 		if (config.app.stage === 'DEV' || lifecycleState === 'InService') {
-			await pollTranscriptionQueue(
+			const message = await getNextMessage({
+				client: sqsClient,
+				queueUrl: queueUrl,
+				WaitTimeSeconds: LONG_POLLING_INTERVAL_SECONDS,
+			});
+			processPollResult(
 				pollCount,
 				sqsClient,
 				queueUrl,
@@ -106,13 +111,19 @@ const main = async () => {
 				metrics,
 				config,
 				instanceId,
-			);
+				message,
+			)
+				.then(() => {
+					console.log(`finished another poll cycle, poll count ${pollCount}`);
+				})
+				.catch((e) => {
+					throw e;
+				});
 		} else {
 			logger.warn(
 				`instance in state ${lifecycleState} - waiting until it goes to InService.`,
 			);
 		}
-		await setTimeout(POLLING_INTERVAL_SECONDS * 1000);
 	}
 };
 
@@ -136,7 +147,7 @@ const publishTranscriptionOutputFailure = async (
 	}
 };
 
-const pollTranscriptionQueue = async (
+const processPollResult = async (
 	pollCount: number,
 	sqsClient: SQSClient,
 	taskQueueUrl: string,
@@ -145,6 +156,7 @@ const pollTranscriptionQueue = async (
 	metrics: MetricsService,
 	config: TranscriptionConfig,
 	instanceId: string,
+	message: ReceiveResult,
 ) => {
 	const stage = config.app.stage;
 	const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
@@ -161,8 +173,6 @@ const pollTranscriptionQueue = async (
 		instanceId,
 		asgName,
 	);
-
-	const message = await getNextMessage(sqsClient, taskQueueUrl);
 
 	if (isSqsFailure(message)) {
 		logger.error(`Failed to fetch message due to ${message.errorMsg}`);
