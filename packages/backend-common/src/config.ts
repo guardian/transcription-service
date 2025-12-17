@@ -197,10 +197,12 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		parameters,
 		paramPath,
 		'media-download/proxy-ip-address',
-	);
-	const mediaDownloadProxyIpAddresses = mediaDownloadProxyIpAddressParam
-		.split(',')
-		.map((ip) => ip.trim());
+	).trim();
+
+	const mediaDownloadProxyIpAddresses =
+		mediaDownloadProxyIpAddressParam === ''
+			? []
+			: mediaDownloadProxyIpAddressParam.split(',').map((ip) => ip.trim());
 
 	const useWhisperxParam = findParameter(
 		parameters,
