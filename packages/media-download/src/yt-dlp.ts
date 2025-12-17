@@ -4,17 +4,17 @@ import { logger } from '@guardian/transcription-service-backend-common';
 import {
 	MediaDownloadFailureReason,
 	MediaMetadata,
-	YoutubeEventDynamoItem,
 } from '@guardian/transcription-service-common';
 
-type YtDlpSuccess = {
+export type YtDlpSuccess = {
 	status: 'SUCCESS';
 	metadata: MediaMetadata;
 };
 
-type YtDlpFailure = {
+export type YtDlpFailure = {
 	errorType: MediaDownloadFailureReason;
 	status: 'FAILURE';
+	cookiesExpired?: boolean;
 };
 
 export const isSuccess = (
@@ -24,6 +24,17 @@ export const isSuccess = (
 export const isFailure = (
 	result: YtDlpSuccess | YtDlpFailure,
 ): result is YtDlpFailure => result.status === 'FAILURE';
+
+export const getYtDlpMetricDimension = (result: YtDlpRetryResult) => {
+	if (isSuccess(result.result)) {
+		return 'SUCCESS';
+	}
+	if (result.failures.some((failure) => failure.cookiesExpired)) {
+		// it's useful in metrics to know when cookies have expired so we can alarm and update them
+		return 'BOT_BLOCKED_COOKIES_EXPIRED';
+	}
+	return result.result.errorType;
+};
 
 const extractInfoJson = (
 	infoJsonPath: string,
@@ -85,33 +96,12 @@ export const startProxyTunnels = async (
 	}
 };
 
-// We store success/bot block youtube events to indicate the likelihood of future
-// youtube jobs succeeding
-export const getYoutubeEvent = (
-	url: string,
-	status: 'SUCCESS' | MediaDownloadFailureReason,
-	id: string,
-): YoutubeEventDynamoItem | undefined => {
-	const youtubeMatch = url.includes('youtube.com');
-	if (youtubeMatch && (status === 'SUCCESS' || status === 'BOT_BLOCKED')) {
-		return {
-			id,
-			eventTime: `${new Date().toISOString()}`,
-			status,
-		};
-	}
-	return undefined;
-};
-
 export const downloadMedia = async (
 	url: string,
 	workingDirectory: string,
 	id: string,
-	proxyUrls?: string[],
+	cookieProxyParam: string[],
 ): Promise<YtDlpSuccess | YtDlpFailure> => {
-	const nextProxy =
-		proxyUrls && proxyUrls.length > 0 ? proxyUrls[0] : undefined;
-	const proxyParams = nextProxy ? ['--proxy', nextProxy] : [];
 	try {
 		const filepathLocation = `${workingDirectory}/${id}.txt`;
 		// yt-dlp --print-to-file appends to the file, so wipe it first
@@ -135,7 +125,7 @@ export const downloadMedia = async (
 				'--newline',
 				'-o',
 				`${workingDirectory}/${id}.%(ext)s`,
-				...proxyParams,
+				...cookieProxyParam,
 				url,
 			],
 			true,
@@ -153,9 +143,14 @@ export const downloadMedia = async (
 				(result.stderr.includes('LOGIN_REQUIRED') ||
 					result.stderr.includes('HTTP Error 403'))
 			) {
-				if (proxyUrls && proxyUrls.length > 1) {
-					logger.info('Got blocked. Retrying yt-dlp with next proxy...');
-					return downloadMedia(url, workingDirectory, id, proxyUrls?.slice(1));
+				if (
+					result.stderr.includes('YouTube account cookies are no longer valid')
+				) {
+					return {
+						errorType: 'BOT_BLOCKED',
+						status: 'FAILURE',
+						cookiesExpired: true,
+					};
 				}
 				return { errorType: 'BOT_BLOCKED', status: 'FAILURE' };
 			} else {
@@ -180,4 +175,57 @@ export const downloadMedia = async (
 		logger.error(`Failed to download ${url}`, error);
 		return { errorType: 'FAILURE', status: 'FAILURE' };
 	}
+};
+
+export type YtDlpRetryResult = {
+	result: YtDlpSuccess | YtDlpFailure;
+	failures: Array<YtDlpFailure>;
+};
+
+export const downloadMediaWithRetry = async (
+	url: string,
+	workingDirectory: string,
+	id: string,
+	isYoutube: boolean,
+	proxyUrls: string[],
+	cookies?: string,
+): Promise<YtDlpRetryResult> => {
+	const failures: Array<YtDlpFailure> = [];
+	// try downloading via proxies
+	if (proxyUrls) {
+		const proxyParams = proxyUrls.map((proxyUrl) => ['--proxy', proxyUrl]);
+		for (const param of proxyParams) {
+			logger.info(`Attempting to download media with ${param.join(' ')}`);
+			const result = await downloadMedia(url, workingDirectory, id, param);
+
+			if (isFailure(result)) {
+				failures.push(result);
+				// if we get bot blocked, try again with the next proxy
+				if (result.errorType === 'BOT_BLOCKED') {
+					continue;
+				}
+			}
+			return { result, failures };
+		}
+	}
+
+	if (isYoutube && cookies) {
+		// Try logging in to perform the download
+		const path = '/tmp/cookies.txt';
+		fs.writeFileSync(path, cookies);
+		const cookieParam = ['--cookies', path];
+		logger.info(`Attempting to download media with cookies`);
+		const result = await downloadMedia(url, workingDirectory, id, cookieParam);
+		if (isSuccess(result)) {
+			return { result, failures };
+		} else {
+			failures.push(result);
+		}
+	}
+	// one last try with no proxy or cookies - download straight to the ecs container
+	const result = await downloadMedia(url, workingDirectory, id, []);
+	if (isFailure(result)) {
+		failures.push(result);
+	}
+	return { result, failures };
 };

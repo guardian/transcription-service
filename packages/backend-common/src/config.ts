@@ -27,6 +27,7 @@ export interface TranscriptionConfig {
 		mediaDownloadProxySSHKey: () => Promise<string>;
 		mediaDownloadProxyIpAddresses: string[];
 		mediaDownloadProxyPort: number;
+		mediaDownloadCookies: string;
 		mediaExportFunctionName: string;
 		useWhisperx: boolean;
 		eventsTableName: string;
@@ -196,10 +197,12 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		parameters,
 		paramPath,
 		'media-download/proxy-ip-address',
-	);
-	const mediaDownloadProxyIpAddresses = mediaDownloadProxyIpAddressParam
-		.split(',')
-		.map((ip) => ip.trim());
+	).trim();
+
+	const mediaDownloadProxyIpAddresses =
+		mediaDownloadProxyIpAddressParam === ''
+			? []
+			: mediaDownloadProxyIpAddressParam.split(',').map((ip) => ip.trim());
 
 	const useWhisperxParam = findParameter(
 		parameters,
@@ -216,6 +219,12 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 
 	const youtubeBlocked =
 		findParameter(parameters, paramPath, 'app/youtubeBlocked') === 'true';
+
+	const gtsAccountCookies = findParameter(
+		parameters,
+		paramPath,
+		'media-download/gts-cookie',
+	);
 
 	return {
 		auth: {
@@ -242,6 +251,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			mediaDownloadProxySSHKey,
 			mediaDownloadProxyIpAddresses,
 			mediaDownloadProxyPort: 1337,
+			mediaDownloadCookies: gtsAccountCookies,
 			mediaExportFunctionName,
 			useWhisperx,
 			eventsTableName,
