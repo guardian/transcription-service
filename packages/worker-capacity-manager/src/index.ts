@@ -37,7 +37,7 @@ const updateASGCapacity = async (
 
 	// It takes so long to start a new instance, we assume that it will generally
 	// be faster to allocate multiple jobs to the same box
-	const numServersForMessages = totalMessagesInQueue % JOBS_PER_BOX;
+	const numServersForMessages = Math.ceil(totalMessagesInQueue / JOBS_PER_BOX);
 
 	const minCapacity = Math.min(numServersForMessages, asgMaxCapacity);
 
