@@ -186,8 +186,9 @@ export const downloadMediaWithRetry = async (
 	url: string,
 	workingDirectory: string,
 	id: string,
+	isYoutube: boolean,
+	proxyUrls: string[],
 	cookies?: string,
-	proxyUrls?: string[],
 ): Promise<YtDlpRetryResult> => {
 	const failures: Array<YtDlpFailure> = [];
 	// try downloading via proxies
@@ -208,7 +209,7 @@ export const downloadMediaWithRetry = async (
 		}
 	}
 
-	if (url.startsWith('https://www.youtube.com') && cookies) {
+	if (isYoutube && cookies) {
 		// Try logging in to perform the download
 		const path = '/tmp/cookies.txt';
 		fs.writeFileSync(path, cookies);

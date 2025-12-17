@@ -255,14 +255,18 @@ const main = async () => {
 				proxyData,
 				workingDirectory,
 			)
-		: undefined;
+		: [];
+
+	const parsedUrl = new URL(job.url);
+	const isYoutube = parsedUrl.hostname === 'www.youtube.com';
 
 	const ytDlpResult = await downloadMediaWithRetry(
 		job.url,
 		workingDirectory,
 		job.id,
-		config.app.mediaDownloadCookies,
+		isYoutube,
 		proxyUrls,
+		config.app.mediaDownloadCookies,
 	);
 
 	const { result, failures } = ytDlpResult;
@@ -278,12 +282,14 @@ const main = async () => {
 		},
 	]);
 
-	await updateYoutubeEvent(
-		job.id,
-		dynamoClient,
-		config.app.eventsTableName,
-		result,
-	);
+	if (isYoutube) {
+		await updateYoutubeEvent(
+			job.id,
+			dynamoClient,
+			config.app.eventsTableName,
+			result,
+		);
+	}
 
 	if (isFailure(result)) {
 		if (isTranscriptionMediaDownloadJob(job)) {
