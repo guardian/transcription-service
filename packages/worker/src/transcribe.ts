@@ -18,6 +18,8 @@ import { SHAKIRA } from './shakira';
 
 interface FfmpegResult {
 	duration?: number;
+	fileContainsNoAudio: boolean;
+	failed: boolean;
 }
 
 export type WhisperModel = 'medium' | 'tiny';
@@ -94,13 +96,26 @@ export const runFfmpeg = async (
 					'docker',
 					['exec', containerId, 'ffmpeg', ...ffmpegParams],
 					true,
+					false,
 				)
-			: await runSpawnCommand('convertToWav', 'ffmpeg', ffmpegParams, true);
+			: await runSpawnCommand(
+					'convertToWav',
+					'ffmpeg',
+					ffmpegParams,
+					true,
+					false,
+				);
 
 		const duration = getDuration(res.stderr);
 
+		const fileContainsNoAudio = res.stderr.includes(
+			'Output file #0 does not contain any stream',
+		);
+
 		return {
 			duration,
+			fileContainsNoAudio,
+			failed: res.code !== 0,
 		};
 	} catch (error) {
 		logger.error('ffmpeg failed error:', error);

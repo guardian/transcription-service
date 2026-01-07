@@ -53,10 +53,16 @@ const transcriptionFailureMessageBody = (
 	originalFilename: string,
 	id: string,
 	sourceMediaDownloadUrl: string,
+	noAudioDetected: boolean,
 ): string => {
+	const noAudioMessage =
+		'No audio was detected in your source media file - please check that you uploaded the correct file.';
+	const basicErrorMessage =
+		'Please make sure that the file is a valid audio or video file.';
 	return `
 		<h1>Transcription for ${originalFilename} has failed.</h1>
 		<p>Please make sure that the file is a valid audio or video file.</p>
+		<p>${noAudioDetected ? noAudioMessage : basicErrorMessage}</p>
 		<p>Click <a href="${sourceMediaDownloadUrl}">here</a> to download the input media.</p>
 		<p>Contact digital.investigations@theguardian.com for support.</p>
 		<p>Transcription ID: ${id}</p>
@@ -168,6 +174,7 @@ const handleTranscriptionFailure = async (
 				transcriptionOutput.originalFilename,
 				transcriptionOutput.id,
 				sourceMediaDownloadUrl,
+				transcriptionOutput.noAudioDetected,
 			),
 		);
 
