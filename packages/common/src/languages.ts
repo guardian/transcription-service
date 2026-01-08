@@ -124,3 +124,5 @@ function getKeys<T extends Record<string, any>>(obj: T) {
 export const languageCodes = getKeys(languageCodeToLanguage);
 export const inputLanguageCodes = getKeys(languageCodeToLanguageWithAuto);
 export const outputLanguageCodes = getKeys(languageCodeToLanguageWithUnknown);
+export const isEnglish = (languageCodeOrName: string): boolean =>
+	['en', languageCodeToLanguage['en']].includes(languageCodeOrName);
