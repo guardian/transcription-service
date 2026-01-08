@@ -118,10 +118,7 @@ const processMessage = async (event: unknown) => {
 	const config = await getConfig();
 	console.log(JSON.stringify(event, null, 2));
 
-	const sqsClient = getSQSClient(
-		config.aws.region,
-		config.aws.localstackEndpoint,
-	);
+	const sqsClient = getSQSClient(config.aws, config.dev?.localstackEndpoint);
 	const parsedEvent = IncomingSQSEvent.safeParse(event);
 	if (!parsedEvent.success) {
 		logger.error(

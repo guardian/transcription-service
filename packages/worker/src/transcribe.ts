@@ -14,6 +14,7 @@ import {
 	MetricsService,
 	secondsForWhisperXStartupMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
+import { SHAKIRA } from './shakira';
 
 interface FfmpegResult {
 	duration?: number;
@@ -30,6 +31,7 @@ export type WhisperBaseParams = {
 	engine: TranscriptionEngine;
 	diarize: boolean;
 	stage: string;
+	huggingFaceToken?: string;
 };
 
 export const CONTAINER_FOLDER = '/input';
@@ -228,6 +230,10 @@ export const getTranscriptionText = async (
 	whisperX: boolean,
 	metrics: MetricsService,
 ): Promise<TranscriptionResult> => {
+	if (process.env.SHAKIRA_MODE) {
+		// in shakira mode, all input transcribes to shakira
+		return SHAKIRA;
+	}
 	if (combineTranscribeAndTranslate) {
 		return transcribeAndTranslate(
 			whisperBaseParams,
@@ -310,17 +316,28 @@ export const runWhisperX = async (
 	translate: boolean,
 	metrics: MetricsService,
 ) => {
-	const { wavPath, diarize, stage } = whisperBaseParams;
+	const { wavPath, stage, diarize, huggingFaceToken } = whisperBaseParams;
 	const fileName = path.parse(wavPath).name;
-	const model = languageCode === 'en' ? whisperBaseParams.model : 'large';
+	const model =
+		languageCode === 'auto' || languageCode === 'en' ? 'large' : 'large';
 	const languageCodeParam =
 		languageCode === 'auto' ? [] : ['--language', languageCode];
 	const translateParam = translate ? ['--task', 'translate'] : [];
+	const diarizeParam = diarize ? [`--diarize`] : [];
+
+	// below settings deal with differences between DEV and CODE/PROD environments
+
 	// On mac arm processors, we need to set the compute type to int8
 	// see https://github.com/m-bain/whisperX?tab=readme-ov-file#usage--command-line
 	const computeParam = stage === 'DEV' ? ['--compute', 'int8'] : [];
+	// in DEV we can (and might need to) download models, otherwise they will be
+	// baked into the AMI
+	const useCachedModelsParam =
+		stage === 'DEV' ? [] : ['--model_cache_only', 'True'];
+	const huggingfaceTokenParam =
+		stage === 'DEV' && huggingFaceToken ? ['--hf_token', huggingFaceToken] : [];
+
 	try {
-		const diarizeParam = diarize ? [`--diarize`] : [];
 		let secondsForWhisperXStartup: number | undefined = undefined;
 		const startEpochMillis = Date.now();
 		const result = await runSpawnCommand(
@@ -334,8 +351,8 @@ export const runWhisperX = async (
 				...diarizeParam,
 				...computeParam,
 				'--no_align',
-				'--model_cache_only',
-				'True',
+				...useCachedModelsParam,
+				...huggingfaceTokenParam,
 				'--output_dir',
 				path.parse(wavPath).dir,
 				wavPath,

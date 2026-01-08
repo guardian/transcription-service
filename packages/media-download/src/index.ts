@@ -155,7 +155,7 @@ const requestTranscription = async (
 	metadata: MediaMetadata,
 ) => {
 	const signedUrl = await getSignedDownloadUrl(
-		config.aws.region,
+		config.aws,
 		config.app.sourceMediaBucket,
 		s3Key,
 		604800, // one week in seconds
@@ -221,20 +221,17 @@ const main = async () => {
 
 	const metrics = new MetricsService(
 		config.app.stage,
-		config.aws.region,
+		config.aws,
 		'media-download',
 	);
 
 	const dynamoClient = getDynamoClient(
-		config.aws.region,
-		config.aws.localstackEndpoint,
+		config.aws,
+		config.dev?.localstackEndpoint,
 	);
 
-	const s3Client = new S3Client({ region: config.aws.region });
-	const sqsClient = getSQSClient(
-		config.aws.region,
-		config.aws.localstackEndpoint,
-	);
+	const s3Client = new S3Client(config.aws);
+	const sqsClient = getSQSClient(config.aws, config.dev?.localstackEndpoint);
 
 	const useProxy =
 		config.app.stage !== 'DEV' || process.env['USE_PROXY'] === 'true';

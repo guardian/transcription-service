@@ -1,8 +1,9 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 import { logger } from '@guardian/transcription-service-backend-common';
+import { AwsConfig } from '@guardian/transcription-service-backend-common/src/types';
 
-export const getSESClient = (region: string) => {
-	return new SESClient({ region });
+export const getSESClient = (awsConfig: AwsConfig) => {
+	return new SESClient(awsConfig);
 };
 
 export const sendEmail = async (

@@ -48,11 +48,8 @@ const updateASGCapacity = async (
 
 const updateASGsCapacity = async () => {
 	const config = await getConfig();
-	const sqsClient = getSQSClient(
-		config.aws.region,
-		config.aws.localstackEndpoint,
-	);
-	const asgClient = getASGClient(config.aws.region);
+	const sqsClient = getSQSClient(config.aws, config.dev?.localstackEndpoint);
+	const asgClient = getASGClient(config.aws);
 	const asgName = `transcription-service-workers-${config.app.stage}`;
 	const gpuAsgName = `transcription-service-gpu-workers-${config.app.stage}`;
 	await updateASGCapacity(

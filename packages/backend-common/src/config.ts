@@ -4,6 +4,7 @@ import { defaultProvider } from '@aws-sdk/credential-provider-node';
 import { logger } from '@guardian/transcription-service-backend-common';
 import { DestinationService } from '@guardian/transcription-service-common';
 import { SecretsManager } from '@aws-sdk/client-secrets-manager';
+import { AwsConfig } from './types';
 
 export interface TranscriptionConfig {
 	auth: {
@@ -34,9 +35,10 @@ export interface TranscriptionConfig {
 		youtubeEventId: string;
 		youtubeBlocked: boolean;
 	};
-	aws: {
-		region: string;
-		localstackEndpoint?: string;
+	aws: AwsConfig;
+	dev?: {
+		huggingfaceToken: string;
+		localstackEndpoint: string;
 	};
 }
 
@@ -94,6 +96,24 @@ const getEnvVarOrMetadata = async (
 	return clean ? clean(metadataValue) : metadataValue;
 };
 
+const devConfig = (
+	parameters: Parameter[],
+	paramPath: string,
+	sqsTaskQueueUrl: string,
+): TranscriptionConfig['dev'] => {
+	const huggingfaceToken = findParameter(
+		parameters,
+		paramPath,
+		'dev/huggingfaceToken',
+	);
+	// AWS clients take an optional 'endpoint' property that is only needed by localstack. Here we infer the endpoint (http://localhost:4566) from the sqs url
+	const localstackEndpoint = new URL(sqsTaskQueueUrl).origin;
+	return {
+		huggingfaceToken,
+		localstackEndpoint,
+	};
+};
+
 export const getConfig = async (): Promise<TranscriptionConfig> => {
 	const region = await getEnvVarOrMetadata(
 		'AWS_REGION',
@@ -102,10 +122,11 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		(az) => az.slice(0, -1),
 	);
 	const stage = await getEnvVarOrMetadata('STAGE', 'tags/instance/Stage');
-	const ssm = new SSM({
+	const awsConfig = {
 		region,
 		credentials: credentialProvider(stage !== 'DEV'),
-	});
+	};
+	const ssm = new SSM(awsConfig);
 	const app = await getEnvVarOrMetadata('APP', 'tags/instance/App');
 
 	const paramPath = `/${stage}/investigations/transcription-service/`;
@@ -142,10 +163,6 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		paramPath,
 		'destinationQueueUrls/giant',
 	);
-	// AWS clients take an optional 'endpoint' property that is only needed by localstack - on code/prod you don't need
-	// to set it. Here we inder the endpoint (http://localhost:4566) from the sqs url
-	const localstackEndpoint =
-		stage === 'DEV' ? new URL(taskQueueUrl).origin : undefined;
 
 	const authClientId = findParameter(parameters, paramPath, 'auth/clientId');
 	const authClientSecret = findParameter(
@@ -226,6 +243,11 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		'media-download/gts-cookie',
 	);
 
+	const devConfiguration =
+		stage === 'DEV'
+			? devConfig(parameters, paramPath, taskQueueUrl)
+			: undefined;
+
 	return {
 		auth: {
 			clientId: authClientId,
@@ -258,9 +280,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			youtubeEventId: 'media-download/youtube',
 			youtubeBlocked,
 		},
-		aws: {
-			region,
-			localstackEndpoint,
-		},
+		aws: awsConfig,
+		dev: devConfiguration,
 	};
 };

@@ -61,18 +61,11 @@ const main = async () => {
 			? ''
 			: readFile('/var/lib/cloud/data/instance-id').trim();
 
-	const metrics = new MetricsService(
-		config.app.stage,
-		config.aws.region,
-		'worker',
-	);
+	const metrics = new MetricsService(config.app.stage, config.aws, 'worker');
 
-	const sqsClient = getSQSClient(
-		config.aws.region,
-		config.aws.localstackEndpoint,
-	);
+	const sqsClient = getSQSClient(config.aws, config.dev?.localstackEndpoint);
 
-	const autoScalingClient = getASGClient(config.aws.region);
+	const autoScalingClient = getASGClient(config.aws);
 	const isGpu = config.app.app.startsWith('transcription-service-gpu-worker');
 	const asgName = isGpu
 		? `transcription-service-gpu-workers-${config.app.stage}`
@@ -365,16 +358,15 @@ const pollTranscriptionQueue = async (
 			file: fileToTranscribe,
 			numberOfThreads,
 			// whisperx always runs on powerful gpu instances so let's always use the medium model
-			model:
-				job.engine !== 'whisperx' && config.app.stage !== 'PROD'
-					? 'tiny'
-					: 'medium',
+			model: config.app.stage === 'DEV' ? 'tiny' : 'medium',
 			engine: job.engine,
 			diarize: job.diarize,
 			stage: config.app.stage,
+			huggingFaceToken: config.dev?.huggingfaceToken,
 		};
 
 		const transcriptionStartTime = new Date();
+
 		const transcriptResult = await getTranscriptionText(
 			whisperBaseParams,
 			job.languageCode,
@@ -383,13 +375,16 @@ const pollTranscriptionQueue = async (
 			job.engine === 'whisperx',
 			metrics,
 		);
+
 		const transcriptionEndTime = new Date();
 		const transcriptionTimeSeconds = Math.round(
 			(transcriptionEndTime.getTime() - transcriptionStartTime.getTime()) /
 				1000,
 		);
 		const transcriptionRate =
-			ffmpegResult.duration && ffmpegResult.duration / transcriptionTimeSeconds;
+			ffmpegResult.duration &&
+			transcriptionTimeSeconds > 0 &&
+			ffmpegResult.duration / transcriptionTimeSeconds;
 
 		if (transcriptionRate) {
 			await metrics.putMetric(transcriptionRateMetric(transcriptionRate));

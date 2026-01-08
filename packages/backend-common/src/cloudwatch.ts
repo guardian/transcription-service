@@ -4,9 +4,10 @@ import {
 	PutMetricDataInput,
 } from '@aws-sdk/client-cloudwatch';
 import { logger } from './logging';
+import { AwsConfig } from './types';
 
-export const getCloudwatchClient = (region: string) => {
-	return new CloudWatchClient({ region });
+export const getCloudwatchClient = (awsConfig: AwsConfig) => {
+	return new CloudWatchClient(awsConfig);
 };
 
 export const putMetricData = async (
