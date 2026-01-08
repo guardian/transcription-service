@@ -1,3 +1,5 @@
+import { DocExportType, TranscriptionResult } from './types';
+
 interface UploadSuccess {
 	isSuccess: true;
 }
@@ -50,5 +52,22 @@ export const uploadToS3 = async (
 			isSuccess: false,
 			errorMsg,
 		};
+	}
+};
+
+export const getTranscriptDoc = (
+	docExportType: DocExportType,
+	transcriptResult: TranscriptionResult,
+) => {
+	switch (docExportType) {
+		case 'text':
+		case 'srt':
+			return transcriptResult.transcripts[docExportType];
+		case 'translation-srt':
+			return transcriptResult.transcriptTranslations?.['srt'];
+		case 'translation-text':
+			return transcriptResult.transcriptTranslations?.['text'];
+		default:
+			throw new Error('Invalid doc export type');
 	}
 };
