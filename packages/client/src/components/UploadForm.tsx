@@ -207,7 +207,7 @@ export const UploadForm = () => {
 	const [translationRequested, setTranslationRequested] =
 		useState<boolean>(false);
 	const [diarizationRequested, setDiarizationRequested] =
-		useState<boolean>(false);
+		useState<boolean>(true);
 	const [mediaSource, setMediaSource] = useState<MediaSourceType>('file');
 	const [mediaUrls, setMediaUrls] = useState<Record<string, RequestStatus>>({});
 	const [mediaUrlInputs, setMediaUrlInputs] = useState<MediaUrlInput[]>([
@@ -489,6 +489,9 @@ export const UploadForm = () => {
 							onChange={(e) => {
 								setMediaFileLanguageCode(e.target.value as InputLanguageCode);
 								setLanguageCodeValid(true);
+								if (e.target.value !== 'en') {
+									setTranslationRequested(true);
+								}
 							}}
 						>
 							<option disabled selected>
