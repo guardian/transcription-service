@@ -75,10 +75,10 @@ export const exportMediaToDrive = async (
 
 const processExport = async (exportRequest: TranscriptExportRequest) => {
 	const config = await getConfig();
-	const s3Client = new S3Client(config.aws.region);
+	const s3Client = new S3Client(config.aws);
 
 	const dynamoClient = getDynamoClient(
-		config.aws.region,
+		config.aws,
 		config.dev?.localstackEndpoint,
 	);
 	const getItemResult = await getTranscriptionItem(

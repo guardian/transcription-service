@@ -110,7 +110,7 @@ const handleTranscriptionSuccess = async (
 
 	try {
 		await writeDynamoItem(
-			getDynamoClient(config.aws.region, config.dev?.localstackEndpoint),
+			getDynamoClient(config.aws, config.dev?.localstackEndpoint),
 			config.app.tableName,
 			dynamoItem,
 		);
@@ -218,11 +218,11 @@ const handleMediaDownloadFailure = async (
 
 const processMessage = async (event: unknown) => {
 	const config = await getConfig();
-	const sesClient = getSESClient(config.aws.region);
+	const sesClient = getSESClient(config.aws);
 
 	const metrics = new MetricsService(
 		config.app.stage,
-		config.aws.region,
+		config.aws,
 		'output-handler',
 	);
 
@@ -250,7 +250,7 @@ const processMessage = async (event: unknown) => {
 				`Handling transcription failure. Transcription output: ${JSON.stringify(transcriptionOutput)}`,
 			);
 			const sourceMediaDownloadUrl = await getSignedDownloadUrl(
-				config.aws.region,
+				config.aws,
 				config.app.sourceMediaBucket,
 				transcriptionOutput.id,
 				ONE_WEEK_IN_SECONDS,

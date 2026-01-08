@@ -67,17 +67,14 @@ const getApp = async () => {
 	const app = express();
 	const apiRouter = express.Router();
 
-	const sqsClient = getSQSClient(
-		config.aws.region,
-		config.dev?.localstackEndpoint,
-	);
+	const sqsClient = getSQSClient(config.aws, config.dev?.localstackEndpoint);
 
-	const s3Client = getS3Client(config.aws.region);
+	const s3Client = getS3Client(config.aws);
 	const dynamoClient: DynamoDBDocumentClient = getDynamoClient(
-		config.aws.region,
+		config.aws,
 		config.dev?.localstackEndpoint,
 	);
-	const lambdaClient = new LambdaClient({ region: config.aws.region });
+	const lambdaClient = new LambdaClient(config.aws);
 
 	app.use(bodyParser.json({ limit: '40mb' }));
 	app.use(passport.initialize());
@@ -155,7 +152,7 @@ const getApp = async () => {
 			// confirm that the current user uploaded the file with this key
 			const s3Key = body.data.s3Key;
 			const objectMetadata = await getObjectMetadata(
-				config.aws.region,
+				config.aws,
 				config.app.sourceMediaBucket,
 				s3Key,
 			);
@@ -189,7 +186,7 @@ const getApp = async () => {
 			);
 
 			const signedUrl = await getSignedDownloadUrl(
-				config.aws.region,
+				config.aws,
 				config.app.sourceMediaBucket,
 				s3Key,
 				604800, // one week in seconds
@@ -301,7 +298,7 @@ const getApp = async () => {
 				return;
 			}
 			const mediaDownloadUrl = await getSignedDownloadUrl(
-				config.aws.region,
+				config.aws,
 				config.app.sourceMediaBucket,
 				getItemResult.item.id,
 				TWELVE_HOURS_IN_SECONDS,
@@ -483,7 +480,7 @@ const getApp = async () => {
 
 			const s3Key = uuid4();
 			const presignedS3Url = await getSignedUploadUrl(
-				config.aws.region,
+				config.aws,
 				config.app.sourceMediaBucket,
 				req.user?.email ?? 'not found',
 				60,

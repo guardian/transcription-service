@@ -4,6 +4,7 @@ import { defaultProvider } from '@aws-sdk/credential-provider-node';
 import { logger } from '@guardian/transcription-service-backend-common';
 import { DestinationService } from '@guardian/transcription-service-common';
 import { SecretsManager } from '@aws-sdk/client-secrets-manager';
+import { AwsConfig } from './types';
 
 export interface TranscriptionConfig {
 	auth: {
@@ -34,9 +35,7 @@ export interface TranscriptionConfig {
 		youtubeEventId: string;
 		youtubeBlocked: boolean;
 	};
-	aws: {
-		region: string;
-	};
+	aws: AwsConfig;
 	dev?: {
 		huggingfaceToken: string;
 		localstackEndpoint: string;
@@ -123,10 +122,11 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		(az) => az.slice(0, -1),
 	);
 	const stage = await getEnvVarOrMetadata('STAGE', 'tags/instance/Stage');
-	const ssm = new SSM({
+	const awsConfig = {
 		region,
 		credentials: credentialProvider(stage !== 'DEV'),
-	});
+	};
+	const ssm = new SSM(awsConfig);
 	const app = await getEnvVarOrMetadata('APP', 'tags/instance/App');
 
 	const paramPath = `/${stage}/investigations/transcription-service/`;
@@ -280,9 +280,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			youtubeEventId: 'media-download/youtube',
 			youtubeBlocked,
 		},
-		aws: {
-			region,
-		},
+		aws: awsConfig,
 		dev: devConfiguration,
 	};
 };

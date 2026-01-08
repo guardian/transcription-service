@@ -19,7 +19,7 @@ import {
 	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
 import { logger } from '@guardian/transcription-service-backend-common';
-import { AWSStatus } from './types';
+import { AwsConfig, AWSStatus } from './types';
 
 interface SendSuccess {
 	status: AWSStatus.Success;
@@ -45,14 +45,13 @@ type SendResult = SendSuccess | SQSFailure;
 type ReceiveResult = ReceiveSuccess | SQSFailure;
 type DeleteResult = DeleteSuccess | SQSFailure;
 
-export const getSQSClient = (region: string, localstackEndpoint?: string) => {
-	const clientBaseConfig = {
-		region,
-	};
-
+export const getSQSClient = (
+	awsConfig: AwsConfig,
+	localstackEndpoint?: string,
+) => {
 	const clientConfig = localstackEndpoint
-		? { ...clientBaseConfig, endpoint: localstackEndpoint }
-		: clientBaseConfig;
+		? { ...awsConfig, endpoint: localstackEndpoint }
+		: awsConfig;
 
 	return new SQSClient(clientConfig);
 };
@@ -74,7 +73,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	const combinedOutputKey = `combined/${s3Key}.json`;
 
 	const combinedUrl = await getSignedUploadUrl(
-		config.aws.region,
+		config.aws,
 		config.app.transcriptionOutputBucket,
 		userEmail,
 		ONE_WEEK_IN_SECONDS,
@@ -126,7 +125,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		const translationId = `${s3Key}-translation`;
 		const translationCombinedOutputKey = `combined/${translationId}.json`;
 		const translationCombinedUrl = await getSignedUploadUrl(
-			config.aws.region,
+			config.aws,
 			config.app.transcriptionOutputBucket,
 			userEmail,
 			ONE_WEEK_IN_SECONDS,

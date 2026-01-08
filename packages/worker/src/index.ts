@@ -61,18 +61,11 @@ const main = async () => {
 			? ''
 			: readFile('/var/lib/cloud/data/instance-id').trim();
 
-	const metrics = new MetricsService(
-		config.app.stage,
-		config.aws.region,
-		'worker',
-	);
+	const metrics = new MetricsService(config.app.stage, config.aws, 'worker');
 
-	const sqsClient = getSQSClient(
-		config.aws.region,
-		config.dev?.localstackEndpoint,
-	);
+	const sqsClient = getSQSClient(config.aws, config.dev?.localstackEndpoint);
 
-	const autoScalingClient = getASGClient(config.aws.region);
+	const autoScalingClient = getASGClient(config.aws);
 	const isGpu = config.app.app.startsWith('transcription-service-gpu-worker');
 	const asgName = isGpu
 		? `transcription-service-gpu-workers-${config.app.stage}`

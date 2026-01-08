@@ -10,18 +10,15 @@ import {
 	TranscriptionDynamoItem,
 	YoutubeEventDynamoItem,
 } from '@guardian/transcription-service-common';
+import { AwsConfig } from './types';
 
 export const getDynamoClient = (
-	region: string,
+	awsConfig: AwsConfig,
 	localstackEndpoint?: string,
 ) => {
-	const clientBaseConfig = {
-		region,
-	};
-
 	const clientConfig = localstackEndpoint
-		? { ...clientBaseConfig, endpoint: localstackEndpoint }
-		: clientBaseConfig;
+		? { ...awsConfig, endpoint: localstackEndpoint }
+		: awsConfig;
 
 	const client = new DynamoDBClient(clientConfig);
 	return DynamoDBDocumentClient.from(client);

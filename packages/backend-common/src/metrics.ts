@@ -2,6 +2,7 @@ import { CloudWatchClient } from '@aws-sdk/client-cloudwatch';
 import { getCloudwatchClient, putMetricData } from './cloudwatch';
 import { StandardUnit } from '@aws-sdk/client-cloudwatch';
 import { Dimension } from '@aws-sdk/client-cloudwatch/dist-types/models/models_0';
+import { AwsConfig } from './types';
 
 type Metric = {
 	name: string;
@@ -50,8 +51,8 @@ export class MetricsService {
 	private readonly stage: string;
 	private readonly app: string;
 
-	constructor(stage: string, region: string, app: string) {
-		this.cloudwatchClient = getCloudwatchClient(region);
+	constructor(stage: string, awsConfig: AwsConfig, app: string) {
+		this.cloudwatchClient = getCloudwatchClient(awsConfig);
 		this.stage = stage;
 		this.app = app;
 	}

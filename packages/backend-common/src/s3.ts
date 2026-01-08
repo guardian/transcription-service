@@ -11,7 +11,7 @@ import { Readable } from 'stream';
 import { z } from 'zod';
 import axios from 'axios';
 import { logger } from '@guardian/transcription-service-backend-common';
-import { AWSStatus } from './types';
+import { AwsConfig, AWSStatus } from './types';
 import { ungzip } from 'node-gzip';
 import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
@@ -19,17 +19,17 @@ import { stat } from 'node:fs/promises';
 const ReadableBody = z.instanceof(Readable);
 
 export const getS3Client = (
-	region: string,
+	awsConfig: AwsConfig,
 	useAccelerateEndpoint: boolean = false,
 ) => {
 	return new S3Client({
-		region,
+		...awsConfig,
 		useAccelerateEndpoint,
 	});
 };
 
 export const getSignedUploadUrl = (
-	region: string,
+	awsConfig: AwsConfig,
 	bucket: string,
 	userEmail: string,
 	expiresIn: number,
@@ -49,7 +49,7 @@ export const getSignedUploadUrl = (
 			}
 		: metadata;
 	return getSignedUrlSdk(
-		getS3Client(region, useAccelerateEndpoint),
+		getS3Client(awsConfig, useAccelerateEndpoint),
 		new PutObjectCommand({
 			Bucket: bucket,
 			Key: id,
@@ -78,7 +78,7 @@ const sanitizeFilename = (filename: string) => {
 };
 
 export const getSignedDownloadUrl = async (
-	region: string,
+	awsConfig: AwsConfig,
 	bucket: string,
 	key: string,
 	expiresIn: number,
@@ -88,7 +88,7 @@ export const getSignedDownloadUrl = async (
 		? `attachment; filename="${sanitizeFilename(overrideFilename)}"`
 		: undefined;
 	return await getSignedUrlSdk(
-		getS3Client(region),
+		getS3Client(awsConfig),
 		new GetObjectCommand({
 			Bucket: bucket,
 			Key: key,
@@ -278,12 +278,12 @@ const downloadS3Data = async (
 };
 
 export const getObjectMetadata = async (
-	region: string,
+	awsConfig: AwsConfig,
 	bucket: string,
 	key: string,
 ) => {
 	try {
-		const client = getS3Client(region);
+		const client = getS3Client(awsConfig);
 		const data = await client.send(
 			new HeadObjectCommand({
 				Bucket: bucket,
