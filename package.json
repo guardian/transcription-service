@@ -18,7 +18,7 @@
 		"worker-capacity-manager::start": "APP=worker-capacity-manager AWS_REGION=eu-west-1 STAGE=DEV npm run start --workspace worker-capacity-manager",
 		"media-download::build": "npm run build --workspace media-download",
 		"media-download::start": "APP=media-download AWS_REGION=eu-west-1 STAGE=DEV npm run start --workspace media-download",
-		"worker::build": "npm run build --workspace worker; npm run build --workspace worker",
+		"worker::build": "npm run build --workspace worker",
 		"worker::package": "npm run package --workspace worker",
 		"gpu-worker::start": "APP=transcription-service-gpu-worker AWS_REGION=eu-west-1 STAGE=DEV TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=true pipenv run npm run start --workspace worker",
 		"gpu-worker::shakira": "SHAKIRA_MODE=true npm run gpu-worker::start",

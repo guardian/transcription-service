@@ -335,6 +335,8 @@ export class TranscriptionService extends GuStack {
 			`ln -s /usr/local/cuda-12.8 /usr/local/cuda`,
 			`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
 			`dpkg -i transcription-service-worker_1.0.0_all.deb`,
+			// warm up whisperx by transcribing sample file then start the service NOTE: won't work for whisper.cpp if we bring that back
+			`LD_LIBRARY_PATH=/usr/local/cuda/lib:/usr/local/cuda/lib64 CUDA_HOME=/usr/local/cuda PATH=/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin runuser -u ubuntu -- whisperx --model large --language en --no_align --model_cache_only True --output_dir /tmp /opt/transcription-service/sample.wav`,
 			`service transcription-service-worker start`,
 		].join('\n');
 
