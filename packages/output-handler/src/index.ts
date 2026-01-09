@@ -103,6 +103,7 @@ const handleTranscriptionSuccess = async (
 		combinedOutputKey: transcriptionOutput.combinedOutputKey,
 		userEmail: transcriptionOutput.userEmail,
 		completedAt: new Date().toISOString(),
+		includesTranslation: transcriptionOutput.includesTranslation,
 		languageCode: transcriptionOutput.languageCode,
 	};
 
