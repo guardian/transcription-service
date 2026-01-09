@@ -345,7 +345,7 @@ export const TranscriptionDynamoItem = z.object({
 	combinedOutputKey: z.string(),
 	userEmail: z.string(),
 	completedAt: z.optional(z.string()), // dynamodb can't handle dates so we need to use an ISO date
-	includesTranslation: z.boolean(),
+	includesTranslation: z.optional(z.boolean()),
 	languageCode: z.optional(OutputLanguageCode),
 	exportStatuses: z.optional(ExportStatuses),
 });
