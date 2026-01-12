@@ -72,6 +72,20 @@ deployments:
       publicReadAcl: false
     dependencies:
       - cfn-eu-west-1-investigations-transcription-service
+  transcription-service-gpu-worker:
+    type: autoscaling
+    actions: [deploy]
+    stacks:
+      - investigations
+    regions:
+      - eu-west-1
+    app: transcription-service-gpu-worker
+    dependencies:
+      - cfn-eu-west-1-investigations-transcription-service
+      - transcription-service-worker
+    parameters:
+      warmupGrace: 600
+      terminationGrace: 600
   lambda-upload-eu-west-1-investigations-transcription-service-output-handler:
     type: aws-lambda
     stacks:
