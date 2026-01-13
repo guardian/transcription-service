@@ -7,13 +7,13 @@ import {
 	getTranscriptionItem,
 	logger,
 	TranscriptionConfig,
-	TranscriptionDynamoItem,
 	writeDynamoItem,
 } from '@guardian/transcription-service-backend-common';
 import { S3Client } from '@aws-sdk/client-s3';
 import {
 	ExportStatus,
 	TranscriptExportRequest,
+	TranscriptionDynamoItem,
 	ZTokenResponse,
 } from '@guardian/transcription-service-common';
 import { updateStatuses } from 'api/src/export';

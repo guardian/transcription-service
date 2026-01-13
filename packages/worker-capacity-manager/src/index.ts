@@ -5,8 +5,9 @@ import {
 	getConfig,
 	getSQSClient,
 	logger,
+	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
-import { getMaxCapacity, setDesiredCapacity } from './asg';
+import { getMaxCapacity, refreshASG, setDesiredCapacity } from './asg';
 import { getSQSQueueLengthIncludingInvisible } from './sqs';
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
@@ -46,33 +47,45 @@ const updateASGCapacity = async (
 	await setDesiredCapacity(asgClient, asgName, desiredCapacity);
 };
 
-const updateASGsCapacity = async () => {
-	const config = await getConfig();
+const updateASGsCapacity = async (
+	config: TranscriptionConfig,
+	asgClient: AutoScalingClient,
+) => {
 	const sqsClient = getSQSClient(config.aws, config.dev?.localstackEndpoint);
-	const asgClient = getASGClient(config.aws);
-	const asgName = `transcription-service-workers-${config.app.stage}`;
-	const gpuAsgName = `transcription-service-gpu-workers-${config.app.stage}`;
 	await updateASGCapacity(
 		asgClient,
 		sqsClient,
 		config.app.taskQueueUrl,
-		asgName,
+		config.app.cpuAsgName,
 	);
 	await updateASGCapacity(
 		asgClient,
 		sqsClient,
 		config.app.gpuTaskQueueUrl,
-		gpuAsgName,
+		config.app.gpuAsgName,
 		config.app.stage === 'PROD' ? 1 : 0, // always have at least 1 GPU worker in PROD
 	);
 };
-const handler: Handler = async () => {
-	await updateASGsCapacity();
-	return 'Updated the ASG capacity';
+const handler: Handler = async (event) => {
+	const config = await getConfig();
+	const asgClient = getASGClient(config.aws);
+	if (event.source === 'aws.s3' && event['detail-type'] === 'Object Created') {
+		// new worker artifact - refresh the autoscaling group
+		await refreshASG(
+			asgClient,
+			`transcription-service-gpu-workers-${config.app.stage}`,
+		);
+		return 'Triggered instance refresh';
+	} else {
+		await updateASGsCapacity(config, asgClient);
+		return 'Updated the ASG capacity';
+	}
 };
 
 if (!process.env['AWS_EXECUTION_ENV']) {
-	updateASGsCapacity();
+	getConfig().then((config) =>
+		updateASGsCapacity(config, getASGClient(config.aws)),
+	);
 }
 
 export { handler as workerCapacityManager };

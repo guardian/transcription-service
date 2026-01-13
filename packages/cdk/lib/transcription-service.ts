@@ -897,6 +897,7 @@ export class TranscriptionService extends GuStack {
 				actions: [
 					'autoscaling:SetDesiredCapacity',
 					'autoscaling:DescribeAutoScalingInstances',
+					'autoscaling:StartInstanceRefresh',
 				],
 				resources: [
 					transcriptionWorkerASG.autoScalingGroupArn,
@@ -933,6 +934,31 @@ export class TranscriptionService extends GuStack {
 				new aws_events_targets.LambdaFunction(workerCapacityManagerLambda),
 			],
 			schedule: Schedule.rate(Duration.minutes(1)),
+		});
+
+		new Rule(this, 'worker-capacity-manager-s3-trigger-rule', {
+			description:
+				'Triggers worker capacity manager when worker package is updated in S3',
+			targets: [
+				new aws_events_targets.LambdaFunction(workerCapacityManagerLambda),
+			],
+			eventPattern: {
+				source: ['aws.s3'],
+				detailType: ['Object Created'],
+				detail: {
+					bucket: {
+						name: [
+							GuDistributionBucketParameter.getInstance(this).valueAsString,
+						],
+					},
+					object: {
+						key: [
+							`${props.stack}/${props.stage}/${workerApp}/transcription-service-worker_1.0.0_all.deb`,
+						],
+					},
+					reason: ['PutObject', 'PostObject', 'CompleteMultipartUpload'],
+				},
+			},
 		});
 
 		// alarms

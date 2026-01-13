@@ -34,6 +34,8 @@ export interface TranscriptionConfig {
 		eventsTableName: string;
 		youtubeEventId: string;
 		youtubeBlocked: boolean;
+		cpuAsgName: string;
+		gpuAsgName: string;
 	};
 	aws: AwsConfig;
 	dev?: {
@@ -279,6 +281,8 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			eventsTableName,
 			youtubeEventId: 'media-download/youtube',
 			youtubeBlocked,
+			cpuAsgName: `transcription-service-workers-${stage}`,
+			gpuAsgName: `transcription-service-gpu-workers-${stage}`,
 		},
 		aws: awsConfig,
 		dev: devConfiguration,
