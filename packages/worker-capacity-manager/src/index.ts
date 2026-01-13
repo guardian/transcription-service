@@ -52,12 +52,13 @@ const updateASGsCapacity = async (
 	asgClient: AutoScalingClient,
 ) => {
 	const sqsClient = getSQSClient(config.aws, config.dev?.localstackEndpoint);
-	await updateASGCapacity(
-		asgClient,
-		sqsClient,
-		config.app.taskQueueUrl,
-		config.app.cpuAsgName,
-	);
+	// cpu capacity manager has been disabled whilst we aren't using whisper.cpp
+	// await updateASGCapacity(
+	// 	asgClient,
+	// 	sqsClient,
+	// 	config.app.taskQueueUrl,
+	// 	config.app.cpuAsgName,
+	// );
 	await updateASGCapacity(
 		asgClient,
 		sqsClient,
