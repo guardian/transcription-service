@@ -2,7 +2,6 @@ import {
 	AutoScalingClient,
 	DescribeAutoScalingGroupsCommand,
 	SetDesiredCapacityCommand,
-	StartInstanceRefreshCommand,
 } from '@aws-sdk/client-auto-scaling';
 import { logger } from '@guardian/transcription-service-backend-common';
 
@@ -43,33 +42,6 @@ export const getMaxCapacity = async (
 		return undefined;
 	} catch (error) {
 		logger.error("Couldn't get max capacity", error);
-		throw error;
-	}
-};
-
-export const refreshASG = async (
-	asgClient: AutoScalingClient,
-	asgName: string,
-) => {
-	logger.info(`Starting instance refresh for ASG ${asgName}`);
-
-	try {
-		const command = new StartInstanceRefreshCommand({
-			AutoScalingGroupName: asgName,
-			Strategy: 'Rolling',
-			Preferences: {
-				MinHealthyPercentage: 0,
-				// allow transcription jobs to finish before refresh
-				ScaleInProtectedInstances: 'Wait',
-			},
-		});
-		const response = await asgClient.send(command);
-		logger.info(
-			`Instance refresh started for ASG ${asgName}, refresh ID: ${response.InstanceRefreshId}`,
-		);
-		return response.InstanceRefreshId;
-	} catch (error) {
-		logger.error(`Couldn't start instance refresh for ASG ${asgName}`, error);
 		throw error;
 	}
 };
