@@ -34,6 +34,8 @@ export interface TranscriptionConfig {
 		eventsTableName: string;
 		youtubeEventId: string;
 		youtubeBlocked: boolean;
+		workerArtifactBucket: string;
+		workerArtifactKey: string;
 	};
 	aws: AwsConfig;
 	dev?: {
@@ -248,6 +250,18 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			? devConfig(parameters, paramPath, taskQueueUrl)
 			: undefined;
 
+	const workerArtifactBucket = findParameter(
+		parameters,
+		paramPath,
+		'worker/artifactBucket',
+	);
+
+	const workerArtifactKey = findParameter(
+		parameters,
+		paramPath,
+		'worker/artifactKey',
+	);
+
 	return {
 		auth: {
 			clientId: authClientId,
@@ -279,6 +293,8 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			eventsTableName,
 			youtubeEventId: 'media-download/youtube',
 			youtubeBlocked,
+			workerArtifactBucket,
+			workerArtifactKey,
 		},
 		aws: awsConfig,
 		dev: devConfiguration,

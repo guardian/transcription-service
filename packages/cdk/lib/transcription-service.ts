@@ -325,6 +325,7 @@ export class TranscriptionService extends GuStack {
 		// worker autoscaling group
 
 		const workerApp = `${APP_NAME}-worker`;
+		const gpuWorkerApp = `${APP_NAME}-gpu-worker`;
 		const userData = UserData.forLinux({ shebang: '#!/bin/bash' });
 
 		const userDataCommands = [
@@ -372,8 +373,26 @@ export class TranscriptionService extends GuStack {
 					],
 					resources: [loggingStreamArn],
 				}),
+				new GuPolicy(this, 'DescribeInstancesPolicy', {
+					statements: [
+						new PolicyStatement({
+							actions: ['ec2:DescribeInstances'],
+							resources: ['*'],
+							conditions: {
+								StringEquals: {
+									'ec2:ResourceTag/App': [workerApp, gpuWorkerApp],
+									'ec2:ResourceTag/Stack': props.stack,
+									'ec2:ResourceTag/Stage': props.stage,
+								},
+							},
+						}),
+					],
+				}),
 				new GuAllowPolicy(this, 'SetInstanceProtection', {
-					actions: ['autoscaling:SetInstanceProtection'],
+					actions: [
+						'autoscaling:SetInstanceProtection',
+						'autoscaling:TerminateInstanceInAutoScalingGroup',
+					],
 					resources: [
 						`arn:aws:autoscaling:${props.env.region}:${this.account}:autoScalingGroup:*:autoScalingGroupName/${workerAutoscalingGroupName}`,
 						`arn:aws:autoscaling:${props.env.region}:${this.account}:autoScalingGroup:*:autoScalingGroupName/${gpuWorkerAutoscalingGroupName}`,

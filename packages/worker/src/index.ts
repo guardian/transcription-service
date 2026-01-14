@@ -13,6 +13,7 @@ import {
 	publishTranscriptionOutput,
 	readFile,
 	getASGClient,
+	getS3Client,
 } from '@guardian/transcription-service-backend-common';
 import {
 	OutputLanguageCode,
@@ -30,7 +31,11 @@ import {
 } from './transcribe';
 import path from 'path';
 
-import { getInstanceLifecycleState, updateScaleInProtection } from './asg';
+import {
+	getInstanceLifecycleState,
+	terminateInstance,
+	updateScaleInProtection,
+} from './asg';
 import { uploadedCombinedResultsToS3 } from './util';
 import {
 	MetricsService,
@@ -45,6 +50,8 @@ import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import { checkSpotInterrupt } from './spot-termination';
 import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
 import fs from 'node:fs';
+import { EC2Client } from '@aws-sdk/client-ec2';
+import { getInstanceStartTime, newArtifactAvailable } from './self-deploy';
 
 const POLLING_INTERVAL_SECONDS = 15;
 
@@ -64,6 +71,8 @@ const main = async () => {
 	const metrics = new MetricsService(config.app.stage, config.aws, 'worker');
 
 	const sqsClient = getSQSClient(config.aws, config.dev?.localstackEndpoint);
+	const ec2Client = new EC2Client(config.aws);
+	const s3Client = getS3Client(config.aws);
 
 	const autoScalingClient = getASGClient(config.aws);
 	const isGpu = config.app.app.startsWith('transcription-service-gpu-worker');
@@ -71,6 +80,8 @@ const main = async () => {
 		? `transcription-service-gpu-workers-${config.app.stage}`
 		: `transcription-service-workers-${config.app.stage}`;
 	const queueUrl = isGpu ? config.app.gpuTaskQueueUrl : config.app.taskQueueUrl;
+
+	const instanceStartTime = await getInstanceStartTime(ec2Client, instanceId);
 
 	logger.info(`Worker reading from queue ${queueUrl}`);
 
@@ -84,6 +95,17 @@ const main = async () => {
 	// keep polling unless instance is scheduled for termination
 	while (!INTERRUPTION_TIME) {
 		pollCount += 1;
+		const shouldTerminate = await newArtifactAvailable(
+			instanceStartTime,
+			s3Client,
+			config.app.workerArtifactBucket,
+			config.app.workerArtifactKey,
+		);
+		if (shouldTerminate) {
+			logger.info('New worker artifact detected, terminating this instance');
+			await terminateInstance(autoScalingClient, instanceId);
+			return;
+		}
 		const lifecycleState = await getInstanceLifecycleState(
 			autoScalingClient,
 			config.app.stage,
