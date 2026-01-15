@@ -16,10 +16,10 @@ export const getObjectLastModified = async (
 		return response.LastModified;
 	} catch (error) {
 		logger.error(
-			`Failed to get last modified date for s3://${bucket}/${key}`,
+			`WARNING: Failed to get last modified date for deployment artifact. App will not self deploy. Artifact location: s3://${bucket}/${key}. `,
 			error,
 		);
-		throw error;
+		return undefined;
 	}
 };
 
