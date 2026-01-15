@@ -61,12 +61,17 @@ export const setInterruptionTime = (time: Date) => (INTERRUPTION_TIME = time);
 export const getCurrentReceiptHandle = () => CURRENT_MESSAGE_RECEIPT_HANDLE;
 
 const main = async () => {
+	// This time won't be accurate if the app restarts. I went for this rather than
+	// using the EC2 DescribeInstances command to reduce the extra permissions
+	// needed, but we could reconsider
 	const appStartTime = new Date();
+
 	const config = await getConfig();
 	const instanceId =
 		config.app.stage === 'DEV'
 			? ''
 			: readFile('/var/lib/cloud/data/instance-id').trim();
+	logger.info(`Retrieved instance id: ${instanceId}`);
 
 	const metrics = new MetricsService(config.app.stage, config.aws, 'worker');
 
@@ -92,12 +97,14 @@ const main = async () => {
 	// keep polling unless instance is scheduled for termination
 	while (!INTERRUPTION_TIME) {
 		pollCount += 1;
-		const shouldTerminate = await newArtifactAvailable(
-			appStartTime,
-			s3Client,
-			config.app.workerArtifactBucket,
-			config.app.workerArtifactKey,
-		);
+		const shouldTerminate =
+			config.app.stage !== 'DEV' &&
+			(await newArtifactAvailable(
+				appStartTime,
+				s3Client,
+				config.app.workerArtifactBucket,
+				config.app.workerArtifactKey,
+			));
 		if (shouldTerminate) {
 			logger.info('New worker artifact detected, terminating this instance');
 			await terminateInstance(autoScalingClient, instanceId);

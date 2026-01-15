@@ -15,8 +15,6 @@ export const updateScaleInProtection = async (
 ) => {
 	try {
 		if (stage !== 'DEV') {
-			logger.info(`instanceId retrieved from worker instance: ${instanceId}`);
-
 			const input = {
 				InstanceIds: [instanceId],
 				AutoScalingGroupName: asgName,
