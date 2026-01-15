@@ -50,8 +50,7 @@ import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import { checkSpotInterrupt } from './spot-termination';
 import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
 import fs from 'node:fs';
-import { EC2Client } from '@aws-sdk/client-ec2';
-import { getInstanceStartTime, newArtifactAvailable } from './self-deploy';
+import { newArtifactAvailable } from './s3';
 
 const POLLING_INTERVAL_SECONDS = 15;
 
@@ -62,6 +61,7 @@ export const setInterruptionTime = (time: Date) => (INTERRUPTION_TIME = time);
 export const getCurrentReceiptHandle = () => CURRENT_MESSAGE_RECEIPT_HANDLE;
 
 const main = async () => {
+	const appStartTime = new Date();
 	const config = await getConfig();
 	const instanceId =
 		config.app.stage === 'DEV'
@@ -71,7 +71,6 @@ const main = async () => {
 	const metrics = new MetricsService(config.app.stage, config.aws, 'worker');
 
 	const sqsClient = getSQSClient(config.aws, config.dev?.localstackEndpoint);
-	const ec2Client = new EC2Client(config.aws);
 	const s3Client = getS3Client(config.aws);
 
 	const autoScalingClient = getASGClient(config.aws);
@@ -80,8 +79,6 @@ const main = async () => {
 		? `transcription-service-gpu-workers-${config.app.stage}`
 		: `transcription-service-workers-${config.app.stage}`;
 	const queueUrl = isGpu ? config.app.gpuTaskQueueUrl : config.app.taskQueueUrl;
-
-	const instanceStartTime = await getInstanceStartTime(ec2Client, instanceId);
 
 	logger.info(`Worker reading from queue ${queueUrl}`);
 
@@ -96,7 +93,7 @@ const main = async () => {
 	while (!INTERRUPTION_TIME) {
 		pollCount += 1;
 		const shouldTerminate = await newArtifactAvailable(
-			instanceStartTime,
+			appStartTime,
 			s3Client,
 			config.app.workerArtifactBucket,
 			config.app.workerArtifactKey,

@@ -13,7 +13,6 @@
 	"license": "ISC",
 	"dependencies": {
 		"@aws-sdk/client-auto-scaling": "^3.624.0",
-		"@aws-sdk/client-ec2": "^3.968.0",
 		"@aws-sdk/client-sns": "^3.624.0",
 		"@guardian/transcription-service-backend-common": "1.0.0"
 	},
