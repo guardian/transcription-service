@@ -115,7 +115,7 @@ export const runFfmpeg = async (
 		return {
 			duration,
 			fileContainsNoAudio,
-			failed: res.code !== 0,
+			failed: res.code && res.code !== 0,
 		};
 	} catch (error) {
 		logger.error('ffmpeg failed error:', error);
