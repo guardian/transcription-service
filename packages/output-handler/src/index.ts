@@ -61,7 +61,6 @@ const transcriptionFailureMessageBody = (
 		'Please make sure that the file is a valid audio or video file.';
 	return `
 		<h1>Transcription for ${originalFilename} has failed.</h1>
-		<p>Please make sure that the file is a valid audio or video file.</p>
 		<p>${noAudioDetected ? noAudioMessage : basicErrorMessage}</p>
 		<p>Click <a href="${sourceMediaDownloadUrl}">here</a> to download the input media.</p>
 		<p>Contact digital.investigations@theguardian.com for support.</p>
