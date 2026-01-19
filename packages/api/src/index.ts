@@ -37,6 +37,7 @@ import {
 	TWELVE_HOURS_IN_SECONDS,
 	TranscriptionItemWithTranscript,
 	TranscriptionMediaDownloadJob,
+	isEnglish,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
@@ -113,7 +114,8 @@ const getApp = async () => {
 				id,
 				url: body.data.url,
 				languageCode: body.data.languageCode,
-				translationRequested: body.data.translationRequested,
+				translationRequested:
+					body.data.translationRequested && !isEnglish(body.data.languageCode),
 				diarizationRequested: body.data.diarizationRequested,
 				userEmail,
 				client: 'TRANSCRIPTION_SERVICE',
@@ -203,7 +205,7 @@ const getApp = async () => {
 				body.data.fileName,
 				signedUrl,
 				body.data.languageCode,
-				body.data.translationRequested,
+				body.data.translationRequested && !isEnglish(body.data.languageCode),
 				body.data.diarizationRequested,
 			);
 			if (isSqsFailure(sendResult)) {

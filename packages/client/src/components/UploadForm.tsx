@@ -10,6 +10,7 @@ import {
 	languageCodeToLanguageWithAuto,
 	YoutubeStatus,
 	ABOUT_THIS_TOOL_YOUTUBE,
+	isEnglish,
 } from '@guardian/transcription-service-common';
 import { AuthContext } from '@/app/template';
 import {
@@ -205,9 +206,9 @@ export const UploadForm = () => {
 		boolean | undefined
 	>(undefined);
 	const [translationRequested, setTranslationRequested] =
-		useState<boolean>(false);
+		useState<boolean>(true);
 	const [diarizationRequested, setDiarizationRequested] =
-		useState<boolean>(false);
+		useState<boolean>(true);
 	const [mediaSource, setMediaSource] = useState<MediaSourceType>('file');
 	const [mediaUrls, setMediaUrls] = useState<Record<string, RequestStatus>>({});
 	const [mediaUrlInputs, setMediaUrlInputs] = useState<MediaUrlInput[]>([
@@ -290,7 +291,7 @@ export const UploadForm = () => {
 					urlWithProtocol,
 					token,
 					mediaFileLanguageCode,
-					translationRequested,
+					translationRequested && !isEnglish(mediaFileLanguageCode),
 					diarizationRequested,
 				);
 				if (success) {
@@ -329,7 +330,7 @@ export const UploadForm = () => {
 				file,
 				token,
 				mediaFileLanguageCode,
-				translationRequested,
+				translationRequested && !isEnglish(mediaFileLanguageCode),
 				diarizationRequested,
 			);
 			if (!result) {
