@@ -2,6 +2,7 @@ import {
 	AutoScalingClient,
 	DescribeAutoScalingInstancesCommand,
 	SetInstanceProtectionCommand,
+	TerminateInstanceInAutoScalingGroupCommand,
 } from '@aws-sdk/client-auto-scaling';
 import { logger } from '@guardian/transcription-service-backend-common';
 
@@ -14,8 +15,6 @@ export const updateScaleInProtection = async (
 ) => {
 	try {
 		if (stage !== 'DEV') {
-			logger.info(`instanceId retrieved from worker instance: ${instanceId}`);
-
 			const input = {
 				InstanceIds: [instanceId],
 				AutoScalingGroupName: asgName,
@@ -59,6 +58,28 @@ export const getInstanceLifecycleState = async (
 		}
 	} catch (error) {
 		logger.error(`Could not retrieve ASG instance lifecycle state`, error);
+		throw error;
+	}
+};
+
+export const terminateInstance = async (
+	autoscalingClient: AutoScalingClient,
+	instanceId: string,
+) => {
+	try {
+		logger.info(`Terminating instance ${instanceId} in ASG`);
+		const input = {
+			InstanceId: instanceId,
+			ShouldDecrementDesiredCapacity: false,
+		};
+		const command = new TerminateInstanceInAutoScalingGroupCommand(input);
+		const result = await autoscalingClient.send(command);
+		logger.info(
+			`Successfully initiated termination of instance ${instanceId}. Activity ID: ${result.Activity?.ActivityId}`,
+		);
+		return result;
+	} catch (error) {
+		logger.error(`Could not terminate instance ${instanceId} in ASG`, error);
 		throw error;
 	}
 };

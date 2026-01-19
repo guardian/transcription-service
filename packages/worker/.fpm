@@ -7,4 +7,4 @@
 -t deb
 -p dist
 
-dist/index.js=/opt/transcription-service/index.js transcription-service-worker.service=/lib/systemd/system/transcription-service-worker.service
+dist/index.js=/opt/transcription-service/index.js transcription-service-worker.service=/lib/systemd/system/transcription-service-worker.service sample-media/sample.wav=/opt/transcription-service/sample.wav

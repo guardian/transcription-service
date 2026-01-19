@@ -13,6 +13,7 @@ import {
 	publishTranscriptionOutput,
 	readFile,
 	getASGClient,
+	getS3Client,
 } from '@guardian/transcription-service-backend-common';
 import {
 	OutputLanguageCode,
@@ -30,7 +31,11 @@ import {
 } from './transcribe';
 import path from 'path';
 
-import { getInstanceLifecycleState, updateScaleInProtection } from './asg';
+import {
+	getInstanceLifecycleState,
+	terminateInstance,
+	updateScaleInProtection,
+} from './asg';
 import { uploadedCombinedResultsToS3 } from './util';
 import {
 	MetricsService,
@@ -45,6 +50,7 @@ import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import { checkSpotInterrupt } from './spot-termination';
 import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
 import fs from 'node:fs';
+import { newArtifactAvailable } from './s3';
 
 const POLLING_INTERVAL_SECONDS = 15;
 
@@ -55,15 +61,22 @@ export const setInterruptionTime = (time: Date) => (INTERRUPTION_TIME = time);
 export const getCurrentReceiptHandle = () => CURRENT_MESSAGE_RECEIPT_HANDLE;
 
 const main = async () => {
+	// This time won't be accurate if the app restarts. I went for this rather than
+	// using the EC2 DescribeInstances command to reduce the extra permissions
+	// needed, but we could reconsider
+	const appStartTime = new Date();
+
 	const config = await getConfig();
 	const instanceId =
 		config.app.stage === 'DEV'
 			? ''
 			: readFile('/var/lib/cloud/data/instance-id').trim();
+	logger.info(`Retrieved instance id: ${instanceId}`);
 
 	const metrics = new MetricsService(config.app.stage, config.aws, 'worker');
 
 	const sqsClient = getSQSClient(config.aws, config.dev?.localstackEndpoint);
+	const s3Client = getS3Client(config.aws);
 
 	const autoScalingClient = getASGClient(config.aws);
 	const isGpu = config.app.app.startsWith('transcription-service-gpu-worker');
@@ -84,6 +97,19 @@ const main = async () => {
 	// keep polling unless instance is scheduled for termination
 	while (!INTERRUPTION_TIME) {
 		pollCount += 1;
+		const shouldTerminate =
+			config.app.stage !== 'DEV' &&
+			(await newArtifactAvailable(
+				appStartTime,
+				s3Client,
+				config.app.workerArtifactBucket,
+				config.app.workerArtifactKey,
+			));
+		if (shouldTerminate) {
+			logger.info('New worker artifact detected, terminating this instance');
+			await terminateInstance(autoScalingClient, instanceId);
+			return;
+		}
 		const lifecycleState = await getInstanceLifecycleState(
 			autoScalingClient,
 			config.app.stage,

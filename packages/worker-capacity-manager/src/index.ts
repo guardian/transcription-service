@@ -50,14 +50,15 @@ const updateASGsCapacity = async () => {
 	const config = await getConfig();
 	const sqsClient = getSQSClient(config.aws, config.dev?.localstackEndpoint);
 	const asgClient = getASGClient(config.aws);
-	const asgName = `transcription-service-workers-${config.app.stage}`;
 	const gpuAsgName = `transcription-service-gpu-workers-${config.app.stage}`;
-	await updateASGCapacity(
-		asgClient,
-		sqsClient,
-		config.app.taskQueueUrl,
-		asgName,
-	);
+	// cpu capacity manager has been disabled whilst we aren't using whisper.cpp
+	// await updateASGCapacity(
+	// 	asgClient,
+	// 	sqsClient,
+	// 	config.app.taskQueueUrl,
+	// 	`transcription-service-workers-${config.app.stage}`,
+	// );
+
 	await updateASGCapacity(
 		asgClient,
 		sqsClient,
