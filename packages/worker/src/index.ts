@@ -371,7 +371,7 @@ const pollTranscriptionQueue = async (
 				sqsClient,
 				taskQueueUrl,
 				receiptHandle,
-				ffmpegResult.duration * 2 * extraTranslationTimeMultiplier,
+				ffmpegResult.duration * 1.2 * extraTranslationTimeMultiplier,
 			);
 		}
 
