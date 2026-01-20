@@ -11,8 +11,6 @@ import { getSQSQueueLengthIncludingInvisible } from './sqs';
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
 
-const JOBS_PER_BOX = 3;
-
 const updateASGCapacity = async (
 	asgClient: AutoScalingClient,
 	sqsClient: SQSClient,
@@ -35,11 +33,7 @@ const updateASGCapacity = async (
 		throw new Error("absoluteMinCapacity can't be greater than asgMaxCapacity");
 	}
 
-	// It takes so long to start a new instance, we assume that it will generally
-	// be faster to allocate multiple jobs to the same box
-	const numServersForMessages = Math.ceil(totalMessagesInQueue / JOBS_PER_BOX);
-
-	const minCapacity = Math.min(numServersForMessages, asgMaxCapacity);
+	const minCapacity = Math.min(totalMessagesInQueue, asgMaxCapacity);
 
 	const desiredCapacity = Math.max(minCapacity, absoluteMinCapacity);
 
