@@ -92,6 +92,7 @@ jobs:
       - name: CDK synth
         run: |
           export CONTAINER_VERSION=${{ github.ref_name }}
+          npm run cdk::test
           npm run cdk::build
           npm run cdk::lint
           npm run cdk::synth
