@@ -1,4 +1,4 @@
-import { getTranslationConfig } from './transcribe';
+import { getTranslationConfig } from './translate';
 
 describe('getTranslationConfig', () => {
 	describe('when inputLanguageCode is "auto"', () => {
