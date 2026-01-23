@@ -85,8 +85,9 @@ jobs:
       - name: Package API/Client/Update
         run: |
           npm run package
-      - name: Package Worker
+      - name: Run tests and package Worker
         run: |
+          npm run worker::test
           npm run worker::build
           npm run worker::package
       - name: CDK synth
