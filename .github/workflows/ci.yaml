@@ -90,11 +90,10 @@ jobs:
           npm run worker::build
           npm run worker::package
       - name: CDK synth
+        # Note testing and linting is done in separate cdk-snapshot-test workflow
         run: |
           export CONTAINER_VERSION=${{ github.ref_name }}
-          npm run cdk::test
           npm run cdk::build
-          npm run cdk::lint
           npm run cdk::synth
       - name: Upload to riff-raff
         uses: guardian/actions-riff-raff@v4
