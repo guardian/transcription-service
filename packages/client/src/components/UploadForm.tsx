@@ -512,8 +512,8 @@ export const UploadForm = () => {
 								value="English translation"
 							/>
 							<p className="font-light">
-								Translation results are now included in the same email.
-								Translation quality varies
+								If you select this option the email we send you will provide access 
+								to both the original transcription and an English translation.
 							</p>
 						</div>
 						<div className={'ml-3'}>
@@ -542,10 +542,6 @@ export const UploadForm = () => {
 							htmlFor="diarization-checkbox"
 							value="Speaker identification"
 						/>
-						<p className="font-light">
-							Speaker identification is a new feature - please share any
-							feedback with us.
-						</p>
 					</div>
 					<div className={'ml-3'}>
 						<div className="flex h-5 items-center gap-2">
