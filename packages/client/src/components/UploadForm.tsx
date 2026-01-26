@@ -542,10 +542,6 @@ export const UploadForm = () => {
 							htmlFor="diarization-checkbox"
 							value="Speaker identification"
 						/>
-						<p className="font-light">
-							Speaker identification is a new feature - please share any
-							feedback with us.
-						</p>
 					</div>
 					<div className={'ml-3'}>
 						<div className="flex h-5 items-center gap-2">
