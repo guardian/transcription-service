@@ -4273,6 +4273,7 @@ service transcription-service-worker start",
       "Properties": {
         "ContentBasedDeduplication": true,
         "FifoQueue": true,
+        "MessageRetentionPeriod": 1209600,
         "QueueName": "transcription-service-task-dead-letter-queue-TEST.fifo",
         "Tags": [
           {

@@ -601,6 +601,8 @@ export class TranscriptionService extends GuStack {
 				fifo: true,
 				queueName: `${APP_NAME}-task-dead-letter-queue-${this.stage}.fifo`,
 				contentBasedDeduplication: true,
+				// allow enough time to investigate/debug why messages end up in the DLQ
+				retentionPeriod: Duration.days(14),
 			},
 		);
 
