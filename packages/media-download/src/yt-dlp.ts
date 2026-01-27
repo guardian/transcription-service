@@ -117,6 +117,7 @@ export const downloadMedia = async (
 				'youtubepot-bgutilscript:script_path=/opt/bgutil-ytdlp-pot-provider/server/build/generate_once.js',
 				'--write-info-json',
 				'--no-clean-info-json',
+				'--remote-components ejs:github',
 				'--no-playlist', // we have no support for > 1 video currently
 				'--progress-delta',
 				'10', //seconds

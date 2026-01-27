@@ -9,7 +9,7 @@ RUN pip install yt-dlp
 
 RUN apt-get update
 RUN apt-get install -y ffmpeg git nodejs npm
-RUN npm install -g n yarn
+RUN npm install -g n yarn deno
 RUN echo "node version: $node_version"
 RUN n $node_version
 
