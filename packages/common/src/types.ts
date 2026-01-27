@@ -162,6 +162,7 @@ export type MediaDownloadFailure = z.infer<typeof MediaDownloadFailure>;
 export const TranscriptionOutputFailure = TranscriptionOutputBase.extend({
 	// status must be kept in sync with https://github.com/guardian/giant/blob/main/backend/app/extraction/ExternalTranscriptionExtractor.scala#L76
 	status: z.literal('TRANSCRIPTION_FAILURE'),
+	noAudioDetected: z.boolean(),
 });
 
 export const TranscriptionOutput = z.union([

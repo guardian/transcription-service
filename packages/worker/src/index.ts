@@ -139,6 +139,7 @@ const publishTranscriptionOutputFailure = async (
 	sqsClient: SQSClient,
 	destination: string,
 	job: TranscriptionJob,
+	noAudioDetected: boolean = false,
 ) => {
 	logger.info(`Sending failure message to ${destination}`);
 	const failureMessage: TranscriptionOutputFailure = {
@@ -146,6 +147,7 @@ const publishTranscriptionOutputFailure = async (
 		status: 'TRANSCRIPTION_FAILURE',
 		userEmail: job.userEmail,
 		originalFilename: job.originalFilename,
+		noAudioDetected: noAudioDetected,
 	};
 	try {
 		await publishTranscriptionOutput(sqsClient, destination, failureMessage);
@@ -330,7 +332,10 @@ const pollTranscriptionQueue = async (
 
 		const ffmpegResult = await runFfmpeg(ffmpegParams, containerId);
 
-		if (ffmpegResult === undefined) {
+		if (
+			ffmpegResult === undefined ||
+			(ffmpegResult?.failed && !ffmpegResult.fileContainsNoAudio)
+		) {
 			// when ffmpeg fails to transcribe, move message to the dead letter
 			// queue
 			if (!isDev && config.app.deadLetterQueueUrl) {
@@ -356,6 +361,19 @@ const pollTranscriptionQueue = async (
 				config.app.destinationQueueUrls[job.transcriptDestinationService],
 				job,
 			);
+			return;
+		}
+		if (ffmpegResult.fileContainsNoAudio) {
+			logger.warn(
+				'No audio detected in file - deleting from queue without moving to dead letter queue and returning failure message',
+			);
+			await publishTranscriptionOutputFailure(
+				sqsClient,
+				config.app.destinationQueueUrls[job.transcriptDestinationService],
+				job,
+				true,
+			);
+			await deleteMessage(sqsClient, taskQueueUrl, receiptHandle, job.id);
 			return;
 		}
 
