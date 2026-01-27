@@ -179,7 +179,7 @@ const requestTranscription = async (
 // We store success/bot block youtube events to indicate the likelihood of future
 // youtube jobs succeeding
 const updateYoutubeEvent = async (
-	id: string,
+	youtubeEventId: string,
 	client: DynamoDBDocumentClient,
 	tableName: string,
 	result: YtDlpSuccess | YtDlpFailure,
@@ -189,7 +189,7 @@ const updateYoutubeEvent = async (
 		: result.errorType;
 	if (statusOrErrorType === 'SUCCESS' || statusOrErrorType === 'BOT_BLOCKED') {
 		const youtubeEvent = {
-			id,
+			id: youtubeEventId,
 			eventTime: `${new Date().toISOString()}`,
 			status: statusOrErrorType,
 		};
@@ -281,7 +281,7 @@ const main = async () => {
 
 	if (isYoutube) {
 		await updateYoutubeEvent(
-			job.id,
+			config.app.youtubeEventId,
 			dynamoClient,
 			config.app.eventsTableName,
 			result,
