@@ -8,6 +8,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuAmiParameter",
       "GuStringParameter",
       "GuStringParameter",
+      "GuStringParameter",
       "GuCertificate",
       "GuS3Bucket",
       "GuS3Bucket",
@@ -39,6 +40,8 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuEcsTask",
       "GuAllowPolicy",
       "GuAllowPolicy",
+      "GuLambdaFunction",
+      "GuStringParameter",
       "GuLambdaFunction",
       "GuLambdaFunction",
       "GuLambdaFunction",
@@ -94,6 +97,11 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "Description": "AMI to use for the worker instances",
       "Type": "AWS::EC2::Image::Id",
     },
+    "ChromiumLayerZipKey": {
+      "Default": "chromium-v140.0.0-layer.arm64.zip",
+      "Description": "Key for the chromium layer's zip file (pushed to layerBucket by publish-chromium-layer.sh script)",
+      "Type": "String",
+    },
     "DistributionBucketName": {
       "Default": "/account/services/artifact.bucket",
       "Description": "SSM parameter containing the S3 bucket name holding distribution artifacts",
@@ -134,6 +142,10 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "Default": "/account/vpc/primary/subnets/private",
       "Description": "A list of private subnets",
       "Type": "AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>",
+    },
+    "remoteIngestGiantOutputQueueArn": {
+      "Default": "/TEST/investigations/transcription-service/remoteIngestGiantOutputQueueArn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "transcriptionserviceworkerPrivateSubnets": {
       "Default": "/account/vpc/primary/subnets/private",
@@ -177,6 +189,105 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "Type": "AWS::CertificateManager::Certificate",
       "UpdateReplacePolicy": "Retain",
     },
+    "ChromiumLayerarm64TEST01FEA923": {
+      "Properties": {
+        "CompatibleArchitectures": [
+          "arm64",
+        ],
+        "CompatibleRuntimes": [
+          "nodejs22.x",
+          "nodejs20.x",
+          "nodejs18.x",
+        ],
+        "Content": {
+          "S3Bucket": {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::Split": [
+                  "/",
+                  {
+                    "Fn::Select": [
+                      5,
+                      {
+                        "Fn::Split": [
+                          ":",
+                          {
+                            "Ref": "LayerBucketArn",
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "S3Key": {
+            "Ref": "ChromiumLayerZipKey",
+          },
+        },
+        "Description": "Chromium Layer",
+        "LayerName": "ChromiumLayer",
+      },
+      "Type": "AWS::Lambda::LayerVersion",
+    },
+    "CombinedTaskTopicB6DB688C": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "TopicName": "transcription-service-combined-task-topic-TEST",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "CombinedTaskTopicMediaDownloadSubscriptionDB9CAF28": {
+      "Properties": {
+        "Endpoint": {
+          "Fn::GetAtt": [
+            "transcriptionservicemediadownloadtaskqueue26AAF7A2",
+            "Arn",
+          ],
+        },
+        "Protocol": "sqs",
+        "RawMessageDelivery": true,
+        "TopicArn": {
+          "Ref": "CombinedTaskTopicB6DB688C",
+        },
+      },
+      "Type": "AWS::SNS::Subscription",
+    },
+    "CombinedTaskTopicWebpageSnapshotSubscription951A2247": {
+      "Properties": {
+        "Endpoint": {
+          "Fn::GetAtt": [
+            "transcriptionservicewebpagesnapshotqueue6C5C1571",
+            "Arn",
+          ],
+        },
+        "Protocol": "sqs",
+        "RawMessageDelivery": true,
+        "TopicArn": {
+          "Ref": "CombinedTaskTopicB6DB688C",
+        },
+      },
+      "Type": "AWS::SNS::Subscription",
+    },
     "DescribeEC2PolicyFF5F9295": {
       "Properties": {
         "PolicyDocument": {
@@ -203,6 +314,52 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
+    "EventsTableD24865E5": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "id",
+            "AttributeType": "S",
+          },
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "id",
+            "KeyType": "HASH",
+          },
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 1,
+          "WriteCapacityUnits": 1,
+        },
+        "TableName": "transcription-service-events-TEST",
+        "Tags": [
+          {
+            "Key": "devx-backup-enabled",
+            "Value": "true",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::DynamoDB::Table",
+      "UpdateReplacePolicy": "Retain",
+    },
     "ExportFunctionName1C83D756": {
       "Properties": {
         "Name": "/TEST/investigations/transcription-service/app/mediaExportFunctionName",
@@ -225,7 +382,6 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
           "x86_64",
         ],
         "CompatibleRuntimes": [
-          "nodejs18.x",
           "nodejs22.x",
           "nodejs20.x",
           "nodejs18.x",
@@ -581,7 +737,10 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         "PolicyDocument": {
           "Statement": [
             {
-              "Action": "autoscaling:SetInstanceProtection",
+              "Action": [
+                "autoscaling:SetInstanceProtection",
+                "autoscaling:TerminateInstanceInAutoScalingGroup",
+              ],
               "Effect": "Allow",
               "Resource": [
                 {
@@ -717,7 +876,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         "MixedInstancesPolicy": {
           "InstancesDistribution": {
             "OnDemandBaseCapacity": 0,
-            "OnDemandPercentageAboveBaseCapacity": 10,
+            "OnDemandPercentageAboveBaseCapacity": 100,
             "SpotAllocationStrategy": "capacity-optimized",
             "SpotMaxPrice": "0.5260",
           },
@@ -988,7 +1147,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         "MixedInstancesPolicy": {
           "InstancesDistribution": {
             "OnDemandBaseCapacity": 0,
-            "OnDemandPercentageAboveBaseCapacity": 10,
+            "OnDemandPercentageAboveBaseCapacity": 100,
             "SpotAllocationStrategy": "capacity-optimized",
             "SpotMaxPrice": "0.6202",
           },
@@ -1158,12 +1317,15 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                   "#!/bin/bash
 export STAGE=TEST
 export AWS_REGION=test-region
+rm /usr/local/cuda
+ln -s /usr/local/cuda-12.8 /usr/local/cuda
 aws s3 cp s3://",
                   {
                     "Ref": "DistributionBucketName",
                   },
                   "/investigations/TEST/transcription-service-worker/transcription-service-worker_1.0.0_all.deb .
 dpkg -i transcription-service-worker_1.0.0_all.deb
+LD_LIBRARY_PATH=/usr/local/cuda/lib:/usr/local/cuda/lib64 CUDA_HOME=/usr/local/cuda PATH=/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin runuser -u ubuntu -- whisperx --model large --language en --no_align --model_cache_only True --output_dir /tmp /opt/transcription-service/sample.wav
 service transcription-service-worker start",
                 ],
               ],
@@ -1307,12 +1469,15 @@ service transcription-service-worker start",
                   "#!/bin/bash
 export STAGE=TEST
 export AWS_REGION=test-region
+rm /usr/local/cuda
+ln -s /usr/local/cuda-12.8 /usr/local/cuda
 aws s3 cp s3://",
                   {
                     "Ref": "DistributionBucketName",
                   },
                   "/investigations/TEST/transcription-service-worker/transcription-service-worker_1.0.0_all.deb .
 dpkg -i transcription-service-worker_1.0.0_all.deb
+LD_LIBRARY_PATH=/usr/local/cuda/lib:/usr/local/cuda/lib64 CUDA_HOME=/usr/local/cuda PATH=/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin runuser -u ubuntu -- whisperx --model large --language en --no_align --model_cache_only True --output_dir /tmp /opt/transcription-service/sample.wav
 service transcription-service-worker start",
                 ],
               ],
@@ -1604,7 +1769,7 @@ service transcription-service-worker start",
           },
           "Level": "INFO",
         },
-        "Name": "media-download-queue-sfn-pipe-TEST",
+        "Name": "media-download-state-machine-pipe-TEST",
         "RoleArn": {
           "Fn::GetAtt": [
             "eventbridgepiperoleA95C594F",
@@ -2295,6 +2460,13 @@ service transcription-service-worker start",
               ],
             },
             {
+              "Action": "sqs:SendMessage",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "remoteIngestGiantOutputQueueArn",
+              },
+            },
+            {
               "Action": "secretsmanager:GetSecretValue",
               "Effect": "Allow",
               "Resource": {
@@ -2342,6 +2514,19 @@ service transcription-service-worker start",
             },
             {
               "Action": [
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "EventsTableD24865E5",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
                 "ssm:GetParameter",
                 "ssm:GetParametersByPath",
               ],
@@ -2358,6 +2543,11 @@ service transcription-service-worker start",
                   ],
                 ],
               },
+            },
+            {
+              "Action": "cloudwatch:PutMetricData",
+              "Effect": "Allow",
+              "Resource": "*",
             },
           ],
           "Version": "2012-10-17",
@@ -2794,6 +2984,34 @@ service transcription-service-worker start",
                 {
                   "Fn::GetAtt": [
                     "TranscriptTableA6F8B506",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Ref": "AWS::NoValue",
+                },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "EventsTableD24865E5",
                     "Arn",
                   ],
                 },
@@ -3312,9 +3530,7 @@ service transcription-service-worker start",
     "transcriptionservicemediadownloaddeadletterqueueE0C3D72F": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "ContentBasedDeduplication": true,
-        "FifoQueue": true,
-        "QueueName": "transcription-service-media-download-dead-letter-queue-TEST.fifo",
+        "QueueName": "transcription-service-media-download-dead-letter-queue-TEST",
         "Tags": [
           {
             "Key": "gu:cdk:version",
@@ -3340,9 +3556,7 @@ service transcription-service-worker start",
     "transcriptionservicemediadownloadtaskqueue26AAF7A2": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "ContentBasedDeduplication": true,
-        "FifoQueue": true,
-        "QueueName": "transcription-service-media-download-task-queue-TEST.fifo",
+        "QueueName": "transcription-service-media-download-task-queue-TEST",
         "RedrivePolicy": {
           "deadLetterTargetArn": {
             "Fn::GetAtt": [
@@ -3374,6 +3588,41 @@ service transcription-service-worker start",
       },
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
+    },
+    "transcriptionservicemediadownloadtaskqueuePolicy6D5E2132": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sqs:SendMessage",
+              "Condition": {
+                "ArnEquals": {
+                  "AWS:SourceArn": {
+                    "Ref": "CombinedTaskTopicB6DB688C",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "sns.amazonaws.com",
+              },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionservicemediadownloadtaskqueue26AAF7A2",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Queues": [
+          {
+            "Ref": "transcriptionservicemediadownloadtaskqueue26AAF7A2",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::QueuePolicy",
     },
     "transcriptionservicemediaexport2E32D5D8": {
       "DependsOn": [
@@ -3708,6 +3957,30 @@ service transcription-service-worker start",
           "Statement": [
             {
               "Action": [
+                "ssm:GetParameter",
+                "ssm:GetParametersByPath",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "cloudwatch:PutMetricData",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -3867,30 +4140,6 @@ service transcription-service-worker start",
                   ],
                 },
               ],
-            },
-            {
-              "Action": [
-                "ssm:GetParameter",
-                "ssm:GetParametersByPath",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:aws:ssm:test-region:",
-                    {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":parameter/TEST/investigations/transcription-service/*",
-                  ],
-                ],
-              },
-            },
-            {
-              "Action": "cloudwatch:PutMetricData",
-              "Effect": "Allow",
-              "Resource": "*",
             },
           ],
           "Version": "2012-10-17",
@@ -4084,6 +4333,361 @@ service transcription-service-worker start",
       },
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
+    },
+    "transcriptionservicewebpagesnapshotDABBD8CF": {
+      "DependsOn": [
+        "transcriptionservicewebpagesnapshotServiceRoleDefaultPolicy60A5B2F0",
+        "transcriptionservicewebpagesnapshotServiceRole96DDA7A1",
+      ],
+      "Properties": {
+        "Architectures": [
+          "arm64",
+        ],
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DistributionBucketName",
+          },
+          "S3Key": "investigations/TEST/transcription-service-webpage-snapshot/webpage-snapshot.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "APP": "transcription-service-webpage-snapshot",
+            "STACK": "investigations",
+            "STAGE": "TEST",
+          },
+        },
+        "Handler": "index.webpageSnapshot",
+        "Layers": [
+          {
+            "Ref": "ChromiumLayerarm64TEST01FEA923",
+          },
+        ],
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+        },
+        "MemorySize": 2048,
+        "Role": {
+          "Fn::GetAtt": [
+            "transcriptionservicewebpagesnapshotServiceRole96DDA7A1",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service-webpage-snapshot",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "transcriptionservicewebpagesnapshotServiceRole96DDA7A1": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service-webpage-snapshot",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "transcriptionservicewebpagesnapshotServiceRoleDefaultPolicy60A5B2F0": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ssm:GetParameter",
+                "ssm:GetParametersByPath",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "cloudwatch:PutMetricData",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": "sqs:SendMessage",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "remoteIngestGiantOutputQueueArn",
+              },
+            },
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                      "/investigations/TEST/transcription-service-webpage-snapshot/webpage-snapshot.zip",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "ssm:GetParametersByPath",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service-webpage-snapshot",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:test-region:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/investigations/transcription-service-webpage-snapshot/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionservicewebpagesnapshotqueue6C5C1571",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "transcriptionservicewebpagesnapshotServiceRoleDefaultPolicy60A5B2F0",
+        "Roles": [
+          {
+            "Ref": "transcriptionservicewebpagesnapshotServiceRole96DDA7A1",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "transcriptionservicewebpagesnapshotSqsEventSourceTranscriptionServicetranscriptionservicewebpagesnapshotqueue9F4BEE0F35421D6D": {
+      "Properties": {
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "transcriptionservicewebpagesnapshotqueue6C5C1571",
+            "Arn",
+          ],
+        },
+        "FunctionName": {
+          "Ref": "transcriptionservicewebpagesnapshotDABBD8CF",
+        },
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "transcription-service-webpage-snapshot",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::Lambda::EventSourceMapping",
+    },
+    "transcriptionservicewebpagesnapshotqueue6C5C1571": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "transcription-service-webpage-snapshot-queue-TEST",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "VisibilityTimeout": 960,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "transcriptionservicewebpagesnapshotqueuePolicy06FF027B": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sqs:SendMessage",
+              "Condition": {
+                "ArnEquals": {
+                  "AWS:SourceArn": {
+                    "Ref": "CombinedTaskTopicB6DB688C",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "sns.amazonaws.com",
+              },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "transcriptionservicewebpagesnapshotqueue6C5C1571",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Queues": [
+          {
+            "Ref": "transcriptionservicewebpagesnapshotqueue6C5C1571",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::QueuePolicy",
     },
     "transcriptionserviceworkercapacitymanagerD9692635": {
       "DependsOn": [

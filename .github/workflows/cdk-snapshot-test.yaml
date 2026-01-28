@@ -1,0 +1,30 @@
+name: 'cdk-snapshot-test'
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'packages/cdk/**'
+      - '.github/workflows/cdk-snapshot-test.yaml'
+
+jobs:
+  cdk-snapshot-test:
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+      - name: Install dependencies
+        run: |
+          npm install
+      - name: Lint and test CDK
+        run: |
+          npm run cdk::test
+          npm run cdk::lint
