@@ -15,6 +15,7 @@ import {
 	secondsForWhisperXStartupMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
 import { SHAKIRA } from './shakira';
+import { transcribeAndTranslate } from './translate';
 
 interface FfmpegResult {
 	duration?: number;
@@ -139,7 +140,7 @@ const getDuration = (ffmpegOutput: string) => {
 	return duration;
 };
 
-const runTranscription = async (
+export const runTranscription = async (
 	whisperBaseParams: WhisperBaseParams,
 	languageCode: InputLanguageCode,
 	translate: boolean,
@@ -175,72 +176,6 @@ const runTranscription = async (
 	} catch (error) {
 		logger.error(
 			`Could not read the transcript result. Params: ${JSON.stringify(whisperBaseParams)}`,
-			error,
-		);
-		throw error;
-	}
-};
-
-const transcribeAndTranslate = async (
-	whisperBaseParams: WhisperBaseParams,
-	whisperX: boolean,
-	metrics: MetricsService,
-	languageCode: InputLanguageCode,
-): Promise<TranscriptionResult> => {
-	const run = (translate: boolean) =>
-		runTranscription(
-			whisperBaseParams,
-			languageCode,
-			translate,
-			whisperX,
-			metrics,
-		);
-	try {
-		const transcription = run(false);
-
-		// if we don't know the language code then run transcription and decide whether to run translation based off the
-		// detected language code
-		if (languageCode === 'auto') {
-			const finishedTranscription = await transcription;
-			if (
-				finishedTranscription.metadata.detectedLanguageCode !== 'UNKNOWN' &&
-				finishedTranscription.metadata.detectedLanguageCode !== 'en'
-			) {
-				const translation = await run(true);
-				return {
-					transcripts: finishedTranscription.transcripts,
-					transcriptTranslations: translation?.transcripts,
-					metadata: finishedTranscription.metadata,
-				};
-			}
-		}
-
-		// if we have a language code and it's not English, run translation in parallel
-		if (languageCode !== 'en') {
-			const translation = run(true);
-			const [finishedTranscription, finishedTranslation] = await Promise.all([
-				transcription,
-				translation,
-			]);
-			return {
-				transcripts: finishedTranscription.transcripts,
-				transcriptTranslations: finishedTranslation.transcripts,
-				metadata: finishedTranscription.metadata,
-			};
-		}
-
-		// otherwise, skip translation
-		const finishedTranscription = await transcription;
-
-		return {
-			transcripts: finishedTranscription.transcripts,
-			// we only return one metadata field here even though we might have two (one from the translation) - a
-			// bit messy but I can't think of much use for the translation metadata at the moment
-			metadata: finishedTranscription.metadata,
-		};
-	} catch (error) {
-		logger.error(
-			`Failed during combined detect language/transcribe/translate process result`,
 			error,
 		);
 		throw error;
