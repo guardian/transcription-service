@@ -5,11 +5,11 @@ LABEL com.theguardian.transcription-service.media-download-container="Media down
 ARG node_version
 ARG BGUTIL_YTDLP_POT_PROVIDER_VERSION=1.2.2
 
-RUN pip install yt-dlp
+RUN pip install --no-cache-dir -U "yt-dlp[default]"
 
 RUN apt-get update
 RUN apt-get install -y ffmpeg git nodejs npm
-RUN npm install -g n yarn
+RUN npm install -g n yarn deno
 RUN echo "node version: $node_version"
 RUN n $node_version
 
