@@ -384,15 +384,16 @@ const pollTranscriptionQueue = async (
 			// Update visibility timeout to 1.2x the file duration, plus 5 minutes to allow whisperx to start up
 			// (whisperx shouldn't take this long to start as it has been prewarmed but this makes sense for very
 			// short files to have a bit of extra time)
-			// (TODO: investigate whisperx model load time/transcription performance further - it seems to vary)
 			// This should avoid another worker picking up the task and to allow
 			// this worker to delete the message when it's finished.
+			const visibilityTimeoutSeconds =
+				Math.floor(ffmpegResult.duration * 1.2 + 300) *
+				extraTranslationTimeMultiplier;
 			await changeMessageVisibility(
 				sqsClient,
 				taskQueueUrl,
 				receiptHandle,
-				Math.floor(ffmpegResult.duration * 1.2 + 5) *
-					extraTranslationTimeMultiplier,
+				visibilityTimeoutSeconds,
 			);
 		}
 
