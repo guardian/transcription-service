@@ -36,6 +36,19 @@ export const getYtDlpMetricDimension = (result: YtDlpRetryResult) => {
 	return result.result.errorType;
 };
 
+export const isYoutubeUrl = (url: string): boolean => {
+	try {
+		const { hostname } = new URL(url);
+		return (
+			hostname === 'www.youtube.com' ||
+			hostname === 'youtube.com' ||
+			hostname === 'youtu.be'
+		);
+	} catch {
+		return false;
+	}
+};
+
 const extractInfoJson = (
 	infoJsonPath: string,
 	outputFilePath: string,
@@ -142,7 +155,7 @@ export const downloadMedia = async (
 				return { errorType: 'INVALID_URL', status: 'FAILURE' };
 			}
 			if (
-				url.includes('youtube') &&
+				isYoutubeUrl(url) &&
 				(result.stderr.includes('LOGIN_REQUIRED') ||
 					result.stderr.includes('HTTP Error 403'))
 			) {
