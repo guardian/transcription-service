@@ -24,6 +24,7 @@ import {
 	isSuccess,
 	YtDlpFailure,
 	YtDlpSuccess,
+	isYoutubeUrl,
 } from './yt-dlp';
 import {
 	MediaDownloadFailureReason,
@@ -254,8 +255,7 @@ const main = async () => {
 			)
 		: [];
 
-	const parsedUrl = new URL(job.url);
-	const isYoutube = parsedUrl.hostname === 'www.youtube.com';
+	const isYoutube = isYoutubeUrl(job.url);
 
 	const ytDlpResult = await downloadMediaWithRetry(
 		job.url,
