@@ -7,7 +7,7 @@ import { authFetch } from '@/helpers';
 import { TranscriptViewer } from '@/components/TranscriptViewer';
 import { InfoMessage } from '@/components/InfoMessage';
 import { RequestStatus } from '@/types';
-import { Alert, ToggleSwitch } from 'flowbite-react';
+import { Alert, Checkbox, Label } from 'flowbite-react';
 
 const errorInfo = (message: string) => {
 	return <InfoMessage message={message} status={RequestStatus.Failed} />;
@@ -159,12 +159,18 @@ const ViewerPage = () => {
 					{transcriptData.item.originalFilename}
 				</h2>
 			</div>
-
-			<ToggleSwitch
-				checked={isPublic}
-				label="Make transcript accessible to other Guardian staff"
-				onChange={handleSetPublic}
-			/>
+			<div>
+				<Checkbox
+					id="translation"
+					checked={isPublic}
+					onChange={(event) => handleSetPublic(event.target.checked)}
+				/>
+				<div className="flex flex-col">
+					<Label htmlFor="translation" className="font-light text-base">
+						Make transcript accessible to any Guardian staff with the link
+					</Label>
+				</div>
+			</div>
 
 			<Alert color="info" className="font-light">
 				<span className="font-medium">Reminder:</span> Transcripts and source
