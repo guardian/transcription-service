@@ -38,6 +38,7 @@ import {
 	TranscriptionItemWithTranscript,
 	TranscriptionMediaDownloadJob,
 	isEnglish,
+	SetPublicRequest,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
@@ -520,6 +521,36 @@ const getApp = async () => {
 			}
 			res.send({ status: 'WARN' });
 			return;
+		}),
+	]);
+
+	apiRouter.post('/set-public', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			const setPublicRequest = SetPublicRequest.safeParse(req.body);
+			if (!setPublicRequest.success) {
+				res
+					.status(400)
+					.send(
+						'Invalid request - you must provide the transcript id and isPublic (true/false)',
+					);
+				return;
+			}
+			const getItemResult = await getTranscriptionItem(
+				dynamoClient,
+				config.app.tableName,
+				setPublicRequest.data.id,
+				{ check: true, currentUserEmail: req.user?.email },
+			);
+			if (getItemResult.status === 'failure') {
+				res.status(getItemResult.statusCode).send(getItemResult.errorMessage);
+				return;
+			}
+			await writeDynamoItem(dynamoClient, config.app.tableName, {
+				...getItemResult.item,
+				isPublic: setPublicRequest.data.isPublic,
+			});
+			res.send({ success: true, isPublic: setPublicRequest.data.isPublic });
 		}),
 	]);
 

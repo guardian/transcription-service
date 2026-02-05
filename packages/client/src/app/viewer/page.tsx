@@ -7,7 +7,7 @@ import { authFetch } from '@/helpers';
 import { TranscriptViewer } from '@/components/TranscriptViewer';
 import { InfoMessage } from '@/components/InfoMessage';
 import { RequestStatus } from '@/types';
-import { Alert } from 'flowbite-react';
+import { Alert, ToggleSwitch } from 'flowbite-react';
 
 const errorInfo = (message: string) => {
 	return <InfoMessage message={message} status={RequestStatus.Failed} />;
@@ -57,6 +57,7 @@ const ViewerPage = () => {
 	const [transcriptData, setTranscriptData] =
 		useState<TranscriptionItemWithTranscript | null>(null);
 	const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+	const [isPublic, setIsPublic] = useState<boolean>(false);
 
 	useEffect(() => {
 		if (!token || !transcriptId) {
@@ -82,6 +83,7 @@ const ViewerPage = () => {
 					throw new Error('Invalid transcript data');
 				}
 				setTranscriptData(parsedTranscript.data);
+				setIsPublic(parsedTranscript.data.item.isPublic ?? false);
 
 				const mediaResponse = await authFetch(
 					`/api/export/source-media-download-url?id=${transcriptIdNoTranslate}`,
@@ -114,6 +116,29 @@ const ViewerPage = () => {
 		mediaUrl,
 		loading,
 	);
+
+	const handleSetPublic = async (checked: boolean) => {
+		if (!token || !transcriptIdNoTranslate) return;
+		setIsPublic(checked);
+		try {
+			const response = await authFetch('/api/set-public', token, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					id: transcriptIdNoTranslate,
+					isPublic: checked,
+				}),
+			});
+			if (!response.ok) {
+				setIsPublic(!checked);
+				console.error('Failed to update public status');
+			}
+		} catch (err) {
+			setIsPublic(!checked);
+			console.error('Error updating public status:', err);
+		}
+	};
+
 	if (errorMessage) {
 		return errorMessage;
 	}
@@ -134,6 +159,12 @@ const ViewerPage = () => {
 					{transcriptData.item.originalFilename}
 				</h2>
 			</div>
+
+			<ToggleSwitch
+				checked={isPublic}
+				label="Make transcript accessible to other Guardian staff"
+				onChange={handleSetPublic}
+			/>
 
 			<Alert color="info" className="font-light">
 				<span className="font-medium">Reminder:</span> Transcripts and source

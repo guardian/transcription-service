@@ -127,6 +127,7 @@ export const getTranscriptionItem = async (
 	}
 	if (
 		ownershipCheck.check &&
+		!parsedItem.data.isPublic &&
 		parsedItem.data.userEmail !== ownershipCheck.currentUserEmail
 	) {
 		// users can only export their own transcripts. Return a 404 to avoid leaking information about other users' transcripts

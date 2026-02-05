@@ -298,6 +298,13 @@ export const TranscriptExportRequest = z.object({
 
 export type TranscriptExportRequest = z.infer<typeof TranscriptExportRequest>;
 
+export const SetPublicRequest = z.object({
+	id: z.string(),
+	isPublic: z.boolean(),
+});
+
+export type SetPublicRequest = z.infer<typeof SetPublicRequest>;
+
 export const CreateFolderRequest = z.object({
 	transcriptId: z.string(),
 	oAuthTokenResponse: ZTokenResponse,
@@ -349,6 +356,7 @@ export const TranscriptionDynamoItem = z.object({
 	includesTranslation: z.boolean(),
 	languageCode: z.optional(OutputLanguageCode),
 	exportStatuses: z.optional(ExportStatuses),
+	isPublic: z.optional(z.boolean()),
 });
 
 export type TranscriptionDynamoItem = z.infer<typeof TranscriptionDynamoItem>;
