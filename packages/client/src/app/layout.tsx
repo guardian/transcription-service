@@ -21,8 +21,15 @@ export default function RootLayout({
 						</div>
 						<p className={'italic pt-1 font-light '}>
 							This is a tool developed for GNM by the Investigations and
-							Reporting engineering team. Please email feedback / bug reports to
+						Reporting engineering team. Please email feedback / bug reports to{' '}
+						<a
+							href={`https://mail.google.com/mail/?view=cm&fs=1&to=digital.investigations@theguardian.com&su=Guardian%20Transcription%20Tool%20feedback%20-%20${new Date().toLocaleDateString('en-GB')}`}
+							target="_blank"
+							rel="noopener noreferrer"
+							className="text-blue-600 hover:underline"
+						>
 							digital.investigations@theguardian.com
+						</a>
 						</p>
 					</div>
 				</header>
