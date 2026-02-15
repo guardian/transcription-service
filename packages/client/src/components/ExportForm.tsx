@@ -124,6 +124,11 @@ const ExportForm = () => {
 		'Fetching source media download url...',
 	);
 	const [downloadStatus, setDownloadStatus] = useState<string | undefined>('');
+	const [transcriptCheckInProgress, setTranscriptCheckInProgress] =
+		useState<boolean>(true);
+	const [transcriptCheckError, setTranscriptCheckError] = useState<
+		string | undefined
+	>(undefined);
 
 	// TODO: once we have some CSS/component library, tidy up this messy error handling
 	if (!token) {
@@ -147,19 +152,60 @@ const ExportForm = () => {
 		);
 	}
 	useEffect(() => {
-		authFetch(`/api/export/source-media-download-url?id=${transcriptId}`, token)
-			.then((resp) => resp.text())
-			.then((url: string) => {
-				setSourceMediaDownloadUrl(url);
+		// First check if the transcript exists
+		authFetch(`/api/export/transcript?id=${transcriptId}&format=text`, token)
+			.then(async (resp) => {
+				if (!resp.ok) {
+					const errorText = await resp.text();
+					setTranscriptCheckError(errorText);
+					setTranscriptCheckInProgress(false);
+					return;
+				}
+				// Transcript exists, now fetch source media download URL
+				setTranscriptCheckInProgress(false);
+				authFetch(
+					`/api/export/source-media-download-url?id=${transcriptId}`,
+					token,
+				)
+					.then((resp) => resp.text())
+					.then((url: string) => {
+						setSourceMediaDownloadUrl(url);
+					})
+					.catch((error) => {
+						console.error('Failed to fetch source media download URL', error);
+						setSourceMediaDownloadUrl(undefined);
+						setsourceMediaUrlStatus(
+							'Failed to fetch source media download URL. You can still export to Google Drive.',
+						);
+					});
 			})
 			.catch((error) => {
-				console.error('Failed to fetch source media download URL', error);
-				setSourceMediaDownloadUrl(undefined);
-				setsourceMediaUrlStatus(
-					'Failed to fetch source media download URL. You can still export to Google Drive.',
+				console.error('Failed to check transcript existence', error);
+				setTranscriptCheckError(
+					'Failed to check if transcript exists. Please try again.',
 				);
+				setTranscriptCheckInProgress(false);
 			});
 	}, [transcriptId]);
+
+	if (transcriptCheckInProgress) {
+		return (
+			<InfoMessage
+				message={'Checking transcript...'}
+				status={RequestStatus.InProgress}
+			/>
+		);
+	}
+
+	if (transcriptCheckError) {
+		return (
+			<InfoMessage
+				message={transcriptCheckError}
+				status={RequestStatus.Failed}
+			/>
+		);
+	}
+
 	if (requestStatus === RequestStatus.Failed) {
 		return (
 			<InfoMessage
@@ -342,7 +388,8 @@ const ExportForm = () => {
 				setDownloadStatus(`Failed to download ${getExportTypeText(format)}`);
 			}
 		} else {
-			setDownloadStatus('Failed to download transcript');
+			const errorText = await response.text();
+			setDownloadStatus(errorText || 'Failed to download transcript');
 		}
 	};
 
