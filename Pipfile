@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-whisperx = "3.7.4"
+whisperx = "3.8.1"
 
 [dev-packages]
 
