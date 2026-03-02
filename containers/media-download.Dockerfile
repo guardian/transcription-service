@@ -13,7 +13,7 @@ RUN npm install -g n yarn deno
 RUN echo "node version: $node_version"
 RUN n $node_version
 
-# Setup bgutil-ytdlp-pot-provider provider
+# Setup bgutil-ytdlp-pot-provider provider, install with npm
 RUN git clone --single-branch --branch ${BGUTIL_YTDLP_POT_PROVIDER_VERSION} https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git
 WORKDIR /opt/bgutil-ytdlp-pot-provider/server
 RUN npm ci
