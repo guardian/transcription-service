@@ -11,7 +11,7 @@
 		"@aws-sdk/client-secrets-manager": "^3.1000.0",
 		"@aws-sdk/client-cloudwatch": "^3.1000.0",
 		"@aws-sdk/client-auto-scaling": "^3.1000.0",
-		"axios": "^1.8.2",
+		"axios": "^1.13.5",
 		"winston": "^3.11.0",
 		"node-gzip": "^1.1.2",
 		"@types/node-gzip": "^1.1.3"
