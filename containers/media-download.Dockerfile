@@ -16,7 +16,8 @@ RUN n $node_version
 # Setup bgutil-ytdlp-pot-provider provider
 RUN git clone --single-branch --branch ${BGUTIL_YTDLP_POT_PROVIDER_VERSION} https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git
 WORKDIR /opt/bgutil-ytdlp-pot-provider/server
-RUN deno install --allow-scripts=npm:canvas --frozen
+RUN npm ci
+RUN npx tsc
 
 WORKDIR /opt
 # Install the bgutil-ytdlp-pot-provider plugin for yt-dlp
