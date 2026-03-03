@@ -32,6 +32,16 @@ import {
 import { SESClient } from '@aws-sdk/client-ses';
 import { sqsMessageToTestMessage } from 'webpage-snapshot/test/testMessage';
 
+const getFeedbackEmailLink = () => {
+	const emailParams = new URLSearchParams({
+		view: 'cm',
+		fs: '1',
+		to: 'digital.investigations@theguardian.com',
+		su: `Guardian Transcription Tool feedback - ${new Date().toLocaleDateString('en-GB')}`,
+	});
+	return `https://mail.google.com/mail/?${emailParams.toString()}`;
+};
+
 const successMessageBody = (
 	transcriptId: string,
 	originalFilename: string,
@@ -59,11 +69,12 @@ const transcriptionFailureMessageBody = (
 		'No audio was detected in your source media file - please check that you uploaded the correct file.';
 	const basicErrorMessage =
 		'Please make sure that the file is a valid audio or video file.';
+	const feedbackLink = getFeedbackEmailLink();
 	return `
 		<h1>Transcription for ${originalFilename} has failed.</h1>
 		<p>${noAudioDetected ? noAudioMessage : basicErrorMessage}</p>
 		<p>Click <a href="${sourceMediaDownloadUrl}">here</a> to download the input media.</p>
-		<p>Contact digital.investigations@theguardian.com for support.</p>
+		<p>Contact <a href="${feedbackLink}">digital.investigations@theguardian.com</a> for support.</p>
 		<p>Transcription ID: ${id}</p>
 	`;
 };
@@ -88,11 +99,12 @@ const mediaDownloadFailureMessageBody = (
 	url: string,
 	failureReason: MediaDownloadFailureReason,
 ) => {
+	const feedbackLink = getFeedbackEmailLink();
 	return `
 		<h1>Media download failed for ${url}</h1>
 		<p>You recently requested a transcription of the media at this url ${url}.
 		${failureDescription(failureReason)}
-		<p>Please contact digital.investigations@theguardian.com for further assistance.</p>
+		<p>Please contact <a href="${feedbackLink}">digital.investigations@theguardian.com</a> for further assistance.</p>
 		`;
 };
 

@@ -71,7 +71,8 @@ const ViewerPage = () => {
 					token,
 				);
 				if (!transcriptResponse.ok) {
-					throw new Error('Failed to fetch transcript');
+					const errorText = await transcriptResponse.text();
+					throw new Error(errorText || 'Failed to fetch transcript');
 				}
 
 				const transcriptJson = await transcriptResponse.json();
