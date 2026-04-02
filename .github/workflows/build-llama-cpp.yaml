@@ -56,7 +56,18 @@ jobs:
           zip -r llama-cpp-cuda.zip llama-cpp-cuda/
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: llama-cpp-cuda
           path: llama-cpp-cuda.zip
+
+      - name: Upload llama.cpp to riff-raff
+        uses: guardian/actions-riff-raff@v4
+        with:
+          roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          configPath: llama-cpp/riff-raff.yaml
+          projectName: investigations::transcription-service-llama-cpp
+          contentDirectories: |
+            llama-cpp:
+              - llama-cpp-cuda.zip
