@@ -34,12 +34,14 @@ jobs:
           cmake -B build \
             -DGGML_CUDA=ON \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_CUDA_ARCHITECTURES="75"
+            -DCMAKE_CUDA_ARCHITECTURES="75" \
+            -DCMAKE_INSTALL_PREFIX=install
           cmake --build build --config Release -j "$(nproc)"
+          cmake --install build
 
       - name: Package llama.cpp distribution
         run: |
-          zip -r llama-cpp-cuda.zip llama.cpp/build/
+          zip -r llama-cpp-cuda.zip llama.cpp/install/
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
