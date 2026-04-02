@@ -6,7 +6,7 @@ import torchaudio
 from pyannote.audio import Pipeline
 import sys
 import huggingface_hub
-import typer
+import argparse
 
 # ASR Models
 # Should be kept in sync with https://github.com/m-bain/whisperX/blob/main/whisperx/asr.py
@@ -65,7 +65,7 @@ def download_huggingface_align_models():
 def download_diarization_models(auth_token):
     pyannote_model="pyannote/speaker-diarization-3.1"
     print(f"Downloading diarization models {pyannote_model}")
-    Pipeline.from_pretrained(pyannote_model, use_auth_token=auth_token)
+    Pipeline.from_pretrained(pyannote_model, token=auth_token)
 
 # faster-whisper models
 
@@ -114,27 +114,28 @@ def download_all_whisper_models():
     for model_name in WHISPER_MODELS.keys():
         download_model(model_name)
 
-app = typer.Typer()
-
-@app.command()
-def main(
-        whisper_models: bool = typer.Option(False, help="Download whisper models"),
-        diarization_models: bool = typer.Option(False, help="Download diarization models"),
-        torch_align_models: bool = typer.Option(False, help="Download torch align models"),
-        huggingface_align_models: bool = typer.Option(False, help="Download huggingface align models"),
-        huggingface_token: str = typer.Option("", help="Huggingface authentication token")):
-    if whisper_models:
+def main():
+    parser = argparse.ArgumentParser(description='Download whisperx models for offline use')
+    parser.add_argument('--whisper-models', action='store_true', help='Download whisper models')
+    parser.add_argument('--diarization-models', action='store_true', help='Download diarization models')
+    parser.add_argument('--torch-align-models', action='store_true', help='Download torch align models')
+    parser.add_argument('--huggingface-align-models', action='store_true', help='Download huggingface align models')
+    parser.add_argument('--huggingface-token', default='', help='Huggingface authentication token')
+    
+    args = parser.parse_args()
+    
+    if args.whisper_models:
         download_all_whisper_models()
-    if diarization_models:
-        if not huggingface_token:
+    if args.diarization_models:
+        if not args.huggingface_token:
             print("Please provide a Huggingface authentication token (--huggingface-token <token>)")
             sys.exit(1)
-        download_diarization_models(huggingface_token)
-    if torch_align_models:
+        download_diarization_models(args.huggingface_token)
+    if args.torch_align_models:
         download_torch_align_models()
-    if huggingface_align_models:
+    if args.huggingface_align_models:
         download_huggingface_align_models()
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    main()
