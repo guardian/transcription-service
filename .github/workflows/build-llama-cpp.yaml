@@ -1,10 +1,13 @@
 name: Build llama.cpp for CUDA
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-llama-cpp.yaml'
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: 4core-ubuntu-latest-arm-giant
     # Cross-compile for g4dn.xlarge (Tesla T4, compute capability 7.5)
     # Target: Ubuntu 22.04 Deep Learning AMI, CUDA 12.8, driver 580.95.05
     steps:
