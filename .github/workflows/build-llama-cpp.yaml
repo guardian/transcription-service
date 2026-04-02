@@ -8,6 +8,10 @@ on:
 jobs:
   build:
     runs-on: 4core-ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
     # Cross-compile for g4dn.xlarge (Tesla T4, compute capability 7.5)
     # Target: Ubuntu 22.04 Deep Learning AMI, CUDA 12.8, driver 580.95.05
     steps:
@@ -34,18 +38,22 @@ jobs:
           cmake -B build \
             -DGGML_CUDA=ON \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_CUDA_ARCHITECTURES="75"
+            -DCMAKE_CUDA_ARCHITECTURES="75" \
+            -DCMAKE_INSTALL_PREFIX=install
           cmake --build build --config Release -j "$(nproc)"
-
-      - name: Package llama.cpp distribution
-        run: |
-          zip -r llama-cpp-cuda.zip llama.cpp/build/
+          cmake --install build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
         with:
           name: llama-cpp-cuda
-          path: llama-cpp-cuda.zip
+          path: llama.cpp/install/
+
+      - name: Zip llama.cpp for riffraff
+        run: |
+          mkdir -p llama.cpp/install
+          touch llama.cpp/install/testface
+          zip -r llama-cpp-cuda.zip llama.cpp/install/
 
       - name: Upload llama.cpp to riff-raff
         uses: guardian/actions-riff-raff@v4
@@ -57,3 +65,22 @@ jobs:
           contentDirectories: |
             llama-cpp:
               - llama-cpp-cuda.zip
+          config: |
+            allowedStages:
+              - PROD
+              - CODE
+            regions:
+              - eu-west-1
+            stacks:
+              - deploy
+            deployments:
+              llama-cpp:
+                type: aws-s3
+                app: llama-cpp
+                parameters:
+                  bucketSsmLookup: true
+                  publicReadAcl: false
+                  cacheControl: 'max-age=0, no-cache'
+                  bucketSsmKeyStageParam:
+                    PROD: /PROD/deploy/amigo/amigo.data.bucket
+                    CODE: /CODE/deploy/amigo/amigo.data.bucket
