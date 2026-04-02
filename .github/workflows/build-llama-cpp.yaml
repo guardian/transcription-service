@@ -39,21 +39,7 @@ jobs:
 
       - name: Package llama.cpp distribution
         run: |
-          mkdir -p llama-cpp-cuda/bin llama-cpp-cuda/lib
-          cp llama.cpp/build/bin/* llama-cpp-cuda/bin/
-          # Bundle ggml shared libs
-          cp llama.cpp/build/lib/*.so* llama-cpp-cuda/lib/ 2>/dev/null || true
-          # Add a wrapper script
-          cat > llama-cpp-cuda/run.sh << 'EOF'
-          #!/bin/bash
-          SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-          export LD_LIBRARY_PATH="${SCRIPT_DIR}/lib:${LD_LIBRARY_PATH}"
-          COMMAND="${1:?Usage: ./run.sh <command> [args...] (e.g. llama-server, llama-cli)}"
-          shift
-          exec "${SCRIPT_DIR}/bin/${COMMAND}" "$@"
-          EOF
-          chmod +x llama-cpp-cuda/run.sh
-          zip -r llama-cpp-cuda.zip llama-cpp-cuda/
+          zip -r llama-cpp-cuda.zip llama.cpp/build/
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
