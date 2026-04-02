@@ -37,28 +37,26 @@ jobs:
             -DCMAKE_CUDA_ARCHITECTURES="75"
           cmake --build build --config Release -j "$(nproc)"
 
-      - name: Package llama-server distribution
+      - name: Package llama.cpp distribution
         run: |
-          mkdir -p llama-server-cuda
-          cp llama.cpp/build/bin/llama-server llama-server-cuda/
-          # Bundle CUDA runtime libs needed at runtime
-          cp /usr/local/cuda-12.8/lib64/libcudart.so* llama-server-cuda/
-          cp /usr/local/cuda-12.8/lib64/libcublas.so* llama-server-cuda/
-          cp /usr/local/cuda-12.8/lib64/libcublasLt.so* llama-server-cuda/
+          mkdir -p llama-cpp-cuda/bin llama-cpp-cuda/lib
+          cp llama.cpp/build/bin/* llama-cpp-cuda/bin/
           # Bundle ggml shared libs
-          cp llama.cpp/build/lib/*.so* llama-server-cuda/ 2>/dev/null || true
+          cp llama.cpp/build/lib/*.so* llama-cpp-cuda/lib/ 2>/dev/null || true
           # Add a wrapper script
-          cat > llama-server-cuda/run.sh << 'EOF'
+          cat > llama-cpp-cuda/run.sh << 'EOF'
           #!/bin/bash
           SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-          export LD_LIBRARY_PATH="${SCRIPT_DIR}:${LD_LIBRARY_PATH}"
-          exec "${SCRIPT_DIR}/llama-server" "$@"
+          export LD_LIBRARY_PATH="${SCRIPT_DIR}/lib:${LD_LIBRARY_PATH}"
+          COMMAND="${1:?Usage: ./run.sh <command> [args...] (e.g. llama-server, llama-cli)}"
+          shift
+          exec "${SCRIPT_DIR}/bin/${COMMAND}" "$@"
           EOF
-          chmod +x llama-server-cuda/run.sh
-          zip -r llama-server-cuda.zip llama-server-cuda/
+          chmod +x llama-cpp-cuda/run.sh
+          zip -r llama-cpp-cuda.zip llama-cpp-cuda/
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: llama-server-cuda
-          path: llama-server-cuda.zip
+          name: llama-cpp-cuda
+          path: llama-cpp-cuda.zip
