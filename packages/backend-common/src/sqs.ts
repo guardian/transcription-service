@@ -83,18 +83,9 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		'gzip',
 	);
 
-	// user whisperX if whisperX enabled and...
-	// duration is either unknown or greater than 10 minutes or  diarization has been requested
-	// UPDATE: whisper.cpp is being deprecated. Conditional logic here will eventually be removed following a succesful
-	// trial of using whisperx for everything
-	const engine = config.app.useWhisperx
-		? TranscriptionEngine.WHISPER_X
-		: TranscriptionEngine.WHISPER_CPP;
+	const engine = TranscriptionEngine.WHISPER_X;
 
-	const queue =
-		engine === TranscriptionEngine.WHISPER_X
-			? config.app.gpuTaskQueueUrl
-			: config.app.taskQueueUrl;
+	const queue = config.app.gpuTaskQueueUrl;
 
 	const job: TranscriptionJob = {
 		id: s3Key, // id of the source file

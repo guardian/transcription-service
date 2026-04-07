@@ -14,7 +14,6 @@ export interface TranscriptionConfig {
 	app: {
 		secret: string;
 		rootUrl: string;
-		taskQueueUrl: string;
 		gpuTaskQueueUrl: string;
 		deadLetterQueueUrl?: string;
 		mediaDownloadQueueUrl: string;
@@ -30,7 +29,6 @@ export interface TranscriptionConfig {
 		mediaDownloadProxyPort: number;
 		mediaDownloadCookies: string;
 		mediaExportFunctionName: string;
-		useWhisperx: boolean;
 		eventsTableName: string;
 		youtubeEventId: string;
 		youtubeBlocked: boolean;
@@ -139,7 +137,6 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 	});
 
 	logger.info(`Parameters fetched: ${parameterNames.join(', ')}`);
-	const taskQueueUrl = findParameter(parameters, paramPath, 'taskQueueUrl');
 	const gpuTaskQueueUrl = findParameter(
 		parameters,
 		paramPath,
@@ -223,13 +220,6 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			? []
 			: mediaDownloadProxyIpAddressParam.split(',').map((ip) => ip.trim());
 
-	const useWhisperxParam = findParameter(
-		parameters,
-		paramPath,
-		'app/useWhisperx',
-	);
-	const useWhisperx = useWhisperxParam === 'true';
-
 	const eventsTableName = findParameter(
 		parameters,
 		paramPath,
@@ -247,7 +237,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 
 	const devConfiguration =
 		stage === 'DEV'
-			? devConfig(parameters, paramPath, taskQueueUrl)
+			? devConfig(parameters, paramPath, gpuTaskQueueUrl)
 			: undefined;
 
 	const workerArtifactBucket = findParameter(
@@ -270,7 +260,6 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		app: {
 			rootUrl: appRootUrl,
 			secret: appSecret,
-			taskQueueUrl,
 			gpuTaskQueueUrl,
 			deadLetterQueueUrl,
 			mediaDownloadQueueUrl,
@@ -289,7 +278,6 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			mediaDownloadProxyPort: 1337,
 			mediaDownloadCookies: gtsAccountCookies,
 			mediaExportFunctionName,
-			useWhisperx,
 			eventsTableName,
 			youtubeEventId: 'media-download/youtube',
 			youtubeBlocked,

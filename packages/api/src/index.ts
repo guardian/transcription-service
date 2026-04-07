@@ -217,7 +217,6 @@ const getApp = async () => {
 				filename: body.data.fileName,
 				userEmail,
 				gpuQueue: config.app.gpuTaskQueueUrl,
-				taskQueue: config.app.taskQueueUrl,
 			});
 			res.send('Message sent');
 		}),
