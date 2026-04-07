@@ -8,6 +8,10 @@ on:
 jobs:
   build:
     runs-on: 4core-ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
     # Cross-compile for g4dn.xlarge (Tesla T4, compute capability 7.5)
     # Target: Ubuntu 22.04 Deep Learning AMI, CUDA 12.8, driver 580.95.05
     steps:
