@@ -29,7 +29,6 @@ export type WhisperBaseParams = {
 	containerId?: string;
 	wavPath: string;
 	file: string;
-	numberOfThreads: number;
 	model: WhisperModel;
 	engine: TranscriptionEngine;
 	diarize: boolean;
@@ -37,35 +36,6 @@ export type WhisperBaseParams = {
 	huggingFaceToken?: string;
 	translationDirectory: string;
 	baseDirectory: string;
-};
-
-export const CONTAINER_FOLDER = '/input';
-
-export const getOrCreateContainer = async (
-	tempDir: string,
-): Promise<string> => {
-	const existingContainer = await runSpawnCommand(
-		'getContainer',
-		'docker',
-		['ps', '--filter', 'name=whisper', '--format', '{{.ID}}'],
-		true,
-	);
-
-	if (existingContainer.stdout) {
-		return existingContainer.stdout.trim();
-	}
-
-	const newContainer = await runSpawnCommand('createNewContainer', 'docker', [
-		'run',
-		'-t',
-		'-d',
-		'--name',
-		'whisper',
-		'-v',
-		`${tempDir}:${CONTAINER_FOLDER}`,
-		'ghcr.io/guardian/transcription-service',
-	]);
-	return newContainer.stdout.trim();
 };
 
 export const getFfmpegParams = (
@@ -88,24 +58,15 @@ export const getFfmpegParams = (
 
 export const runFfmpeg = async (
 	ffmpegParams: string[],
-	containerId?: string,
 ): Promise<FfmpegResult | undefined> => {
 	try {
-		const res = containerId
-			? await runSpawnCommand(
-					'convertToWav',
-					'docker',
-					['exec', containerId, 'ffmpeg', ...ffmpegParams],
-					true,
-					false,
-				)
-			: await runSpawnCommand(
-					'convertToWav',
-					'ffmpeg',
-					ffmpegParams,
-					true,
-					false,
-				);
+		const res = await runSpawnCommand(
+			'convertToWav',
+			'ffmpeg',
+			ffmpegParams,
+			true,
+			false,
+		);
 
 		const duration = getDuration(res.stderr);
 
@@ -144,19 +105,15 @@ export const runTranscription = async (
 	whisperBaseParams: WhisperBaseParams,
 	languageCode: InputLanguageCode,
 	translate: boolean,
-	whisperX: boolean,
 	metrics: MetricsService,
 ) => {
 	try {
-		const params = whisperParams(
-			false,
-			whisperBaseParams.wavPath,
+		const { fileName, metadata } = await runWhisperX(
+			whisperBaseParams,
 			languageCode,
 			translate,
+			metrics,
 		);
-		const { fileName, metadata } = whisperX
-			? await runWhisperX(whisperBaseParams, languageCode, translate, metrics)
-			: await runWhisper(whisperBaseParams, params);
 
 		const outputDir = translate
 			? whisperBaseParams.translationDirectory
@@ -186,7 +143,6 @@ export const getTranscriptionText = async (
 	whisperBaseParams: WhisperBaseParams,
 	languageCode: InputLanguageCode,
 	translate: boolean,
-	whisperX: boolean,
 	metrics: MetricsService,
 ): Promise<TranscriptionResult> => {
 	if (process.env.SHAKIRA_MODE) {
@@ -194,20 +150,9 @@ export const getTranscriptionText = async (
 		return SHAKIRA;
 	}
 	if (translate) {
-		return transcribeAndTranslate(
-			whisperBaseParams,
-			whisperX,
-			metrics,
-			languageCode,
-		);
+		return transcribeAndTranslate(whisperBaseParams, metrics, languageCode);
 	}
-	return runTranscription(
-		whisperBaseParams,
-		languageCode,
-		translate,
-		whisperX,
-		metrics,
-	);
+	return runTranscription(whisperBaseParams, languageCode, translate, metrics);
 };
 
 const regexExtract = (text: string, regex: RegExp): string | undefined => {
@@ -225,48 +170,6 @@ const extractWhisperXStdoutData = (stdout: string): TranscriptionMetadata => {
 	return {
 		detectedLanguageCode: parseLanguageCodeString(detectedLanguageCode),
 	};
-};
-
-const extractWhisperStderrData = (stderr: string): TranscriptionMetadata => {
-	const languageRegex = /auto-detected\slanguage: ([a-zA-Z]{2})/;
-	const detectedLanguageCode = regexExtract(stderr, languageRegex);
-
-	const totalTimeRegex =
-		/whisper_print_timings:\s+total time =\s+(\d+\.\d+) ms/;
-	const loadTimeRegex = /whisper_print_timings:\s+load time =\s+(\d+\.\d+) ms/;
-	const totalTime = regexExtract(stderr, totalTimeRegex);
-	const loadTime = regexExtract(stderr, loadTimeRegex);
-
-	return {
-		detectedLanguageCode: parseLanguageCodeString(detectedLanguageCode),
-		loadTimeMs: loadTime ? parseInt(loadTime) : undefined,
-		totalTimeMs: totalTime ? parseInt(totalTime) : undefined,
-	};
-};
-
-const whisperParams = (
-	detectLanguageOnly: boolean,
-	file: string,
-	languageCode: InputLanguageCode = 'auto',
-	translate: boolean = false,
-) => {
-	if (detectLanguageOnly) {
-		return ['--detect-language'];
-	} else {
-		const fileName = path.parse(file).name;
-		const containerOutputFilePath = path.resolve(CONTAINER_FOLDER, fileName);
-		logger.info(`Transcription output file path: ${containerOutputFilePath}`);
-		const translateParam: string[] = translate ? ['--translate'] : [];
-		return [
-			'--output-srt',
-			'--output-txt',
-			'--output-json',
-			'--output-file',
-			containerOutputFilePath,
-			'--language',
-			languageCode,
-		].concat(translateParam);
-	}
 };
 
 export const runWhisperX = async (
@@ -346,46 +249,6 @@ export const runWhisperX = async (
 		logger.info('Whisper finished successfully', metadata);
 		return {
 			fileName,
-			metadata,
-		};
-	} catch (error) {
-		logger.error(`Whisper failed due to `, error);
-		throw error;
-	}
-};
-
-export const runWhisper = async (
-	whisperBaseParams: WhisperBaseParams,
-	whisperParams: string[],
-) => {
-	const { containerId, numberOfThreads, model, wavPath } = whisperBaseParams;
-	if (!containerId) {
-		throw new Error(
-			"Container id undefined - can't run whisper container (has this worker ended up in whisperX mode?)",
-		);
-	}
-	const fileName = path.parse(wavPath).name;
-	logger.info(
-		`Runnning whisper with params ${whisperParams}, base params: ${JSON.stringify(whisperBaseParams, null, 2)}`,
-	);
-
-	try {
-		const result = await runSpawnCommand('transcribe', 'docker', [
-			'exec',
-			containerId,
-			'whisper.cpp/main',
-			'--model',
-			`whisper.cpp/models/ggml-${model}.bin`,
-			'--threads',
-			numberOfThreads.toString(),
-			'--file',
-			wavPath,
-			...whisperParams,
-		]);
-		const metadata = extractWhisperStderrData(result.stderr);
-		logger.info('Whisper finished successfully', metadata);
-		return {
-			fileName: `${fileName}`,
 			metadata,
 		};
 	} catch (error) {
