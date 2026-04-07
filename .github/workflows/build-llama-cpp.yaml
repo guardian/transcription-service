@@ -47,8 +47,8 @@ jobs:
 
       - name: Zip llama.cpp for riffraff
         run: |
-          mkdir -p llama-cpp/install
-          touch llama-cpp/install/testface
+          mkdir -p llama.cpp/install
+          touch llama.cpp/install/testface
           zip -r llama-cpp-cuda.zip llama.cpp/install/
 
       - name: Upload llama.cpp to riff-raff
