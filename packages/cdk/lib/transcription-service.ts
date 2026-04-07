@@ -84,11 +84,6 @@ export class TranscriptionService extends GuStack {
 
 		if (!props.env?.region) throw new Error('region not provided in props');
 
-		const workerAmi = new GuAmiParameter(this, {
-			app: `${APP_NAME}-worker`,
-			description: 'AMI to use for the worker instances',
-		});
-
 		const gpuWorkerAmi = new GuAmiParameter(this, {
 			app: `${APP_NAME}-gpu-worker`,
 			description: 'AMI to use for the gpu worker instances',
@@ -420,42 +415,16 @@ export class TranscriptionService extends GuStack {
 			Port.tcp(443),
 		);
 
-		const commonLaunchTemplateProps = {
-			// include tags in instance metadata so that we can work out the STAGE
-			instanceMetadataTags: true,
-			userData,
-			role: workerRole,
-			requireImdsv2: true,
-			securityGroup: workerSecurityGroup,
-		};
-
-		const cpuWorkerLaunchTemplate = new LaunchTemplate(
-			this,
-			'TranscriptionWorkerLaunchTemplate',
-			{
-				...commonLaunchTemplateProps,
-				machineImage: MachineImage.genericLinux({
-					'eu-west-1': workerAmi.valueAsString,
-				}),
-				instanceType: InstanceType.of(InstanceClass.C7G, InstanceSize.XLARGE4),
-				// the size of this block device will determine the max input file size for transcription. In future we could
-				// attach the block device on startup once we know how large the file to be transcribed is, or try some kind
-				// of streaming approach to the transcription so we don't need the whole file on disk
-				blockDevices: [
-					{
-						deviceName: '/dev/sda1',
-						// assuming that we intend to support video files, 50GB seems a reasonable starting point
-						volume: BlockDeviceVolume.ebs(50),
-					},
-				],
-			},
-		);
-
 		const gpuWorkerLaunchTemplate = new LaunchTemplate(
 			this,
 			'TranscriptionWorkerGPULaunchTemplate',
 			{
-				...commonLaunchTemplateProps,
+				// include tags in instance metadata so that we can work out the STAGE
+				instanceMetadataTags: true,
+				userData,
+				role: workerRole,
+				requireImdsv2: true,
+				securityGroup: workerSecurityGroup,
 				machineImage: MachineImage.genericLinux({
 					'eu-west-1': gpuWorkerAmi.valueAsString,
 				}),
@@ -472,16 +441,6 @@ export class TranscriptionService extends GuStack {
 
 		// instance types we are happy to use for workers. Note - order matters as when launching 'on demand' instances
 		// the ASG will start at the top of the list and work down until it manages to launch an instance
-		const acceptableInstanceTypes = isProd
-			? [
-					InstanceType.of(InstanceClass.C7G, InstanceSize.XLARGE4),
-					InstanceType.of(InstanceClass.C6G, InstanceSize.XLARGE4),
-					InstanceType.of(InstanceClass.M7G, InstanceSize.XLARGE4),
-					InstanceType.of(InstanceClass.C7G, InstanceSize.XLARGE8),
-					InstanceType.of(InstanceClass.C6G, InstanceSize.XLARGE8),
-				]
-			: [InstanceType.of(InstanceClass.T4G, InstanceSize.MEDIUM)];
-
 		const gpuInstanceTypes = isProd
 			? [
 					InstanceType.of(InstanceClass.G4DN, InstanceSize.XLARGE),
@@ -502,55 +461,27 @@ export class TranscriptionService extends GuStack {
 			},
 		});
 
-		const commonAsgProps = {
-			maxCapacity: isProd ? 20 : 4,
-			vpc,
-			vpcSubnets: {
-				subnets: guSubnets,
-			},
-			groupMetrics: [GroupMetrics.all()],
-		};
-
-		const commonInstancesDistributionprops = {
-			// 0 is the default, including this here just to make it more obvious what's happening
-			onDemandBaseCapacity: 0,
-			// if this value is set to 100, then we won't use spot instances at all, if it is 0 then we use 100% spot
-			onDemandPercentageAboveBaseCapacity: 100,
-			spotAllocationStrategy: SpotAllocationStrategy.CAPACITY_OPTIMIZED,
-		};
-
 		// unfortunately GuAutoscalingGroup doesn't support having a mixedInstancesPolicy so using the basic ASG here
-		const transcriptionWorkerASG = new AutoScalingGroup(
-			this,
-			'TranscriptionWorkerASG',
-			{
-				...commonAsgProps,
-				minCapacity: 0,
-				autoScalingGroupName: workerAutoscalingGroupName,
-				mixedInstancesPolicy: {
-					launchTemplate: cpuWorkerLaunchTemplate,
-					instancesDistribution: {
-						...commonInstancesDistributionprops,
-						spotMaxPrice: '0.6202',
-					},
-					launchTemplateOverrides: acceptableInstanceTypes.map(
-						instanceTypeToOverride,
-					),
-				},
-			},
-		);
-
 		const transcriptionGpuWorkerASG = new AutoScalingGroup(
 			this,
 			'TranscriptionGpuWorkerASG',
 			{
-				...commonAsgProps,
+				maxCapacity: isProd ? 20 : 4,
+				vpc,
+				vpcSubnets: {
+					subnets: guSubnets,
+				},
+				groupMetrics: [GroupMetrics.all()],
 				minCapacity: this.stage === 'PROD' ? 1 : 0,
 				autoScalingGroupName: gpuWorkerAutoscalingGroupName,
 				mixedInstancesPolicy: {
 					launchTemplate: gpuWorkerLaunchTemplate,
 					instancesDistribution: {
-						...commonInstancesDistributionprops,
+						// 0 is the default, including this here just to make it more obvious what's happening
+						onDemandBaseCapacity: 0,
+						// if this value is set to 100, then we won't use spot instances at all, if it is 0 then we use 100% spot
+						onDemandPercentageAboveBaseCapacity: 100,
+						spotAllocationStrategy: SpotAllocationStrategy.CAPACITY_OPTIMIZED,
 						spotMaxPrice: '0.5260',
 					},
 					launchTemplateOverrides: gpuInstanceTypes.map(instanceTypeToOverride),
@@ -558,25 +489,11 @@ export class TranscriptionService extends GuStack {
 			},
 		);
 
-		Tags.of(transcriptionWorkerASG).add(
-			'LogKinesisStreamName',
-			GuLoggingStreamNameParameter.getInstance(this).valueAsString,
-			{ applyToLaunchedInstances: true },
-		);
-
 		Tags.of(transcriptionGpuWorkerASG).add(
 			'LogKinesisStreamName',
 			GuLoggingStreamNameParameter.getInstance(this).valueAsString,
 			{ applyToLaunchedInstances: true },
 		);
-
-		Tags.of(transcriptionWorkerASG).add('SystemdUnit', `${workerApp}.service`, {
-			applyToLaunchedInstances: true,
-		});
-
-		Tags.of(transcriptionWorkerASG).add('App', `transcription-service-worker`, {
-			applyToLaunchedInstances: true,
-		});
 
 		Tags.of(transcriptionGpuWorkerASG).add(
 			'SystemdUnit',
@@ -623,11 +540,6 @@ export class TranscriptionService extends GuStack {
 				maxReceiveCount: MAX_RECEIVE_COUNT,
 			},
 		};
-		const transcriptionTaskQueue = new Queue(
-			this,
-			`${APP_NAME}-task-queue`,
-			taskQueueProps,
-		);
 
 		const transcriptionGpuTaskQueue = new Queue(
 			this,
@@ -643,15 +555,12 @@ export class TranscriptionService extends GuStack {
 		});
 
 		// allow API lambda to write to queue
-		transcriptionTaskQueue.grantSendMessages(apiLambda);
 		transcriptionGpuTaskQueue.grantSendMessages(apiLambda);
 
 		// allow worker to receive message from queue
-		transcriptionTaskQueue.grantConsumeMessages(transcriptionWorkerASG);
 		transcriptionGpuTaskQueue.grantConsumeMessages(transcriptionGpuWorkerASG);
 
 		// allow worker to write messages to the dead letter queue
-		transcriptionDeadLetterQueue.grantSendMessages(transcriptionWorkerASG);
 		transcriptionDeadLetterQueue.grantSendMessages(transcriptionGpuWorkerASG);
 
 		const alarmTopicArn = new GuStringParameter(
@@ -687,7 +596,6 @@ export class TranscriptionService extends GuStack {
 			APP_NAME,
 			apiLambda,
 			alarmTopicArn,
-			transcriptionTaskQueue,
 			transcriptionGpuTaskQueue,
 			transcriptionOutputQueue,
 			sourceMediaBucket,
@@ -903,10 +811,7 @@ export class TranscriptionService extends GuStack {
 					'autoscaling:SetDesiredCapacity',
 					'autoscaling:DescribeAutoScalingInstances',
 				],
-				resources: [
-					transcriptionWorkerASG.autoScalingGroupArn,
-					transcriptionGpuWorkerASG.autoScalingGroupArn,
-				],
+				resources: [transcriptionGpuWorkerASG.autoScalingGroupArn],
 			}),
 		);
 
@@ -922,10 +827,7 @@ export class TranscriptionService extends GuStack {
 			new PolicyStatement({
 				effect: Effect.ALLOW,
 				actions: ['sqs:GetQueueAttributes'],
-				resources: [
-					transcriptionTaskQueue.queueArn,
-					transcriptionGpuTaskQueue.queueArn,
-				],
+				resources: [transcriptionGpuTaskQueue.queueArn],
 			}),
 		);
 
@@ -944,10 +846,8 @@ export class TranscriptionService extends GuStack {
 		if (isProd) {
 			makeAlarms(
 				this,
-				transcriptionTaskQueue,
 				transcriptionGpuTaskQueue,
 				transcriptionDeadLetterQueue,
-				transcriptionWorkerASG,
 				transcriptionGpuWorkerASG,
 				alarmTopicArn,
 			);
