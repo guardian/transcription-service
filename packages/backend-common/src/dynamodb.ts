@@ -9,6 +9,7 @@ import { logger } from '@guardian/transcription-service-backend-common';
 import {
 	TranscriptionDynamoItem,
 	YoutubeEventDynamoItem,
+	LlmDynamoItem,
 } from '@guardian/transcription-service-common';
 import { AwsConfig } from './types';
 
@@ -27,7 +28,7 @@ export const getDynamoClient = (
 export const writeDynamoItem = async (
 	client: DynamoDBDocumentClient,
 	tableName: string,
-	item: TranscriptionDynamoItem | YoutubeEventDynamoItem,
+	item: TranscriptionDynamoItem | YoutubeEventDynamoItem | LlmDynamoItem,
 ) => {
 	const command = new PutCommand({
 		TableName: tableName,
@@ -140,4 +141,56 @@ export const getTranscriptionItem = async (
 		};
 	}
 	return { status: 'success', item: parsedItem.data };
+};
+
+type GetLlmItemSuccess = {
+	status: 'SUCCESS';
+	item: LlmDynamoItem;
+};
+
+type GetLlmItemFailure = {
+	status: 'FAILURE';
+	statusCode: number;
+	errorMessage: string;
+};
+
+type GetLlmItemResult = GetLlmItemSuccess | GetLlmItemFailure;
+
+export const getLlmItem = async (
+	client: DynamoDBDocumentClient,
+	tableName: string,
+	itemId: string,
+	ownershipCheck: OwnershipCheck,
+): Promise<GetLlmItemResult> => {
+	const item = await getItem(client, tableName, itemId);
+	const genericNotFoundMessage = 'LLM result not found';
+	if (!item) {
+		const msg = `Failed to fetch LLM item with id ${itemId} from database.`;
+		logger.error(msg);
+		return {
+			status: 'FAILURE',
+			errorMessage: genericNotFoundMessage,
+			statusCode: 404,
+		};
+	}
+	const parsedItem = LlmDynamoItem.safeParse(item);
+	if (!parsedItem.success) {
+		const msg = `Failed to parse LLM item ${itemId} from dynamodb. Error: ${parsedItem.error.message}`;
+		logger.error(msg);
+		return { status: 'FAILURE', errorMessage: msg, statusCode: 500 };
+	}
+	if (
+		ownershipCheck.check &&
+		parsedItem.data.userEmail !== ownershipCheck.currentUserEmail
+	) {
+		logger.warn(
+			`User ${ownershipCheck.currentUserEmail} attempted to access LLM result ${item.id} which does not belong to them.`,
+		);
+		return {
+			status: 'FAILURE',
+			errorMessage: genericNotFoundMessage,
+			statusCode: 404,
+		};
+	}
+	return { status: 'SUCCESS', item: parsedItem.data };
 };
