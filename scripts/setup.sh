@@ -33,3 +33,8 @@ echo "Installing whisperX dependencies (required to run gpu worker locally)"
 echo ""
 
 pipenv install
+
+echo ""
+echo "Installing llama.cpp"
+
+brew install llama.cpp
