@@ -11,7 +11,6 @@ import {
 	getDynamoClient,
 	writeDynamoItem,
 } from '@guardian/transcription-service-backend-common/src/dynamodb';
-import { testMessage } from '../test/testMessage';
 import {
 	transcriptionOutputIsSuccess,
 	TranscriptionOutputSuccess,
@@ -23,6 +22,11 @@ import {
 	ONE_WEEK_IN_SECONDS,
 	MediaDownloadFailureReason,
 	ABOUT_THIS_TOOL_YOUTUBE,
+	transcriptionOutputIsLLMSuccess,
+	transcriptionOutputIsLLMFailure,
+	LLMOutputSuccess,
+	LLMOutputFailure,
+	LlmDynamoItem,
 } from '@guardian/transcription-service-common';
 import {
 	MetricsService,
@@ -30,7 +34,7 @@ import {
 	secondsFromEnqueueToCompleteEmailSentMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
 import { SESClient } from '@aws-sdk/client-ses';
-import { sqsMessageToTestMessage } from 'webpage-snapshot/test/testMessage';
+import { devTrigger } from './dev';
 
 const successMessageBody = (
 	transcriptId: string,
@@ -220,7 +224,70 @@ const handleMediaDownloadFailure = async (
 	}
 };
 
-const processMessage = async (event: unknown) => {
+const handleLLMSuccess = async (
+	config: TranscriptionConfig,
+	llmOutput: LLMOutputSuccess,
+	metrics: MetricsService,
+) => {
+	const dynamoItem: LlmDynamoItem = {
+		id: llmOutput.id,
+		userEmail: llmOutput.userEmail,
+		status: 'LLM_SUCCESS',
+		outputKey: llmOutput.outputKey,
+		completedAt: new Date().toISOString(),
+	};
+
+	try {
+		await writeDynamoItem(
+			getDynamoClient(config.aws, config.dev?.localstackEndpoint),
+			config.app.tableName,
+			dynamoItem,
+		);
+
+		logger.info('Output handler saved LLM success to DynamoDB', {
+			id: llmOutput.id,
+			userEmail: llmOutput.userEmail,
+		});
+	} catch (error) {
+		logger.error(
+			'Failed to process LLM success message - data may be missing from dynamo',
+			error,
+		);
+		await metrics.putMetric(FailureMetric);
+	}
+};
+
+const handleLLMFailure = async (
+	config: TranscriptionConfig,
+	llmOutput: LLMOutputFailure,
+	metrics: MetricsService,
+) => {
+	const dynamoItem: LlmDynamoItem = {
+		id: llmOutput.id,
+		userEmail: llmOutput.userEmail,
+		status: 'LLM_FAILURE',
+		errorMessage: 'LLM processing failed',
+		completedAt: new Date().toISOString(),
+	};
+
+	try {
+		await writeDynamoItem(
+			getDynamoClient(config.aws, config.dev?.localstackEndpoint),
+			config.app.tableName,
+			dynamoItem,
+		);
+
+		logger.info('Output handler saved LLM failure to DynamoDB', {
+			id: llmOutput.id,
+			userEmail: llmOutput.userEmail,
+		});
+	} catch (error) {
+		logger.error('Failed to process LLM failure message', error);
+		await metrics.putMetric(FailureMetric);
+	}
+};
+
+export const processMessage = async (event: unknown) => {
 	const config = await getConfig();
 	const sesClient = getSESClient(config.aws);
 
@@ -277,6 +344,16 @@ const processMessage = async (event: unknown) => {
 				sesClient,
 				metrics,
 			);
+		} else if (transcriptionOutputIsLLMSuccess(transcriptionOutput)) {
+			logger.info(
+				`Handling LLM success. Output: ${JSON.stringify(transcriptionOutput)}`,
+			);
+			await handleLLMSuccess(config, transcriptionOutput, metrics);
+		} else if (transcriptionOutputIsLLMFailure(transcriptionOutput)) {
+			logger.info(
+				`Handling LLM failure. Output: ${JSON.stringify(transcriptionOutput)}`,
+			);
+			await handleLLMFailure(config, transcriptionOutput, metrics);
 		}
 	}
 };
@@ -288,11 +365,6 @@ const handler: Handler = async (event) => {
 
 // when running locally bypass the handler
 if (!process.env['AWS_EXECUTION_ENV']) {
-	const messageBodyEnv = process.env['MESSAGE_BODY'];
-	if (messageBodyEnv) {
-		processMessage(sqsMessageToTestMessage(messageBodyEnv));
-	} else {
-		processMessage(testMessage);
-	}
+	devTrigger();
 }
 export { handler as outputHandler };
