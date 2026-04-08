@@ -3,10 +3,10 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
-[packages]
-whisperx = "3.8.5"
 
 [dev-packages]
+whisperx = "3.8.5"
+boto3 = "*"
 
 [requires]
 python_version = "3.10"
