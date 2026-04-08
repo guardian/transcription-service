@@ -65,6 +65,7 @@ import {
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { invokeLambda } from './services/lambda';
 import { LambdaClient } from '@aws-sdk/client-lambda';
+import { getS3Keys } from 'worker/src/llama-cpp';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -258,8 +259,8 @@ const getApp = async () => {
 			}
 
 			const id = uuid4();
-			const promptKey = `llm-prompts/${id}.txt`;
-			const outputKey = `llm-output/${id}.txt`;
+
+			const { promptKey, outputKey } = getS3Keys(id);
 
 			await putObject(
 				s3Client,
@@ -342,6 +343,17 @@ const getApp = async () => {
 
 			const item = getItemResult.item;
 
+			const { promptKey } = getS3Keys(id);
+			const promptResult = await getObjectText(
+				s3Client,
+				config.app.sourceMediaBucket,
+				promptKey,
+				false,
+			);
+			const itemWithPrompt = isS3Failure(promptResult)
+				? item
+				: { ...item, prompt: promptResult.text };
+
 			if (item.status === 'LLM_SUCCESS' && item.outputKey) {
 				const outputResult = await getObjectText(
 					s3Client,
@@ -350,7 +362,10 @@ const getApp = async () => {
 					false,
 				);
 				if (!isS3Failure(outputResult)) {
-					const result: LlmResult = { ...item, output: outputResult.text };
+					const result: LlmResult = {
+						...itemWithPrompt,
+						output: outputResult.text,
+					};
 					res.json(result);
 					return;
 				}
