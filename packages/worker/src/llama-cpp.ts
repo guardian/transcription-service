@@ -22,6 +22,11 @@ interface LlamaChatMessage {
 	content: string;
 }
 
+export const getS3Keys = (id: string) => ({
+	promptKey: `llm-prompts/${id}.txt`,
+	outputKey: `llm-output/${id}.txt`,
+});
+
 const LlamaChatResponse = z.object({
 	choices: z.array(
 		z.object({

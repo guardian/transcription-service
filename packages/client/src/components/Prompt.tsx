@@ -1,5 +1,6 @@
 'use client';
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { AuthContext } from '@/app/template';
 import { authFetch } from '@/helpers';
 import { Alert, Label, Spinner } from 'flowbite-react';
@@ -28,12 +29,17 @@ const getResult = async (
 
 export const Prompt = () => {
 	const { token } = useContext(AuthContext);
+	const searchParams = useSearchParams();
+	const router = useRouter();
 	const [systemPrompt, setSystemPrompt] = useState('');
 	const [userPrompt, setUserPrompt] = useState('');
 	const [assistantPrompt, setAssistantPrompt] = useState('');
 	const [status, setStatus] = useState<RequestStatus>(RequestStatus.Ready);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [result, setResult] = useState<LlmResult | null>(null);
+	const [promptId, setPromptId] = useState<string | null>(
+		searchParams.get('id'),
+	);
 
 	if (!token) {
 		return (
@@ -43,15 +49,31 @@ export const Prompt = () => {
 		);
 	}
 
+	const setIdInQueryString = (id: string) => {
+		const params = new URLSearchParams(searchParams.toString());
+		params.set('id', id);
+		router.replace(`?${params.toString()}`);
+	};
+
 	const poll = async (id: string) => {
 		const result = await getResult(id, token);
 		if (result) {
+			console.log(result);
+			if (result.prompt) {
+				setUserPrompt(result.prompt);
+			}
 			setResult(result);
 			setStatus(RequestStatus.Success);
 		} else {
 			setTimeout(() => poll(id), POLL_INTERVAL_MS);
 		}
 	};
+
+	useEffect(() => {
+		if (promptId) {
+			poll(promptId);
+		}
+	}, [token, promptId]);
 
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
@@ -86,6 +108,8 @@ export const Prompt = () => {
 
 			const data = await response.json();
 			const id = data.id as string;
+			setIdInQueryString(id);
+			setPromptId(id);
 			poll(id);
 			setStatus(RequestStatus.WaitingForLlmResult);
 		} catch (err) {
@@ -158,7 +182,7 @@ export const Prompt = () => {
 				<div>
 					<Label className="text-base" value="Result" />
 					<div className="mt-2 min-h-[200px] rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700">
-						{!result && (
+						{status !== RequestStatus.WaitingForLlmResult && !result && (
 							<p className="text-gray-400 italic">
 								Submit a prompt to see the result here.
 							</p>

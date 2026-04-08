@@ -364,16 +364,16 @@ export type TranscribeFileRequestBody = z.infer<
 	typeof transcribeFileRequestBody
 >;
 
-export const llmPrompts = z.object({
+export const LlmPrompt = z.object({
 	system: z.string().optional(),
 	user: z.string(),
 	assistant: z.string().optional(),
 });
 
-export type LLMPrompts = z.infer<typeof llmPrompts>;
+export type LLMPrompts = z.infer<typeof LlmPrompt>;
 
 export const llmRequestBody = z.object({
-	prompts: llmPrompts,
+	prompts: LlmPrompt,
 });
 
 export type LLMRequestBody = z.infer<typeof llmRequestBody>;
@@ -417,7 +417,10 @@ export const LlmDynamoItem = z.object({
 
 export type LlmDynamoItem = z.infer<typeof LlmDynamoItem>;
 
-export const LlmResult = LlmDynamoItem.extend({ output: z.string() });
+export const LlmResult = LlmDynamoItem.extend({
+	output: z.string(),
+	prompt: z.string().optional(),
+});
 export type LlmResult = z.infer<typeof LlmResult>;
 
 export const YoutubeEventDynamoItem = z.object({
