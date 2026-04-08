@@ -106,7 +106,10 @@ export enum TranscriptionEngine {
 	WHISPER_CPP = 'whispercpp',
 }
 
-export const TranscriptionJob = z.object({
+export const JobType = z.enum(['transcribe', 'llm']);
+export type JobType = z.infer<typeof JobType>;
+
+export const Job = z.object({
 	id: z.string(),
 	originalFilename: z.string(),
 	inputSignedUrl: z.string(),
@@ -114,6 +117,12 @@ export const TranscriptionJob = z.object({
 	userEmail: z.string(),
 	transcriptDestinationService: z.nativeEnum(DestinationService),
 	combinedOutputUrl: SignedUrl,
+});
+
+export type Job = z.infer<typeof Job>;
+
+export const TranscriptionJob = Job.extend({
+	jobType: z.literal('transcribe').optional(),
 	languageCode: InputLanguageCode,
 	translate: z.boolean(),
 	diarize: z.boolean(),
@@ -121,6 +130,15 @@ export const TranscriptionJob = z.object({
 });
 
 export type TranscriptionJob = z.infer<typeof TranscriptionJob>;
+
+export const LLMJob = Job.extend({
+	jobType: z.literal('llm'),
+});
+
+export type LLMJob = z.infer<typeof LLMJob>;
+
+export const WorkerJob = z.union([LLMJob, TranscriptionJob]);
+export type WorkerJob = z.infer<typeof WorkerJob>;
 
 const OutputBase = z.object({
 	id: z.string(),
@@ -141,6 +159,17 @@ export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
 	includesTranslation: z.boolean(),
 	translationRequested: z.boolean(),
 });
+
+export const LLMOutputSuccess = OutputBase.extend({
+	status: z.literal('LLM_SUCCESS'),
+	outputKey: z.string(),
+});
+export type LLMOutputSuccess = z.infer<typeof LLMOutputSuccess>;
+
+export const LLMOutputFailure = OutputBase.extend({
+	status: z.literal('LLM_FAILURE'),
+});
+export type LLMOutputFailure = z.infer<typeof LLMOutputFailure>;
 
 export const MediaDownloadFailureReason = z.union([
 	z.literal('FAILURE'),
@@ -169,6 +198,8 @@ export const TranscriptionOutput = z.union([
 	TranscriptionOutputSuccess,
 	TranscriptionOutputFailure,
 	MediaDownloadFailure,
+	LLMOutputSuccess,
+	LLMOutputFailure,
 ]);
 
 export type TranscriptionOutputSuccess = z.infer<
@@ -191,6 +222,14 @@ export const transcriptionOutputIsTranscriptionFailure = (
 export const transcriptionOutputIsMediaDownloadFailure = (
 	output: TranscriptionOutput,
 ): output is MediaDownloadFailure => output.status === 'MEDIA_DOWNLOAD_FAILURE';
+
+export const transcriptionOutputIsLLMSuccess = (
+	output: TranscriptionOutput,
+): output is LLMOutputSuccess => output.status === 'LLM_SUCCESS';
+
+export const transcriptionOutputIsLLMFailure = (
+	output: TranscriptionOutput,
+): output is LLMOutputFailure => output.status === 'LLM_FAILURE';
 
 export type TranscriptionOutput = z.infer<typeof TranscriptionOutput>;
 
@@ -325,6 +364,20 @@ export type TranscribeFileRequestBody = z.infer<
 	typeof transcribeFileRequestBody
 >;
 
+export const llmPrompts = z.object({
+	system: z.string().optional(),
+	user: z.string(),
+	assistant: z.string().optional(),
+});
+
+export type LLMPrompts = z.infer<typeof llmPrompts>;
+
+export const llmRequestBody = z.object({
+	prompts: llmPrompts,
+});
+
+export type LLMRequestBody = z.infer<typeof llmRequestBody>;
+
 export const signedUrlRequestBody = z.object({
 	fileName: z.string(),
 });
@@ -352,6 +405,20 @@ export const TranscriptionDynamoItem = z.object({
 });
 
 export type TranscriptionDynamoItem = z.infer<typeof TranscriptionDynamoItem>;
+
+export const LlmDynamoItem = z.object({
+	id: z.string(),
+	userEmail: z.string(),
+	status: z.union([z.literal('LLM_SUCCESS'), z.literal('LLM_FAILURE')]),
+	outputKey: z.optional(z.string()),
+	errorMessage: z.optional(z.string()),
+	completedAt: z.optional(z.string()),
+});
+
+export type LlmDynamoItem = z.infer<typeof LlmDynamoItem>;
+
+export const LlmResult = LlmDynamoItem.extend({ output: z.string() });
+export type LlmResult = z.infer<typeof LlmResult>;
 
 export const YoutubeEventDynamoItem = z.object({
 	id: z.string(),
