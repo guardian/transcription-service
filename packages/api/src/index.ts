@@ -21,6 +21,9 @@ import {
 	writeDynamoItem,
 	downloadObject,
 	getYoutubeEventItem,
+	putObject,
+	getObjectText,
+	isS3Failure,
 } from '@guardian/transcription-service-backend-common';
 import {
 	ClientConfig,
@@ -35,14 +38,20 @@ import {
 	ExportStatuses,
 	TranscriptDownloadRequest,
 	TWELVE_HOURS_IN_SECONDS,
+	ONE_WEEK_IN_SECONDS,
 	TranscriptionItemWithTranscript,
 	TranscriptionMediaDownloadJob,
 	isEnglish,
+	llmRequestBody,
+	DestinationService,
+	LLMJob,
+	LlmResult,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
 	getDynamoClient,
 	getTranscriptionItem,
+	getLlmItem,
 } from '@guardian/transcription-service-backend-common/src/dynamodb';
 import { createExportFolder, getDriveClients } from './services/googleDrive';
 import { v4 as uuid4 } from 'uuid';
@@ -229,6 +238,128 @@ const getApp = async () => {
 				googleClientId: config.auth.clientId,
 			};
 			res.send(JSON.stringify(clientConfig));
+		}),
+	]);
+
+	apiRouter.post('/llm-prompt', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			const userEmail = req.user?.email;
+			if (!userEmail) {
+				res.status(403).send('No user email property - is user logged in?');
+				return;
+			}
+
+			const body = llmRequestBody.safeParse(req.body);
+			if (!body.success) {
+				logger.error('Failed to parse LLM request body', body.error);
+				res.status(422).send('Invalid request body');
+				return;
+			}
+
+			const id = uuid4();
+			const promptKey = `llm-prompts/${id}.txt`;
+			const outputKey = `llm-output/${id}.txt`;
+
+			await putObject(
+				s3Client,
+				config.app.sourceMediaBucket,
+				promptKey,
+				body.data.prompts.user,
+				{ 'user-email': userEmail },
+			);
+			logger.info(
+				`Uploaded LLM prompt to s3://${config.app.sourceMediaBucket}/${promptKey}`,
+			);
+
+			const inputSignedUrl = await getSignedDownloadUrl(
+				config.aws,
+				config.app.sourceMediaBucket,
+				promptKey,
+				ONE_WEEK_IN_SECONDS,
+			);
+
+			const outputSignedUrl = await getSignedUploadUrl(
+				config.aws,
+				config.app.transcriptionOutputBucket,
+				userEmail,
+				ONE_WEEK_IN_SECONDS,
+				false,
+				outputKey,
+			);
+
+			const job: LLMJob = {
+				id,
+				jobType: 'llm',
+				originalFilename: `${id}.txt`,
+				inputSignedUrl,
+				sentTimestamp: new Date().toISOString(),
+				userEmail,
+				transcriptDestinationService: DestinationService.TranscriptionService,
+				combinedOutputUrl: { key: outputKey, url: outputSignedUrl },
+			};
+
+			const sendResult = await sendMessage(
+				sqsClient,
+				config.app.gpuTaskQueueUrl,
+				JSON.stringify(job),
+				id,
+			);
+			if (isSqsFailure(sendResult)) {
+				res.status(500).send(sendResult.errorMsg);
+				return;
+			}
+
+			logger.info('API successfully sent LLM job to task queue', {
+				id,
+				userEmail,
+				queue: config.app.gpuTaskQueueUrl,
+			});
+
+			res.send({ id });
+		}),
+	]);
+
+	apiRouter.get('/llm-prompt', [
+		checkAuth,
+		asyncHandler(async (req, res) => {
+			const id = req.query.id;
+			if (!id || typeof id !== 'string') {
+				res.status(400).send('Missing required query parameter: id');
+				return;
+			}
+
+			const getItemResult = await getLlmItem(
+				dynamoClient,
+				config.app.tableName,
+				id,
+				{ check: true, currentUserEmail: req.user?.email },
+			);
+			if (getItemResult.status === 'FAILURE') {
+				res.status(getItemResult.statusCode).send(getItemResult.errorMessage);
+				return;
+			}
+
+			const item = getItemResult.item;
+
+			if (item.status === 'LLM_SUCCESS' && item.outputKey) {
+				const outputResult = await getObjectText(
+					s3Client,
+					config.app.transcriptionOutputBucket,
+					item.outputKey,
+					false,
+				);
+				if (!isS3Failure(outputResult)) {
+					const result: LlmResult = { ...item, output: outputResult.text };
+					res.json(result);
+					return;
+				}
+				logger.error(
+					`Failed to fetch LLM output from S3 for key ${item.outputKey}`,
+				);
+			}
+
+			res.json(item);
 		}),
 	]);
 
