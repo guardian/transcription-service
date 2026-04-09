@@ -46,12 +46,14 @@ DEFAULT_ALIGN_MODELS_HF = {
     "nn": "NbAiLab/nb-wav2vec2-300m-nynorsk",
 }
 
+
 def download_torch_align_models():
     for lang, model_name in DEFAULT_ALIGN_MODELS_TORCH.items():
         print(f"Downloading {model_name} for {lang}")
         bundle = torchaudio.pipelines.__dict__[model_name]
         bundle.get_model()
         print(f"Downloaded {model_name} for {lang}")
+
 
 def download_huggingface_align_models():
     for lang, model_name in DEFAULT_ALIGN_MODELS_HF.items():
@@ -63,9 +65,13 @@ def download_huggingface_align_models():
 # Diarization - see https://github.com/m-bain/whisperX/blob/main/whisperx/diarize.py
 
 def download_diarization_models(auth_token):
-    pyannote_model="pyannote/speaker-diarization-3.1"
+    pyannote_model = "pyannote/speaker-diarization-3.1"
     print(f"Downloading diarization models {pyannote_model}")
     Pipeline.from_pretrained(pyannote_model, token=auth_token)
+    community_model = "pyannote/speaker-diarization-community-1"
+    print(f"Downloading diarization models {community_model}")
+    Pipeline.from_pretrained(community_model, token=auth_token)
+
 
 # faster-whisper models
 
@@ -80,6 +86,7 @@ WHISPER_MODELS = {
     "medium": "Systran/faster-whisper-medium",
     "large": "Systran/faster-whisper-large-v3",
 }
+
 
 def download_model(
         model: str,
@@ -110,9 +117,11 @@ def download_model(
 
     return huggingface_hub.snapshot_download(repo_id, **kwargs)
 
+
 def download_all_whisper_models():
     for model_name in WHISPER_MODELS.keys():
         download_model(model_name)
+
 
 def main():
     parser = argparse.ArgumentParser(description='Download whisperx models for offline use')
@@ -121,9 +130,9 @@ def main():
     parser.add_argument('--torch-align-models', action='store_true', help='Download torch align models')
     parser.add_argument('--huggingface-align-models', action='store_true', help='Download huggingface align models')
     parser.add_argument('--huggingface-token', default='', help='Huggingface authentication token')
-    
+
     args = parser.parse_args()
-    
+
     if args.whisper_models:
         download_all_whisper_models()
     if args.diarization_models:
