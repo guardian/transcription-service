@@ -64,13 +64,7 @@ export const Prompt = () => {
 			headers: {
 				'Content-Type': 'application/json',
 			},
-			body: JSON.stringify({
-				prompts: {
-					system: prompt.system?.trim(),
-					user: prompt.user.trim(),
-					assistant: prompt.assistant?.trim(),
-				},
-			}),
+			body: JSON.stringify({ prompt }),
 		});
 
 		if (!response.ok) {
@@ -80,7 +74,7 @@ export const Prompt = () => {
 
 		const data = await response.json();
 		return data.id;
-	}
+	};
 
 	const poll = async (id: string) => {
 		const result = await getResult(id, token);
