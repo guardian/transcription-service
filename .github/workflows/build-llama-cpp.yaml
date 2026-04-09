@@ -39,7 +39,8 @@ jobs:
             -DGGML_CUDA=ON \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_CUDA_ARCHITECTURES="75" \
-            -DCMAKE_INSTALL_PREFIX=install
+            -DCMAKE_INSTALL_PREFIX=install \
+            -DBUILD_SHARED_LIBS=OFF
           cmake --build build --config Release -j "$(nproc)"
           cmake --install build
 
