@@ -5,11 +5,10 @@ import {
 } from '@aws-sdk/client-s3';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl as getSignedUrlSdk } from '@aws-sdk/s3-request-presigner';
-import { ReadStream, createWriteStream } from 'fs';
+import { createWriteStream } from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
 import { z } from 'zod';
-import axios from 'axios';
 import { logger } from '@guardian/transcription-service-backend-common';
 import { AwsConfig, AWSStatus } from './types';
 import { ungzip } from 'node-gzip';
@@ -168,10 +167,16 @@ export const getObjectWithPresignedUrl = async (
 	workingDirectory: string,
 ) => {
 	const destinationPath = `${workingDirectory}/${path.basename(key)}`;
-	const response = await axios.get<ReadStream>(presignedUrl, {
-		responseType: 'stream',
-	});
-	const body = ReadableBody.parse(response.data);
+	const response = await fetch(presignedUrl);
+	if (!response.ok) {
+		throw new Error(
+			`Failed to download ${key}: ${response.status} ${response.statusText}`,
+		);
+	}
+	if (!response.body) {
+		throw new Error(`Response body is empty for ${key}`);
+	}
+	const body = Readable.fromWeb(response.body as import('stream/web').ReadableStream);
 	await downloadS3Data(body, destinationPath, key);
 	return destinationPath;
 };

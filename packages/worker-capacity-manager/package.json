@@ -15,8 +15,6 @@
 		"@guardian/transcription-service-backend-common": "1.0.0"
 	},
 	"devDependencies": {
-		"@types/node": "^20.11.5",
-		"typescript": "^5.3.3",
-		"@types/aws-lambda": "^8.10.133"
+		"@types/aws-lambda": "8.10.145"
 	}
 }

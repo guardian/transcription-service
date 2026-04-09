@@ -1,0 +1,22 @@
+version: 2
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/'
+    cooldown:
+      default-days: 3
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: 'pip'
+    directory: '/'
+    cooldown:
+      default-days: 3
+
+  - package-ecosystem: 'docker'
+    directory: '/containers'
+    cooldown:
+      default-days: 3
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    cooldown:
+      default-days: 3
