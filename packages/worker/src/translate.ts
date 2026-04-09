@@ -38,18 +38,11 @@ export const getTranslationConfig = (
 
 export const transcribeAndTranslate = async (
 	whisperBaseParams: WhisperBaseParams,
-	whisperX: boolean,
 	metrics: MetricsService,
 	languageCode: InputLanguageCode,
 ): Promise<TranscriptionResult> => {
 	const run = (translate: boolean, languageCode: InputLanguageCode) =>
-		runTranscription(
-			whisperBaseParams,
-			languageCode,
-			translate,
-			whisperX,
-			metrics,
-		);
+		runTranscription(whisperBaseParams, languageCode, translate, metrics);
 	try {
 		const transcription = await run(false, languageCode);
 		const translationConfig = getTranslationConfig(

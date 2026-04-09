@@ -30,9 +30,6 @@ deployments:
         PROD: TranscriptionService-PROD.template.json
       amiEncrypted: investigations
       amiParametersToTags:
-        AMITranscriptionserviceworker:
-          BuiltBy: amigo
-          Recipe: investigations-transcription-service
         AMITranscriptionservicegpuworker:
           BuiltBy: amigo
           Recipe: investigations-transcription-service-gpu

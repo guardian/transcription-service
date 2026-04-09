@@ -24,9 +24,7 @@ import {
 import {
 	getTranscriptionText,
 	runFfmpeg,
-	getOrCreateContainer,
 	WhisperBaseParams,
-	CONTAINER_FOLDER,
 	getFfmpegParams,
 } from './transcribe';
 import path from 'path';
@@ -79,11 +77,8 @@ const main = async () => {
 	const s3Client = getS3Client(config.aws);
 
 	const autoScalingClient = getASGClient(config.aws);
-	const isGpu = config.app.app.startsWith('transcription-service-gpu-worker');
-	const asgName = isGpu
-		? `transcription-service-gpu-workers-${config.app.stage}`
-		: `transcription-service-workers-${config.app.stage}`;
-	const queueUrl = isGpu ? config.app.gpuTaskQueueUrl : config.app.taskQueueUrl;
+	const asgName = `transcription-service-gpu-workers-${config.app.stage}`;
+	const queueUrl = config.app.gpuTaskQueueUrl;
 
 	logger.info(`Worker reading from queue ${queueUrl}`);
 
@@ -167,7 +162,6 @@ const pollTranscriptionQueue = async (
 	instanceId: string,
 ) => {
 	const stage = config.app.stage;
-	const numberOfThreads = config.app.stage === 'PROD' ? 16 : 2;
 	const isDev = config.app.stage === 'DEV';
 
 	logger.info(
@@ -314,30 +308,20 @@ const pollTranscriptionQueue = async (
 			destinationDirectory,
 		);
 
-		const useContainer = job.engine !== 'whisperx';
-
-		const ffmpegDir = useContainer ? CONTAINER_FOLDER : destinationDirectory;
-
 		const fileName = path.basename(fileToTranscribe);
-		const filePath = `${ffmpegDir}/${fileName}`;
-		const wavPath = `${ffmpegDir}/${fileName}-converted.wav`;
+		const filePath = `${destinationDirectory}/${fileName}`;
+		const wavPath = `${destinationDirectory}/${fileName}-converted.wav`;
 		logger.info(`Input file path: ${filePath}, Output file path: ${wavPath}`);
 
 		const ffmpegParams = getFfmpegParams(filePath, wavPath);
 
-		// docker container to run ffmpeg and whisper on file
-		const containerId = useContainer
-			? await getOrCreateContainer(path.parse(fileToTranscribe).dir)
-			: undefined;
-
-		const ffmpegResult = await runFfmpeg(ffmpegParams, containerId);
+		const ffmpegResult = await runFfmpeg(ffmpegParams);
 
 		if (
 			ffmpegResult === undefined ||
 			(ffmpegResult?.failed && !ffmpegResult.fileContainsNoAudio)
 		) {
-			// when ffmpeg fails to transcribe, move message to the dead letter
-			// queue
+			// when ffmpeg fails to convert, move message to the dead letter queue
 			if (!isDev && config.app.deadLetterQueueUrl) {
 				logger.error(
 					`'ffmpeg failed, moving message with message id ${taskMessage.MessageId} to dead letter queue`,
@@ -398,10 +382,8 @@ const pollTranscriptionQueue = async (
 		}
 
 		const whisperBaseParams: WhisperBaseParams = {
-			containerId,
 			wavPath: wavPath,
 			file: fileToTranscribe,
-			numberOfThreads,
 			// whisperx always runs on powerful gpu instances so let's always use the medium model
 			model: config.app.stage === 'DEV' ? 'tiny' : 'medium',
 			engine: job.engine,
@@ -418,7 +400,6 @@ const pollTranscriptionQueue = async (
 			whisperBaseParams,
 			job.languageCode,
 			job.translate,
-			job.engine === 'whisperx',
 			metrics,
 		);
 

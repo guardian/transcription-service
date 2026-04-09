@@ -34,7 +34,6 @@ export const makeMediaDownloadService = (
 	APP_NAME: string,
 	apiLambda: GuLambdaFunction,
 	alarmTopicArn: string,
-	transcriptionTaskQueue: Queue,
 	transcriptionGpuTaskQueue: Queue,
 	transcriptionOutputQueue: Queue,
 	sourceMediaBucket: Bucket,
@@ -128,7 +127,6 @@ export const makeMediaDownloadService = (
 				effect: Effect.ALLOW,
 				actions: ['sqs:SendMessage'],
 				resources: [
-					transcriptionTaskQueue.queueArn,
 					transcriptionGpuTaskQueue.queueArn,
 					transcriptionOutputQueue.queueArn,
 				],
