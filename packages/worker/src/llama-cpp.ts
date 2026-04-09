@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'path';
 import {
 	LLMJob,
+	LlmPrompt,
 	type LLMOutputSuccess,
 	uploadToS3,
 } from '@guardian/transcription-service-common';
@@ -39,20 +40,29 @@ const LlamaChatResponse = z.object({
 
 type LlamaChatResponse = z.infer<typeof LlamaChatResponse>;
 
+const buildMessages = (prompts: LlmPrompt): LlamaChatMessage[] => {
+	const messages: LlamaChatMessage[] = [];
+	messages.push({ role: 'user', content: prompts.user });
+	if (prompts.system) {
+		messages.push({ role: 'system', content: prompts.system });
+	}
+	if (prompts.assistant) {
+		messages.push({ role: 'assistant', content: prompts.assistant });
+	}
+	return messages;
+};
+
 /**
  * Send a prompt to the llama-server OpenAI-compatible chat completions API
  * and return the response text.
  */
-export const sendPromptToLlama = async (prompt: string): Promise<string> => {
-	const messages: LlamaChatMessage[] = [
-		{
-			role: 'user',
-			content: prompt,
-		},
-	];
+export const sendPromptToLlama = async (
+	prompts: LlmPrompt,
+): Promise<string> => {
+	const messages = buildMessages(prompts);
 
 	logger.info(
-		`Sending prompt to llama-server at ${LLAMA_SERVER_URL} (prompt length: ${prompt.length} chars)`,
+		`Sending prompt to llama-server at ${LLAMA_SERVER_URL} (${messages.length} messages, user prompt length: ${prompts.user.length} chars)`,
 	);
 
 	const response = await fetch(`${LLAMA_SERVER_URL}/v1/chat/completions`, {
@@ -117,7 +127,12 @@ export const processLLMJob = async (
 ) => {
 	logger.info(`Processing LLM job with id ${job.id}`);
 
-	const promptContent = fs.readFileSync(downloadedFile, 'utf-8');
+	const fileContent = fs.readFileSync(downloadedFile, 'utf-8');
+
+	const parsedPrompts = LlmPrompt.safeParse(JSON.parse(fileContent));
+	if (!parsedPrompts.success) {
+		throw new Error(`Failed to parse prompt file, content: ${fileContent}`);
+	}
 
 	// Set a generous visibility timeout for LLM processing
 	await changeMessageVisibility(
@@ -127,7 +142,7 @@ export const processLLMJob = async (
 		600, // 10 minutes
 	);
 
-	const llmResult = await sendPromptToLlama(promptContent);
+	const llmResult = await sendPromptToLlama(parsedPrompts.data);
 
 	const outputPath = saveLLMResult(destinationDirectory, job.id, llmResult);
 

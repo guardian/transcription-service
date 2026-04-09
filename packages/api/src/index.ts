@@ -45,6 +45,7 @@ import {
 	DestinationService,
 	LLMJob,
 	LlmResult,
+	LlmPrompt,
 } from '@guardian/transcription-service-common';
 import type { SignedUrlResponseBody } from '@guardian/transcription-service-common';
 import {
@@ -257,7 +258,7 @@ const getApp = async () => {
 				s3Client,
 				config.app.sourceMediaBucket,
 				promptKey,
-				body.data.prompts.user,
+				JSON.stringify(body.data.prompt),
 				{ 'user-email': userEmail },
 			);
 			logger.info(
@@ -341,9 +342,16 @@ const getApp = async () => {
 				promptKey,
 				false,
 			);
-			const itemWithPrompt = isS3Failure(promptResult)
-				? item
-				: { ...item, prompt: promptResult.text };
+			const parsedPrompt =
+				!isS3Failure(promptResult) &&
+				LlmPrompt.safeParse(JSON.parse(promptResult.text));
+			const itemWithPrompt =
+				parsedPrompt && parsedPrompt.success
+					? {
+							...item,
+							prompt: parsedPrompt.data,
+						}
+					: item;
 
 			if (item.status === 'LLM_SUCCESS' && item.outputKey) {
 				const outputResult = await getObjectText(
