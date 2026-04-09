@@ -58,6 +58,30 @@ export const Prompt = () => {
 		router.replace(`?${params.toString()}`);
 	};
 
+	const submitPrompt = async (prompt: LlmPrompt): Promise<string> => {
+		const response = await authFetch('/api/llm-prompt', token, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				prompts: {
+					system: prompt.system?.trim(),
+					user: prompt.user.trim(),
+					assistant: prompt.assistant?.trim(),
+				},
+			}),
+		});
+
+		if (!response.ok) {
+			const text = await response.text();
+			throw new Error(text || 'Failed to submit prompt');
+		}
+
+		const data = await response.json();
+		return data.id;
+	}
+
 	const poll = async (id: string) => {
 		const result = await getResult(id, token);
 		if (result) {
@@ -90,27 +114,7 @@ export const Prompt = () => {
 		setResult(null);
 
 		try {
-			const response = await authFetch('/api/llm-prompt', token, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					prompts: {
-						system: prompt.system?.trim(),
-						user: prompt.user.trim(),
-						assistant: prompt.assistant?.trim(),
-					},
-				}),
-			});
-
-			if (!response.ok) {
-				const text = await response.text();
-				throw new Error(text || 'Failed to submit prompt');
-			}
-
-			const data = await response.json();
-			const id = data.id as string;
+			const id = await submitPrompt(prompt);
 			setIdInQueryString(id);
 			setPromptId(id);
 			poll(id);
