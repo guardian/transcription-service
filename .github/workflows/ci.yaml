@@ -43,7 +43,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            node_version=20.11.0
+            node_version=24.14.1
   ci:
     permissions:
       id-token: write
