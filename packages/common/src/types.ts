@@ -370,10 +370,10 @@ export const LlmPrompt = z.object({
 	assistant: z.string().optional(),
 });
 
-export type LLMPrompts = z.infer<typeof LlmPrompt>;
+export type LlmPrompt = z.infer<typeof LlmPrompt>;
 
 export const llmRequestBody = z.object({
-	prompts: LlmPrompt,
+	prompt: LlmPrompt,
 });
 
 export type LLMRequestBody = z.infer<typeof llmRequestBody>;
@@ -419,7 +419,7 @@ export type LlmDynamoItem = z.infer<typeof LlmDynamoItem>;
 
 export const LlmResult = LlmDynamoItem.extend({
 	output: z.string(),
-	prompt: z.string().optional(),
+	prompt: LlmPrompt.optional(),
 });
 export type LlmResult = z.infer<typeof LlmResult>;
 

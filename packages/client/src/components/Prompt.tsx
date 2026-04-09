@@ -5,7 +5,7 @@ import { AuthContext } from '@/app/template';
 import { authFetch } from '@/helpers';
 import { Alert, Label, Spinner } from 'flowbite-react';
 import { RequestStatus } from '@/types';
-import { LlmResult } from '@guardian/transcription-service-common';
+import { LlmPrompt, LlmResult } from '@guardian/transcription-service-common';
 import { PromptField } from '@/components/PromptField';
 const POLL_INTERVAL_MS = 3000;
 
@@ -15,7 +15,6 @@ const getResult = async (
 ): Promise<LlmResult | undefined> => {
 	const response = await authFetch(`/api/llm-prompt?id=${id}`, token);
 	if (!response.ok) {
-		// Item not in dynamo yet — keep polling
 		return undefined;
 	}
 	const data = await response.json();
@@ -27,13 +26,17 @@ const getResult = async (
 	return parsedResponse.data;
 };
 
+const emptyPrompts: LlmPrompt = {
+	system: '',
+	user: '',
+	assistant: '',
+};
+
 export const Prompt = () => {
 	const { token } = useContext(AuthContext);
 	const searchParams = useSearchParams();
 	const router = useRouter();
-	const [systemPrompt, setSystemPrompt] = useState('');
-	const [userPrompt, setUserPrompt] = useState('');
-	const [assistantPrompt, setAssistantPrompt] = useState('');
+	const [prompt, setPrompt] = useState<LlmPrompt>(emptyPrompts);
 	const [status, setStatus] = useState<RequestStatus>(RequestStatus.Ready);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [result, setResult] = useState<LlmResult | null>(null);
@@ -60,7 +63,7 @@ export const Prompt = () => {
 		if (result) {
 			console.log(result);
 			if (result.prompt) {
-				setUserPrompt(result.prompt);
+				setPrompt(result.prompt);
 			}
 			setResult(result);
 			setStatus(RequestStatus.Success);
@@ -78,7 +81,7 @@ export const Prompt = () => {
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 
-		if (!userPrompt.trim()) {
+		if (!prompt.user.trim()) {
 			return;
 		}
 
@@ -94,9 +97,9 @@ export const Prompt = () => {
 				},
 				body: JSON.stringify({
 					prompts: {
-						system: systemPrompt.trim(),
-						user: userPrompt.trim(),
-						assistant: assistantPrompt.trim(),
+						system: prompt.system?.trim(),
+						user: prompt.user.trim(),
+						assistant: prompt.assistant?.trim(),
 					},
 				}),
 			});
@@ -140,8 +143,8 @@ export const Prompt = () => {
 							id="system-prompt"
 							label="System prompt"
 							description="Optional. Sets the behaviour and context for the LLM."
-							value={systemPrompt}
-							onChange={setSystemPrompt}
+							value={prompt.system || ''}
+							onChange={(system) => setPrompt({ ...prompt, system })}
 							rows={3}
 						/>
 
@@ -149,8 +152,8 @@ export const Prompt = () => {
 							id="user-prompt"
 							label="User prompt"
 							description="Required. The main instruction or question for the LLM."
-							value={userPrompt}
-							onChange={setUserPrompt}
+							value={prompt.user}
+							onChange={(user) => setPrompt({ ...prompt, user })}
 							rows={6}
 						/>
 
@@ -158,16 +161,16 @@ export const Prompt = () => {
 							id="assistant-prompt"
 							label="Assistant prompt"
 							description="Optional. Pre-fill the start of the assistant's response."
-							value={assistantPrompt}
-							onChange={setAssistantPrompt}
+							value={prompt.assistant || ''}
+							onChange={(assistant) => setPrompt({ ...prompt, assistant })}
 							rows={3}
 						/>
 
 						<button
 							type="submit"
-							disabled={!userPrompt.trim() || isSubmitting}
+							disabled={!prompt.user.trim() || isSubmitting}
 							className={`text-white px-5 py-2.5 text-center rounded-lg text-sm font-medium inline-flex items-center ${
-								!userPrompt.trim() || isSubmitting
+								!prompt.user.trim() || isSubmitting
 									? 'bg-blue-400 dark:bg-blue-500 cursor-not-allowed'
 									: 'bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'
 							}`}
