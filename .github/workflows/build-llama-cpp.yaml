@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: 4core-ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       id-token: write
       contents: read
