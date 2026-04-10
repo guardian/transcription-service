@@ -109,7 +109,8 @@ export const getTranscriptionItem = async (
 	ownershipCheck: OwnershipCheck,
 ): Promise<GetTranscriptionItemResult> => {
 	const item = await getItem(client, tableName, itemId);
-	const genericNotFoundMessage = 'Transcript not found';
+	const genericNotFoundMessage =
+		'We cannot find a transcript with this ID. Either the URL is wrong or the transcript has expired. As part of our privacy and security commitment, transcripts are only retained for a brief period. Please re-upload your recording to generate a new transcript.';
 	if (!item) {
 		const msg = `Failed to fetch item with id ${itemId} from database.`;
 		logger.error(msg);

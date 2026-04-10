@@ -50,7 +50,7 @@ export const getCombinedOutput = async (
 	if (isS3Failure(combinedOutputText)) {
 		const msg =
 			combinedOutputText.failureReason === 'NoSuchKey'
-				? `Failed to export transcript - file has expired. Please re-upload the file and try again.`
+				? `Your transcript no longer exists. As part of our privacy and security commitment, transcripts are only retained for a brief period. Please re-upload your recording to generate a new transcript.`
 				: `Failed to fetch transcript. Please contact the digital investigations team for support`;
 		logger.error(msg);
 		return {
