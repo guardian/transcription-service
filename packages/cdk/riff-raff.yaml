@@ -32,7 +32,8 @@ deployments:
       amiParametersToTags:
         AMITranscriptionservicegpuworker:
           BuiltBy: amigo
-          Recipe: investigations-transcription-service-gpu
+          Recipe: cuda-llama
+          AmigoStage: CODE
     dependencies:
       - lambda-upload-eu-west-1-investigations-transcription-service
       - lambda-upload-eu-west-1-investigations-transcription-service-output-handler
