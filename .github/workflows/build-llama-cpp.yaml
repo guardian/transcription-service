@@ -15,6 +15,40 @@ jobs:
     # Cross-compile for g4dn.xlarge (Tesla T4, compute capability 7.5)
     # Target: Ubuntu 22.04 Deep Learning AMI, CUDA 12.8, driver 580.95.05
     steps:
+      - name: Download Qwen3-8B GGUF model from Hugging Face
+        run: |
+          mkdir -p models
+          curl -L --fail -o models/Qwen3-8B-Q4_K_M.gguf \
+            -H "Authorization: Bearer ${{ secrets.HUGGINGFACE_TOKEN }}" \
+            "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
+          zip -j llama-models.zip models/Qwen3-8B-Q4_K_M.gguf
+
+      - name: Upload models to riff-raff
+        uses: guardian/actions-riff-raff@v4
+        with:
+          roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          projectName: investigations::transcription-service-llama-models
+          contentDirectories: |
+            llama-models:
+              - llama-models.zip
+          config: |
+            allowedStages:
+              - PROD
+              - CODE
+            regions:
+              - eu-west-1
+            stacks:
+              - investigations
+            deployments:
+              llama-models:
+                type: aws-s3
+                app: llama-models
+                parameters:
+                  bucketSsmLookup: true
+                  publicReadAcl: false
+                  cacheControl: 'max-age=0, no-cache'
+
       - name: Install CUDA toolkit 12.8
         run: |
           wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
@@ -61,7 +95,6 @@ jobs:
         with:
           roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          configPath: llama-cpp/riff-raff.yaml
           projectName: investigations::transcription-service-llama-cpp
           contentDirectories: |
             llama-cpp:
