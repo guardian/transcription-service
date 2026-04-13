@@ -323,6 +323,8 @@ export class TranscriptionService extends GuStack {
 		const workerApp = `${APP_NAME}-worker`;
 		const userData = UserData.forLinux({ shebang: '#!/bin/bash' });
 
+		const baseS3DistPath = `s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}`;
+
 		const userDataCommands = [
 			`set -x`,
 			`export STAGE=${props.stage}`,
@@ -332,7 +334,7 @@ export class TranscriptionService extends GuStack {
 			`ln -s /usr/local/cuda-12.8 /usr/local/cuda`,
 			// Download models from s3 to nvme drive - we get a 125GB nvme drive with g4dn.xlarge instances. Fetching
 			// models from s3 to this drive on startup is faster than reading them from the AMI/root EBS volume
-			`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/transcription-service-models/models.zip /opt/dlami/nvme/models.zip`,
+			`aws s3 cp s3://${baseS3DistPath}/transcription-service-models/models.zip /opt/dlami/nvme/models.zip`,
 			`unzip /opt/dlami/nvme/models.zip -d /opt/dlami/nvme/`,
 			`rm -rf /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface`,
 			`chown -R ubuntu:ubuntu /opt/dlami/nvme/models`,
@@ -342,10 +344,8 @@ export class TranscriptionService extends GuStack {
 			`ln -s /opt/dlami/nvme/models/huggingface /home/ubuntu/.cache/huggingface`,
 			`chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface`,
 			// Set up transcription service worker
-			`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
+			`aws s3 cp ${baseS3DistPath}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
 			`dpkg -i transcription-service-worker_1.0.0_all.deb`,
-			// copy the llama model to the NVMe instance store for faster loading
-			`cp /opt/llama/models/Qwen3-8B-Q4_K_M.gguf /opt/dlami/nvme/Qwen3-8B-Q4_K_M.gguf`,
 			// start llama-server in the background
 			`LD_LIBRARY_PATH=/opt/llama/llama.cpp/install/lib/ /opt/llama/llama.cpp/install/bin/llama-server -m /opt/dlami/nvme/Qwen3-8B-Q4_K_M.gguf --port 9080 &`,
 			// warm up whisperx by transcribing sample file then start the service NOTE: won't work for whisper.cpp if we bring that back
