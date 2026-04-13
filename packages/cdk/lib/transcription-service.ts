@@ -322,16 +322,17 @@ export class TranscriptionService extends GuStack {
 		const workerApp = `${APP_NAME}-worker`;
 		const userData = UserData.forLinux({ shebang: '#!/bin/bash' });
 
+		const baseS3DistPath = `s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}`;
+
 		const userDataCommands = [
 			`export STAGE=${props.stage}`,
 			`export AWS_REGION=${props.env.region}`,
 			// set cuda version needed by whisperx - see https://docs.aws.amazon.com/dlami/latest/devguide/tutorial-base.html
 			`rm /usr/local/cuda`,
 			`ln -s /usr/local/cuda-12.8 /usr/local/cuda`,
-			`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
+			`aws s3 cp ${baseS3DistPath}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
 			`dpkg -i transcription-service-worker_1.0.0_all.deb`,
-			// copy the llama model to the NVMe instance store for faster loading
-			`cp /opt/llama/models/Qwen3-8B-Q4_K_M.gguf /opt/dlami/nvme/Qwen3-8B-Q4_K_M.gguf`,
+			`aws s3 cp ${baseS3DistPath}/transcription-service-models/Qwen3-8B-Q4_K_M.gguf /opt/dlami/nvme/Qwen3-8B-Q4_K_M.gguf`,
 			// start llama-server in the background
 			`LD_LIBRARY_PATH=/opt/llama/llama.cpp/install/lib/ /opt/llama/llama.cpp/install/bin/llama-server -m /opt/dlami/nvme/Qwen3-8B-Q4_K_M.gguf --port 9080 &`,
 			// warm up whisperx by transcribing sample file then start the service NOTE: won't work for whisper.cpp if we bring that back
@@ -384,6 +385,12 @@ export class TranscriptionService extends GuStack {
 				new GuAllowPolicy(this, 'WriteCloudwatch', {
 					actions: ['cloudwatch:PutMetricData'],
 					resources: ['*'],
+				}),
+				new GuAllowPolicy(this, 'GetModels', {
+					actions: ['s3:GetObject'],
+					resources: [
+						`arn:aws:s3:::${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/transcription-service-models/*`,
+					],
 				}),
 			],
 		});
