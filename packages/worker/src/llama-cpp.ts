@@ -4,7 +4,9 @@ import {
 	publishTranscriptionOutput,
 	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'path';
 import {
 	LLMJob,
@@ -17,6 +19,8 @@ import { z } from 'zod';
 
 const LLAMA_SERVER_URL =
 	process.env.LLAMA_SERVER_URL ?? 'http://localhost:9080';
+
+const USE_SERVER = false;
 
 interface LlamaChatMessage {
 	role: 'system' | 'user' | 'assistant';
@@ -56,7 +60,7 @@ const buildMessages = (prompts: LlmPrompt): LlamaChatMessage[] => {
  * Send a prompt to the llama-server OpenAI-compatible chat completions API
  * and return the response text.
  */
-export const sendPromptToLlama = async (
+export const sendPromptToLlamaServer = async (
 	prompts: LlmPrompt,
 ): Promise<string> => {
 	const messages = buildMessages(prompts);
@@ -101,6 +105,57 @@ export const sendPromptToLlama = async (
 	return content;
 };
 
+const LLAMA_CLI_MODEL_PATH = '/opt/dlami/nvme/Qwen3-8B-Q4_K_M.gguf';
+
+export const sendPromptToLlamaCli = (prompts: LlmPrompt): string => {
+	// Write prompts to temporary files to avoid shell injection and ARG_MAX issues
+	const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'llama-cli-'));
+	const userPromptFile = path.join(tmpDir, 'prompt.txt');
+	fs.writeFileSync(userPromptFile, prompts.user, 'utf-8');
+
+	const args: string[] = [
+		'--model',
+		LLAMA_CLI_MODEL_PATH,
+		'--file',
+		userPromptFile,
+	];
+
+	let systemPromptFile: string | undefined;
+	if (prompts.system) {
+		systemPromptFile = path.join(tmpDir, 'system-prompt.txt');
+		fs.writeFileSync(systemPromptFile, prompts.system, 'utf-8');
+		args.push('--system-prompt-file', systemPromptFile);
+	}
+
+	logger.info(
+		`Running llama-cli with model ${LLAMA_CLI_MODEL_PATH} (prompt length: ${prompts.user.length} chars)`,
+	);
+
+	try {
+		const output = execFileSync(
+			'/opt/llama/llama.cpp/install/bin/llama-cli',
+			args,
+			{
+				env: {
+					...process.env,
+					LD_LIBRARY_PATH: '/opt/llama/llama.cpp/install/lib/',
+				},
+				encoding: 'utf-8',
+				maxBuffer: 50 * 1024 * 1024, // 50 MB
+			},
+		);
+
+		logger.info(
+			`Received response from llama-cli (response length: ${output.length} chars)`,
+		);
+
+		return output;
+	} finally {
+		// Clean up temporary files
+		fs.rmSync(tmpDir, { recursive: true, force: true });
+	}
+};
+
 /**
  * Save the LLM result to a file and return the file path.
  */
@@ -142,7 +197,9 @@ export const processLLMJob = async (
 		600, // 10 minutes
 	);
 
-	const llmResult = await sendPromptToLlama(parsedPrompts.data);
+	const llmResult = USE_SERVER
+		? await sendPromptToLlamaServer(parsedPrompts.data)
+		: sendPromptToLlamaCli(parsedPrompts.data);
 
 	const outputPath = saveLLMResult(destinationDirectory, job.id, llmResult);
 

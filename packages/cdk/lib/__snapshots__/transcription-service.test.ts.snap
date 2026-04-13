@@ -1256,8 +1256,6 @@ aws s3 cp s3://",
                     "Ref": "DistributionBucketName",
                   },
                   "/investigations/TEST/transcription-service-models/Qwen3-8B-Q4_K_M.gguf /opt/dlami/nvme/Qwen3-8B-Q4_K_M.gguf
-LD_LIBRARY_PATH=/opt/llama/llama.cpp/install/lib/ /opt/llama/llama.cpp/install/bin/llama-server -m /opt/dlami/nvme/Qwen3-8B-Q4_K_M.gguf --port 9080 &
-LD_LIBRARY_PATH=/usr/local/cuda/lib:/usr/local/cuda/lib64 CUDA_HOME=/usr/local/cuda PATH=/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin runuser -u ubuntu -- whisperx --model large --language en --no_align --model_cache_only True --output_dir /tmp /opt/transcription-service/sample.wav
 service transcription-service-worker start",
                 ],
               ],
