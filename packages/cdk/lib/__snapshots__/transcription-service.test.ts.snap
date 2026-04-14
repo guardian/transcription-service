@@ -24,6 +24,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuAllowPolicy",
       "GuAllowPolicy",
       "GuAllowPolicy",
+      "GuAllowPolicy",
       "GuInstanceRole",
       "GuSsmSshPolicy",
       "GuDescribeEC2Policy",
@@ -454,6 +455,38 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
           "Version": "2012-10-17",
         },
         "PolicyName": "GetDistributablePolicyTranscriptionserviceworker2DFD604E",
+        "Roles": [
+          {
+            "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "GetModelsEC437BA7": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:GetObject",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:s3:::",
+                    {
+                      "Ref": "DistributionBucketName",
+                    },
+                    "/investigations/TEST/transcription-service-models/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "GetModelsEC437BA7",
         "Roles": [
           {
             "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
@@ -1208,10 +1241,23 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
                 "",
                 [
                   "#!/bin/bash
+set -x
 export STAGE=TEST
 export AWS_REGION=test-region
 rm /usr/local/cuda
 ln -s /usr/local/cuda-12.8 /usr/local/cuda
+aws s3 cp s3://",
+                  {
+                    "Ref": "DistributionBucketName",
+                  },
+                  "/investigations/TEST/transcription-service-models/models.zip /opt/dlami/nvme/models.zip
+unzip /opt/dlami/nvme/models.zip -d /opt/dlami/nvme/
+rm -rf /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface
+chown -R ubuntu:ubuntu /opt/dlami/nvme/models
+mkdir -p /home/ubuntu/.cache
+ln -s /opt/dlami/nvme/models/torch /home/ubuntu/.cache/torch
+ln -s /opt/dlami/nvme/models/huggingface /home/ubuntu/.cache/huggingface
+chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface
 aws s3 cp s3://",
                   {
                     "Ref": "DistributionBucketName",
