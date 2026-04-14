@@ -273,7 +273,6 @@ const pollTranscriptionQueue = async (
 			await processLLMJob(
 				job,
 				downloadedFile,
-				destinationDirectory,
 				sqsClient,
 				config,
 				taskQueueUrl,

@@ -14,7 +14,7 @@ export type ProcessName =
 	| 'downloadMedia'
 	| 'getContainer'
 	| 'createNewContainer'
-	| 'startLlamaServer';
+	| 'llama-server';
 
 const processesWithHiddenStdout: ProcessName[] = ['transcribe'];
 
@@ -127,4 +127,10 @@ export const spawnBackgroundProcess = (
 	});
 
 	return cp;
+};
+
+export const killProcess = (name: string, cp: ChildProcess): void => {
+	logger.info(`Stopping ${name}...`);
+	cp.kill('SIGTERM');
+	logger.info(`${name} stop signal sent`);
 };
