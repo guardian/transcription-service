@@ -3,10 +3,10 @@ import {
 	logger,
 	publishTranscriptionOutput,
 	TranscriptionConfig,
+	spawnBackgroundProcess,
 } from '@guardian/transcription-service-backend-common';
-import { execFileSync } from 'node:child_process';
+import type { ChildProcess } from 'child_process';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'path';
 import {
 	LLMJob,
@@ -17,10 +17,12 @@ import {
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { z } from 'zod';
 
+const LLAMA_MODEL_PATH = '/opt/dlami/nvme/Qwen3-8B-Q4_K_M.gguf';
+const LLAMA_SERVER_BIN = '/opt/llama/llama.cpp/install/bin/llama-server';
+const LLAMA_LIB_PATH = '/opt/llama/llama.cpp/install/lib/';
+const LLAMA_SERVER_PORT = '9080';
 const LLAMA_SERVER_URL =
 	process.env.LLAMA_SERVER_URL ?? 'http://localhost:9080';
-
-const USE_SERVER = false;
 
 interface LlamaChatMessage {
 	role: 'system' | 'user' | 'assistant';
@@ -105,55 +107,63 @@ export const sendPromptToLlamaServer = async (
 	return content;
 };
 
-const LLAMA_CLI_MODEL_PATH = '/opt/dlami/nvme/Qwen3-8B-Q4_K_M.gguf';
+/**
+ * Start llama-server as a background process and wait for it to be ready.
+ */
+export const startLlamaServer = async (): Promise<ChildProcess> => {
+	logger.info('Starting llama-server...');
 
-export const sendPromptToLlamaCli = (prompts: LlmPrompt): string => {
-	// Write prompts to temporary files to avoid shell injection and ARG_MAX issues
-	const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'llama-cli-'));
-	const userPromptFile = path.join(tmpDir, 'prompt.txt');
-	fs.writeFileSync(userPromptFile, prompts.user, 'utf-8');
-
-	const args: string[] = [
-		'--model',
-		LLAMA_CLI_MODEL_PATH,
-		'--file',
-		userPromptFile,
-	];
-
-	let systemPromptFile: string | undefined;
-	if (prompts.system) {
-		systemPromptFile = path.join(tmpDir, 'system-prompt.txt');
-		fs.writeFileSync(systemPromptFile, prompts.system, 'utf-8');
-		args.push('--system-prompt-file', systemPromptFile);
-	}
-
-	logger.info(
-		`Running llama-cli with model ${LLAMA_CLI_MODEL_PATH} (prompt length: ${prompts.user.length} chars)`,
+	const cp = spawnBackgroundProcess(
+		'startLlamaServer',
+		LLAMA_SERVER_BIN,
+		['-m', LLAMA_MODEL_PATH, '--port', LLAMA_SERVER_PORT],
+		{ LD_LIBRARY_PATH: LLAMA_LIB_PATH },
 	);
 
-	try {
-		const output = execFileSync(
-			'/opt/llama/llama.cpp/install/bin/llama-cli',
-			args,
-			{
-				env: {
-					...process.env,
-					LD_LIBRARY_PATH: '/opt/llama/llama.cpp/install/lib/',
-				},
-				encoding: 'utf-8',
-				maxBuffer: 50 * 1024 * 1024, // 50 MB
-			},
-		);
+	await waitForLlamaServer();
 
-		logger.info(
-			`Received response from llama-cli (response length: ${output.length} chars)`,
-		);
+	return cp;
+};
 
-		return output;
-	} finally {
-		// Clean up temporary files
-		fs.rmSync(tmpDir, { recursive: true, force: true });
+/**
+ * Poll the llama-server health endpoint until it responds, with a timeout.
+ */
+const waitForLlamaServer = async (
+	timeoutMs: number = 120_000,
+	intervalMs: number = 1_000,
+): Promise<void> => {
+	const healthUrl = `${LLAMA_SERVER_URL}/health`;
+	const deadline = Date.now() + timeoutMs;
+
+	logger.info(
+		`Waiting for llama-server to be ready at ${healthUrl} (timeout: ${timeoutMs}ms)`,
+	);
+
+	while (Date.now() < deadline) {
+		try {
+			const response = await fetch(healthUrl);
+			if (response.ok) {
+				logger.info('llama-server is ready');
+				return;
+			}
+		} catch {
+			// Server not yet accepting connections – keep polling
+		}
+		await new Promise((resolve) => setTimeout(resolve, intervalMs));
 	}
+
+	throw new Error(
+		`llama-server did not become ready within ${timeoutMs / 1000}s`,
+	);
+};
+
+/**
+ * Stop llama-server by killing the child process.
+ */
+export const stopLlamaServer = (cp: ChildProcess): void => {
+	logger.info('Stopping llama-server...');
+	cp.kill('SIGTERM');
+	logger.info('llama-server stop signal sent');
 };
 
 /**
@@ -189,6 +199,9 @@ export const processLLMJob = async (
 		throw new Error(`Failed to parse prompt file, content: ${fileContent}`);
 	}
 
+	// start llama-server
+	const llamaProcess = await startLlamaServer();
+
 	// Set a generous visibility timeout for LLM processing
 	await changeMessageVisibility(
 		sqsClient,
@@ -197,11 +210,12 @@ export const processLLMJob = async (
 		600, // 10 minutes
 	);
 
-	const llmResult = USE_SERVER
-		? await sendPromptToLlamaServer(parsedPrompts.data)
-		: sendPromptToLlamaCli(parsedPrompts.data);
+	const llmResult = await sendPromptToLlamaServer(parsedPrompts.data);
 
 	const outputPath = saveLLMResult(destinationDirectory, job.id, llmResult);
+
+	// stop llama-server
+	stopLlamaServer(llamaProcess);
 
 	const resultBuffer = fs.readFileSync(outputPath);
 	const uploadResult = await uploadToS3(
