@@ -13,10 +13,8 @@ import type { Queue } from 'aws-cdk-lib/aws-sqs';
 
 export const makeAlarms = (
 	scope: GuStack,
-	taskQueue: Queue,
 	gpuTaskQueue: Queue,
 	dlQueue: Queue,
-	cpuWorkerAsg: AutoScalingGroup,
 	gpuWorkerAsg: AutoScalingGroup,
 	alarmTopicArn: string,
 ) => {
@@ -41,19 +39,6 @@ export const makeAlarms = (
 			comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
 		}),
 		// alarm when there's a really old message in the task queue
-		new Alarm(scope, 'TaskQueueOldMessageAlarm', {
-			alarmName: `transcription-service-task-queue-${scope.stage}`,
-			metric: taskQueue.metricApproximateAgeOfOldestMessage({
-				period: Duration.minutes(5),
-				statistic: 'max',
-			}),
-			threshold: oldestMessageAlarmThresholdSeconds,
-			evaluationPeriods: 1,
-			actionsEnabled: true,
-			alarmDescription: `A transcription job has been in the task queue for more than ${oldestMessageAlarmThresholdMinutes} minutes`,
-			treatMissingData: TreatMissingData.IGNORE,
-			comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-		}),
 		new Alarm(scope, 'GpuTaskQueueOldMessageAlarm', {
 			alarmName: `transcription-service-gpu-task-queue-${scope.stage}`,
 			metric: gpuTaskQueue.metricApproximateAgeOfOldestMessage({
