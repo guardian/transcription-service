@@ -1,0 +1,126 @@
+name: Fetch models for transcription service
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fetch-models.yaml'
+      - 'whisperx-model-fetch/**'
+
+jobs:
+  models:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    steps:
+      # Get some more disk space - thanks https://dev.to/mathio/squeezing-disk-space-from-github-actions-runners-an-engineers-guide-3pjg
+      - name: Aggressive cleanup
+        run: |
+          # Remove Java (JDKs)
+          sudo rm -rf /usr/lib/jvm
+
+          # Remove .NET SDKs
+          sudo rm -rf /usr/share/dotnet
+
+          # Remove Swift toolchain
+          sudo rm -rf /usr/share/swift
+
+          # Remove Haskell (GHC)
+          sudo rm -rf /usr/local/.ghcup
+
+          # Remove Julia
+          sudo rm -rf /usr/local/julia*
+
+          # Remove Android SDKs
+          sudo rm -rf /usr/local/lib/android
+
+          # Remove Chromium (optional if not using for browser tests)
+          sudo rm -rf /usr/local/share/chromium
+
+          # Remove Microsoft/Edge and Google Chrome builds
+          sudo rm -rf /opt/microsoft /opt/google
+
+          # Remove Azure CLI
+          sudo rm -rf /opt/az
+
+          # Remove PowerShell
+          sudo rm -rf /usr/local/share/powershell
+
+          # Remove CodeQL and other toolcaches
+          sudo rm -rf /opt/hostedtoolcache
+
+          docker system prune -af || true
+          docker builder prune -af || true
+          df -h
+
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        name: Configure AWS credentials for pushing to S3
+        with:
+          role-to-assume: ${{ secrets.INVESTIGATIONS_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: eu-west-1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+          cache-dependency-path: whisperx-model-fetch/requirements.txt
+
+      - name: Install Python dependencies for whisperx model fetch
+        run: |
+          pip install -r whisperx-model-fetch/requirements.txt
+
+      - name: Download Qwen3-8B GGUF model from Hugging Face
+        run: |
+          mkdir -p models
+          curl -L --fail -o models/Qwen3-8B-Q4_K_M.gguf \
+            -H "Authorization: Bearer ${{ secrets.HUGGINGFACE_TOKEN }}" \
+            "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
+
+      - name: Download all models needed to run whisperx model from Hugging Face
+        env:
+          HF_HOME: ${{ github.workspace }}/models/huggingface
+          TORCH_HOME: ${{ github.workspace }}/models/torch
+          HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+          HF_HUB_DOWNLOAD_TIMEOUT: '120'
+        run: |
+          python whisperx-model-fetch/download_whisperx_models.py \
+            --whisper-models \
+            --diarization-models \
+            --torch-align-models \
+            --huggingface-token "$HUGGINGFACE_TOKEN"
+
+      - name: Upload models to S3
+        run: |
+          zip -r models.zip models
+          aws s3 cp models.zip s3://${{ secrets.INVESTIGATIONS_DIST_BUCKET_NAME }}/investigations/${{ github.ref == 'refs/heads/main' && 'PROD' || 'CODE' }}/transcription-service-models/models.zip
+
+      # unfortunately actions-riff-raff doesn't support uploading artifacts larger than 2GB so we can't use this yet
+      #      - name: Upload models to riff-raff
+      #        uses: guardian/actions-riff-raff@v4
+      #        with:
+      #          roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+      #          githubToken: ${{ secrets.GITHUB_TOKEN }}
+      #          projectName: investigations::transcription-service-llama-models
+      #          contentDirectories: |
+      #            llama-models:
+      #              - llama-models.zip
+      #          config: |
+      #            allowedStages:
+      #              - PROD
+      #              - CODE
+      #            regions:
+      #              - eu-west-1
+      #            stacks:
+      #              - investigations
+      #            deployments:
+      #              llama-models:
+      #                type: aws-s3
+      #                app: llama-models
+      #                parameters:
+      #                  bucketSsmLookup: true
+      #                  publicReadAcl: false
+      #                  cacheControl: 'max-age=0, no-cache'
