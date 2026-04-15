@@ -44,16 +44,8 @@ jobs:
           cmake --build build --config Release -j "$(nproc)"
           cmake --install build
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: llama-cpp-cuda
-          path: llama.cpp/install/
-
       - name: Zip llama.cpp for riffraff
         run: |
-          mkdir -p llama.cpp/install
-          touch llama.cpp/install/testface
           zip -r llama-cpp-cuda.zip llama.cpp/install/
 
       - name: Upload llama.cpp to riff-raff
