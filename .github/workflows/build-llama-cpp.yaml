@@ -61,7 +61,6 @@ jobs:
         with:
           roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          configPath: llama-cpp/riff-raff.yaml
           projectName: investigations::transcription-service-llama-cpp
           contentDirectories: |
             llama-cpp:
