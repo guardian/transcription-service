@@ -5,8 +5,33 @@
 import torchaudio
 from pyannote.audio import Pipeline
 import sys
+import os
+import time
 import huggingface_hub
 import argparse
+
+MAX_RETRIES = 3
+RETRY_DELAY_SECONDS = 30
+
+# Increase the default httpx timeout used by huggingface_hub (default is 10s which
+# is too aggressive for large model downloads on GitHub Actions runners).
+os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "120")
+
+
+def retry(description, fn, *args, **kwargs):
+    """Retry a function up to MAX_RETRIES times with exponential back-off."""
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            return fn(*args, **kwargs)
+        except Exception as e:
+            if attempt == MAX_RETRIES:
+                print(f"Failed to download {description} after {MAX_RETRIES} attempts")
+                raise
+            delay = RETRY_DELAY_SECONDS * attempt
+            print(f"Attempt {attempt}/{MAX_RETRIES} failed for {description}: {e}")
+            print(f"Retrying in {delay}s...")
+            time.sleep(delay)
+
 
 # ASR Models
 # Should be kept in sync with https://github.com/m-bain/whisperX/blob/main/whisperx/asr.py
@@ -51,14 +76,14 @@ def download_torch_align_models():
     for lang, model_name in DEFAULT_ALIGN_MODELS_TORCH.items():
         print(f"Downloading {model_name} for {lang}")
         bundle = torchaudio.pipelines.__dict__[model_name]
-        bundle.get_model()
+        retry(model_name, bundle.get_model)
         print(f"Downloaded {model_name} for {lang}")
 
 
 def download_huggingface_align_models():
     for lang, model_name in DEFAULT_ALIGN_MODELS_HF.items():
         print(f"Downloading {model_name} for {lang}")
-        huggingface_hub.snapshot_download(model_name)
+        retry(model_name, huggingface_hub.snapshot_download, model_name)
         print(f"Downloaded {model_name} for {lang}")
 
 
@@ -67,10 +92,10 @@ def download_huggingface_align_models():
 def download_diarization_models(auth_token):
     pyannote_model = "pyannote/speaker-diarization-3.1"
     print(f"Downloading diarization models {pyannote_model}")
-    Pipeline.from_pretrained(pyannote_model, token=auth_token)
+    retry(pyannote_model, Pipeline.from_pretrained, pyannote_model, token=auth_token)
     community_model = "pyannote/speaker-diarization-community-1"
     print(f"Downloading diarization models {community_model}")
-    Pipeline.from_pretrained(community_model, token=auth_token)
+    retry(community_model, Pipeline.from_pretrained, community_model, token=auth_token)
 
 
 # faster-whisper models
@@ -82,9 +107,9 @@ def download_diarization_models(auth_token):
 
 WHISPER_MODELS = {
     "tiny": "Systran/faster-whisper-tiny",
-    "small": "Systran/faster-whisper-small",
+    # "small": "Systran/faster-whisper-small",
     "medium": "Systran/faster-whisper-medium",
-    "large": "Systran/faster-whisper-large-v3",
+    # "large": "Systran/faster-whisper-large-v3",
 }
 
 
@@ -115,7 +140,7 @@ def download_model(
         "allow_patterns": allow_patterns,
     }
 
-    return huggingface_hub.snapshot_download(repo_id, **kwargs)
+    return retry(repo_id, huggingface_hub.snapshot_download, repo_id, **kwargs)
 
 
 def download_all_whisper_models():
