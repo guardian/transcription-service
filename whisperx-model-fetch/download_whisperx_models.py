@@ -115,6 +115,7 @@ WHISPER_MODELS = {
 
 def download_model(
         model: str,
+        token: str = None,
 ):
     """Downloads a CTranslate2 Whisper model from the Hugging Face Hub.
 
@@ -138,14 +139,15 @@ def download_model(
 
     kwargs = {
         "allow_patterns": allow_patterns,
+        "token": token,
     }
 
     return retry(repo_id, huggingface_hub.snapshot_download, repo_id, **kwargs)
 
 
-def download_all_whisper_models():
+def download_all_whisper_models(token: str = None):
     for model_name in WHISPER_MODELS.keys():
-        download_model(model_name)
+        download_model(model_name, token=token)
 
 
 def main():
@@ -159,7 +161,7 @@ def main():
     args = parser.parse_args()
 
     if args.whisper_models:
-        download_all_whisper_models()
+        download_all_whisper_models(token=args.huggingface_token or None)
     if args.diarization_models:
         if not args.huggingface_token:
             print("Please provide a Huggingface authentication token (--huggingface-token <token>)")

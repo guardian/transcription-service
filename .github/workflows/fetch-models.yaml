@@ -93,34 +93,32 @@ jobs:
             --torch-align-models \
             --huggingface-token "$HUGGINGFACE_TOKEN"
 
-      - name: Upload models to S3
+      - name: Zip models to prepare to upload to Riff-Raff
         run: |
           zip -r models.zip models
-          aws s3 cp models.zip s3://${{ secrets.INVESTIGATIONS_DIST_BUCKET_NAME }}/investigations/${{ github.ref == 'refs/heads/main' && 'PROD' || 'CODE' }}/transcription-service-models/models.zip
 
-      # unfortunately actions-riff-raff doesn't support uploading artifacts larger than 2GB so we can't use this yet
-      #      - name: Upload models to riff-raff
-      #        uses: guardian/actions-riff-raff@v4
-      #        with:
-      #          roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
-      #          githubToken: ${{ secrets.GITHUB_TOKEN }}
-      #          projectName: investigations::transcription-service-llama-models
-      #          contentDirectories: |
-      #            llama-models:
-      #              - llama-models.zip
-      #          config: |
-      #            allowedStages:
-      #              - PROD
-      #              - CODE
-      #            regions:
-      #              - eu-west-1
-      #            stacks:
-      #              - investigations
-      #            deployments:
-      #              llama-models:
-      #                type: aws-s3
-      #                app: llama-models
-      #                parameters:
-      #                  bucketSsmLookup: true
-      #                  publicReadAcl: false
-      #                  cacheControl: 'max-age=0, no-cache'
+      - name: Upload models to riff-raff
+        uses: guardian/actions-riff-raff@use-multipart-upload
+        with:
+          roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          projectName: investigations::transcription-service-models
+          contentDirectories: |
+            transcription-service-models:
+              - models.zip
+          config: |
+            allowedStages:
+              - PROD
+              - CODE
+            regions:
+              - eu-west-1
+            stacks:
+              - investigations
+            deployments:
+              transcription-service-models:
+                type: aws-s3
+                app: transcription-service-models
+                parameters:
+                  bucketSsmLookup: true
+                  publicReadAcl: false
+                  cacheControl: 'max-age=0, no-cache'
