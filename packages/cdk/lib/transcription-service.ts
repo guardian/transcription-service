@@ -39,8 +39,7 @@ import {
 	SpotAllocationStrategy,
 } from 'aws-cdk-lib/aws-autoscaling';
 import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
-import type {
-	CfnLaunchTemplate} from 'aws-cdk-lib/aws-ec2';
+import type { CfnLaunchTemplate } from 'aws-cdk-lib/aws-ec2';
 import {
 	InstanceClass,
 	InstanceSize,
@@ -448,7 +447,7 @@ export class TranscriptionService extends GuStack {
 			.defaultChild as CfnLaunchTemplate;
 		cfnLaunchTemplate.addPropertyOverride(
 			'LaunchTemplateData.BlockDeviceMappings.0.Ebs.VolumeInitializationRate',
-			1000,
+			300,
 		);
 
 		// instance types we are happy to use for workers. Note - order matters as when launching 'on demand' instances

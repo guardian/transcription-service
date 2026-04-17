@@ -1124,7 +1124,7 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
             {
               "DeviceName": "/dev/sda1",
               "Ebs": {
-                "VolumeInitializationRate": 1000,
+                "VolumeInitializationRate": 300,
                 "VolumeSize": 100,
               },
             },
