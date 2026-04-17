@@ -39,6 +39,8 @@ import {
 	SpotAllocationStrategy,
 } from 'aws-cdk-lib/aws-autoscaling';
 import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
+import type {
+	CfnLaunchTemplate} from 'aws-cdk-lib/aws-ec2';
 import {
 	InstanceClass,
 	InstanceSize,
@@ -415,6 +417,9 @@ export class TranscriptionService extends GuStack {
 			Port.tcp(443),
 		);
 
+		// The AMI with the nvidia cuda drivers and whisperx installed is enormous
+		const workerVolume = BlockDeviceVolume.ebs(100);
+
 		const gpuWorkerLaunchTemplate = new LaunchTemplate(
 			this,
 			'TranscriptionWorkerGPULaunchTemplate',
@@ -432,11 +437,18 @@ export class TranscriptionService extends GuStack {
 				blockDevices: [
 					{
 						deviceName: '/dev/sda1',
-						// The AMI with the nvidia cuda drivers and whisperx installed is enormous
-						volume: BlockDeviceVolume.ebs(100),
+						volume: workerVolume,
 					},
 				],
 			},
+		);
+
+		// Set VolumeInitializationRate via L1 escape hatch (not yet supported in L2)
+		const cfnLaunchTemplate = gpuWorkerLaunchTemplate.node
+			.defaultChild as CfnLaunchTemplate;
+		cfnLaunchTemplate.addPropertyOverride(
+			'LaunchTemplateData.BlockDeviceMappings.0.Ebs.VolumeInitializationRate',
+			1000,
 		);
 
 		// instance types we are happy to use for workers. Note - order matters as when launching 'on demand' instances
