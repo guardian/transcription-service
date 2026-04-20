@@ -3,7 +3,6 @@ import {
 	logger,
 	publishTranscriptionOutput,
 	TranscriptionConfig,
-	killProcess,
 } from '@guardian/transcription-service-backend-common';
 import fs from 'node:fs';
 import {
@@ -13,7 +12,9 @@ import {
 	uploadToS3,
 } from '@guardian/transcription-service-common';
 import { SQSClient } from '@aws-sdk/client-sqs';
-import { sendPromptToLlamaServer, startLlamaServer } from './llama-server';
+
+import { executePrompt } from './llama-server';
+import { sendPromptToBedrock } from './bedrock';
 
 export const getS3Keys = (id: string) => ({
 	promptKey: `llm-prompts/${id}.txt`,
@@ -37,8 +38,6 @@ export const processLLMJob = async (
 		throw new Error(`Failed to parse prompt file, content: ${fileContent}`);
 	}
 
-	const { serverProcess, url } = await startLlamaServer();
-
 	// Set a generous visibility timeout for LLM processing
 	await changeMessageVisibility(
 		sqsClient,
@@ -47,9 +46,10 @@ export const processLLMJob = async (
 		300, // 5 minutes
 	);
 
-	const llmResult = await sendPromptToLlamaServer(url, parsedPrompts.data);
-
-	killProcess('llama-server', serverProcess);
+	const llmResult =
+		job.backend === 'BEDROCK'
+			? await sendPromptToBedrock(parsedPrompts.data)
+			: await executePrompt(config.app.stage, parsedPrompts.data);
 
 	const uploadResult = await uploadToS3(
 		job.combinedOutputUrl.url,

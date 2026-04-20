@@ -131,8 +131,12 @@ export const TranscriptionJob = Job.extend({
 
 export type TranscriptionJob = z.infer<typeof TranscriptionJob>;
 
+export const LlmBackend = z.union([z.literal('LOCAL'), z.literal('BEDROCK')]);
+export type LlmBackend = z.infer<typeof LlmBackend>;
+
 export const LLMJob = Job.extend({
 	jobType: z.literal('llm'),
+	backend: LlmBackend,
 });
 
 export type LLMJob = z.infer<typeof LLMJob>;
@@ -374,6 +378,7 @@ export type LlmPrompt = z.infer<typeof LlmPrompt>;
 
 export const llmRequestBody = z.object({
 	prompt: LlmPrompt,
+	backend: LlmBackend,
 });
 
 export type LLMRequestBody = z.infer<typeof llmRequestBody>;

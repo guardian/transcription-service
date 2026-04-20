@@ -1,14 +1,34 @@
 import type { ChildProcess } from 'child_process';
 import {
+	killProcess,
 	logger,
 	spawnBackgroundProcess,
 } from '@guardian/transcription-service-backend-common';
 import { LlmPrompt } from '@guardian/transcription-service-common';
 import { z } from 'zod';
-const LLAMA_MODEL_PATH = '/opt/dlami/nvme/Qwen3-8B-Q4_K_M.gguf';
-const LLAMA_SERVER_BIN = '/opt/llama/llama.cpp/install/bin/llama-server';
-const LLAMA_LIB_PATH = '/opt/llama/llama.cpp/install/lib/';
-const LLAMA_SERVER_PORT = '9080';
+
+type ServerConfig = {
+	modelPath: string;
+	executable: string;
+	libPath?: string;
+	port: string;
+};
+
+const getServerConfig = (stage: string): ServerConfig => {
+	if (stage === 'DEV') {
+		return {
+			modelPath: '/Users/philip_mcmahon/.cache/llama.cpp/Qwen3-0.6B-Q8_0.gguf',
+			executable: 'llama-server',
+			port: '9080',
+		};
+	}
+	return {
+		modelPath: '/opt/dlami/nvme/Qwen3-8B-Q4_K_M.gguf',
+		executable: '/opt/llama/llama.cpp/install/bin/llama-server',
+		libPath: '/opt/llama/llama.cpp/install/lib/',
+		port: '9080',
+	};
+};
 
 const LlamaChatResponse = z.object({
 	choices: z.array(
@@ -27,20 +47,24 @@ interface LlamaChatMessage {
 	content: string;
 }
 
-export const startLlamaServer = async (): Promise<{
+export const startLlamaServer = async (
+	stage: string,
+): Promise<{
 	serverProcess: ChildProcess;
 	url: string;
 }> => {
 	logger.info('Starting llama-server...');
 
+	const config = getServerConfig(stage);
+
 	const childProcess = spawnBackgroundProcess(
 		'llama-server',
-		LLAMA_SERVER_BIN,
-		['-m', LLAMA_MODEL_PATH, '--port', LLAMA_SERVER_PORT],
-		{ LD_LIBRARY_PATH: LLAMA_LIB_PATH },
+		config.executable,
+		['-m', config.modelPath, '--port', config.port],
+		config.libPath ? { LD_LIBRARY_PATH: config.libPath } : {},
 	);
 
-	const url = `http://localhost:${LLAMA_SERVER_PORT}`;
+	const url = `http://localhost:${config.port}`;
 
 	await waitForLlamaServer(url);
 
@@ -135,4 +159,11 @@ export const sendPromptToLlamaServer = async (
 	);
 
 	return content;
+};
+
+export const executePrompt = async (stage: string, prompts: LlmPrompt) => {
+	const serverConfig = await startLlamaServer(stage);
+	const llmResult = await sendPromptToLlamaServer(serverConfig!.url, prompts);
+	killProcess('llama-server', serverConfig.serverProcess);
+	return llmResult;
 };

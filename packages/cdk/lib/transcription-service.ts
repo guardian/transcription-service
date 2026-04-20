@@ -392,6 +392,15 @@ export class TranscriptionService extends GuStack {
 						`arn:aws:s3:::${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/transcription-service-models/*`,
 					],
 				}),
+				new GuAllowPolicy(this, 'InvokeBedrockModels', {
+					actions: [
+						'bedrock:InvokeModel',
+						'bedrock:InvokeModelWithResponseStream',
+					],
+					resources: [
+						`arn:aws:bedrock:${props.env.region}::foundation-model/*`,
+					],
+				}),
 			],
 		});
 		const vpc = GuVpc.fromIdParameter(
