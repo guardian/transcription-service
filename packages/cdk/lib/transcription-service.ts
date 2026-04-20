@@ -442,13 +442,16 @@ export class TranscriptionService extends GuStack {
 			},
 		);
 
-		// Set VolumeInitializationRate via L1 escape hatch (not yet supported in L2)
-		const cfnLaunchTemplate = gpuWorkerLaunchTemplate.node
-			.defaultChild as CfnLaunchTemplate;
-		cfnLaunchTemplate.addPropertyOverride(
-			'LaunchTemplateData.BlockDeviceMappings.0.Ebs.VolumeInitializationRate',
-			300,
-		);
+		if (this.stage === 'PROD') {
+			// Set VolumeInitializationRate via L1 escape hatch (not yet supported in L2)
+			// Note - EBS charges $0.0036/GB for this https://aws.amazon.com/ebs/pricing/ so we're only enabling for PROD
+			const cfnLaunchTemplate = gpuWorkerLaunchTemplate.node
+				.defaultChild as CfnLaunchTemplate;
+			cfnLaunchTemplate.addPropertyOverride(
+				'LaunchTemplateData.BlockDeviceMappings.0.Ebs.VolumeInitializationRate',
+				300,
+			);
+		}
 
 		// instance types we are happy to use for workers. Note - order matters as when launching 'on demand' instances
 		// the ASG will start at the top of the list and work down until it manages to launch an instance
