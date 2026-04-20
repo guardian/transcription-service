@@ -1,5 +1,6 @@
-import { Button, Label, Textarea } from 'flowbite-react';
+import { Button, Label, Select, Textarea } from 'flowbite-react';
 import React from 'react';
+import type { LlmBackend } from '@guardian/transcription-service-common';
 
 interface PromptFieldProps {
 	id: string;
@@ -9,6 +10,25 @@ interface PromptFieldProps {
 	onChange: (value: string) => void;
 	rows?: number;
 }
+
+interface BackendPickerProps {
+	value: LlmBackend;
+	onChange: (value: LlmBackend) => void;
+}
+
+export const BackendPicker = ({ value, onChange }: BackendPickerProps) => (
+	<div className="mb-4">
+		<Label className="text-base" htmlFor="backend" value="Backend" />
+		<Select
+			id="backend"
+			value={value}
+			onChange={(e) => onChange(e.target.value as LlmBackend)}
+		>
+			<option value="BEDROCK">Bedrock</option>
+			<option value="LOCAL">Local (llama.cpp)</option>
+		</Select>
+	</div>
+);
 
 export const PromptField = ({
 	id,

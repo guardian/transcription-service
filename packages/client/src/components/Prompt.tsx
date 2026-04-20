@@ -4,8 +4,12 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { AuthContext } from '@/app/template';
 import { Alert, Label, Spinner } from 'flowbite-react';
 import { RequestStatus } from '@/types';
-import { LlmPrompt, LlmResult } from '@guardian/transcription-service-common';
-import { PromptField } from '@/components/PromptField';
+import {
+	type LlmBackend,
+	LlmPrompt,
+	LlmResult,
+} from '@guardian/transcription-service-common';
+import { BackendPicker, PromptField } from '@/components/PromptField';
 import { getResult, submitPrompt } from '@/services/llm';
 const POLL_INTERVAL_MS = 3000;
 
@@ -20,6 +24,7 @@ export const Prompt = () => {
 	const searchParams = useSearchParams();
 	const router = useRouter();
 	const [prompt, setPrompt] = useState<LlmPrompt>(emptyPrompts);
+	const [backend, setBackend] = useState<LlmBackend>('BEDROCK');
 	const [status, setStatus] = useState<RequestStatus>(RequestStatus.Ready);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [result, setResult] = useState<LlmResult | null>(null);
@@ -73,7 +78,7 @@ export const Prompt = () => {
 		setResult(null);
 
 		try {
-			const id = await submitPrompt(prompt, token);
+			const id = await submitPrompt(prompt, token, backend);
 			setIdInQueryString(id);
 			setPromptId(id);
 			poll(id);
@@ -128,6 +133,8 @@ export const Prompt = () => {
 							onChange={(assistant) => setPrompt({ ...prompt, assistant })}
 							rows={3}
 						/>
+
+						<BackendPicker value={backend} onChange={setBackend} />
 
 						<button
 							type="submit"

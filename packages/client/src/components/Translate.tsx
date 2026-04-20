@@ -4,8 +4,12 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { AuthContext } from '@/app/template';
 import { Alert, Label, Select, Spinner, Textarea } from 'flowbite-react';
 import { RequestStatus } from '@/types';
-import { LlmResult } from '@guardian/transcription-service-common';
+import {
+	type LlmBackend,
+	LlmResult,
+} from '@guardian/transcription-service-common';
 import { QWEN3_LANGUAGES } from '@/components/languages';
+import { BackendPicker } from '@/components/PromptField';
 import { getResult, submitPrompt } from '@/services/llm';
 
 const POLL_INTERVAL_MS = 3000;
@@ -46,6 +50,7 @@ export const Translate = () => {
 	const router = useRouter();
 	const [targetLang, setTargetLang] = useState('English');
 	const [sourceLang, setSourceLang] = useState(AUTO_DETECT);
+	const [backend, setBackend] = useState<LlmBackend>('BEDROCK');
 	const [inputText, setInputText] = useState('');
 	const [status, setStatus] = useState<RequestStatus>(RequestStatus.Ready);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -100,7 +105,7 @@ export const Translate = () => {
 				system: buildSystemPrompt(targetLang, sourceLang),
 				user: buildUserPrompt(inputText),
 			};
-			const id = await submitPrompt(prompt, token);
+			const id = await submitPrompt(prompt, token, backend);
 			setIdInQueryString(id);
 			setPromptId(id);
 			poll(id);
@@ -137,9 +142,6 @@ export const Translate = () => {
 								htmlFor="target-lang"
 								value="Target language"
 							/>
-							<p className="font-light mb-1">
-								Required. The language to translate into.
-							</p>
 							<Select
 								id="target-lang"
 								value={targetLang}
@@ -160,10 +162,6 @@ export const Translate = () => {
 								htmlFor="source-lang"
 								value="Source language"
 							/>
-							<p className="font-light mb-1">
-								Optional. Leave as auto-detect to let the LLM identify the
-								source language.
-							</p>
 							<Select
 								id="source-lang"
 								value={sourceLang}
@@ -195,6 +193,8 @@ export const Translate = () => {
 								className="font-mono text-sm"
 							/>
 						</div>
+
+						<BackendPicker value={backend} onChange={setBackend} />
 
 						<button
 							type="submit"
@@ -230,7 +230,9 @@ export const Translate = () => {
 
 						{result?.status === 'LLM_SUCCESS' && result.output && (
 							<pre className="whitespace-pre-wrap font-mono text-sm text-gray-800 dark:text-gray-200">
-								{result.output}
+								{result.output
+									.replace(/^\s*<text>\s*\n?/, '')
+									.replace(/\n?\s*<\/text>\s*$/, '')}
 							</pre>
 						)}
 

@@ -290,6 +290,7 @@ const getApp = async () => {
 				userEmail,
 				transcriptDestinationService: DestinationService.TranscriptionService,
 				combinedOutputUrl: { key: outputKey, url: outputSignedUrl },
+				backend: body.data.backend,
 			};
 
 			const sendResult = await sendMessage(

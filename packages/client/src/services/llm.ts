@@ -1,5 +1,9 @@
 import { authFetch } from '@/helpers';
-import { LlmPrompt, LlmResult } from '@guardian/transcription-service-common';
+import {
+	type LlmBackend,
+	LlmPrompt,
+	LlmResult,
+} from '@guardian/transcription-service-common';
 
 export const getResult = async (
 	id: string,
@@ -21,13 +25,14 @@ export const getResult = async (
 export const submitPrompt = async (
 	prompt: LlmPrompt,
 	token: string,
+	backend: LlmBackend,
 ): Promise<string> => {
 	const response = await authFetch('/api/llm-prompt', token, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
 		},
-		body: JSON.stringify({ prompt }),
+		body: JSON.stringify({ prompt, backend }),
 	});
 
 	if (!response.ok) {
