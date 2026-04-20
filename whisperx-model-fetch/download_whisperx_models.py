@@ -82,9 +82,9 @@ def download_diarization_models(auth_token):
 
 WHISPER_MODELS = {
     "tiny": "Systran/faster-whisper-tiny",
-    "small": "Systran/faster-whisper-small",
+    # "small": "Systran/faster-whisper-small",
     "medium": "Systran/faster-whisper-medium",
-    "large": "Systran/faster-whisper-large-v3",
+    # "large": "Systran/faster-whisper-large-v3",
 }
 
 
