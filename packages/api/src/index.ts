@@ -678,7 +678,7 @@ const getApp = async () => {
 
 	app.use('/api', apiRouter);
 
-	const clientPages = ['export', 'viewer', 'prompt'];
+	const clientPages = ['export', 'viewer', 'prompt', 'translate'];
 
 	if (runningOnAws) {
 		app.use(express.static('client'));
