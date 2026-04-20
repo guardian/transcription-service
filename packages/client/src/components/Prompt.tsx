@@ -2,29 +2,12 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { AuthContext } from '@/app/template';
-import { authFetch } from '@/helpers';
 import { Alert, Label, Spinner } from 'flowbite-react';
 import { RequestStatus } from '@/types';
 import { LlmPrompt, LlmResult } from '@guardian/transcription-service-common';
 import { PromptField } from '@/components/PromptField';
+import { getResult, submitPrompt } from '@/services/llm';
 const POLL_INTERVAL_MS = 3000;
-
-const getResult = async (
-	id: string,
-	token: string,
-): Promise<LlmResult | undefined> => {
-	const response = await authFetch(`/api/llm-prompt?id=${id}`, token);
-	if (!response.ok) {
-		return undefined;
-	}
-	const data = await response.json();
-	const parsedResponse = LlmResult.safeParse(data);
-	if (!parsedResponse.success) {
-		console.error('Failed to parse llm result', data);
-		return undefined;
-	}
-	return parsedResponse.data;
-};
 
 const emptyPrompts: LlmPrompt = {
 	system: '',
@@ -56,24 +39,6 @@ export const Prompt = () => {
 		const params = new URLSearchParams(searchParams.toString());
 		params.set('id', id);
 		router.replace(`?${params.toString()}`);
-	};
-
-	const submitPrompt = async (prompt: LlmPrompt): Promise<string> => {
-		const response = await authFetch('/api/llm-prompt', token, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({ prompt }),
-		});
-
-		if (!response.ok) {
-			const text = await response.text();
-			throw new Error(text || 'Failed to submit prompt');
-		}
-
-		const data = await response.json();
-		return data.id;
 	};
 
 	const poll = async (id: string) => {
@@ -108,7 +73,7 @@ export const Prompt = () => {
 		setResult(null);
 
 		try {
-			const id = await submitPrompt(prompt);
+			const id = await submitPrompt(prompt, token);
 			setIdInQueryString(id);
 			setPromptId(id);
 			poll(id);
