@@ -282,6 +282,12 @@ export class TranscriptionService extends GuStack {
 			}),
 		);
 
+		const bedrockPolicy = new GuAllowPolicy(this, 'InvokeBedrockModels', {
+			actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream'],
+			resources: [`arn:aws:bedrock:${props.env.region}::foundation-model/*`],
+		});
+		apiLambda.role?.attachInlinePolicy(bedrockPolicy);
+
 		const getParametersPolicy = new PolicyStatement({
 			effect: Effect.ALLOW,
 			actions: ['ssm:GetParameter', 'ssm:GetParametersByPath'],
@@ -419,15 +425,7 @@ export class TranscriptionService extends GuStack {
 						`arn:aws:s3:::${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/transcription-service-models/*`,
 					],
 				}),
-				new GuAllowPolicy(this, 'InvokeBedrockModels', {
-					actions: [
-						'bedrock:InvokeModel',
-						'bedrock:InvokeModelWithResponseStream',
-					],
-					resources: [
-						`arn:aws:bedrock:${props.env.region}::foundation-model/*`,
-					],
-				}),
+				bedrockPolicy,
 			],
 		});
 		const vpc = GuVpc.fromIdParameter(

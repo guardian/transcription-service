@@ -1,3 +1,10 @@
+import { TranscriptionConfig } from './config';
+import {
+	LlmDynamoItem,
+	LLMOutputSuccess,
+} from '@guardian/transcription-service-common';
+import { FailureMetric, MetricsService } from './metrics';
+import { getDynamoClient, writeDynamoItem } from './dynamodb';
 import {
 	BedrockRuntimeClient,
 	ConverseCommand,
@@ -44,4 +51,39 @@ export const sendPromptToBedrock = async (
 	);
 
 	return content;
+};
+
+export const saveLllmOutput = async (
+	config: TranscriptionConfig,
+	llmOutput: LLMOutputSuccess,
+	metrics: MetricsService,
+) => {
+	const dynamoItem: LlmDynamoItem = {
+		id: llmOutput.id,
+		userEmail: llmOutput.userEmail,
+		status: 'LLM_SUCCESS',
+		outputKey: llmOutput.outputKey,
+		completedAt: new Date().toISOString(),
+	};
+
+	try {
+		await writeDynamoItem(
+			getDynamoClient(config.aws, config.dev?.localstackEndpoint),
+			config.app.tableName,
+			dynamoItem,
+		);
+
+		logger.info('Output handler saved LLM success to DynamoDB', {
+			id: llmOutput.id,
+			userEmail: llmOutput.userEmail,
+		});
+	} catch (error) {
+		logger.error(
+			'Failed to process LLM success message - data may be missing from dynamo',
+			error,
+		);
+		await metrics.putMetric(FailureMetric);
+		return false;
+	}
+	return true;
 };

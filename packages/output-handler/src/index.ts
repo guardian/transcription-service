@@ -24,7 +24,6 @@ import {
 	ABOUT_THIS_TOOL_YOUTUBE,
 	transcriptionOutputIsLLMSuccess,
 	transcriptionOutputIsLLMFailure,
-	LLMOutputSuccess,
 	LLMOutputFailure,
 	LlmDynamoItem,
 } from '@guardian/transcription-service-common';
@@ -35,6 +34,7 @@ import {
 } from '@guardian/transcription-service-backend-common/src/metrics';
 import { SESClient } from '@aws-sdk/client-ses';
 import { devTrigger } from './dev';
+import { saveLllmOutput } from '@guardian/transcription-service-backend-common/src/llm';
 
 const successMessageBody = (
 	transcriptId: string,
@@ -224,39 +224,6 @@ const handleMediaDownloadFailure = async (
 	}
 };
 
-const handleLLMSuccess = async (
-	config: TranscriptionConfig,
-	llmOutput: LLMOutputSuccess,
-	metrics: MetricsService,
-) => {
-	const dynamoItem: LlmDynamoItem = {
-		id: llmOutput.id,
-		userEmail: llmOutput.userEmail,
-		status: 'LLM_SUCCESS',
-		outputKey: llmOutput.outputKey,
-		completedAt: new Date().toISOString(),
-	};
-
-	try {
-		await writeDynamoItem(
-			getDynamoClient(config.aws, config.dev?.localstackEndpoint),
-			config.app.tableName,
-			dynamoItem,
-		);
-
-		logger.info('Output handler saved LLM success to DynamoDB', {
-			id: llmOutput.id,
-			userEmail: llmOutput.userEmail,
-		});
-	} catch (error) {
-		logger.error(
-			'Failed to process LLM success message - data may be missing from dynamo',
-			error,
-		);
-		await metrics.putMetric(FailureMetric);
-	}
-};
-
 const handleLLMFailure = async (
 	config: TranscriptionConfig,
 	llmOutput: LLMOutputFailure,
@@ -348,7 +315,7 @@ export const processMessage = async (event: unknown) => {
 			logger.info(
 				`Handling LLM success. Output: ${JSON.stringify(transcriptionOutput)}`,
 			);
-			await handleLLMSuccess(config, transcriptionOutput, metrics);
+			await saveLllmOutput(config, transcriptionOutput, metrics);
 		} else if (transcriptionOutputIsLLMFailure(transcriptionOutput)) {
 			logger.info(
 				`Handling LLM failure. Output: ${JSON.stringify(transcriptionOutput)}`,
