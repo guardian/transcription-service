@@ -48,8 +48,8 @@ export const processLLMJob = async (
 
 	const llmResult =
 		job.backend === 'BEDROCK'
-			? await sendPromptToBedrock(parsedPrompts.data)
-			: await executePrompt(config.app.stage, parsedPrompts.data);
+			? await sendPromptToBedrock(parsedPrompts.data, config.bedrock.modelId)
+			: await executePrompt(config, parsedPrompts.data);
 
 	const uploadResult = await uploadToS3(
 		job.combinedOutputUrl.url,

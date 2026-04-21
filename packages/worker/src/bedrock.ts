@@ -5,10 +5,9 @@ import {
 import { logger } from '@guardian/transcription-service-backend-common';
 import { LlmPrompt } from '@guardian/transcription-service-common';
 
-const BEDROCK_MODEL_ID = 'qwen.qwen3-next-80b-a3b';
-
 export const sendPromptToBedrock = async (
 	prompts: LlmPrompt,
+	bedrockModelId: string,
 ): Promise<string> => {
 	const client = new BedrockRuntimeClient({ region: 'eu-west-1' });
 
@@ -25,13 +24,13 @@ export const sendPromptToBedrock = async (
 	}
 
 	const command = new ConverseCommand({
-		modelId: BEDROCK_MODEL_ID,
+		modelId: bedrockModelId,
 		messages,
 		...(prompts.system ? { system: [{ text: prompts.system }] } : {}),
 	});
 
 	logger.info(
-		`Sending prompt to Bedrock model ${BEDROCK_MODEL_ID} (user prompt length: ${prompts.user.length} chars)`,
+		`Sending prompt to Bedrock model ${bedrockModelId} (user prompt length: ${prompts.user.length} chars)`,
 	);
 
 	const response = await client.send(command);

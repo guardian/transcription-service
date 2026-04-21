@@ -325,6 +325,22 @@ export class TranscriptionService extends GuStack {
 
 		const baseS3DistPath = `s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}`;
 
+		const llamaCppModelPath = '/opt/dlami/nvme/Qwen3-8B-Q4_K_M.gguf';
+		new StringParameter(this, 'llamaCppModelPath', {
+			stringValue: llamaCppModelPath,
+			description:
+				'Fully qualified path to model to use for llama.cpp llama-server',
+			parameterName: `/${props.stage}/${props.stack}/transcription-service/llamacpp/modelPath`,
+		});
+
+		new StringParameter(this, 'llamaCppInstallDirectory', {
+			// this is determined by the llama-cpp AMIgo role https://amigo.gutools.co.uk/roles#llama-cpp
+			stringValue: '/opt/llama/llama.cpp/install/',
+			description:
+				'Location where llama.cpp has been installed (check AMIgo role)',
+			parameterName: `/${props.stage}/${props.stack}/transcription-service/llamacpp/installDirectory`,
+		});
+
 		const userDataCommands = [
 			`set -x`,
 			`export STAGE=${props.stage}`,
@@ -346,8 +362,6 @@ export class TranscriptionService extends GuStack {
 			// Set up transcription service worker
 			`aws s3 cp ${baseS3DistPath}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
 			`dpkg -i transcription-service-worker_1.0.0_all.deb`,
-			// start llama-server in the background
-			// `LD_LIBRARY_PATH=/opt/llama/llama.cpp/install/lib/ /opt/llama/llama.cpp/install/bin/llama-server -m /opt/dlami/nvme/Qwen3-8B-Q4_K_M.gguf --port 9080 &`,
 			// warm up whisperx by transcribing sample file then start the service NOTE: won't work for whisper.cpp if we bring that back
 			`LD_LIBRARY_PATH=/usr/local/cuda/lib:/usr/local/cuda/lib64 CUDA_HOME=/usr/local/cuda PATH=/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin runuser -u ubuntu -- whisperx --model large --language en --no_align --model_cache_only True --output_dir /tmp /opt/transcription-service/sample.wav`,
 			`service transcription-service-worker start`,

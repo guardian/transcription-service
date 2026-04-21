@@ -38,3 +38,14 @@ echo ""
 echo "Installing llama.cpp"
 
 brew install llama.cpp
+
+echo ""
+echo "Saving model to use for llama.cpp to /etc/gu/models."
+
+export AWS_PROFILE=investigations
+HUGGINGFACE_TOKEN=$(aws ssm get-parameter --name /DEV/investigations/transcription-service/dev/huggingfaceToken --query Parameter.Value --output text --region eu-west-1)
+
+mkdir -p /etc/gu/models
+curl -L --fail -o /etc/gu/models/dev-llama-cpp-model.gguf \
+            -H "Authorization: Bearer ${HUGGINGFACE_TOKEN}" \
+            "https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q8_0.gguf"

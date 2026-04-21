@@ -3,6 +3,7 @@ import {
 	killProcess,
 	logger,
 	spawnBackgroundProcess,
+	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
 import { LlmPrompt } from '@guardian/transcription-service-common';
 import { z } from 'zod';
@@ -14,19 +15,15 @@ type ServerConfig = {
 	port: string;
 };
 
-const getServerConfig = (stage: string): ServerConfig => {
-	if (stage === 'DEV') {
-		return {
-			modelPath: '/Users/philip_mcmahon/.cache/llama.cpp/Qwen3-0.6B-Q8_0.gguf',
-			executable: 'llama-server',
-			port: '9080',
-		};
-	}
+const getServerConfig = (config: TranscriptionConfig): ServerConfig => {
 	return {
-		modelPath: '/opt/dlami/nvme/Qwen3-8B-Q4_K_M.gguf',
-		executable: '/opt/llama/llama.cpp/install/bin/llama-server',
-		libPath: '/opt/llama/llama.cpp/install/lib/',
+		modelPath: config.llamacpp.modelPath,
+		executable: 'llama-server',
 		port: '9080',
+		libPath:
+			config.llamacpp.installDirectory && config.app.stage !== 'DEV'
+				? `${config.llamacpp.installDirectory}/lib/`
+				: undefined,
 	};
 };
 
@@ -48,23 +45,23 @@ interface LlamaChatMessage {
 }
 
 export const startLlamaServer = async (
-	stage: string,
+	config: TranscriptionConfig,
 ): Promise<{
 	serverProcess: ChildProcess;
 	url: string;
 }> => {
 	logger.info('Starting llama-server...');
 
-	const config = getServerConfig(stage);
+	const { modelPath, executable, libPath, port } = getServerConfig(config);
 
 	const childProcess = spawnBackgroundProcess(
 		'llama-server',
-		config.executable,
-		['-m', config.modelPath, '--port', config.port],
-		config.libPath ? { LD_LIBRARY_PATH: config.libPath } : {},
+		executable,
+		['-m', modelPath, '--port', port],
+		libPath ? { LD_LIBRARY_PATH: libPath } : {},
 	);
 
-	const url = `http://localhost:${config.port}`;
+	const url = `http://localhost:${port}`;
 
 	await waitForLlamaServer(url);
 
@@ -161,8 +158,11 @@ export const sendPromptToLlamaServer = async (
 	return content;
 };
 
-export const executePrompt = async (stage: string, prompts: LlmPrompt) => {
-	const serverConfig = await startLlamaServer(stage);
+export const executePrompt = async (
+	config: TranscriptionConfig,
+	prompts: LlmPrompt,
+) => {
+	const serverConfig = await startLlamaServer(config);
 	const llmResult = await sendPromptToLlamaServer(serverConfig!.url, prompts);
 	killProcess('llama-server', serverConfig.serverProcess);
 	return llmResult;
