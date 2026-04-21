@@ -14,7 +14,7 @@ import {
 import { SQSClient } from '@aws-sdk/client-sqs';
 
 import { executePrompt } from './llama-server';
-import { sendPromptToBedrock } from './bedrock';
+import { sendPromptToBedrock } from '@guardian/transcription-service-backend-common/src/llm';
 
 export const getS3Keys = (id: string) => ({
 	promptKey: `llm-prompts/${id}.txt`,

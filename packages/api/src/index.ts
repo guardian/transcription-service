@@ -38,13 +38,10 @@ import {
 	ExportStatuses,
 	TranscriptDownloadRequest,
 	TWELVE_HOURS_IN_SECONDS,
-	ONE_WEEK_IN_SECONDS,
 	TranscriptionItemWithTranscript,
 	TranscriptionMediaDownloadJob,
 	isEnglish,
-	llmRequestBody,
-	DestinationService,
-	LLMJob,
+	LlmRequestBody,
 	LlmResult,
 	LlmPrompt,
 } from '@guardian/transcription-service-common';
@@ -67,6 +64,8 @@ import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { invokeLambda } from './services/lambda';
 import { LambdaClient } from '@aws-sdk/client-lambda';
 import { getS3Keys } from 'worker/src/llama-cpp';
+import { bedrockLlmJob, sendLlmJob, sendLlmResultIsSuccess } from './llm';
+import { MetricsService } from '@guardian/transcription-service-backend-common/src/metrics';
 
 const runningOnAws = process.env['AWS_EXECUTION_ENV'];
 const emulateProductionLocally =
@@ -87,6 +86,7 @@ const getApp = async () => {
 		config.dev?.localstackEndpoint,
 	);
 	const lambdaClient = new LambdaClient(config.aws);
+	const metrics = new MetricsService(config.app.stage, config.aws, 'api');
 
 	app.use(bodyParser.json({ limit: '40mb' }));
 	app.use(passport.initialize());
@@ -252,7 +252,7 @@ const getApp = async () => {
 				return;
 			}
 
-			const body = llmRequestBody.safeParse(req.body);
+			const body = LlmRequestBody.safeParse(req.body);
 			if (!body.success) {
 				logger.error('Failed to parse LLM request body', body.error);
 				res.status(422).send('Invalid request body');
@@ -274,50 +274,30 @@ const getApp = async () => {
 				`Uploaded LLM prompt to s3://${config.app.sourceMediaBucket}/${promptKey}`,
 			);
 
-			const inputSignedUrl = await getSignedDownloadUrl(
-				config.aws,
-				config.app.sourceMediaBucket,
-				promptKey,
-				ONE_WEEK_IN_SECONDS,
-			);
-
-			const outputSignedUrl = await getSignedUploadUrl(
-				config.aws,
-				config.app.transcriptionOutputBucket,
-				userEmail,
-				ONE_WEEK_IN_SECONDS,
-				false,
-				outputKey,
-			);
-
-			const job: LLMJob = {
-				id,
-				jobType: 'llm',
-				originalFilename: `${id}.txt`,
-				inputSignedUrl,
-				sentTimestamp: new Date().toISOString(),
-				userEmail,
-				transcriptDestinationService: DestinationService.TranscriptionService,
-				combinedOutputUrl: { key: outputKey, url: outputSignedUrl },
-				backend: body.data.backend,
-			};
-
-			const sendResult = await sendMessage(
-				sqsClient,
-				config.app.gpuTaskQueueUrl,
-				JSON.stringify(job),
-				id,
-			);
-			if (isSqsFailure(sendResult)) {
-				res.status(500).send(sendResult.errorMsg);
-				return;
+			const sendResult =
+				// if bedrock is the backend we don't need to use the worker - just query directly
+				body.data.backend === 'BEDROCK'
+					? await bedrockLlmJob(
+							id,
+							userEmail,
+							outputKey,
+							body.data,
+							config,
+							metrics,
+							s3Client,
+						)
+					: await sendLlmJob(
+							id,
+							userEmail,
+							promptKey,
+							outputKey,
+							body.data,
+							sqsClient,
+							config,
+						);
+			if (!sendLlmResultIsSuccess(sendResult)) {
+				res.status(500).send(sendResult.failureReason);
 			}
-
-			logger.info('API successfully sent LLM job to task queue', {
-				id,
-				userEmail,
-				queue: config.app.gpuTaskQueueUrl,
-			});
 
 			res.send({ id });
 		}),
