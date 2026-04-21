@@ -93,10 +93,12 @@ jobs:
             --torch-align-models \
             --huggingface-token "$HUGGINGFACE_TOKEN"
 
-      - name: Zip models to prepare to upload to Riff-Raff
+      - name: Zip and upload models to s3
         run: |
           zip -r models.zip models
+          aws s3 cp models.zip s3://${{ secrets.INVESTIGATIONS_DIST_BUCKET_NAME }}/investigations/${{ github.ref == 'refs/heads/main' && 'PROD' || 'CODE' }}/transcription-service-models/models.zip
 
+      # Note- this step works, but I'm not sure riffraff is really designed to be moving around giant (10GB) artifacts
       - name: Upload models to riff-raff
         uses: guardian/actions-riff-raff@use-multipart-upload
         with:
