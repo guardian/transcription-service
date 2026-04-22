@@ -96,11 +96,9 @@ jobs:
       - name: Zip and upload models to s3
         run: |
           zip -r models.zip models
-          aws s3 cp models.zip s3://${{ secrets.INVESTIGATIONS_DIST_BUCKET_NAME }}/investigations/${{ github.ref == 'refs/heads/main' && 'PROD' || 'CODE' }}/transcription-service-models/models.zip
 
-      # Note- this step works, but I'm not sure riffraff is really designed to be moving around giant (10GB) artifacts
       - name: Upload models to riff-raff
-        uses: guardian/actions-riff-raff@use-multipart-upload
+        uses: guardian/actions-riff-raff@v4
         with:
           roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
