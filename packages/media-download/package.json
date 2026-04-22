@@ -14,9 +14,5 @@
 		"@guardian/transcription-service-common": "1.0.0",
 		"@guardian/transcription-service-backend-common": "1.0.0",
 		"@aws-sdk/lib-storage": "3.1000.0"
-	},
-	"devDependencies": {
-		"@types/node": "^20.11.5",
-		"typescript": "^5.3.3"
 	}
 }
