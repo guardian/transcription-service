@@ -324,11 +324,24 @@ export class TranscriptionService extends GuStack {
 		const userData = UserData.forLinux({ shebang: '#!/bin/bash' });
 
 		const userDataCommands = [
+			`set -x`,
 			`export STAGE=${props.stage}`,
 			`export AWS_REGION=${props.env.region}`,
 			// set cuda version needed by whisperx - see https://docs.aws.amazon.com/dlami/latest/devguide/tutorial-base.html
 			`rm /usr/local/cuda`,
 			`ln -s /usr/local/cuda-12.8 /usr/local/cuda`,
+			// Download models from s3 to nvme drive - we get a 125GB nvme drive with g4dn.xlarge instances. Fetching
+			// models from s3 to this drive on startup is faster than reading them from the AMI/root EBS volume
+			`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/transcription-service-models/models.zip /opt/dlami/nvme/models.zip`,
+			`unzip /opt/dlami/nvme/models.zip -d /opt/dlami/nvme/`,
+			`rm -rf /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface`,
+			`chown -R ubuntu:ubuntu /opt/dlami/nvme/models`,
+			// symlink nvme location to .cache so that we don't have to tell whisperx about the special /models folder
+			`mkdir -p /home/ubuntu/.cache`,
+			`ln -s /opt/dlami/nvme/models/torch /home/ubuntu/.cache/torch`,
+			`ln -s /opt/dlami/nvme/models/huggingface /home/ubuntu/.cache/huggingface`,
+			`chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface`,
+			// Set up transcription service worker
 			`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
 			`dpkg -i transcription-service-worker_1.0.0_all.deb`,
 			// warm up whisperx by transcribing sample file then start the service NOTE: won't work for whisper.cpp if we bring that back
@@ -381,6 +394,12 @@ export class TranscriptionService extends GuStack {
 				new GuAllowPolicy(this, 'WriteCloudwatch', {
 					actions: ['cloudwatch:PutMetricData'],
 					resources: ['*'],
+				}),
+				new GuAllowPolicy(this, 'GetModels', {
+					actions: ['s3:GetObject'],
+					resources: [
+						`arn:aws:s3:::${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/transcription-service-models/*`,
+					],
 				}),
 			],
 		});
