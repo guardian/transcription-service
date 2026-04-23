@@ -19,7 +19,6 @@ import {
 	getS3Client,
 	sendMessage,
 	writeDynamoItem,
-	downloadObject,
 	getYoutubeEventItem,
 } from '@guardian/transcription-service-backend-common';
 import {
@@ -178,14 +177,6 @@ const getApp = async () => {
 				res.status(404).send('missing s3 object metadata');
 				return;
 			}
-
-			const tempPath = `/tmp/${s3Key}`;
-			await downloadObject(
-				s3Client,
-				config.app.sourceMediaBucket,
-				s3Key,
-				tempPath,
-			);
 
 			const signedUrl = await getSignedDownloadUrl(
 				config.aws,
