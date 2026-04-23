@@ -23,7 +23,7 @@ interface FfmpegResult {
 	failed: boolean;
 }
 
-export type WhisperModel = 'medium' | 'tiny';
+export type WhisperModel = 'large' | 'tiny';
 
 export type WhisperBaseParams = {
 	containerId?: string;
@@ -180,8 +180,6 @@ export const runWhisperX = async (
 ) => {
 	const { wavPath, stage, diarize, huggingFaceToken } = whisperBaseParams;
 	const fileName = path.parse(wavPath).name;
-	const model =
-		languageCode === 'auto' || languageCode === 'en' ? 'large' : 'large';
 	const languageCodeParam =
 		languageCode === 'auto' ? [] : ['--language', languageCode];
 	const translateParam = translate ? ['--task', 'translate'] : [];
@@ -211,7 +209,7 @@ export const runWhisperX = async (
 			'whisperx',
 			[
 				'--model',
-				model,
+				whisperBaseParams.model,
 				...languageCodeParam,
 				...translateParam,
 				...diarizeParam,
