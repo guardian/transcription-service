@@ -96,29 +96,32 @@ jobs:
       - name: Zip and upload models to s3
         run: |
           zip -r models.zip models
+          aws s3 cp models.zip s3://${{ secrets.INVESTIGATIONS_DIST_BUCKET_NAME }}/investigations/${{ github.ref == 'refs/heads/main' && 'PROD' || 'CODE' }}/transcription-service-models/models.zip
 
-      - name: Upload models to riff-raff
-        uses: guardian/actions-riff-raff@v4
-        with:
-          roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-          projectName: investigations::transcription-service-models
-          contentDirectories: |
-            transcription-service-models:
-              - models.zip
-          config: |
-            allowedStages:
-              - PROD
-              - CODE
-            regions:
-              - eu-west-1
-            stacks:
-              - investigations
-            deployments:
-              transcription-service-models:
-                type: aws-s3
-                app: transcription-service-models
-                parameters:
-                  bucketSsmLookup: true
-                  publicReadAcl: false
-                  cacheControl: 'max-age=0, no-cache'
+# Riffraff currently can't deploy files larger than 5GB so disabling this step for now
+# See https://riffraff.gutools.co.uk/deployment/view/c8371929-1867-4b2b-8f3e-442d05919863
+#      - name: Upload models to riff-raff
+#        uses: guardian/actions-riff-raff@v4
+#        with:
+#          roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+#          githubToken: ${{ secrets.GITHUB_TOKEN }}
+#          projectName: investigations::transcription-service-models
+#          contentDirectories: |
+#            transcription-service-models:
+#              - models.zip
+#          config: |
+#            allowedStages:
+#              - PROD
+#              - CODE
+#            regions:
+#              - eu-west-1
+#            stacks:
+#              - investigations
+#            deployments:
+#              transcription-service-models:
+#                type: aws-s3
+#                app: transcription-service-models
+#                parameters:
+#                  bucketSsmLookup: true
+#                  publicReadAcl: false
+#                  cacheControl: 'max-age=0, no-cache'
