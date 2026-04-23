@@ -325,6 +325,7 @@ export class TranscriptionService extends GuStack {
 
 		const userDataCommands = [
 			`set -x`,
+			`set -e`,
 			`export STAGE=${props.stage}`,
 			`export AWS_REGION=${props.env.region}`,
 			// set cuda version needed by whisperx - see https://docs.aws.amazon.com/dlami/latest/devguide/tutorial-base.html
