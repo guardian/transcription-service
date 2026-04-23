@@ -8,39 +8,25 @@ import {
 	changeMessageVisibility,
 	getObjectWithPresignedUrl,
 	TranscriptionConfig,
-	moveMessageToDeadLetterQueue,
 	logger,
 	publishTranscriptionOutput,
 	readFile,
 	getASGClient,
 	getS3Client,
 } from '@guardian/transcription-service-backend-common';
-import {
-	OutputLanguageCode,
-	TranscriptionJob,
-	TranscriptionOutputFailure,
-	type TranscriptionOutputSuccess,
-} from '@guardian/transcription-service-common';
-import {
-	getTranscriptionText,
-	runFfmpeg,
-	WhisperBaseParams,
-	getFfmpegParams,
-} from './transcribe';
-import path from 'path';
+import { type LLMOutputFailure } from '@guardian/transcription-service-common';
 
 import {
 	getInstanceLifecycleState,
 	terminateInstance,
 	updateScaleInProtection,
 } from './asg';
-import { uploadedCombinedResultsToS3 } from './util';
+import { processLLMJob } from './llama-cpp';
 import {
 	MetricsService,
 	FailureMetric,
 	secondsFromEnqueueToStartMetric,
 	attemptNumberMetric,
-	transcriptionRateMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { setTimeout } from 'timers/promises';
@@ -49,6 +35,10 @@ import { checkSpotInterrupt } from './spot-termination';
 import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
 import fs from 'node:fs';
 import { newArtifactAvailable } from './s3';
+import {
+	processTranscriptionJob,
+	publishTranscriptionOutputFailure,
+} from './transcribe';
 
 const POLLING_INTERVAL_SECONDS = 15;
 
@@ -130,27 +120,6 @@ const main = async () => {
 	}
 };
 
-const publishTranscriptionOutputFailure = async (
-	sqsClient: SQSClient,
-	destination: string,
-	job: TranscriptionJob,
-	noAudioDetected: boolean = false,
-) => {
-	logger.info(`Sending failure message to ${destination}`);
-	const failureMessage: TranscriptionOutputFailure = {
-		id: job.id,
-		status: 'TRANSCRIPTION_FAILURE',
-		userEmail: job.userEmail,
-		originalFilename: job.originalFilename,
-		noAudioDetected: noAudioDetected,
-	};
-	try {
-		await publishTranscriptionOutput(sqsClient, destination, failureMessage);
-	} catch (e) {
-		logger.error(`error publishing failure message to ${destination}`, e);
-	}
-};
-
 const pollTranscriptionQueue = async (
 	pollCount: number,
 	sqsClient: SQSClient,
@@ -209,8 +178,9 @@ const pollTranscriptionQueue = async (
 
 	const maybeSentTimestamp: string | undefined | null =
 		message.message.Attributes?.SentTimestamp;
-	const maybeEnqueuedAtEpochMillis =
-		maybeSentTimestamp && parseInt(maybeSentTimestamp);
+	const maybeEnqueuedAtEpochMillis = maybeSentTimestamp
+		? parseInt(maybeSentTimestamp)
+		: undefined;
 	const messageReceivedAtEpochMillis = Date.now();
 	const maybeSecondsFromEnqueueToStartMetric =
 		maybeEnqueuedAtEpochMillis &&
@@ -285,191 +255,45 @@ const pollTranscriptionQueue = async (
 			maybeSecondsFromEnqueueToStartMetric,
 		);
 
-		const { inputSignedUrl, combinedOutputUrl } = job;
-
-		logger.info(
-			`Fetched transcription job with id ${job.id}, engine ${job.engine}`,
-		);
+		const { inputSignedUrl, jobType } = job;
 
 		const destinationDirectory = isDev
 			? `${__dirname}/../../../worker-tmp-files`
 			: '/tmp';
-		const translationDirectory = `${destinationDirectory}/translation/`;
 
-		logger.info(
-			`Ensuring ${destinationDirectory} and ${translationDirectory} exist`,
-		);
 		fs.mkdirSync(destinationDirectory, { recursive: true });
-		fs.mkdirSync(translationDirectory, { recursive: true });
 
-		const fileToTranscribe = await getObjectWithPresignedUrl(
+		const downloadedFile = await getObjectWithPresignedUrl(
 			inputSignedUrl,
 			job.id,
 			destinationDirectory,
 		);
 
-		const fileName = path.basename(fileToTranscribe);
-		const filePath = `${destinationDirectory}/${fileName}`;
-		const wavPath = `${destinationDirectory}/${fileName}-converted.wav`;
-		logger.info(`Input file path: ${filePath}, Output file path: ${wavPath}`);
-
-		const ffmpegParams = getFfmpegParams(filePath, wavPath);
-
-		const ffmpegResult = await runFfmpeg(ffmpegParams);
-
-		if (
-			ffmpegResult === undefined ||
-			(ffmpegResult?.failed && !ffmpegResult.fileContainsNoAudio)
-		) {
-			// when ffmpeg fails to convert, move message to the dead letter queue
-			if (!isDev && config.app.deadLetterQueueUrl) {
-				logger.error(
-					`'ffmpeg failed, moving message with message id ${taskMessage.MessageId} to dead letter queue`,
-				);
-				await moveMessageToDeadLetterQueue(
-					sqsClient,
-					taskQueueUrl,
-					config.app.deadLetterQueueUrl,
-					taskMessage.Body,
-					receiptHandle,
-					job.id,
-				);
-				logger.info(
-					`moved message with message id ${taskMessage.MessageId} to dead letter queue.`,
-				);
-			} else {
-				logger.info('skip moving message to dead letter queue in DEV');
-			}
-			await publishTranscriptionOutputFailure(
-				sqsClient,
-				config.app.destinationQueueUrls[job.transcriptDestinationService],
+		if (jobType === 'llm') {
+			await processLLMJob(
 				job,
-			);
-			return;
-		}
-		if (ffmpegResult.fileContainsNoAudio) {
-			logger.warn(
-				'No audio detected in file - deleting from queue without moving to dead letter queue and returning failure message',
-			);
-			await publishTranscriptionOutputFailure(
+				downloadedFile,
 				sqsClient,
-				config.app.destinationQueueUrls[job.transcriptDestinationService],
-				job,
-				true,
-			);
-			await deleteMessage(sqsClient, taskQueueUrl, receiptHandle, job.id);
-			return;
-		}
-
-		const extraTranslationTimeMultiplier = job.translate ? 2 : 1;
-
-		if (ffmpegResult.duration && ffmpegResult.duration !== 0) {
-			// Transcription time is usually slightly longer than file duration.
-			// Update visibility timeout to 1.2x the file duration, plus 5 minutes to allow whisperx to start up
-			// (whisperx shouldn't take this long to start as it has been prewarmed but this makes sense for very
-			// short files to have a bit of extra time)
-			// This should avoid another worker picking up the task and to allow
-			// this worker to delete the message when it's finished.
-			const visibilityTimeoutSeconds =
-				Math.floor(ffmpegResult.duration * 1.2 + 300) *
-				extraTranslationTimeMultiplier;
-			await changeMessageVisibility(
-				sqsClient,
+				config,
 				taskQueueUrl,
 				receiptHandle,
-				visibilityTimeoutSeconds,
+			);
+		} else {
+			await processTranscriptionJob(
+				job,
+				downloadedFile,
+				destinationDirectory,
+				sqsClient,
+				config,
+				taskQueueUrl,
+				receiptHandle,
+				isDev,
+				metrics,
+				taskMessage,
+				maybeEnqueuedAtEpochMillis,
+				INTERRUPTION_TIME,
 			);
 		}
-
-		const whisperBaseParams: WhisperBaseParams = {
-			wavPath: wavPath,
-			file: fileToTranscribe,
-			// whisperx always runs on powerful gpu instances so let's always use the medium model
-			model: config.app.stage === 'DEV' ? 'tiny' : 'medium',
-			engine: job.engine,
-			diarize: job.diarize,
-			stage: config.app.stage,
-			huggingFaceToken: config.dev?.huggingfaceToken,
-			baseDirectory: destinationDirectory,
-			translationDirectory,
-		};
-
-		const transcriptionStartTime = new Date();
-
-		const transcriptResult = await getTranscriptionText(
-			whisperBaseParams,
-			job.languageCode,
-			job.translate,
-			metrics,
-		);
-
-		const transcriptionEndTime = new Date();
-		const transcriptionTimeSeconds = Math.round(
-			(transcriptionEndTime.getTime() - transcriptionStartTime.getTime()) /
-				1000,
-		);
-		const transcriptionRate =
-			ffmpegResult.duration &&
-			transcriptionTimeSeconds > 0 &&
-			ffmpegResult.duration / transcriptionTimeSeconds;
-
-		if (transcriptionRate) {
-			await metrics.putMetric(transcriptionRateMetric(transcriptionRate));
-		}
-
-		const languageCode: OutputLanguageCode =
-			job.languageCode === 'auto'
-				? transcriptResult.metadata.detectedLanguageCode
-				: job.languageCode;
-
-		// if we've received an interrupt signal we don't want to perform a half-finished transcript upload/publish as
-		// this may, for example, result in duplicate emails to the user. Here we assume that we can upload some text
-		// files to s3 and make a single request to SNS and SQS within 20 seconds
-		if (
-			INTERRUPTION_TIME &&
-			INTERRUPTION_TIME.getTime() - new Date().getTime() < 20 * 1000
-		) {
-			logger.warn('Spot termination happening soon, abandoning transcription');
-			// exit cleanly to prevent systemd restarting the process
-			process.exit(0);
-		}
-
-		await uploadedCombinedResultsToS3(combinedOutputUrl.url, transcriptResult);
-
-		const transcriptionOutput: TranscriptionOutputSuccess = {
-			id: job.id,
-			status: 'SUCCESS',
-			languageCode,
-			userEmail: job.userEmail,
-			originalFilename: job.originalFilename,
-			combinedOutputKey: combinedOutputUrl?.key,
-			translationRequested: job.translate,
-			includesTranslation:
-				transcriptResult.transcriptTranslations !== undefined,
-			duration: ffmpegResult.duration,
-			maybeEnqueuedAtEpochMillis: maybeEnqueuedAtEpochMillis || undefined,
-		};
-
-		await publishTranscriptionOutput(
-			sqsClient,
-			config.app.destinationQueueUrls[job.transcriptDestinationService],
-			transcriptionOutput,
-		);
-
-		logger.info(
-			`Worker successfully transcribed the file and sent notification to ${job.transcriptDestinationService} output queue`,
-			{
-				id: transcriptionOutput.id,
-				filename: transcriptionOutput.originalFilename,
-				userEmail: transcriptionOutput.userEmail,
-				mediaDurationSeconds: ffmpegResult.duration || 0,
-				transcriptionTimeSeconds,
-				transcriptionRate: transcriptionRate || '',
-				engine: job.engine,
-				specifiedLanguageCode: job.languageCode,
-				...transcriptResult.metadata,
-			},
-		);
 
 		logger.info(`Deleting message ${taskMessage.MessageId}`);
 		await deleteMessage(sqsClient, taskQueueUrl, receiptHandle, job.id);
@@ -488,11 +312,24 @@ const pollTranscriptionQueue = async (
 			taskMessage.Attributes?.ApproximateReceiveCount || defaultReceiveCount,
 		);
 		if (receiveCount >= MAX_RECEIVE_COUNT) {
-			await publishTranscriptionOutputFailure(
-				sqsClient,
-				config.app.destinationQueueUrls[job.transcriptDestinationService],
-				job,
-			);
+			if (job.jobType === 'llm') {
+				const llmFailure: LLMOutputFailure = {
+					id: job.id,
+					status: 'LLM_FAILURE',
+					userEmail: job.userEmail,
+				};
+				await publishTranscriptionOutput(
+					sqsClient,
+					config.app.destinationQueueUrls[job.transcriptDestinationService],
+					llmFailure,
+				);
+			} else {
+				await publishTranscriptionOutputFailure(
+					sqsClient,
+					config.app.destinationQueueUrls[job.transcriptDestinationService],
+					job,
+				);
+			}
 		}
 	} finally {
 		logger.resetCommonMetadata();

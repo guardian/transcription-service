@@ -6,3 +6,4 @@ export * from './utils';
 export * from './dynamodb';
 export * from './asg';
 export * from './logging';
+export * from './process';

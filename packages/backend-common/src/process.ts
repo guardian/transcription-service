@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { spawn, type ChildProcess } from 'child_process';
 import { logger } from './logging';
 export interface ProcessResult {
 	code?: number;
@@ -13,7 +13,8 @@ export type ProcessName =
 	| 'startProxyTunnel'
 	| 'downloadMedia'
 	| 'getContainer'
-	| 'createNewContainer';
+	| 'createNewContainer'
+	| 'llama-server';
 
 const processesWithHiddenStdout: ProcessName[] = ['transcribe'];
 
@@ -89,4 +90,47 @@ export const runSpawnCommand = (
 			}
 		});
 	});
+};
+
+/**
+ * Spawn a long-running background process, returning the ChildProcess handle
+ * so the caller can kill it later. Unlike runSpawnCommand, this does NOT wait
+ * for the process to exit.
+ */
+export const spawnBackgroundProcess = (
+	processName: ProcessName,
+	cmd: string,
+	args: ReadonlyArray<string>,
+	env?: Record<string, string>,
+): ChildProcess => {
+	logger.info(
+		`Spawning background process ${processName}: ${cmd} ${args.join(' ')}`,
+	);
+	const cp = spawn(cmd, args, {
+		env: { ...process.env, ...env },
+	});
+
+	cp.stdout?.on('data', (data) => {
+		logger.info(`${processName} stdout: ${data.toString()}`);
+	});
+
+	cp.stderr?.on('data', (data) => {
+		logger.info(`${processName} stderr: ${data.toString()}`);
+	});
+
+	cp.on('error', (e) => {
+		logger.error(`${processName} error: ${e.toString()}`);
+	});
+
+	cp.on('close', (code) => {
+		logger.info(`${processName} exited with code ${code}`);
+	});
+
+	return cp;
+};
+
+export const killProcess = (name: string, cp: ChildProcess): void => {
+	logger.info(`Stopping ${name}...`);
+	cp.kill('SIGTERM');
+	logger.info(`${name} stop signal sent`);
 };

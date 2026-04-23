@@ -323,6 +323,24 @@ export class TranscriptionService extends GuStack {
 		const workerApp = `${APP_NAME}-worker`;
 		const userData = UserData.forLinux({ shebang: '#!/bin/bash' });
 
+		const baseS3DistPath = `s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}`;
+
+		const llamaCppModelPath = '/opt/dlami/nvme/models/Qwen3-8B-Q4_K_M.gguf';
+		new StringParameter(this, 'llamaCppModelPath', {
+			stringValue: llamaCppModelPath,
+			description:
+				'Fully qualified path to model to use for llama.cpp llama-server',
+			parameterName: `/${props.stage}/${props.stack}/transcription-service/llamacpp/modelPath`,
+		});
+
+		new StringParameter(this, 'llamaCppInstallDirectory', {
+			// this is determined by the llama-cpp AMIgo role https://amigo.gutools.co.uk/roles#llama-cpp
+			stringValue: '/opt/llama/llama.cpp/install/',
+			description:
+				'Location where llama.cpp has been installed (check AMIgo role)',
+			parameterName: `/${props.stage}/${props.stack}/transcription-service/llamacpp/installDirectory`,
+		});
+
 		const userDataCommands = [
 			`set -x`,
 			`export STAGE=${props.stage}`,
@@ -332,7 +350,7 @@ export class TranscriptionService extends GuStack {
 			`ln -s /usr/local/cuda-12.8 /usr/local/cuda`,
 			// Download models from s3 to nvme drive - we get a 125GB nvme drive with g4dn.xlarge instances. Fetching
 			// models from s3 to this drive on startup is faster than reading them from the AMI/root EBS volume
-			`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/transcription-service-models/models.zip /opt/dlami/nvme/models.zip`,
+			`aws s3 cp ${baseS3DistPath}/transcription-service-models/models.zip /opt/dlami/nvme/models.zip`,
 			`unzip /opt/dlami/nvme/models.zip -d /opt/dlami/nvme/`,
 			`rm -rf /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface`,
 			`chown -R ubuntu:ubuntu /opt/dlami/nvme/models`,
@@ -342,7 +360,7 @@ export class TranscriptionService extends GuStack {
 			`ln -s /opt/dlami/nvme/models/huggingface /home/ubuntu/.cache/huggingface`,
 			`chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface`,
 			// Set up transcription service worker
-			`aws s3 cp s3://${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
+			`aws s3 cp ${baseS3DistPath}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
 			`dpkg -i transcription-service-worker_1.0.0_all.deb`,
 			// warm up whisperx by transcribing sample file then start the service NOTE: won't work for whisper.cpp if we bring that back
 			`LD_LIBRARY_PATH=/usr/local/cuda/lib:/usr/local/cuda/lib64 CUDA_HOME=/usr/local/cuda PATH=/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin runuser -u ubuntu -- whisperx --model large --language en --no_align --model_cache_only True --output_dir /tmp /opt/transcription-service/sample.wav`,
@@ -399,6 +417,15 @@ export class TranscriptionService extends GuStack {
 					actions: ['s3:GetObject'],
 					resources: [
 						`arn:aws:s3:::${GuDistributionBucketParameter.getInstance(this).valueAsString}/${props.stack}/${props.stage}/transcription-service-models/*`,
+					],
+				}),
+				new GuAllowPolicy(this, 'InvokeBedrockModels', {
+					actions: [
+						'bedrock:InvokeModel',
+						'bedrock:InvokeModelWithResponseStream',
+					],
+					resources: [
+						`arn:aws:bedrock:${props.env.region}::foundation-model/*`,
 					],
 				}),
 			],

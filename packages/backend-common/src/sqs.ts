@@ -13,6 +13,7 @@ import {
 	TranscriptionEngine,
 	InputLanguageCode,
 	ONE_WEEK_IN_SECONDS,
+	WorkerJob,
 } from '@guardian/transcription-service-common';
 import {
 	getSignedUploadUrl,
@@ -285,11 +286,11 @@ export const moveMessageToDeadLetterQueue = async (
 
 export const parseTranscriptJobMessage = (
 	message: Message,
-): TranscriptionJob | undefined => {
+): WorkerJob | undefined => {
 	if (!message.Body) {
 		return undefined;
 	}
-	const job = TranscriptionJob.safeParse(JSON.parse(message.Body));
+	const job = WorkerJob.safeParse(JSON.parse(message.Body));
 	if (job.success) {
 		return job.data;
 	}
