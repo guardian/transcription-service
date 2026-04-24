@@ -294,7 +294,7 @@ export const parseTranscriptJobMessage = (
 		return job.data;
 	}
 	logger.error(
-		`Failed to parse message ${message.MessageId}, contents: ${message.Body}, errors: ${JSON.stringify(job.error.errors, null, 2)}`,
+		`Failed to parse message ${message.MessageId}, contents: ${message.Body}, error: ${job.error.message}`,
 	);
 	return undefined;
 };
