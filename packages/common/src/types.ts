@@ -1,9 +1,6 @@
 import { z } from 'zod';
-import { inputLanguageCodes, outputLanguageCodes } from './languages';
-import { LlmBackend } from './shared-types';
-
-export const InputLanguageCode = z.enum(inputLanguageCodes);
-export type InputLanguageCode = z.infer<typeof InputLanguageCode>;
+import { outputLanguageCodes } from './languages';
+import { InputLanguageCode, LlmBackend } from './worker-interface-types';
 
 export const OutputLanguageCode = z.enum(outputLanguageCodes);
 export type OutputLanguageCode = z.infer<typeof OutputLanguageCode>;
