@@ -212,7 +212,7 @@ const main = async () => {
 	const parsedJob = UrlJob.safeParse(parsedInput);
 	if (!parsedJob.success) {
 		logger.error(
-			`MESSAGE_BODY is not a valid UrlJob - exiting. MESSAGE_BODY: ${input} Errors: ${parsedJob.error.errors.map((e) => e.message).join(', ')}`,
+			`MESSAGE_BODY is not a valid UrlJob - exiting. MESSAGE_BODY: ${input} Errors: ${parsedJob.error.message}`,
 		);
 		return;
 	}
