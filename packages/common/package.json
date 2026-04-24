@@ -9,5 +9,8 @@
 	"main": "src/index.ts",
 	"files": [
 		"src"
-	]
+	],
+	"scripts": {
+		"generate-schema": "tsx scripts/generate-json-schema.ts"
+	}
 }
