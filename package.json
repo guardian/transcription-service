@@ -32,7 +32,8 @@
 		"cdk::test-update": "npm run test-update --workspace cdk",
 		"package": "mkdir -p target; zip -j target/output-handler.zip packages/output-handler/dist/index.js; zip -j target/webpage-snapshot.zip packages/webpage-snapshot/dist/index.js; zip -j target/media-export.zip packages/media-export/dist/index.js; zip -j target/worker-capacity-manager.zip packages/worker-capacity-manager/dist/index.js; mkdir -p build/client; mv packages/api/dist/index.js build; mv packages/client/out/* build/client; cd build; zip -qr ../target/api.zip *",
 		"emulate-prod-locally": "npm run build --workspace client; EMULATE_PRODUCTION_SERVER=true npm run start --workspace api",
-		"prepare": "husky install"
+		"prepare": "husky install",
+		"generate-schema": "npm run generate-schema --workspace @guardian/transcription-service-common -- $PWD/worker-interface/schema"
 	},
 	"lint-staged": {
 		"*": "prettier --ignore-unknown --write",
@@ -56,7 +57,7 @@
 		"husky": "8.0.3",
 		"lint-staged": "15.5.2",
 		"prettier": "3.3.3",
-		"ts-node": "10.9.2",
+		"tsx": "^4.21.0",
 		"typescript": "5.6.2"
 	}
 }
