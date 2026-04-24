@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TranscriptionJob } from '../src';
+import { LLMJob, TranscriptionJob } from '../src';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -19,6 +19,10 @@ const schemas: Schema[] = [
 	{
 		name: 'TranscriptionJob',
 		schema: z.toJSONSchema(TranscriptionJob),
+	},
+	{
+		name: 'LlmJob',
+		schema: z.toJSONSchema(LLMJob),
 	},
 ];
 
