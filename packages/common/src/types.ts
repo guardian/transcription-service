@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { inputLanguageCodes, outputLanguageCodes } from './languages';
+import { LlmBackend } from './shared-types';
 
 export const InputLanguageCode = z.enum(inputLanguageCodes);
 export type InputLanguageCode = z.infer<typeof InputLanguageCode>;
@@ -10,18 +11,6 @@ export type OutputLanguageCode = z.infer<typeof OutputLanguageCode>;
 export const inputToOutputLanguageCode = (
 	c: InputLanguageCode,
 ): OutputLanguageCode => (c === 'auto' ? 'UNKNOWN' : c);
-
-export enum DestinationService {
-	TranscriptionService = 'TranscriptionService',
-	Giant = 'Giant',
-}
-
-const SignedUrl = z.object({
-	url: z.string(),
-	key: z.string(),
-});
-
-export type SignedUrl = z.infer<typeof SignedUrl>;
 
 export const UrlJob = z.object({
 	id: z.string(),
@@ -100,49 +89,6 @@ export const WebpageSnapshot = z.object({
 	title: z.string(),
 });
 export type WebpageSnapshot = z.infer<typeof WebpageSnapshot>;
-
-export enum TranscriptionEngine {
-	WHISPER_X = 'whisperx',
-	WHISPER_CPP = 'whispercpp',
-}
-
-export const JobType = z.enum(['transcribe', 'llm']);
-export type JobType = z.infer<typeof JobType>;
-
-export const Job = z.object({
-	id: z.string(),
-	originalFilename: z.string(),
-	inputSignedUrl: z.string(),
-	sentTimestamp: z.string(),
-	userEmail: z.string(),
-	transcriptDestinationService: z.nativeEnum(DestinationService),
-	combinedOutputUrl: SignedUrl,
-});
-
-export type Job = z.infer<typeof Job>;
-
-export const TranscriptionJob = Job.extend({
-	jobType: z.literal('transcribe').optional(),
-	languageCode: InputLanguageCode,
-	translate: z.boolean(),
-	diarize: z.boolean(),
-	engine: z.nativeEnum(TranscriptionEngine),
-});
-
-export type TranscriptionJob = z.infer<typeof TranscriptionJob>;
-
-export const LlmBackend = z.union([z.literal('LOCAL'), z.literal('BEDROCK')]);
-export type LlmBackend = z.infer<typeof LlmBackend>;
-
-export const LLMJob = Job.extend({
-	jobType: z.literal('llm'),
-	backend: LlmBackend,
-});
-
-export type LLMJob = z.infer<typeof LLMJob>;
-
-export const WorkerJob = z.union([LLMJob, TranscriptionJob]);
-export type WorkerJob = z.infer<typeof WorkerJob>;
 
 const OutputBase = z.object({
 	id: z.string(),
