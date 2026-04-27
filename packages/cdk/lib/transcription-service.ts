@@ -350,7 +350,7 @@ export class TranscriptionService extends GuStack {
 			`ln -s /usr/local/cuda-12.8 /usr/local/cuda`,
 			// Download models from s3 to nvme drive - we get a 125GB nvme drive with g4dn.xlarge instances. Fetching
 			// models from s3 to this drive on startup is faster than reading them from the AMI/root EBS volume
-			`aws s3 cp ${baseS3DistPath}/transcription-service-models/models.zip /opt/dlami/nvme/models.zip`,
+			`aws s3 cp --quiet ${baseS3DistPath}/transcription-service-models/models.zip /opt/dlami/nvme/models.zip`,
 			`unzip /opt/dlami/nvme/models.zip -d /opt/dlami/nvme/`,
 			`rm -rf /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface`,
 			`chown -R ubuntu:ubuntu /opt/dlami/nvme/models`,

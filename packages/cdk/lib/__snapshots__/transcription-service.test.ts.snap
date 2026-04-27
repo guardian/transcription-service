@@ -1271,7 +1271,7 @@ export STAGE=TEST
 export AWS_REGION=test-region
 rm /usr/local/cuda
 ln -s /usr/local/cuda-12.8 /usr/local/cuda
-aws s3 cp s3://",
+aws s3 cp --quiet s3://",
                   {
                     "Ref": "DistributionBucketName",
                   },
