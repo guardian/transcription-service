@@ -105,7 +105,10 @@ export const bedrockLlmJob = async (
 	metricsService: MetricsService,
 	s3Client: S3Client,
 ): Promise<SendLlmResult> => {
-	const bedrockResponse = await sendPromptToBedrock(request.prompt);
+	const bedrockResponse = await sendPromptToBedrock(
+		request.prompt,
+		config.bedrock.modelId,
+	);
 	const s3Result = await putObject(
 		s3Client,
 		config.app.transcriptionOutputBucket,
