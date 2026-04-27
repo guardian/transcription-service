@@ -28,7 +28,7 @@ deployments:
       templateStagePaths:
         CODE: TranscriptionService-CODE.template.json
         PROD: TranscriptionService-PROD.template.json
-      amiEncrypted: investigations
+      amiEncrypted: true
       amiParametersToTags:
         AMITranscriptionservicegpuworker:
           BuiltBy: amigo
