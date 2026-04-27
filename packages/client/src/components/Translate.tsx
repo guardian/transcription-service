@@ -14,7 +14,7 @@ import { getResult, submitPrompt } from '@/services/llm';
 
 const POLL_INTERVAL_MS = 3000;
 
-const AUTO_DETECT = '';
+const AUTO_DETECT = 'AUTO_DETECT';
 
 const buildSystemPrompt = (targetLang: string, sourceLang: string): string => {
 	const sourceRule =
@@ -50,7 +50,7 @@ export const Translate = () => {
 	const router = useRouter();
 	const [targetLang, setTargetLang] = useState('English');
 	const [sourceLang, setSourceLang] = useState(AUTO_DETECT);
-	const [backend, setBackend] = useState<LlmBackend>('BEDROCK');
+	const [backend, setBackend] = useState<LlmBackend>('LOCAL');
 	const [inputText, setInputText] = useState('');
 	const [status, setStatus] = useState<RequestStatus>(RequestStatus.Ready);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
