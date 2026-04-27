@@ -13,7 +13,8 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"@aws-sdk/client-auto-scaling": "3.1000.0",
+		"@aws-sdk/client-auto-scaling": "^3.1000.0",
+		"@aws-sdk/client-bedrock-runtime": "^3.1000.0",
 		"@guardian/transcription-service-backend-common": "1.0.0"
 	},
 	"devDependencies": {

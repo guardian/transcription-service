@@ -316,3 +316,21 @@ export const getObjectSize = async (
 	);
 	return data.ContentLength;
 };
+
+export const putObject = async (
+	client: S3Client,
+	bucket: string,
+	key: string,
+	body: string,
+	metadata?: Record<string, string>,
+) => {
+	const resp = await client.send(
+		new PutObjectCommand({
+			Bucket: bucket,
+			Key: key,
+			Body: body,
+			Metadata: metadata,
+		}),
+	);
+	return resp.$metadata;
+};

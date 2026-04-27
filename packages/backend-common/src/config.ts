@@ -35,6 +35,13 @@ export interface TranscriptionConfig {
 		workerArtifactBucket: string;
 		workerArtifactKey: string;
 	};
+	llamacpp: {
+		modelPath: string;
+		installDirectory?: string;
+	};
+	bedrock: {
+		modelId: string;
+	};
 	aws: AwsConfig;
 	dev?: {
 		huggingfaceToken: string;
@@ -252,6 +259,17 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		'worker/artifactKey',
 	);
 
+	const llamaModelPath = findParameter(
+		parameters,
+		paramPath,
+		'llamacpp/modelPath',
+	);
+
+	const installDirectory =
+		stage !== 'DEV'
+			? findParameter(parameters, paramPath, 'llamacpp/installDirectory')
+			: undefined;
+
 	return {
 		auth: {
 			clientId: authClientId,
@@ -283,6 +301,13 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 			youtubeBlocked,
 			workerArtifactBucket,
 			workerArtifactKey,
+		},
+		llamacpp: {
+			modelPath: llamaModelPath,
+			installDirectory,
+		},
+		bedrock: {
+			modelId: 'qwen.qwen3-next-80b-a3b',
 		},
 		aws: awsConfig,
 		dev: devConfiguration,

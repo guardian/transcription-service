@@ -17,6 +17,7 @@ export enum RequestStatus {
 	Success = 'Success',
 	Failed = 'Failed',
 	PartialFailure = 'PartialFailure',
+	WaitingForLlmResult = 'WaitingForLlmResult',
 }
 
 type MediaUrlInvalid = {

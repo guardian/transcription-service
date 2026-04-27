@@ -2,7 +2,10 @@ import { getSignedUploadUrl } from '@guardian/transcription-service-backend-comm
 
 export const getTestMessage = async () => {
 	const signedUrl = await getSignedUploadUrl(
-		'eu-west-1',
+		{
+			region: 'eu-west-1',
+			credentials: undefined,
+		},
 		'pfi-playground-remote-ingest-data-rex',
 		'hellier@numanindustries.com',
 		3600,
