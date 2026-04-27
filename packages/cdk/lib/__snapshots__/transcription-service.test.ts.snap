@@ -17,10 +17,10 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
       "GuApiLambda",
       "GuPolicy",
       "GuPolicy",
+      "GuAllowPolicy",
       "GuCname",
       "GuLoggingStreamNameParameter",
       "GuPolicy",
-      "GuAllowPolicy",
       "GuAllowPolicy",
       "GuAllowPolicy",
       "GuAllowPolicy",
@@ -637,6 +637,9 @@ exports[`The TranscriptionService stack matches the snapshot 1`] = `
         },
         "PolicyName": "InvokeBedrockModels7C5463B9",
         "Roles": [
+          {
+            "Ref": "transcriptionserviceapiServiceRole0EF40E0F",
+          },
           {
             "Ref": "InstanceRoleTranscriptionserviceworkerA8AC6615",
           },
