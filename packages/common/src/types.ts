@@ -376,12 +376,12 @@ export const LlmPrompt = z.object({
 
 export type LlmPrompt = z.infer<typeof LlmPrompt>;
 
-export const llmRequestBody = z.object({
+export const LlmRequestBody = z.object({
 	prompt: LlmPrompt,
 	backend: LlmBackend,
 });
 
-export type LLMRequestBody = z.infer<typeof llmRequestBody>;
+export type LlmRequestBody = z.infer<typeof LlmRequestBody>;
 
 export const signedUrlRequestBody = z.object({
 	fileName: z.string(),
