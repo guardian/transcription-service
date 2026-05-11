@@ -27,6 +27,7 @@ object Jsonschema2Pojo {
     val ruleFactory = new RuleFactory(config, new Jackson2Annotator(config), new SchemaStore())
     val mapper = new SchemaMapper(ruleFactory, new SchemaGenerator())
 
+    require(schemaDir.isDirectory, s"Schema directory does not exist: ${schemaDir.getAbsolutePath}")
     val schemaFiles = schemaDir.listFiles().filter(_.getName.endsWith(".schema.json"))
     schemaFiles.foreach { schema =>
       val className = schema.getName.replace(".schema.json", "").capitalize
