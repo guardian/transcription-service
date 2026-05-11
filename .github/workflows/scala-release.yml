@@ -1,4 +1,4 @@
-name: Release scala worker-interface
+name: Release scala worker-interface2
 
 on:
   workflow_dispatch:
