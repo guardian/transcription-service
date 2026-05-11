@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - '.github/workflows/scala-release.yml'
+      - 'worker-interface/**'
 
 defaults:
   run:
