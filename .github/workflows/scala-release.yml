@@ -13,8 +13,10 @@ defaults:
 
 jobs:
   release:
-    uses: guardian/gha-scala-library-release-workflow/.github/workflows/reusable-release.yml@v1
+    uses: guardian/gha-scala-library-release-workflow/.github/workflows/reusable-release.yml@support-non-root-directory
     permissions: { contents: write, pull-requests: write }
+    with:
+      WORKING_DIRECTORY: './worker-interface/scala'
     secrets:
       SONATYPE_TOKEN: ${{ secrets.AUTOMATED_MAVEN_RELEASE_SONATYPE_TOKEN }}
       PGP_PRIVATE_KEY: ${{ secrets.AUTOMATED_MAVEN_RELEASE_PGP_SECRET }}
