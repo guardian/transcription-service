@@ -16,7 +16,7 @@ libraryDependencies ++= Seq(
 )
 
 Compile / sourceGenerators += Def.task {
-  val schemaDir = baseDirectory.value / ".." / ".." / "packages" / "common" / "schema"
+  val schemaDir = baseDirectory.value / ".." / ".." / "packages" / "common" / "worker-interface" / "schema"
   val outputDir = (Compile / sourceManaged).value / "jsonschema2pojo"
   Jsonschema2Pojo.generate(schemaDir, outputDir, "com.gu.transcriptionservice")
 }.taskValue
