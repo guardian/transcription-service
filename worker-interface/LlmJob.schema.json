@@ -1,0 +1,58 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"properties": {
+		"id": {
+			"type": "string"
+		},
+		"originalFilename": {
+			"type": "string"
+		},
+		"inputSignedUrl": {
+			"type": "string"
+		},
+		"sentTimestamp": {
+			"type": "string"
+		},
+		"userEmail": {
+			"type": "string"
+		},
+		"transcriptDestinationService": {
+			"type": "string",
+			"enum": ["TranscriptionService", "Giant"]
+		},
+		"combinedOutputUrl": {
+			"type": "object",
+			"properties": {
+				"url": {
+					"type": "string"
+				},
+				"key": {
+					"type": "string"
+				}
+			},
+			"required": ["url", "key"],
+			"additionalProperties": false
+		},
+		"jobType": {
+			"type": "string",
+			"const": "llm"
+		},
+		"backend": {
+			"type": "string",
+			"enum": ["LOCAL", "BEDROCK"]
+		}
+	},
+	"required": [
+		"id",
+		"originalFilename",
+		"inputSignedUrl",
+		"sentTimestamp",
+		"userEmail",
+		"transcriptDestinationService",
+		"combinedOutputUrl",
+		"jobType",
+		"backend"
+	],
+	"additionalProperties": false
+}
