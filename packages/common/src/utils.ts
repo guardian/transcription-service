@@ -1,4 +1,5 @@
-import { DocExportType, TranscriptionResult } from './types';
+import { DocExportType } from './types';
+import { TranscriptionResult } from './worker-interface-types';
 
 interface UploadSuccess {
 	isSuccess: true;
