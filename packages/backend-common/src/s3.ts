@@ -170,13 +170,15 @@ export const getObjectWithPresignedUrl = async (
 	const response = await fetch(presignedUrl);
 	if (!response.ok) {
 		throw new Error(
-			`Failed to download ${key}: ${response.status} ${response.statusText}`,
+			`Failed to download ${key}: ${response.status} ${response.statusText} ${presignedUrl}`,
 		);
 	}
 	if (!response.body) {
 		throw new Error(`Response body is empty for ${key}`);
 	}
-	const body = Readable.fromWeb(response.body as import('stream/web').ReadableStream);
+	const body = Readable.fromWeb(
+		response.body as import('stream/web').ReadableStream,
+	);
 	await downloadS3Data(body, destinationPath, key);
 	return destinationPath;
 };

@@ -84,7 +84,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		'gzip',
 	);
 
-	const engine = TranscriptionEngine.WHISPER_X;
+	const engine: TranscriptionEngine = 'whisperx';
 
 	const queue = config.app.gpuTaskQueueUrl;
 
@@ -100,6 +100,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		translate: translationRequested,
 		diarize: diarizationRequested,
 		engine,
+		jobType: 'transcribe',
 	};
 	const messageResult = await sendMessage(
 		client,
