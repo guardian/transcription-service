@@ -339,7 +339,8 @@ const getApp = async () => {
 					s3Client,
 					config.app.transcriptionOutputBucket,
 					item.outputKey,
-					false,
+					// see llama-cpp.ts - we gzip llm output
+					true,
 				);
 				if (!isS3Failure(outputResult)) {
 					const result: LlmResult = {

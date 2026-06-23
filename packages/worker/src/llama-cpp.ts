@@ -15,6 +15,7 @@ import { SQSClient } from '@aws-sdk/client-sqs';
 
 import { executePrompt } from './llama-server';
 import { sendPromptToBedrock } from '@guardian/transcription-service-backend-common/src/llm';
+import { gzip } from 'node-gzip';
 
 export const getS3Keys = (id: string) => ({
 	promptKey: `llm-prompts/${id}.txt`,
@@ -51,10 +52,12 @@ export const processLLMJob = async (
 			? await sendPromptToBedrock(parsedPrompts.data, config.bedrock.modelId)
 			: await executePrompt(config, parsedPrompts.data);
 
+	const gzippedResult = await gzip(llmResult);
+
 	const uploadResult = await uploadToS3(
 		job.combinedOutputUrl.url,
-		Buffer.from(llmResult),
-		false,
+		Buffer.from(gzippedResult),
+		true, // gzip as, especially results from giant document translations, output will be quite large
 	);
 	if (!uploadResult.isSuccess) {
 		throw new Error(
