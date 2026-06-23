@@ -54,7 +54,7 @@ export const processLLMJob = async (
 	const uploadResult = await uploadToS3(
 		job.combinedOutputUrl.url,
 		Buffer.from(llmResult),
-		false,
+		true, // gzip as, especially results from giant document translations, output will be quite large
 	);
 	if (!uploadResult.isSuccess) {
 		throw new Error(
