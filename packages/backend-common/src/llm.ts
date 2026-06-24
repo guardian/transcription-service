@@ -34,6 +34,9 @@ export const sendPromptToBedrock = async (
 		modelId: bedrockModelId,
 		messages,
 		...(prompts.system ? { system: [{ text: prompts.system }] } : {}),
+		additionalModelRequestFields: {
+			thinning: { type: 'disabled' },
+		},
 	});
 
 	logger.info(

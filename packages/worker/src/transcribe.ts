@@ -27,7 +27,7 @@ import {
 } from '@guardian/transcription-service-backend-common/src/metrics';
 import { SHAKIRA } from './shakira';
 import { transcribeAndTranslate } from './translate';
-import { Message, SQSClient } from '@aws-sdk/client-sqs';
+import { Message, MessageAttributeValue, SQSClient } from '@aws-sdk/client-sqs';
 import fs from 'node:fs';
 import { uploadedCombinedResultsToS3 } from './util';
 
@@ -275,6 +275,7 @@ export const publishTranscriptionOutputFailure = async (
 	destination: string,
 	job: TranscriptionJob,
 	noAudioDetected: boolean = false,
+	messageAttributes?: Record<string, MessageAttributeValue>,
 ) => {
 	logger.info(`Sending failure message to ${destination}`);
 	const failureMessage: TranscriptionOutputFailure = {
@@ -285,7 +286,12 @@ export const publishTranscriptionOutputFailure = async (
 		noAudioDetected: noAudioDetected,
 	};
 	try {
-		await publishTranscriptionOutput(sqsClient, destination, failureMessage);
+		await publishTranscriptionOutput(
+			sqsClient,
+			destination,
+			failureMessage,
+			messageAttributes,
+		);
 	} catch (e) {
 		logger.error(`error publishing failure message to ${destination}`, e);
 	}
@@ -304,6 +310,7 @@ export const processTranscriptionJob = async (
 	taskMessage: Message,
 	maybeEnqueuedAtEpochMillis: number | undefined,
 	interruptionTime: Date | undefined,
+	preservedAttributes?: Record<string, MessageAttributeValue>,
 ) => {
 	logger.info(
 		`Fetched transcription job with id ${job.id}, engine ${job.engine}`,
@@ -349,6 +356,8 @@ export const processTranscriptionJob = async (
 			sqsClient,
 			config.app.destinationQueueUrls[job.transcriptDestinationService],
 			job,
+			false,
+			preservedAttributes,
 		);
 		return;
 	}
@@ -361,6 +370,7 @@ export const processTranscriptionJob = async (
 			config.app.destinationQueueUrls[job.transcriptDestinationService],
 			job,
 			true,
+			preservedAttributes,
 		);
 		await deleteMessage(sqsClient, taskQueueUrl, receiptHandle, job.id);
 		return;
@@ -454,6 +464,7 @@ export const processTranscriptionJob = async (
 		sqsClient,
 		config.app.destinationQueueUrls[job.transcriptDestinationService],
 		transcriptionOutput,
+		preservedAttributes,
 	);
 
 	logger.info(
