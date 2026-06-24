@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { outputLanguageCodes } from './languages';
 import {
 	InputLanguageCode,
 	LlmBackend,
@@ -10,10 +9,8 @@ import {
 	TranscriptionOutputSuccess,
 	TranscriptionOutputFailure,
 	TranscriptionResult,
+	OutputLanguageCode,
 } from './worker-interface-types';
-
-export const OutputLanguageCode = z.enum(outputLanguageCodes);
-export type OutputLanguageCode = z.infer<typeof OutputLanguageCode>;
 
 export const inputToOutputLanguageCode = (
 	c: InputLanguageCode,
@@ -342,20 +339,6 @@ export const YoutubeStatus = z.union([
 	z.literal('ERROR'),
 ]);
 export type YoutubeStatus = z.infer<typeof YoutubeStatus>;
-
-export const Transcripts = z.object({
-	srt: z.string(),
-	text: z.string(),
-	json: z.string(),
-});
-export type Transcripts = z.infer<typeof Transcripts>;
-
-export const TranscriptionMetadata = z.object({
-	detectedLanguageCode: OutputLanguageCode,
-	loadTimeMs: z.optional(z.number()),
-	totalTimeMs: z.optional(z.number()),
-});
-export type TranscriptionMetadata = z.infer<typeof TranscriptionMetadata>;
 
 export const TranscriptionItemWithTranscript = z.object({
 	item: TranscriptionDynamoItem,

@@ -2,11 +2,25 @@
 // transcription service
 import { z } from 'zod';
 import { inputLanguageCodes } from './languages';
-import {
-	OutputLanguageCode,
-	TranscriptionMetadata,
-	Transcripts,
-} from './types';
+
+import { outputLanguageCodes } from './languages';
+
+export const OutputLanguageCode = z.enum(outputLanguageCodes);
+export type OutputLanguageCode = z.infer<typeof OutputLanguageCode>;
+
+export const Transcripts = z.object({
+	srt: z.string(),
+	text: z.string(),
+	json: z.string(),
+});
+export type Transcripts = z.infer<typeof Transcripts>;
+
+export const TranscriptionMetadata = z.object({
+	detectedLanguageCode: OutputLanguageCode,
+	loadTimeMs: z.optional(z.number()),
+	totalTimeMs: z.optional(z.number()),
+});
+export type TranscriptionMetadata = z.infer<typeof TranscriptionMetadata>;
 
 export const TranscriptionEngine = z.enum(['whisperx']);
 export type TranscriptionEngine = z.infer<typeof TranscriptionEngine>;
