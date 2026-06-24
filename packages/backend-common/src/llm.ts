@@ -35,7 +35,7 @@ export const sendPromptToBedrock = async (
 		messages,
 		...(prompts.system ? { system: [{ text: prompts.system }] } : {}),
 		additionalModelRequestFields: {
-			thinning: { type: 'disabled' },
+			thinking: { type: 'disabled' },
 		},
 	});
 
