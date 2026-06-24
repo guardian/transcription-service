@@ -13,6 +13,7 @@ import {
 	readFile,
 	getASGClient,
 	getS3Client,
+	getForwardedMessageAttributes,
 } from '@guardian/transcription-service-backend-common';
 import { type LLMOutputFailure } from '@guardian/transcription-service-common';
 
@@ -230,6 +231,10 @@ const pollTranscriptionQueue = async (
 	}
 	CURRENT_MESSAGE_RECEIPT_HANDLE = receiptHandle;
 
+	// these attributes are preserved from the original job message and re-attached to the output message (success or
+	// failure) so that Giant can match the result back to the relevant blob/extractor
+	const preservedAttributes = getForwardedMessageAttributes(taskMessage);
+
 	const job = parseTranscriptJobMessage(taskMessage);
 
 	if (!job) {
@@ -277,6 +282,7 @@ const pollTranscriptionQueue = async (
 				config,
 				taskQueueUrl,
 				receiptHandle,
+				preservedAttributes,
 			);
 		} else {
 			await processTranscriptionJob(
@@ -292,6 +298,7 @@ const pollTranscriptionQueue = async (
 				taskMessage,
 				maybeEnqueuedAtEpochMillis,
 				INTERRUPTION_TIME,
+				preservedAttributes,
 			);
 		}
 
@@ -322,12 +329,15 @@ const pollTranscriptionQueue = async (
 					sqsClient,
 					config.app.destinationQueueUrls[job.transcriptDestinationService],
 					llmFailure,
+					preservedAttributes,
 				);
 			} else {
 				await publishTranscriptionOutputFailure(
 					sqsClient,
 					config.app.destinationQueueUrls[job.transcriptDestinationService],
 					job,
+					false,
+					preservedAttributes,
 				);
 			}
 		}

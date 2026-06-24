@@ -12,6 +12,7 @@ import {
 	uploadToS3,
 } from '@guardian/transcription-service-common';
 import { SQSClient } from '@aws-sdk/client-sqs';
+import { MessageAttributeValue } from '@aws-sdk/client-sqs';
 
 import { executePrompt } from './llama-server';
 import { sendPromptToBedrock } from '@guardian/transcription-service-backend-common/src/llm';
@@ -29,6 +30,7 @@ export const processLLMJob = async (
 	config: TranscriptionConfig,
 	taskQueueUrl: string,
 	receiptHandle: string,
+	messageAttributes?: Record<string, MessageAttributeValue>,
 ) => {
 	logger.info(`Processing LLM job with id ${job.id}`);
 
@@ -77,6 +79,7 @@ export const processLLMJob = async (
 		sqsClient,
 		config.app.destinationQueueUrls[job.transcriptDestinationService],
 		llmOutput,
+		messageAttributes,
 	);
 
 	logger.info(
