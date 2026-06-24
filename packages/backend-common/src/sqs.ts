@@ -64,7 +64,7 @@ export const isSqsFailure = (
 // Message attributes that are always preserved from an incoming job message and re-attached to the output message
 // (whether success or failure) so that the consumer (Giant) can match the output back to the relevant blob/extractor.
 export const FORWARDED_MESSAGE_ATTRIBUTE_NAMES = [
-	'GiantBlobId',
+	'GiantBlobUri',
 	'GiantExtractorName',
 ];
 
@@ -238,7 +238,7 @@ export const getNextMessage = async (
 				VisibilityTimeout: 300, // 	5 minutes
 				// we need to get message attributes so that we can use ApproximateReceiveCount
 				MessageSystemAttributeNames: ['All'],
-				// we need the custom message attributes (e.g. GiantBlobId, GiantExtractorName) so that we can preserve
+				// we need the custom message attributes (e.g. GiantBlobUri, GiantExtractorName) so that we can preserve
 				// them on the output message
 				MessageAttributeNames: ['All'],
 			}),
