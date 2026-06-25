@@ -54,10 +54,24 @@ export const startLlamaServer = async (
 
 	const { modelPath, executable, libPath, port } = getServerConfig(config);
 
+	const args = [
+		'-m',
+		modelPath,
+		'--port',
+		port,
+		'-c',
+		'32768', // 32k context — large docs exceed the default ~4k
+		'-ngl',
+		'99', // offload all layers to GPU (Qwen3-8B Q4 fits on a T4)
+		'-fa', // flash attention
+	];
+
+	logger.info(`Starting llama-server with args: ${args.join(' ')}`);
+
 	const childProcess = spawnBackgroundProcess(
 		'llama-server',
 		executable,
-		['-m', modelPath, '--port', port],
+		args,
 		libPath ? { LD_LIBRARY_PATH: libPath } : {},
 	);
 
