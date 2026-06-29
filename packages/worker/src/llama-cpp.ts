@@ -1,5 +1,4 @@
 import {
-	changeMessageVisibility,
 	logger,
 	publishTranscriptionOutput,
 	TranscriptionConfig,
@@ -10,21 +9,88 @@ import {
 	LlmPrompt,
 	type LLMOutputSuccess,
 	uploadToS3,
+	LLMTranslationJob,
+	LlmBackend,
+	TranslationTask,
+	TranslationField,
 } from '@guardian/transcription-service-common';
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { MessageAttributeValue } from '@aws-sdk/client-sqs';
 
-import { executePrompt } from './llama-server';
-import { sendPromptToBedrock } from '@guardian/transcription-service-backend-common/src/llm';
 import { gzip } from 'node-gzip';
+import { executeLlmPrompt } from './llm';
 
 export const getS3Keys = (id: string) => ({
 	promptKey: `llm-prompts/${id}.txt`,
 	outputKey: `llm-output/${id}.txt`,
 });
 
-export const processLLMJob = async (
-	job: LLMJob,
+const processTranslationTask = async (
+	taskData: string,
+	config: TranscriptionConfig,
+	backend: LlmBackend,
+	sqsClient: SQSClient,
+	taskQueueUrl: string,
+	receiptHandle: string,
+): Promise<string> => {
+	const parsedTask = TranslationTask.safeParse(JSON.parse(taskData));
+	if (!parsedTask.success) {
+		throw new Error(
+			`Failed to parse translation task file, content: ${taskData}`,
+		);
+	}
+	// each field for translation gets a different prompt
+	const prompts: { fieldName: string; prompt: LlmPrompt }[] =
+		parsedTask.data.fields.map((field: TranslationField) => ({
+			fieldName: field.name,
+			prompt: {
+				system: parsedTask.data.systemPrompt,
+				user: field.text,
+			},
+		}));
+
+	const promptOutputs: TranslationField[] = [];
+	for (const prompt of prompts) {
+		const result = await executeLlmPrompt(
+			prompt.prompt,
+			config,
+			backend,
+			sqsClient,
+			taskQueueUrl,
+			receiptHandle,
+		);
+		promptOutputs.push({
+			name: prompt.fieldName,
+			text: result,
+		});
+	}
+	return JSON.stringify(promptOutputs);
+};
+
+const processLLmPrompt = async (
+	taskData: string,
+	config: TranscriptionConfig,
+	backend: LlmBackend,
+	sqsClient: SQSClient,
+	taskQueueUrl: string,
+	receiptHandle: string,
+) => {
+	const parsedPrompts = LlmPrompt.safeParse(JSON.parse(taskData));
+	if (!parsedPrompts.success) {
+		throw new Error(`Failed to parse prompt file, content: ${taskData}`);
+	}
+	return executeLlmPrompt(
+		parsedPrompts.data,
+		config,
+		backend,
+		sqsClient,
+		taskQueueUrl,
+		receiptHandle,
+	);
+};
+
+export const processLLMOrTranslationJob = async (
+	job: LLMJob | LLMTranslationJob,
 	downloadedFile: string,
 	sqsClient: SQSClient,
 	config: TranscriptionConfig,
@@ -34,25 +100,26 @@ export const processLLMJob = async (
 ) => {
 	logger.info(`Processing LLM job with id ${job.id}`);
 
-	const fileContent = fs.readFileSync(downloadedFile, 'utf-8');
-
-	const parsedPrompts = LlmPrompt.safeParse(JSON.parse(fileContent));
-	if (!parsedPrompts.success) {
-		throw new Error(`Failed to parse prompt file, content: ${fileContent}`);
-	}
-
-	// Set a generous visibility timeout for LLM processing
-	await changeMessageVisibility(
-		sqsClient,
-		taskQueueUrl,
-		receiptHandle,
-		300, // 5 minutes
-	);
+	const taskData = fs.readFileSync(downloadedFile, 'utf-8');
 
 	const llmResult =
-		job.backend === 'BEDROCK'
-			? await sendPromptToBedrock(parsedPrompts.data, config.bedrock.modelId)
-			: await executePrompt(config, parsedPrompts.data);
+		job.jobType === 'llm'
+			? await processLLmPrompt(
+					taskData,
+					config,
+					job.backend,
+					sqsClient,
+					taskQueueUrl,
+					receiptHandle,
+				)
+			: await processTranslationTask(
+					taskData,
+					config,
+					job.backend,
+					sqsClient,
+					taskQueueUrl,
+					receiptHandle,
+				);
 
 	const gzippedResult = await gzip(llmResult);
 

@@ -42,7 +42,7 @@ const SignedUrl = z.object({
 });
 export type SignedUrl = z.infer<typeof SignedUrl>;
 
-export const JobType = z.enum(['transcribe', 'llm']);
+export const JobType = z.enum(['transcribe', 'llm', 'llm-translation']);
 export type JobType = z.infer<typeof JobType>;
 
 export const Job = z.object({
@@ -73,9 +73,16 @@ export const LLMJob = Job.extend({
 });
 export type LLMJob = z.infer<typeof LLMJob>;
 
+export const LLMTranslationJob = LLMJob.extend({
+	jobType: z.literal('llm-translation'),
+});
+
+export type LLMTranslationJob = z.infer<typeof LLMTranslationJob>;
+
 export const WorkerJob = z.discriminatedUnion('jobType', [
 	LLMJob,
 	TranscriptionJob,
+	LLMTranslationJob,
 ]);
 
 export type WorkerJob = z.infer<typeof WorkerJob>;
@@ -87,6 +94,18 @@ export const LlmPrompt = z.object({
 });
 
 export type LlmPrompt = z.infer<typeof LlmPrompt>;
+
+export const TranslationField = z.object({
+	name: z.string(),
+	text: z.string(),
+});
+export type TranslationField = z.infer<typeof TranslationField>;
+
+export const TranslationTask = z.object({
+	systemPrompt: z.string(),
+	fields: z.array(TranslationField),
+});
+export type TranslationTask = z.infer<typeof TranslationTask>;
 
 export const OutputBase = z.object({
 	id: z.string(),

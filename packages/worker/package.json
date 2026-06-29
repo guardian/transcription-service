@@ -15,7 +15,9 @@
 	"dependencies": {
 		"@aws-sdk/client-auto-scaling": "^3.1000.0",
 		"@aws-sdk/client-bedrock-runtime": "^3.1000.0",
-		"@guardian/transcription-service-backend-common": "1.0.0"
+		"@guardian/transcription-service-backend-common": "1.0.0",
+		"@langchain/textsplitters": "1.0.1",
+		"js-tiktoken": "1.0.21"
 	},
 	"devDependencies": {
 		"@types/jest": "29.5.13",

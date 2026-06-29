@@ -22,7 +22,7 @@ import {
 	terminateInstance,
 	updateScaleInProtection,
 } from './asg';
-import { processLLMJob } from './llama-cpp';
+import { processLLMOrTranslationJob } from './llama-cpp';
 import {
 	MetricsService,
 	FailureMetric,
@@ -274,8 +274,8 @@ const pollTranscriptionQueue = async (
 			destinationDirectory,
 		);
 
-		if (jobType === 'llm') {
-			await processLLMJob(
+		if (jobType === 'llm' || jobType === 'llm-translation') {
+			await processLLMOrTranslationJob(
 				job,
 				downloadedFile,
 				sqsClient,
@@ -319,7 +319,7 @@ const pollTranscriptionQueue = async (
 			taskMessage.Attributes?.ApproximateReceiveCount || defaultReceiveCount,
 		);
 		if (receiveCount >= MAX_RECEIVE_COUNT) {
-			if (job.jobType === 'llm') {
+			if (job.jobType === 'llm' || job.jobType === 'llm-translation') {
 				const llmFailure: LLMOutputFailure = {
 					id: job.id,
 					status: 'LLM_FAILURE',
