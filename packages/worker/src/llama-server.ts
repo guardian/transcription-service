@@ -44,6 +44,37 @@ interface LlamaChatMessage {
 	content: string;
 }
 
+// We need to track the active llama-server process so we can stop it when we need to free up VRAM for whisperx.
+let activeLlamaServer: { serverProcess: ChildProcess; url: string } | null =
+	null;
+
+export const stopLlamaServer = (): void => {
+	if (activeLlamaServer) {
+		logger.info('Stopping llama-server to free VRAM');
+		killProcess('llama-server', activeLlamaServer.serverProcess);
+		activeLlamaServer = null;
+	}
+};
+
+export const ensureLlamaServerRunning = async (
+	config: TranscriptionConfig,
+): Promise<{ serverProcess: ChildProcess; url: string }> => {
+	if (activeLlamaServer && activeLlamaServer.serverProcess.exitCode === null) {
+		logger.info('llama-server already running, reusing existing instance');
+		return activeLlamaServer;
+	}
+
+	// If the process exited unexpectedly, clean up the stale reference
+	if (activeLlamaServer) {
+		logger.info('llama-server process exited unexpectedly, restarting');
+		activeLlamaServer = null;
+	}
+
+	const result = await startLlamaServer(config);
+	activeLlamaServer = result;
+	return result;
+};
+
 export const startLlamaServer = async (
 	config: TranscriptionConfig,
 ): Promise<{
@@ -63,7 +94,8 @@ export const startLlamaServer = async (
 		'32768', // 32k context — large docs exceed the default ~4k
 		'-ngl',
 		'99', // offload all layers to GPU (Qwen3-8B Q4 fits on a T4)
-		'-fa', // flash attention
+		'-fa',
+		'on', // flash attention
 	];
 
 	logger.info(`Starting llama-server with args: ${args.join(' ')}`);
@@ -176,8 +208,7 @@ export const executePrompt = async (
 	config: TranscriptionConfig,
 	prompts: LlmPrompt,
 ) => {
-	const serverConfig = await startLlamaServer(config);
-	const llmResult = await sendPromptToLlamaServer(serverConfig!.url, prompts);
-	killProcess('llama-server', serverConfig.serverProcess);
+	const serverConfig = await ensureLlamaServerRunning(config);
+	const llmResult = await sendPromptToLlamaServer(serverConfig.url, prompts);
 	return llmResult;
 };
