@@ -27,6 +27,7 @@ import {
 } from '@guardian/transcription-service-backend-common/src/metrics';
 import { SHAKIRA } from './shakira';
 import { transcribeAndTranslate } from './translate';
+import { stopLlamaServer } from './llama-server';
 import { Message, MessageAttributeValue, SQSClient } from '@aws-sdk/client-sqs';
 import fs from 'node:fs';
 import { uploadedCombinedResultsToS3 } from './util';
@@ -192,6 +193,9 @@ export const runWhisperX = async (
 	translate: boolean,
 	metrics: MetricsService,
 ) => {
+	// Kill llama-server if running to free VRAM for whisperx
+	stopLlamaServer();
+
 	const { wavPath, stage, diarize, huggingFaceToken } = whisperBaseParams;
 	const fileName = path.parse(wavPath).name;
 	const model = whisperBaseParams.model;
