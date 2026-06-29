@@ -9,6 +9,7 @@ import {
 	BedrockRuntimeClient,
 	ConverseCommand,
 } from '@aws-sdk/client-bedrock-runtime';
+import { NodeHttp2Handler } from '@smithy/node-http-handler';
 import { logger } from '@guardian/transcription-service-backend-common';
 import { LlmPrompt } from '@guardian/transcription-service-common';
 
@@ -16,7 +17,12 @@ export const sendPromptToBedrock = async (
 	prompts: LlmPrompt,
 	bedrockModelId: string,
 ): Promise<string> => {
-	const client = new BedrockRuntimeClient({ region: 'eu-west-1' });
+	const client = new BedrockRuntimeClient({
+		region: 'eu-west-1',
+		requestHandler: new NodeHttp2Handler({
+			requestTimeout: 10 * 60 * 1000, // 10 minutes
+		}),
+	});
 
 	const messages: {
 		role: 'user' | 'assistant';
@@ -34,13 +40,16 @@ export const sendPromptToBedrock = async (
 		modelId: bedrockModelId,
 		messages,
 		...(prompts.system ? { system: [{ text: prompts.system }] } : {}),
+		inferenceConfig: {
+			maxTokens: 65536,
+		},
 		additionalModelRequestFields: {
 			thinking: { type: 'disabled' },
 		},
 	});
 
 	logger.info(
-		`Sending prompt to Bedrock model ${bedrockModelId} (user prompt length: ${prompts.user.length} chars)`,
+		`Sending prompt to Bedrock model ${bedrockModelId} (user prompt length: ${prompts.user.length} chars).`,
 	);
 
 	const response = await client.send(command);
