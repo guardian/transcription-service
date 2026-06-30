@@ -176,6 +176,7 @@ export const sendPromptToLlamaServer = async (
 		body: JSON.stringify({
 			messages,
 		}),
+		signal: AbortSignal.timeout(10 * 60 * 1000), // 10 minutes – generation on a T4 can exceed the default 5min undici timeout
 	});
 
 	if (!response.ok) {
