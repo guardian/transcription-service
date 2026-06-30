@@ -21,7 +21,18 @@ interface LogEvent {
 	meta?: Record<string, string | number>;
 }
 
-const { combine, timestamp, json } = winston.format;
+const { combine, timestamp, json, simple, colorize } = winston.format;
+
+const isDev = process.env.STAGE === 'DEV';
+
+if (isDev) {
+	winston.addColors({
+		ERROR: 'red',
+		WARN: 'yellow',
+		INFO: 'green',
+		DEBUG: 'blue',
+	});
+}
 
 class ServerLogger {
 	underlyingLogger: winston.Logger;
@@ -39,7 +50,9 @@ class ServerLogger {
 				DEBUG: 3,
 			},
 			level: 'INFO',
-			format: combine(timestamp({ alias: '@timestamp' }), json()),
+			format: isDev
+				? combine(colorize(), timestamp({ format: 'HH:mm:ss' }), simple())
+				: combine(timestamp({ alias: '@timestamp' }), json()),
 			transports: [new winston.transports.Console()],
 		};
 
