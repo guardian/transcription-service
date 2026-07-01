@@ -12,14 +12,16 @@ import { logger } from '@guardian/transcription-service-backend-common';
 
 // To begin with we limit each request to roughly this many tokens of source text. The system prompt and
 // the small fragment note we add are extra, but the model's context window has headroom for them.
-const MAX_INPUT_TOKENS_PER_CHUNK = 5000;
+export const MAX_INPUT_TOKENS_PER_CHUNK = 5000;
 
 // For setting sqs visibility timeout - allow 10 minutes per chunk (based off basic testing of 2 jobs)
-const SECONDS_PER_CHUNK = 60 * 10;
+export const SECONDS_PER_CHUNK = 60 * 10;
+
+export const PARALLEL_JOBS = 2;
 
 // Both backends use Qwen models which share a tokenizer close to cl100k_base.
 const enc = getEncoding('cl100k_base');
-const estimateTokens = (text: string): number => enc.encode(text).length;
+export const estimateTokens = (text: string): number => enc.encode(text).length;
 
 // Splits text into chunks of at most MAX_INPUT_TOKENS_PER_CHUNK tokens, preferring to break on
 // paragraph, sentence, or word boundaries across all supported scripts.
@@ -52,17 +54,37 @@ const CHUNKING_NOTE =
 const addChunkingNote = (systemPrompt: string | undefined): string =>
 	[systemPrompt?.trim(), CHUNKING_NOTE].filter(Boolean).join('\n\n');
 
+// Masks token-expensive URLs/emails then splits a large user prompt into chunks of at most
+// MAX_INPUT_TOKENS_PER_CHUNK tokens. A single-chunk document is sent unchanged; multi-chunk
+// documents have each fragment flagged with the chunking note. The maskLookup is returned so
+// callers can restore the masked items after the model has processed the prompt.
+export const splitPromptIntoChunks = async (
+	prompt: LlmPrompt,
+): Promise<{ prompts: LlmPrompt[]; maskLookup: Record<string, string> }> => {
+	const { maskedText, maskLookup } = maskUrlsAndEmails(prompt.user);
+
+	const chunks = await textSplitter.splitText(maskedText);
+
+	const prompts: LlmPrompt[] =
+		chunks.length <= 1
+			? [{ system: prompt.system, user: maskedText }]
+			: chunks.map((user) => ({
+					system: addChunkingNote(prompt.system),
+					user,
+				}));
+
+	return { prompts, maskLookup };
+};
+
 const runAndCombinePrompts = async (
 	prompts: LlmPrompt[],
 	runPrompt: (prompt: LlmPrompt) => Promise<string>,
 ): Promise<string> => {
 	const outputs: string[] = [];
-	for (const [index, prompt] of prompts.entries()) {
-		logger.info(
-			`Running LLM prompt ${index + 1}/${prompts.length} with user prompt length ${prompt.user.length} chars.`,
-		);
-		const promptResult = await runPrompt(prompt);
-		outputs.push(promptResult);
+	for (let i = 0; i < prompts.length; i += PARALLEL_JOBS) {
+		const chunk = prompts.slice(i, i + PARALLEL_JOBS);
+		const results = await Promise.all(chunk.map(runPrompt));
+		outputs.push(...results);
 	}
 	return outputs.join('');
 };

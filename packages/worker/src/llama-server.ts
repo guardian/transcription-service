@@ -8,6 +8,7 @@ import {
 import { LlmPrompt } from '@guardian/transcription-service-common';
 import { z } from 'zod';
 import { Agent } from 'undici';
+import { PARALLEL_JOBS } from './llm';
 
 type ServerConfig = {
 	modelPath: string;
@@ -97,6 +98,8 @@ export const startLlamaServer = async (
 		'99', // offload all layers to GPU (Qwen3-8B Q4 fits on a T4)
 		'-fa',
 		'on', // flash attention reduces memory footprint - seems generally sensible to turn on where supported
+		'--parallel',
+		PARALLEL_JOBS.toString(),
 	];
 
 	logger.info(`Starting llama-server with args: ${args.join(' ')}`);
