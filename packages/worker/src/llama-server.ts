@@ -14,14 +14,15 @@ type ServerConfig = {
 	modelPath: string;
 	executable: string;
 	libPath?: string;
-	port: string;
 };
+
+const PORT = '9080';
+export const LLAMA_SERVER_URL = `http://localhost:${PORT}`;
 
 const getServerConfig = (config: TranscriptionConfig): ServerConfig => {
 	return {
 		modelPath: config.llamacpp.modelPath,
 		executable: 'llama-server',
-		port: '9080',
 		libPath:
 			config.llamacpp.installDirectory && config.app.stage !== 'DEV'
 				? `${config.llamacpp.installDirectory}/lib/`
@@ -47,51 +48,47 @@ interface LlamaChatMessage {
 }
 
 // We need to track the active llama-server process so we can stop it when we need to free up VRAM for whisperx.
-let activeLlamaServer: { serverProcess: ChildProcess; url: string } | null =
-	null;
+let activeLlamaServerProcess: ChildProcess | null = null;
 
 export const stopLlamaServer = (): void => {
-	if (activeLlamaServer) {
+	if (activeLlamaServerProcess) {
 		logger.info('Stopping llama-server to free VRAM');
-		killProcess('llama-server', activeLlamaServer.serverProcess);
-		activeLlamaServer = null;
+		killProcess('llama-server', activeLlamaServerProcess);
+		activeLlamaServerProcess = null;
 	}
 };
 
 export const ensureLlamaServerRunning = async (
 	config: TranscriptionConfig,
-): Promise<{ serverProcess: ChildProcess; url: string }> => {
-	if (activeLlamaServer && activeLlamaServer.serverProcess.exitCode === null) {
+): Promise<ChildProcess> => {
+	if (activeLlamaServerProcess && activeLlamaServerProcess.exitCode === null) {
 		logger.info('llama-server already running, reusing existing instance');
-		return activeLlamaServer;
+		return activeLlamaServerProcess;
 	}
 
 	// If the process exited unexpectedly, clean up the stale reference
-	if (activeLlamaServer) {
+	if (activeLlamaServerProcess) {
 		logger.info('llama-server process exited unexpectedly, restarting');
-		activeLlamaServer = null;
+		activeLlamaServerProcess = null;
 	}
 
 	const result = await startLlamaServer(config);
-	activeLlamaServer = result;
+	activeLlamaServerProcess = result;
 	return result;
 };
 
 export const startLlamaServer = async (
 	config: TranscriptionConfig,
-): Promise<{
-	serverProcess: ChildProcess;
-	url: string;
-}> => {
+): Promise<ChildProcess> => {
 	logger.info('Starting llama-server...');
 
-	const { modelPath, executable, libPath, port } = getServerConfig(config);
+	const { modelPath, executable, libPath } = getServerConfig(config);
 
 	const args = [
 		'-m',
 		modelPath,
 		'--port',
-		port,
+		PORT,
 		'-c',
 		'12288', // 12k context — large docs exceed the default ~4k
 		'-ngl',
@@ -111,14 +108,9 @@ export const startLlamaServer = async (
 		libPath ? { LD_LIBRARY_PATH: libPath } : {},
 	);
 
-	const url = `http://localhost:${port}`;
+	await waitForLlamaServer(LLAMA_SERVER_URL);
 
-	await waitForLlamaServer(url);
-
-	return {
-		serverProcess: childProcess,
-		url,
-	};
+	return childProcess;
 };
 
 export const waitForLlamaServer = async (
@@ -215,13 +207,4 @@ export const sendPromptToLlamaServer = async (
 	);
 
 	return content;
-};
-
-export const executePrompt = async (
-	config: TranscriptionConfig,
-	prompts: LlmPrompt,
-) => {
-	const serverConfig = await ensureLlamaServerRunning(config);
-	const llmResult = await sendPromptToLlamaServer(serverConfig.url, prompts);
-	return llmResult;
 };

@@ -1,4 +1,3 @@
-import { executePrompt } from './llama-server';
 import { sendPromptToBedrock } from '@guardian/transcription-service-backend-common/src/llm';
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { getEncoding } from 'js-tiktoken';
@@ -9,6 +8,11 @@ import {
 } from '@guardian/transcription-service-common/src/worker-interface-types';
 import { TranscriptionConfig } from '@guardian/transcription-service-backend-common/src/config';
 import { logger } from '@guardian/transcription-service-backend-common';
+import {
+	ensureLlamaServerRunning,
+	LLAMA_SERVER_URL,
+	sendPromptToLlamaServer,
+} from './llama-server';
 
 // To begin with we limit each request to roughly this many tokens of source text. The system prompt and
 // the small fragment note we add are extra, but the model's context window has headroom for them.
@@ -82,6 +86,9 @@ const runAndCombinePrompts = async (
 ): Promise<string> => {
 	const outputs: string[] = [];
 	for (let i = 0; i < prompts.length; i += PARALLEL_JOBS) {
+		logger.info(
+			`Running prompts ${i + 1} to ${Math.min(i + PARALLEL_JOBS, prompts.length)} of ${prompts.length}`,
+		);
 		const chunk = prompts.slice(i, i + PARALLEL_JOBS);
 		const results = await Promise.all(chunk.map(runPrompt));
 		outputs.push(...results);
@@ -103,11 +110,15 @@ export const executeLlmPrompt = async (
 	);
 	await setMessageVisibility(visibilityTimeout);
 
+	if (backend === 'LOCAL') {
+		await ensureLlamaServerRunning(config);
+	}
+
 	const sendPrompt = async (chunkPrompt: LlmPrompt) => {
 		if (backend === 'BEDROCK') {
 			return sendPromptToBedrock(chunkPrompt, config.bedrock.modelId);
 		} else {
-			return executePrompt(config, chunkPrompt);
+			return sendPromptToLlamaServer(LLAMA_SERVER_URL, chunkPrompt);
 		}
 	};
 
