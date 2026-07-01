@@ -7,6 +7,7 @@ import {
 } from '@guardian/transcription-service-backend-common';
 import { LlmPrompt } from '@guardian/transcription-service-common';
 import { z } from 'zod';
+import { Agent } from 'undici';
 
 type ServerConfig = {
 	modelPath: string;
@@ -95,7 +96,7 @@ export const startLlamaServer = async (
 		'-ngl',
 		'99', // offload all layers to GPU (Qwen3-8B Q4 fits on a T4)
 		'-fa',
-		'on', // flash attention
+		'on', // flash attention reduces memory footprint - seems generally sensible to turn on where supported
 	];
 
 	logger.info(`Starting llama-server with args: ${args.join(' ')}`);
@@ -158,6 +159,12 @@ const buildMessages = (prompts: LlmPrompt): LlamaChatMessage[] => {
 	return messages;
 };
 
+// llama-server doesn't return any headers until the prompt is fully processed so we need a long timeout here
+const llamaAgent = new Agent({
+	headersTimeout: 10 * 60 * 1000, // 10 minutes
+	bodyTimeout: 10 * 60 * 1000, // 10 minutes
+});
+
 export const sendPromptToLlamaServer = async (
 	url: string,
 	prompts: LlmPrompt,
@@ -177,6 +184,8 @@ export const sendPromptToLlamaServer = async (
 			messages,
 		}),
 		signal: AbortSignal.timeout(10 * 60 * 1000), // 10 minutes – generation on a T4 can exceed the default 5min undici timeout
+		// @ts-expect-error — dispatcher is supported by Node.js fetch but not in the standard RequestInit types
+		agent: llamaAgent,
 	});
 
 	if (!response.ok) {
