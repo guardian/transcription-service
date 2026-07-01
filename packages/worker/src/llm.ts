@@ -12,7 +12,7 @@ import { logger } from '@guardian/transcription-service-backend-common';
 
 // To begin with we limit each request to roughly this many tokens of source text. The system prompt and
 // the small fragment note we add are extra, but the model's context window has headroom for them.
-const MAX_INPUT_TOKENS_PER_CHUNK = 15000;
+const MAX_INPUT_TOKENS_PER_CHUNK = 5000;
 
 // For setting sqs visibility timeout - allow 10 minutes per chunk (based off basic testing of 2 jobs)
 const SECONDS_PER_CHUNK = 60 * 10;
