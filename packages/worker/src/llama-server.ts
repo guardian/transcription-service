@@ -160,7 +160,7 @@ const buildMessages = (prompts: LlmPrompt): LlamaChatMessage[] => {
 };
 
 // llama-server doesn't return any headers until the prompt is fully processed so we need a long timeout here
-const llamaAgent = new Agent({
+const llamaDispatcher = new Agent({
 	headersTimeout: 10 * 60 * 1000, // 10 minutes
 	bodyTimeout: 10 * 60 * 1000, // 10 minutes
 });
@@ -185,7 +185,7 @@ export const sendPromptToLlamaServer = async (
 		}),
 		signal: AbortSignal.timeout(10 * 60 * 1000), // 10 minutes – generation on a T4 can exceed the default 5min undici timeout
 		// @ts-expect-error — dispatcher is supported by Node.js fetch but not in the standard RequestInit types
-		agent: llamaAgent,
+		dispatcher: llamaDispatcher,
 	});
 
 	if (!response.ok) {
