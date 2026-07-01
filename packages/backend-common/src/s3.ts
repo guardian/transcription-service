@@ -170,7 +170,7 @@ export const getObjectWithPresignedUrl = async (
 	const response = await fetch(presignedUrl);
 	if (!response.ok) {
 		throw new Error(
-			`Failed to download ${key}: ${response.status} ${response.statusText} ${presignedUrl}`,
+			`Failed to download ${key}: ${response.status} ${response.statusText}`,
 		);
 	}
 	if (!response.body) {

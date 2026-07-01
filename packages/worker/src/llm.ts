@@ -1,7 +1,4 @@
-import {
-	sendPromptToLlamaServer,
-	ensureLlamaServerRunning,
-} from './llama-server';
+import { executePrompt } from './llama-server';
 import { sendPromptToBedrock } from '@guardian/transcription-service-backend-common/src/llm';
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { getEncoding } from 'js-tiktoken';
@@ -61,7 +58,10 @@ const runAndCombinePrompts = async (
 	runPrompt: (prompt: LlmPrompt) => Promise<string>,
 ): Promise<string> => {
 	const outputs: string[] = [];
-	for (const prompt of prompts) {
+	for (const [index, prompt] of prompts.entries()) {
+		logger.info(
+			`Running LLM prompt ${index + 1}/${prompts.length} with user prompt length ${prompt.user.length} chars.`,
+		);
 		outputs.push(await runPrompt(prompt));
 	}
 	return outputs.join('');
@@ -108,8 +108,7 @@ export const executeLlmPrompt = async (
 		if (backend === 'BEDROCK') {
 			return sendPromptToBedrock(chunkPrompt, config.bedrock.modelId);
 		} else {
-			const serverConfig = await ensureLlamaServerRunning(config);
-			return sendPromptToLlamaServer(serverConfig.url, chunkPrompt);
+			return executePrompt(config, chunkPrompt);
 		}
 	};
 
