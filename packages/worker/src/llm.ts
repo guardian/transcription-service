@@ -95,27 +95,13 @@ export const executeLlmPrompt = async (
 	backend: LlmBackend,
 	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
 ): Promise<string> => {
-	// Replace URLs and emails with placeholders so they aren't translated and don't waste tokens.
-	const { maskedText, maskLookup } = maskUrlsAndEmails(prompt.user);
+	const { prompts, maskLookup } = await splitPromptIntoChunks(prompt);
 
-	// The model context window is limited, so break a large user prompt into chunks of at most
-	// MAX_INPUT_TOKENS_PER_CHUNK tokens
-	const chunks = await textSplitter.splitText(maskedText);
-
-	const visibilityTimeout = chunks.length * SECONDS_PER_CHUNK;
+	const visibilityTimeout = prompts.length * SECONDS_PER_CHUNK;
 	logger.info(
-		`Executing LLM prompt on ${backend} backend: ${estimateTokens(prompt.user)} estimated input tokens split into ${chunks.length} chunk(s), setting visibility timeout to ${visibilityTimeout}s`,
+		`Executing LLM prompt on ${backend} backend: ${estimateTokens(prompt.user)} estimated input tokens split into ${prompts.length} chunk(s), setting visibility timeout to ${visibilityTimeout}s`,
 	);
 	await setMessageVisibility(visibilityTimeout);
-
-	// A single chunk is the whole document - send it unchanged. Otherwise mark each chunk as a fragment.
-	const prompts: LlmPrompt[] =
-		chunks.length <= 1
-			? [{ system: prompt.system, user: maskedText }]
-			: chunks.map((user) => ({
-					system: addChunkingNote(prompt.system),
-					user,
-				}));
 
 	const sendPrompt = async (chunkPrompt: LlmPrompt) => {
 		if (backend === 'BEDROCK') {
