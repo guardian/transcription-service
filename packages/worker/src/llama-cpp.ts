@@ -14,8 +14,7 @@ import {
 	TranslationTask,
 	TranslationField,
 } from '@guardian/transcription-service-common';
-import { SQSClient } from '@aws-sdk/client-sqs';
-import { MessageAttributeValue } from '@aws-sdk/client-sqs';
+import { MessageAttributeValue, SQSClient } from '@aws-sdk/client-sqs';
 
 import { gzip } from 'node-gzip';
 import { executeLlmPrompt } from './llm';
@@ -29,9 +28,7 @@ const processTranslationTask = async (
 	taskData: string,
 	config: TranscriptionConfig,
 	backend: LlmBackend,
-	sqsClient: SQSClient,
-	taskQueueUrl: string,
-	receiptHandle: string,
+	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
 ): Promise<string> => {
 	const parsedTask = TranslationTask.safeParse(JSON.parse(taskData));
 	if (!parsedTask.success) {
@@ -55,9 +52,7 @@ const processTranslationTask = async (
 			prompt.prompt,
 			config,
 			backend,
-			sqsClient,
-			taskQueueUrl,
-			receiptHandle,
+			setMessageVisibility,
 		);
 		promptOutputs.push({
 			name: prompt.fieldName,
@@ -71,9 +66,7 @@ const processLLmPrompt = async (
 	taskData: string,
 	config: TranscriptionConfig,
 	backend: LlmBackend,
-	sqsClient: SQSClient,
-	taskQueueUrl: string,
-	receiptHandle: string,
+	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
 ) => {
 	const parsedPrompts = LlmPrompt.safeParse(JSON.parse(taskData));
 	if (!parsedPrompts.success) {
@@ -83,19 +76,16 @@ const processLLmPrompt = async (
 		parsedPrompts.data,
 		config,
 		backend,
-		sqsClient,
-		taskQueueUrl,
-		receiptHandle,
+		setMessageVisibility,
 	);
 };
 
 export const processLLMOrTranslationJob = async (
 	job: LLMJob | LLMTranslationJob,
 	downloadedFile: string,
-	sqsClient: SQSClient,
 	config: TranscriptionConfig,
-	taskQueueUrl: string,
-	receiptHandle: string,
+	sqsClient: SQSClient,
+	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
 	messageAttributes?: Record<string, MessageAttributeValue>,
 ) => {
 	logger.info(`Processing LLM job with id ${job.id}`);
@@ -108,17 +98,13 @@ export const processLLMOrTranslationJob = async (
 					taskData,
 					config,
 					job.backend,
-					sqsClient,
-					taskQueueUrl,
-					receiptHandle,
+					setMessageVisibility,
 				)
 			: await processTranslationTask(
 					taskData,
 					config,
 					job.backend,
-					sqsClient,
-					taskQueueUrl,
-					receiptHandle,
+					setMessageVisibility,
 				);
 
 	const gzippedResult = await gzip(llmResult);

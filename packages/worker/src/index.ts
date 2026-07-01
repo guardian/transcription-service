@@ -250,6 +250,15 @@ const pollTranscriptionQueue = async (
 		return;
 	}
 
+	const setMessageVisibility = async (visibilityTimeoutSeconds: number) => {
+		await changeMessageVisibility(
+			sqsClient,
+			taskQueueUrl,
+			receiptHandle,
+			visibilityTimeoutSeconds,
+		);
+	};
+
 	try {
 		// from this point all worker logs will have id & userEmail in their fields
 		// (plus the attempt number and how long it was in seconds between when the item entered the queue to when it was picked up)
@@ -278,10 +287,9 @@ const pollTranscriptionQueue = async (
 			await processLLMOrTranslationJob(
 				job,
 				downloadedFile,
-				sqsClient,
 				config,
-				taskQueueUrl,
-				receiptHandle,
+				sqsClient,
+				setMessageVisibility,
 				preservedAttributes,
 			);
 		} else {
@@ -298,6 +306,7 @@ const pollTranscriptionQueue = async (
 				taskMessage,
 				maybeEnqueuedAtEpochMillis,
 				INTERRUPTION_TIME,
+				setMessageVisibility,
 				preservedAttributes,
 			);
 		}
@@ -308,7 +317,7 @@ const pollTranscriptionQueue = async (
 		const msg = 'Worker failed to complete';
 		logger.error(msg, error);
 		// Terminate the message visibility timeout
-		await changeMessageVisibility(sqsClient, taskQueueUrl, receiptHandle, 0);
+		await setMessageVisibility(0);
 
 		// the type of ApproximateReceiveCount is string | undefined so need to
 		// handle the case where its missing. use default value
