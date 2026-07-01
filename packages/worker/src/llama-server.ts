@@ -92,7 +92,7 @@ export const startLlamaServer = async (
 		'--port',
 		port,
 		'-c',
-		'32768', // 32k context — large docs exceed the default ~4k
+		'8192', // 8k context — large docs exceed the default ~4k
 		'-ngl',
 		'99', // offload all layers to GPU (Qwen3-8B Q4 fits on a T4)
 		'-fa',
