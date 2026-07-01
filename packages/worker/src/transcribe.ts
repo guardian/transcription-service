@@ -1,6 +1,5 @@
 import path from 'path';
 import {
-	changeMessageVisibility,
 	deleteMessage,
 	moveMessageToDeadLetterQueue,
 	publishTranscriptionOutput,
@@ -314,6 +313,7 @@ export const processTranscriptionJob = async (
 	taskMessage: Message,
 	maybeEnqueuedAtEpochMillis: number | undefined,
 	interruptionTime: Date | undefined,
+	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
 	preservedAttributes?: Record<string, MessageAttributeValue>,
 ) => {
 	logger.info(
@@ -386,12 +386,7 @@ export const processTranscriptionJob = async (
 		const visibilityTimeoutSeconds =
 			Math.floor(ffmpegResult.duration * 1.2 + 300) *
 			extraTranslationTimeMultiplier;
-		await changeMessageVisibility(
-			sqsClient,
-			taskQueueUrl,
-			receiptHandle,
-			visibilityTimeoutSeconds,
-		);
+		await setMessageVisibility(visibilityTimeoutSeconds);
 	}
 
 	const whisperBaseParams: WhisperBaseParams = {

@@ -8,15 +8,14 @@ import {
 	LlmPrompt,
 } from '@guardian/transcription-service-common/src/worker-interface-types';
 import { TranscriptionConfig } from '@guardian/transcription-service-backend-common/src/config';
-import {
-	changeMessageVisibility,
-	logger,
-} from '@guardian/transcription-service-backend-common';
-import { SQSClient } from '@aws-sdk/client-sqs';
+import { logger } from '@guardian/transcription-service-backend-common';
 
 // To begin with we limit each request to roughly this many tokens of source text. The system prompt and
 // the small fragment note we add are extra, but the model's context window has headroom for them.
 const MAX_INPUT_TOKENS_PER_CHUNK = 15000;
+
+// For setting sqs visibility timeout - allow 10 minutes per chunk (based off basic testing of 2 jobs)
+const SECONDS_PER_CHUNK = 60 * 10;
 
 // Both backends use Qwen models which share a tokenizer close to cl100k_base.
 const enc = getEncoding('cl100k_base');
@@ -62,20 +61,17 @@ const runAndCombinePrompts = async (
 		logger.info(
 			`Running LLM prompt ${index + 1}/${prompts.length} with user prompt length ${prompt.user.length} chars.`,
 		);
-		outputs.push(await runPrompt(prompt));
+		const promptResult = await runPrompt(prompt);
+		outputs.push(promptResult);
 	}
 	return outputs.join('');
 };
-
-const SECONDS_PER_CHUNK = 180; // 3 minutes per chunk
 
 export const executeLlmPrompt = async (
 	prompt: LlmPrompt,
 	config: TranscriptionConfig,
 	backend: LlmBackend,
-	sqsClient: SQSClient,
-	taskQueueUrl: string,
-	receiptHandle: string,
+	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
 ): Promise<string> => {
 	// Replace URLs and emails with placeholders so they aren't translated and don't waste tokens.
 	const { maskedText, maskLookup } = maskUrlsAndEmails(prompt.user);
@@ -88,12 +84,7 @@ export const executeLlmPrompt = async (
 	logger.info(
 		`Executing LLM prompt on ${backend} backend: ${estimateTokens(prompt.user)} estimated input tokens split into ${chunks.length} chunk(s), setting visibility timeout to ${visibilityTimeout}s`,
 	);
-	await changeMessageVisibility(
-		sqsClient,
-		taskQueueUrl,
-		receiptHandle,
-		visibilityTimeout,
-	);
+	await setMessageVisibility(visibilityTimeout);
 
 	// A single chunk is the whole document - send it unchanged. Otherwise mark each chunk as a fragment.
 	const prompts: LlmPrompt[] =
