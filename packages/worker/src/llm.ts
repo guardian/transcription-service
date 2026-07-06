@@ -9,19 +9,20 @@ import {
 import { TranscriptionConfig } from '@guardian/transcription-service-backend-common/src/config';
 import { logger } from '@guardian/transcription-service-backend-common';
 import {
-	ensureLlamaServerRunning,
-	LLAMA_SERVER_URL,
-	sendPromptToLlamaServer,
-} from './llama-server';
+	MetricsService,
+	llmTokensPerSecondMetric,
+	secondsForLlmJobMetric,
+} from '@guardian/transcription-service-backend-common/src/metrics';
+import { LLAMA_SERVER_URL, sendPromptToLlamaServer } from './llama-server';
 
 // To begin with we limit each request to roughly this many tokens of source text. The system prompt and
 // the small fragment note we add are extra, but the model's context window has headroom for them.
-export const MAX_INPUT_TOKENS_PER_CHUNK = 5000;
+export const MAX_INPUT_TOKENS_PER_CHUNK = 3000;
 
 // For setting sqs visibility timeout - allow 10 minutes per chunk (based off basic testing of 2 jobs)
 export const SECONDS_PER_CHUNK = 60 * 10;
 
-export const PARALLEL_JOBS = 2;
+export const PARALLEL_JOBS = 4;
 
 // Both backends use Qwen models which share a tokenizer close to cl100k_base.
 const enc = getEncoding('cl100k_base');
@@ -101,6 +102,7 @@ export const executeLlmPrompt = async (
 	config: TranscriptionConfig,
 	backend: LlmBackend,
 	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
+	metrics: MetricsService,
 ): Promise<string> => {
 	const { prompts, maskLookup } = await splitPromptIntoChunks(prompt);
 
@@ -110,10 +112,6 @@ export const executeLlmPrompt = async (
 	);
 	await setMessageVisibility(visibilityTimeout);
 
-	if (backend === 'LOCAL') {
-		await ensureLlamaServerRunning(config);
-	}
-
 	const sendPrompt = async (chunkPrompt: LlmPrompt) => {
 		if (backend === 'BEDROCK') {
 			return sendPromptToBedrock(chunkPrompt, config.bedrock.modelId);
@@ -122,8 +120,36 @@ export const executeLlmPrompt = async (
 		}
 	};
 
+	const startTime = Date.now();
 	const combined = await runAndCombinePrompts(prompts, (chunkPrompt) =>
 		sendPrompt(chunkPrompt),
 	);
-	return restoreMaskedItems(combined, maskLookup);
+	const result = restoreMaskedItems(combined, maskLookup);
+
+	const durationSeconds = (Date.now() - startTime) / 1000;
+	const outputTokens = estimateTokens(result);
+	const tokensPerSecond =
+		durationSeconds > 0 ? outputTokens / durationSeconds : 0;
+
+	logger.info(
+		`LLM prompt completed in ${durationSeconds.toFixed(1)}s (${outputTokens} output tokens, ${tokensPerSecond.toFixed(1)} tokens/s, backend: ${backend})`,
+		{
+			llmPromptTimeSeconds: durationSeconds,
+			llmOutputTokens: outputTokens,
+			llmTokensPerSecond: tokensPerSecond,
+			llmBackend: backend,
+		},
+	);
+
+	const backendDimension = { Name: 'Backend', Value: backend };
+	await Promise.all([
+		metrics.putMetric(secondsForLlmJobMetric(durationSeconds), [
+			backendDimension,
+		]),
+		metrics.putMetric(llmTokensPerSecondMetric(tokensPerSecond), [
+			backendDimension,
+		]),
+	]);
+
+	return result;
 };
