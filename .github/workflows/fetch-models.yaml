@@ -73,12 +73,12 @@ jobs:
         run: |
           pip install -r whisperx-model-fetch/requirements.txt
 
-      - name: Download Qwen3-8B GGUF model from Hugging Face
+      - name: Download Qwen3-4B GGUF model from Hugging Face
         run: |
           mkdir -p models
-          curl -L --fail -o models/Qwen3-8B-Q4_K_M.gguf \
+          curl -L --fail -o models/Qwen3-4B-Q4_K_M.gguf \
             -H "Authorization: Bearer ${{ secrets.HUGGINGFACE_TOKEN }}" \
-            "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
+            "https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q4_K_M.gguf"
 
       - name: Download all models needed to run whisperx model from Hugging Face
         env:
