@@ -290,6 +290,7 @@ const pollTranscriptionQueue = async (
 				config,
 				sqsClient,
 				setMessageVisibility,
+				metrics,
 				preservedAttributes,
 			);
 		} else {
