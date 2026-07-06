@@ -85,15 +85,25 @@ const runAndCombinePrompts = async (
 	prompts: LlmPrompt[],
 	runPrompt: (prompt: LlmPrompt) => Promise<string>,
 ): Promise<string> => {
-	const outputs: string[] = [];
-	for (let i = 0; i < prompts.length; i += PARALLEL_JOBS) {
-		logger.info(
-			`Running prompts ${i + 1} to ${Math.min(i + PARALLEL_JOBS, prompts.length)} of ${prompts.length}`,
-		);
-		const chunk = prompts.slice(i, i + PARALLEL_JOBS);
-		const results = await Promise.all(chunk.map(runPrompt));
-		outputs.push(...results);
-	}
+	const outputs: string[] = new Array<string>(prompts.length);
+	let nextIndex = 0;
+
+	// Each worker pulls the next unprocessed prompt until none remain, keeping up to
+	// PARALLEL_JOBS prompts in flight at all times. Note this only works because
+	// javascript is single threaded, so we won't get multiple workers updating nextIndex at the same time.
+	const worker = async () => {
+		// store current index and update in one go
+		let index = nextIndex++;
+		while (index < prompts.length) {
+			logger.info(`Running prompt ${index + 1} of ${prompts.length}`);
+			outputs[index] = await runPrompt(prompts[index]!);
+			index = nextIndex++;
+		}
+	};
+
+	const workerCount = Math.min(PARALLEL_JOBS, prompts.length);
+	await Promise.all(Array.from({ length: workerCount }, worker));
+
 	return outputs.join('');
 };
 
