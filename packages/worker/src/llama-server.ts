@@ -8,18 +8,19 @@ import {
 import { LlmPrompt } from '@guardian/transcription-service-common';
 import { z } from 'zod';
 import { Agent } from 'undici';
-import { PARALLEL_JOBS } from './llm';
+
+export const LOCAL_LLAMA_PARALLEL_JOBS = 2;
 
 type ServerConfig = {
 	modelPath: string;
 	executable: string;
 	libPath?: string;
+	port: string;
+	serverUrl: string;
 };
 
-const PORT = '9080';
-export const LLAMA_SERVER_URL = `http://localhost:${PORT}`;
-
-const getServerConfig = (config: TranscriptionConfig): ServerConfig => {
+export const getServerConfig = (config: TranscriptionConfig): ServerConfig => {
+	const port = '19080';
 	return {
 		modelPath: config.llamacpp.modelPath,
 		executable: 'llama-server',
@@ -27,6 +28,8 @@ const getServerConfig = (config: TranscriptionConfig): ServerConfig => {
 			config.llamacpp.installDirectory && config.app.stage !== 'DEV'
 				? `${config.llamacpp.installDirectory}/lib/`
 				: undefined,
+		port: port,
+		serverUrl: `http://localhost:${port}`,
 	};
 };
 
@@ -82,21 +85,21 @@ export const startLlamaServer = async (
 ): Promise<ChildProcess> => {
 	logger.info('Starting llama-server...');
 
-	const { modelPath, executable, libPath } = getServerConfig(config);
+	const { modelPath, executable, libPath, port } = getServerConfig(config);
 
 	const args = [
 		'-m',
 		modelPath,
 		'--port',
-		PORT,
+		`${port}`,
 		'-c',
-		'32768', // 32k context — large docs exceed the default ~4k
+		'24576', // 24k context — large docs exceed the default ~4k
 		'-ngl',
 		'99', // offload all layers to GPU (Qwen3-8B Q4 fits on a T4)
 		'-fa',
 		'on', // flash attention reduces memory footprint - seems generally sensible to turn on where supported
 		'--parallel',
-		PARALLEL_JOBS.toString(),
+		LOCAL_LLAMA_PARALLEL_JOBS.toString(),
 	];
 
 	logger.info(`Starting llama-server with args: ${args.join(' ')}`);
@@ -108,7 +111,7 @@ export const startLlamaServer = async (
 		libPath ? { LD_LIBRARY_PATH: libPath } : {},
 	);
 
-	await waitForLlamaServer(LLAMA_SERVER_URL);
+	await waitForLlamaServer(getServerConfig(config).serverUrl);
 
 	return childProcess;
 };

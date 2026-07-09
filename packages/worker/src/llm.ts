@@ -13,7 +13,11 @@ import {
 	llmTokensPerSecondMetric,
 	secondsForLlmJobMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
-import { LLAMA_SERVER_URL, sendPromptToLlamaServer } from './llama-server';
+import {
+	getServerConfig,
+	LOCAL_LLAMA_PARALLEL_JOBS,
+	sendPromptToLlamaServer,
+} from './llama-server';
 
 // To begin with we limit each request to roughly this many tokens of source text. The system prompt and
 // the small fragment note we add are extra, but the model's context window has headroom for them.
@@ -22,7 +26,7 @@ export const MAX_INPUT_TOKENS_PER_CHUNK = 3000;
 // For setting sqs visibility timeout - allow 10 minutes per chunk (based off basic testing of 2 jobs)
 export const SECONDS_PER_CHUNK = 60 * 10;
 
-export const PARALLEL_JOBS = 4;
+const BEDROCK_PARALLEL_JOBS = 10;
 
 // Both backends use Qwen models which share a tokenizer close to cl100k_base.
 const enc = getEncoding('cl100k_base');
@@ -84,6 +88,7 @@ export const splitPromptIntoChunks = async (
 const runAndCombinePrompts = async (
 	prompts: LlmPrompt[],
 	runPrompt: (prompt: LlmPrompt) => Promise<string>,
+	parallelJobs: number,
 ): Promise<string> => {
 	const outputs: string[] = new Array<string>(prompts.length);
 	let nextIndex = 0;
@@ -97,11 +102,12 @@ const runAndCombinePrompts = async (
 		while (index < prompts.length) {
 			logger.info(`Running prompt ${index + 1} of ${prompts.length}`);
 			outputs[index] = await runPrompt(prompts[index]!);
+			logger.info(`Completed prompt ${index + 1} of ${prompts.length}`);
 			index = nextIndex++;
 		}
 	};
 
-	const workerCount = Math.min(PARALLEL_JOBS, prompts.length);
+	const workerCount = Math.min(parallelJobs, prompts.length);
 	await Promise.all(Array.from({ length: workerCount }, worker));
 
 	return outputs.join('');
@@ -126,13 +132,21 @@ export const executeLlmPrompt = async (
 		if (backend === 'BEDROCK') {
 			return sendPromptToBedrock(chunkPrompt, config.bedrock.modelId);
 		} else {
-			return sendPromptToLlamaServer(LLAMA_SERVER_URL, chunkPrompt);
+			return sendPromptToLlamaServer(
+				getServerConfig(config).serverUrl,
+				chunkPrompt,
+			);
 		}
 	};
 
+	const parallelJobs =
+		backend === 'BEDROCK' ? BEDROCK_PARALLEL_JOBS : LOCAL_LLAMA_PARALLEL_JOBS;
+
 	const startTime = Date.now();
-	const combined = await runAndCombinePrompts(prompts, (chunkPrompt) =>
-		sendPrompt(chunkPrompt),
+	const combined = await runAndCombinePrompts(
+		prompts,
+		(chunkPrompt) => sendPrompt(chunkPrompt),
+		parallelJobs,
 	);
 	const result = restoreMaskedItems(combined, maskLookup);
 
