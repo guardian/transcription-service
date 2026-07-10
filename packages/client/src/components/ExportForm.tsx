@@ -335,7 +335,9 @@ const ExportForm = () => {
 				parsedTranscriptResp.data.transcript,
 			);
 			if (transcriptText) {
-				const filename = `${parsedTranscriptResp.data.item.originalFilename}.${format === 'text' ? 'txt' : 'srt'}`;
+				const extension =
+					format === 'text' || format === 'translation-text' ? 'txt' : 'srt';
+				const filename = `${parsedTranscriptResp.data.item.originalFilename}.${extension}`;
 				triggerFileDownload(transcriptText, filename);
 				setDownloadStatus(undefined);
 			} else {
@@ -345,6 +347,24 @@ const ExportForm = () => {
 			setDownloadStatus('Failed to download transcript');
 		}
 	};
+
+	const downloadButton = (
+		format: DocExportType,
+		label: string,
+		extraClassName: string = '',
+	) => (
+		<button
+			className={`font-medium text-cyan-600 hover:underline dark:text-cyan-500 ${extraClassName}`}
+			onClick={() =>
+				handleTranscriptDownload(
+					`/api/export/transcript?id=${transcriptId}&format=${format}`,
+					format,
+				)
+			}
+		>
+			{label}
+		</button>
+	);
 
 	const atLeastOneExport = () => exportTypesRequested.length > 0;
 
@@ -429,29 +449,14 @@ const ExportForm = () => {
 			<div className="flex flex-col mt-5">
 				<p className="font-light">
 					Alternatively, you can directly download the files to your computer:{' '}
-					<button
-						className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
-						onClick={() =>
-							handleTranscriptDownload(
-								`/api/export/transcript?id=${transcriptId}&format=text`,
-								'text',
-							)
-						}
-					>
-						Transcript text
-					</button>
-					,{' '}
-					<button
-						className="font-medium text-cyan-600 hover:underline dark:text-cyan-500"
-						onClick={() =>
-							handleTranscriptDownload(
-								`/api/export/transcript?id=${transcriptId}&format=srt`,
-								'srt',
-							)
-						}
-					>
-						Transcript SRT
-					</button>
+					{downloadButton('text', 'Transcript text', 'ml-1')},{' '}
+					{downloadButton('srt', 'Transcript SRT')}
+					{includesTranslation && (
+						<>
+							, {downloadButton('translation-text', 'Translation text')},{' '}
+							{downloadButton('translation-srt', 'Translation SRT')}
+						</>
+					)}
 					{sourceMediaDownloadUrl && (
 						<>
 							,
