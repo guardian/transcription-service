@@ -20,7 +20,7 @@ type ServerConfig = {
 };
 
 export const getServerConfig = (config: TranscriptionConfig): ServerConfig => {
-	const port = '19080';
+	const port = process.env.LLAMA_SERVER_PORT || '9080';
 	return {
 		modelPath: config.llamacpp.modelPath,
 		executable: 'llama-server',
@@ -80,18 +80,12 @@ export const ensureLlamaServerRunning = async (
 	return result;
 };
 
-export const startLlamaServer = async (
-	config: TranscriptionConfig,
-): Promise<ChildProcess> => {
-	logger.info('Starting llama-server...');
-
-	const { modelPath, executable, libPath, port } = getServerConfig(config);
-
-	const args = [
+export const getLlamaServerArgs = (config: ServerConfig): string[] => {
+	return [
 		'-m',
-		modelPath,
+		config.modelPath,
 		'--port',
-		`${port}`,
+		`${config.port}`,
 		'-c',
 		'24576', // 24k context — large docs exceed the default ~4k
 		'-ngl',
@@ -101,17 +95,27 @@ export const startLlamaServer = async (
 		'--parallel',
 		LOCAL_LLAMA_PARALLEL_JOBS.toString(),
 	];
+};
+
+export const startLlamaServer = async (
+	config: TranscriptionConfig,
+): Promise<ChildProcess> => {
+	logger.info('Starting llama-server...');
+
+	const serverConfig = getServerConfig(config);
+
+	const args = getLlamaServerArgs(serverConfig);
 
 	logger.info(`Starting llama-server with args: ${args.join(' ')}`);
 
 	const childProcess = spawnBackgroundProcess(
 		'llama-server',
-		executable,
+		serverConfig.executable,
 		args,
-		libPath ? { LD_LIBRARY_PATH: libPath } : {},
+		serverConfig.libPath ? { LD_LIBRARY_PATH: serverConfig.libPath } : {},
 	);
 
-	await waitForLlamaServer(getServerConfig(config).serverUrl);
+	await waitForLlamaServer(serverConfig.serverUrl);
 
 	return childProcess;
 };
