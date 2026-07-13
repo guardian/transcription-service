@@ -33,6 +33,7 @@ import {
 } from 'aws-cdk-lib';
 import { EndpointType } from 'aws-cdk-lib/aws-apigateway';
 import {
+	Schedule as AsgSchedule,
 	AutoScalingGroup,
 	BlockDeviceVolume,
 	GroupMetrics,
@@ -546,6 +547,17 @@ export class TranscriptionService extends GuStack {
 				},
 			},
 		);
+
+		// We frequently set the min workers on CODE to 1 so we can test stuff, then forget to scale it down
+		// Here we enforce an 8pm scale down, which might occasionally be annoying but is probably on balance
+		// less annoying than running up a $50 aws bill over the weekend because we forgot to scale down the workers
+		if (this.stage === 'CODE') {
+			transcriptionGpuWorkerASG.scaleOnSchedule('ScaleDownAtNight', {
+				schedule: AsgSchedule.cron({ hour: '20', minute: '0' }),
+				minCapacity: 0,
+				desiredCapacity: 0,
+			});
+		}
 
 		Tags.of(transcriptionGpuWorkerASG).add(
 			'LogKinesisStreamName',
