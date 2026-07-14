@@ -363,9 +363,8 @@ export class TranscriptionService extends GuStack {
 			`chown -R ubuntu:ubuntu /opt/dlami/nvme/models`,
 			// symlink nvme location to .cache so that we don't have to tell whisperx about the special /models folder
 			`mkdir -p /home/ubuntu/.cache`,
-			// create symlinks for torch/huggingface dirs if they exist in the downloaded folder
-			`[ -d /opt/dlami/nvme/models/torch ] && ln -s /opt/dlami/nvme/models/torch /home/ubuntu/.cache/torch || true`,
-			`[ -d /opt/dlami/nvme/models/huggingface ] && ln -s /opt/dlami/nvme/models/huggingface /home/ubuntu/.cache/huggingface || true`,
+			`ln -s /opt/dlami/nvme/models/torch /home/ubuntu/.cache/torch`,
+			`ln -s /opt/dlami/nvme/models/huggingface /home/ubuntu/.cache/huggingface`,
 			`chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface`,
 			// Set up transcription service worker
 			`aws s3 cp ${baseS3DistPath}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
