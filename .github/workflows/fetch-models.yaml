@@ -90,7 +90,6 @@ jobs:
           python whisperx-model-fetch/download_whisperx_models.py \
             --whisper-models \
             --diarization-models \
-            --torch-align-models \
             --huggingface-token "$HUGGINGFACE_TOKEN"
 
       - name: Zip and upload models to s3
