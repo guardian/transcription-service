@@ -37,7 +37,7 @@ interface FfmpegResult {
 	failed: boolean;
 }
 
-export type WhisperModel = 'medium' | 'tiny';
+export type WhisperModel = 'large' | 'tiny';
 
 export type WhisperBaseParams = {
 	containerId?: string;
@@ -194,8 +194,7 @@ export const runWhisperX = async (
 ) => {
 	const { wavPath, stage, diarize, huggingFaceToken } = whisperBaseParams;
 	const fileName = path.parse(wavPath).name;
-	const model =
-		languageCode === 'auto' || languageCode === 'en' ? 'large' : 'large';
+	const model = whisperBaseParams.model;
 	const languageCodeParam =
 		languageCode === 'auto' ? [] : ['--language', languageCode];
 	const translateParam = translate ? ['--task', 'translate'] : [];
@@ -384,7 +383,8 @@ export const processTranscriptionJob = async (
 	const whisperBaseParams: WhisperBaseParams = {
 		wavPath: wavPath,
 		file: fileToTranscribe,
-		model: config.app.stage === 'DEV' ? 'tiny' : 'medium',
+		// NOTE: if you change the models here, make sure you update download_whisperx_models accordingly
+		model: config.app.stage === 'DEV' ? 'tiny' : 'large',
 		engine: job.engine,
 		diarize: job.diarize,
 		stage: config.app.stage,
