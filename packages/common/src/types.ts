@@ -326,7 +326,7 @@ export type TranscriptIdentifier = z.infer<typeof TranscriptIdentifier>;
 
 export const TranscriptDownloadRequest = z.object({
 	id: z.string(),
-	format: z.union([z.literal('text'), z.literal('srt')]),
+	format: DocExportType,
 });
 export type TranscriptDownloadRequest = z.infer<
 	typeof TranscriptDownloadRequest
