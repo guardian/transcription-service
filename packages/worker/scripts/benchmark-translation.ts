@@ -3,7 +3,7 @@
  * assumes llama-server is already running on localhost:19080
  *
  * Usage (from packages/worker):
- *   npx ts-node scripts/benchmark-translation.ts <path-to-text-file> [detectedLanguageCode] [targetLanguage]
+ *   npx ts-node scripts/benchmark-translation.ts <path-to-text-file> <port> [detectedLanguageCode] [targetLanguage]
  *
  * Prerequisites:
  *   - Run this script without a llama-server running and it will print out a helpful command to run llama-server
@@ -16,6 +16,7 @@ import { estimateTokens, executeLlmPrompt } from '../src/llm';
 import {
 	getLlamaServerArgs,
 	getServerConfig,
+	ServerConfig,
 	stopLlamaServer,
 } from '../src/llama-server';
 import { LlmPrompt } from '@guardian/transcription-service-common';
@@ -44,22 +45,52 @@ const formatDuration = (ms: number): string => `${(ms / 1000).toFixed(1)}s`;
 // set STAGE, AWS_REGION, APP env vars
 process.env.STAGE = process.env.STAGE || 'DEV';
 process.env.AWS_REGION = process.env.AWS_REGION || 'eu-west-1';
-process.env.APP = process.env.APP || 'benchmark';
+process.env.APP = process.env.APP || 'worker-benchmark';
+
+const printServerInstructions = (serverConfig: ServerConfig, port: number) => {
+	console.error(
+		`llama-server not available on localhost:${port}. Please start it first.`,
+	);
+	console.error(
+		`You can start it with this command (you may need to adjust the port): llama-server ${getLlamaServerArgs(serverConfig).join(' ')}`,
+	);
+	console.error(
+		'If you are running llama-server on a remote instance, you can tunnel to it using the llama-server-tunnel.sh script ',
+	);
+};
 
 const main = async () => {
 	const args = process.argv.slice(2);
-	const [filePath, detectedLanguageCode = 'und', targetLanguage = 'English'] =
-		args;
+	const [
+		filePath,
+		portArg,
+		detectedLanguageCode = 'und',
+		targetLanguage = 'English',
+	] = args;
 
-	if (!filePath) {
+	if (!filePath || !portArg) {
 		console.error(
-			'Usage: npx ts-node scripts/benchmark-translation.ts <path-to-text-file> [detectedLanguageCode] [targetLanguage]',
+			'Usage: npx ts-node scripts/benchmark-translation.ts <path-to-text-file> <port> [detectedLanguageCode] [targetLanguage]',
+		);
+		if (!portArg) {
+			console.error(
+				`Missing required <port> argument. If you're using the tunnel script this will likely be 19080, otherwise refer to how you ran llama-server`,
+			);
+		}
+		process.exit(1);
+	}
+
+	const port = Number.parseInt(portArg, 10);
+	if (!Number.isInteger(port) || port <= 0) {
+		console.error(
+			`Invalid <port> value: "${portArg}". Please provide a positive integer, for example: 19080`,
 		);
 		process.exit(1);
 	}
-	const port = 19080;
 
-	// check if llama available on localhost:19080, if not log out message and exit
+	process.env.LLAMA_SERVER_PORT = String(port);
+
+	// Check if llama is available on the requested localhost port.
 
 	const config = await getConfig();
 	const metrics = new MetricsService(
@@ -69,17 +100,15 @@ const main = async () => {
 	);
 
 	const serverConfig = getServerConfig(config);
-	const healthResponse = await fetch(`http://localhost:${port}/health`);
+
+	const healthResponse = await fetch(`http://localhost:${port}/health`).catch(
+		() => {
+			printServerInstructions(serverConfig, port);
+			process.exit(1);
+		},
+	);
 	if (!healthResponse.ok) {
-		console.error(
-			`llama-server not available on localhost:${port}. Please start it first.`,
-		);
-		console.error(
-			`You can start it with this command (you may need to adjust the port): llama-server ${getLlamaServerArgs(serverConfig).join(' ')}`,
-		);
-		console.error(
-			'If you are running llama-server on a remote instance, you can tunnel to it using the llama-server-tunnel.sh script ',
-		);
+		printServerInstructions(serverConfig, port);
 		process.exit(1);
 	}
 

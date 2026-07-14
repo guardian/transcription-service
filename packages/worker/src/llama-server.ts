@@ -11,7 +11,7 @@ import { Agent } from 'undici';
 
 export const LOCAL_LLAMA_PARALLEL_JOBS = 2;
 
-type ServerConfig = {
+export type ServerConfig = {
 	modelPath: string;
 	executable: string;
 	libPath?: string;
