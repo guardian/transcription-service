@@ -94,6 +94,10 @@ export const getLlamaServerArgs = (config: ServerConfig): string[] => {
 		'on', // flash attention reduces memory footprint - seems generally sensible to turn on where supported
 		'--parallel',
 		LOCAL_LLAMA_PARALLEL_JOBS.toString(),
+		// disable cache - there's no real overlap between tasks we send to llama-server
+		'--no-cache-prompt',
+		'--cache-ram',
+		'0',
 	];
 };
 
