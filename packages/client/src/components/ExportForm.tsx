@@ -337,7 +337,10 @@ const ExportForm = () => {
 			if (transcriptText) {
 				const extension =
 					format === 'text' || format === 'translation-text' ? 'txt' : 'srt';
-				const filename = `${parsedTranscriptResp.data.item.originalFilename}.${extension}`;
+				const translationSuffix = isTranslationExport(format)
+					? '-translation'
+					: '';
+				const filename = `${parsedTranscriptResp.data.item.originalFilename}${translationSuffix}.${extension}`;
 				triggerFileDownload(transcriptText, filename);
 				setDownloadStatus(undefined);
 			} else {
