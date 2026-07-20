@@ -2,6 +2,7 @@ import {
 	SendMessageCommand,
 	SQSClient,
 	Message,
+	MessageAttributeValue,
 	ReceiveMessageCommand,
 	DeleteMessageCommand,
 	ChangeMessageVisibilityCommand,
@@ -60,6 +61,27 @@ export const isSqsFailure = (
 	result: SendResult | ReceiveResult,
 ): result is SQSFailure => result.status === AWSStatus.Failure;
 
+// Message attributes that are always preserved from an incoming job message and re-attached to the output message
+// (whether success or failure) so that the consumer (Giant) can match the output back to the relevant blob/extractor.
+export const FORWARDED_MESSAGE_ATTRIBUTE_NAMES = [
+	'GiantBlobUri',
+	'GiantExtractorName',
+];
+
+export const getForwardedMessageAttributes = (
+	message: Message,
+): Record<string, MessageAttributeValue> => {
+	const attributes = message.MessageAttributes ?? {};
+	const preserved: Record<string, MessageAttributeValue> = {};
+	for (const name of FORWARDED_MESSAGE_ATTRIBUTE_NAMES) {
+		const value = attributes[name];
+		if (value !== undefined) {
+			preserved[name] = value;
+		}
+	}
+	return preserved;
+};
+
 export const generateOutputSignedUrlAndSendMessage = async (
 	s3Key: string,
 	client: SQSClient,
@@ -84,7 +106,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		'gzip',
 	);
 
-	const engine = TranscriptionEngine.WHISPER_X;
+	const engine: TranscriptionEngine = 'whisperx';
 
 	const queue = config.app.gpuTaskQueueUrl;
 
@@ -100,6 +122,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 		translate: translationRequested,
 		diarize: diarizationRequested,
 		engine,
+		jobType: 'transcribe',
 	};
 	const messageResult = await sendMessage(
 		client,
@@ -120,6 +143,7 @@ export const sendMessage = async (
 	queueUrl: string,
 	messageBody: string,
 	id: string,
+	messageAttributes?: Record<string, MessageAttributeValue>,
 ): Promise<SendResult> => {
 	const fifo = queueUrl.includes('.fifo');
 	const fifoProperties = fifo
@@ -127,11 +151,16 @@ export const sendMessage = async (
 				MessageGroupId: id,
 			}
 		: {};
+	const attributeProperties =
+		messageAttributes && Object.keys(messageAttributes).length > 0
+			? { MessageAttributes: messageAttributes }
+			: {};
 	try {
 		const result = await client.send(
 			new SendMessageCommand({
 				QueueUrl: queueUrl,
 				MessageBody: messageBody,
+				...attributeProperties,
 				...fifoProperties,
 			}),
 		);
@@ -161,8 +190,15 @@ export const publishTranscriptionOutput = async (
 	client: SQSClient,
 	queueUrl: string,
 	output: TranscriptionOutput,
+	messageAttributes?: Record<string, MessageAttributeValue>,
 ) => {
-	await sendMessage(client, queueUrl, JSON.stringify(output), output.id);
+	await sendMessage(
+		client,
+		queueUrl,
+		JSON.stringify(output),
+		output.id,
+		messageAttributes,
+	);
 };
 
 export const changeMessageVisibility = async (
@@ -202,6 +238,9 @@ export const getNextMessage = async (
 				VisibilityTimeout: 300, // 	5 minutes
 				// we need to get message attributes so that we can use ApproximateReceiveCount
 				MessageSystemAttributeNames: ['All'],
+				// we need the custom message attributes (e.g. GiantBlobUri, GiantExtractorName) so that we can preserve
+				// them on the output message
+				MessageAttributeNames: ['All'],
 			}),
 		);
 		const messages = message.Messages;
@@ -295,7 +334,7 @@ export const parseTranscriptJobMessage = (
 		return job.data;
 	}
 	logger.error(
-		`Failed to parse message ${message.MessageId}, contents: ${message.Body}, errors: ${JSON.stringify(job.error.errors, null, 2)}`,
+		`Failed to parse message ${message.MessageId}, contents: ${message.Body}, error: ${job.error.message}`,
 	);
 	return undefined;
 };

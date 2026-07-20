@@ -1,27 +1,20 @@
 import { z } from 'zod';
-import { inputLanguageCodes, outputLanguageCodes } from './languages';
-
-export const InputLanguageCode = z.enum(inputLanguageCodes);
-export type InputLanguageCode = z.infer<typeof InputLanguageCode>;
-
-export const OutputLanguageCode = z.enum(outputLanguageCodes);
-export type OutputLanguageCode = z.infer<typeof OutputLanguageCode>;
+import {
+	InputLanguageCode,
+	LlmBackend,
+	LLMOutputFailure,
+	LLMOutputSuccess,
+	LlmPrompt,
+	OutputBase,
+	TranscriptionOutputSuccess,
+	TranscriptionOutputFailure,
+	TranscriptionResult,
+	OutputLanguageCode,
+} from './worker-interface-types';
 
 export const inputToOutputLanguageCode = (
 	c: InputLanguageCode,
 ): OutputLanguageCode => (c === 'auto' ? 'UNKNOWN' : c);
-
-export enum DestinationService {
-	TranscriptionService = 'TranscriptionService',
-	Giant = 'Giant',
-}
-
-const SignedUrl = z.object({
-	url: z.string(),
-	key: z.string(),
-});
-
-export type SignedUrl = z.infer<typeof SignedUrl>;
 
 export const UrlJob = z.object({
 	id: z.string(),
@@ -101,80 +94,6 @@ export const WebpageSnapshot = z.object({
 });
 export type WebpageSnapshot = z.infer<typeof WebpageSnapshot>;
 
-export enum TranscriptionEngine {
-	WHISPER_X = 'whisperx',
-	WHISPER_CPP = 'whispercpp',
-}
-
-export const JobType = z.enum(['transcribe', 'llm']);
-export type JobType = z.infer<typeof JobType>;
-
-export const Job = z.object({
-	id: z.string(),
-	originalFilename: z.string(),
-	inputSignedUrl: z.string(),
-	sentTimestamp: z.string(),
-	userEmail: z.string(),
-	transcriptDestinationService: z.nativeEnum(DestinationService),
-	combinedOutputUrl: SignedUrl,
-});
-
-export type Job = z.infer<typeof Job>;
-
-export const TranscriptionJob = Job.extend({
-	jobType: z.literal('transcribe').optional(),
-	languageCode: InputLanguageCode,
-	translate: z.boolean(),
-	diarize: z.boolean(),
-	engine: z.nativeEnum(TranscriptionEngine),
-});
-
-export type TranscriptionJob = z.infer<typeof TranscriptionJob>;
-
-export const LlmBackend = z.union([z.literal('LOCAL'), z.literal('BEDROCK')]);
-export type LlmBackend = z.infer<typeof LlmBackend>;
-
-export const LLMJob = Job.extend({
-	jobType: z.literal('llm'),
-	backend: LlmBackend,
-});
-
-export type LLMJob = z.infer<typeof LLMJob>;
-
-export const WorkerJob = z.union([LLMJob, TranscriptionJob]);
-export type WorkerJob = z.infer<typeof WorkerJob>;
-
-const OutputBase = z.object({
-	id: z.string(),
-	userEmail: z.string(),
-});
-
-const TranscriptionOutputBase = OutputBase.extend({
-	originalFilename: z.string(),
-});
-
-export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
-	// status must be kept in sync with https://github.com/guardian/giant/blob/main/backend/app/extraction/ExternalTranscriptionExtractor.scala#L76
-	status: z.literal('SUCCESS'),
-	languageCode: OutputLanguageCode,
-	combinedOutputKey: z.string(),
-	duration: z.optional(z.number()),
-	maybeEnqueuedAtEpochMillis: z.optional(z.number()),
-	includesTranslation: z.boolean(),
-	translationRequested: z.boolean(),
-});
-
-export const LLMOutputSuccess = OutputBase.extend({
-	status: z.literal('LLM_SUCCESS'),
-	outputKey: z.string(),
-});
-export type LLMOutputSuccess = z.infer<typeof LLMOutputSuccess>;
-
-export const LLMOutputFailure = OutputBase.extend({
-	status: z.literal('LLM_FAILURE'),
-});
-export type LLMOutputFailure = z.infer<typeof LLMOutputFailure>;
-
 export const MediaDownloadFailureReason = z.union([
 	z.literal('FAILURE'),
 	z.literal('INVALID_URL'),
@@ -192,12 +111,6 @@ export const MediaDownloadFailure = OutputBase.extend({
 
 export type MediaDownloadFailure = z.infer<typeof MediaDownloadFailure>;
 
-export const TranscriptionOutputFailure = TranscriptionOutputBase.extend({
-	// status must be kept in sync with https://github.com/guardian/giant/blob/main/backend/app/extraction/ExternalTranscriptionExtractor.scala#L76
-	status: z.literal('TRANSCRIPTION_FAILURE'),
-	noAudioDetected: z.boolean(),
-});
-
 export const TranscriptionOutput = z.union([
 	TranscriptionOutputSuccess,
 	TranscriptionOutputFailure,
@@ -205,14 +118,6 @@ export const TranscriptionOutput = z.union([
 	LLMOutputSuccess,
 	LLMOutputFailure,
 ]);
-
-export type TranscriptionOutputSuccess = z.infer<
-	typeof TranscriptionOutputSuccess
->;
-
-export type TranscriptionOutputFailure = z.infer<
-	typeof TranscriptionOutputFailure
->;
 
 export const transcriptionOutputIsSuccess = (
 	output: TranscriptionOutput,
@@ -368,14 +273,6 @@ export type TranscribeFileRequestBody = z.infer<
 	typeof transcribeFileRequestBody
 >;
 
-export const LlmPrompt = z.object({
-	system: z.string().optional(),
-	user: z.string(),
-	assistant: z.string().optional(),
-});
-
-export type LlmPrompt = z.infer<typeof LlmPrompt>;
-
 export const LlmRequestBody = z.object({
 	prompt: LlmPrompt,
 	backend: LlmBackend,
@@ -442,27 +339,6 @@ export const YoutubeStatus = z.union([
 	z.literal('ERROR'),
 ]);
 export type YoutubeStatus = z.infer<typeof YoutubeStatus>;
-
-export const Transcripts = z.object({
-	srt: z.string(),
-	text: z.string(),
-	json: z.string(),
-});
-export type Transcripts = z.infer<typeof Transcripts>;
-
-export const TranscriptionMetadata = z.object({
-	detectedLanguageCode: OutputLanguageCode,
-	loadTimeMs: z.optional(z.number()),
-	totalTimeMs: z.optional(z.number()),
-});
-export type TranscriptionMetadata = z.infer<typeof TranscriptionMetadata>;
-
-export const TranscriptionResult = z.object({
-	transcripts: Transcripts,
-	transcriptTranslations: z.optional(Transcripts),
-	metadata: TranscriptionMetadata,
-});
-export type TranscriptionResult = z.infer<typeof TranscriptionResult>;
 
 export const TranscriptionItemWithTranscript = z.object({
 	item: TranscriptionDynamoItem,

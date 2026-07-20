@@ -176,7 +176,9 @@ export const getObjectWithPresignedUrl = async (
 	if (!response.body) {
 		throw new Error(`Response body is empty for ${key}`);
 	}
-	const body = Readable.fromWeb(response.body as import('stream/web').ReadableStream);
+	const body = Readable.fromWeb(
+		response.body as import('stream/web').ReadableStream,
+	);
 	await downloadS3Data(body, destinationPath, key);
 	return destinationPath;
 };

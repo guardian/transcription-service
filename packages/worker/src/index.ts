@@ -13,6 +13,7 @@ import {
 	readFile,
 	getASGClient,
 	getS3Client,
+	getForwardedMessageAttributes,
 } from '@guardian/transcription-service-backend-common';
 import { type LLMOutputFailure } from '@guardian/transcription-service-common';
 
@@ -21,7 +22,7 @@ import {
 	terminateInstance,
 	updateScaleInProtection,
 } from './asg';
-import { processLLMJob } from './llama-cpp';
+import { processLLMOrTranslationJob } from './llama-cpp';
 import {
 	MetricsService,
 	FailureMetric,
@@ -230,6 +231,10 @@ const pollTranscriptionQueue = async (
 	}
 	CURRENT_MESSAGE_RECEIPT_HANDLE = receiptHandle;
 
+	// these attributes are preserved from the original job message and re-attached to the output message (success or
+	// failure) so that Giant can match the result back to the relevant blob/extractor
+	const preservedAttributes = getForwardedMessageAttributes(taskMessage);
+
 	const job = parseTranscriptJobMessage(taskMessage);
 
 	if (!job) {
@@ -244,6 +249,15 @@ const pollTranscriptionQueue = async (
 		);
 		return;
 	}
+
+	const setMessageVisibility = async (visibilityTimeoutSeconds: number) => {
+		await changeMessageVisibility(
+			sqsClient,
+			taskQueueUrl,
+			receiptHandle,
+			visibilityTimeoutSeconds,
+		);
+	};
 
 	try {
 		// from this point all worker logs will have id & userEmail in their fields
@@ -269,14 +283,14 @@ const pollTranscriptionQueue = async (
 			destinationDirectory,
 		);
 
-		if (jobType === 'llm') {
-			await processLLMJob(
+		if (jobType === 'llm' || jobType === 'llm-translation') {
+			await processLLMOrTranslationJob(
 				job,
 				downloadedFile,
-				sqsClient,
 				config,
-				taskQueueUrl,
-				receiptHandle,
+				sqsClient,
+				setMessageVisibility,
+				preservedAttributes,
 			);
 		} else {
 			await processTranscriptionJob(
@@ -292,6 +306,8 @@ const pollTranscriptionQueue = async (
 				taskMessage,
 				maybeEnqueuedAtEpochMillis,
 				INTERRUPTION_TIME,
+				setMessageVisibility,
+				preservedAttributes,
 			);
 		}
 
@@ -301,7 +317,7 @@ const pollTranscriptionQueue = async (
 		const msg = 'Worker failed to complete';
 		logger.error(msg, error);
 		// Terminate the message visibility timeout
-		await changeMessageVisibility(sqsClient, taskQueueUrl, receiptHandle, 0);
+		await setMessageVisibility(0);
 
 		// the type of ApproximateReceiveCount is string | undefined so need to
 		// handle the case where its missing. use default value
@@ -312,7 +328,7 @@ const pollTranscriptionQueue = async (
 			taskMessage.Attributes?.ApproximateReceiveCount || defaultReceiveCount,
 		);
 		if (receiveCount >= MAX_RECEIVE_COUNT) {
-			if (job.jobType === 'llm') {
+			if (job.jobType === 'llm' || job.jobType === 'llm-translation') {
 				const llmFailure: LLMOutputFailure = {
 					id: job.id,
 					status: 'LLM_FAILURE',
@@ -322,12 +338,15 @@ const pollTranscriptionQueue = async (
 					sqsClient,
 					config.app.destinationQueueUrls[job.transcriptDestinationService],
 					llmFailure,
+					preservedAttributes,
 				);
 			} else {
 				await publishTranscriptionOutputFailure(
 					sqsClient,
 					config.app.destinationQueueUrls[job.transcriptDestinationService],
 					job,
+					false,
+					preservedAttributes,
 				);
 			}
 		}

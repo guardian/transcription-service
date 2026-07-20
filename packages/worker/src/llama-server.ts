@@ -7,19 +7,22 @@ import {
 } from '@guardian/transcription-service-backend-common';
 import { LlmPrompt } from '@guardian/transcription-service-common';
 import { z } from 'zod';
+import { Agent } from 'undici';
+import { PARALLEL_JOBS } from './llm';
 
 type ServerConfig = {
 	modelPath: string;
 	executable: string;
 	libPath?: string;
-	port: string;
 };
+
+const PORT = '9080';
+export const LLAMA_SERVER_URL = `http://localhost:${PORT}`;
 
 const getServerConfig = (config: TranscriptionConfig): ServerConfig => {
 	return {
 		modelPath: config.llamacpp.modelPath,
 		executable: 'llama-server',
-		port: '9080',
 		libPath:
 			config.llamacpp.installDirectory && config.app.stage !== 'DEV'
 				? `${config.llamacpp.installDirectory}/lib/`
@@ -44,31 +47,70 @@ interface LlamaChatMessage {
 	content: string;
 }
 
+// We need to track the active llama-server process so we can stop it when we need to free up VRAM for whisperx.
+let activeLlamaServerProcess: ChildProcess | null = null;
+
+export const stopLlamaServer = (): void => {
+	if (activeLlamaServerProcess) {
+		logger.info('Stopping llama-server to free VRAM');
+		killProcess('llama-server', activeLlamaServerProcess);
+		activeLlamaServerProcess = null;
+	}
+};
+
+export const ensureLlamaServerRunning = async (
+	config: TranscriptionConfig,
+): Promise<ChildProcess> => {
+	if (activeLlamaServerProcess && activeLlamaServerProcess.exitCode === null) {
+		logger.info('llama-server already running, reusing existing instance');
+		return activeLlamaServerProcess;
+	}
+
+	// If the process exited unexpectedly, clean up the stale reference
+	if (activeLlamaServerProcess) {
+		logger.info('llama-server process exited unexpectedly, restarting');
+		activeLlamaServerProcess = null;
+	}
+
+	const result = await startLlamaServer(config);
+	activeLlamaServerProcess = result;
+	return result;
+};
+
 export const startLlamaServer = async (
 	config: TranscriptionConfig,
-): Promise<{
-	serverProcess: ChildProcess;
-	url: string;
-}> => {
+): Promise<ChildProcess> => {
 	logger.info('Starting llama-server...');
 
-	const { modelPath, executable, libPath, port } = getServerConfig(config);
+	const { modelPath, executable, libPath } = getServerConfig(config);
+
+	const args = [
+		'-m',
+		modelPath,
+		'--port',
+		PORT,
+		'-c',
+		'24576', // 24k context — large docs exceed the default ~4k
+		'-ngl',
+		'99', // offload all layers to GPU (Qwen3-8B Q4 fits on a T4)
+		'-fa',
+		'on', // flash attention reduces memory footprint - seems generally sensible to turn on where supported
+		'--parallel',
+		PARALLEL_JOBS.toString(),
+	];
+
+	logger.info(`Starting llama-server with args: ${args.join(' ')}`);
 
 	const childProcess = spawnBackgroundProcess(
 		'llama-server',
 		executable,
-		['-m', modelPath, '--port', port],
+		args,
 		libPath ? { LD_LIBRARY_PATH: libPath } : {},
 	);
 
-	const url = `http://localhost:${port}`;
+	await waitForLlamaServer(LLAMA_SERVER_URL);
 
-	await waitForLlamaServer(url);
-
-	return {
-		serverProcess: childProcess,
-		url,
-	};
+	return childProcess;
 };
 
 export const waitForLlamaServer = async (
@@ -112,6 +154,12 @@ const buildMessages = (prompts: LlmPrompt): LlamaChatMessage[] => {
 	return messages;
 };
 
+// llama-server doesn't return any headers until the prompt is fully processed so we need a long timeout here
+const llamaDispatcher = new Agent({
+	headersTimeout: 10 * 60 * 1000, // 10 minutes
+	bodyTimeout: 10 * 60 * 1000, // 10 minutes
+});
+
 export const sendPromptToLlamaServer = async (
 	url: string,
 	prompts: LlmPrompt,
@@ -130,6 +178,9 @@ export const sendPromptToLlamaServer = async (
 		body: JSON.stringify({
 			messages,
 		}),
+		signal: AbortSignal.timeout(10 * 60 * 1000), // 10 minutes – generation on a T4 can exceed the default 5min undici timeout
+		// @ts-expect-error — dispatcher is supported by Node.js fetch but not in the standard RequestInit types
+		dispatcher: llamaDispatcher,
 	});
 
 	if (!response.ok) {
@@ -156,14 +207,4 @@ export const sendPromptToLlamaServer = async (
 	);
 
 	return content;
-};
-
-export const executePrompt = async (
-	config: TranscriptionConfig,
-	prompts: LlmPrompt,
-) => {
-	const serverConfig = await startLlamaServer(config);
-	const llmResult = await sendPromptToLlamaServer(serverConfig!.url, prompts);
-	killProcess('llama-server', serverConfig.serverProcess);
-	return llmResult;
 };
