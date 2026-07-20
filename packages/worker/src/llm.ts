@@ -116,7 +116,11 @@ export const executeLlmPrompt = async (
 
 	const sendPrompt = async (chunkPrompt: LlmPrompt) => {
 		if (backend === 'BEDROCK') {
-			return sendPromptToBedrock(chunkPrompt, config.bedrock.modelId);
+			return sendPromptToBedrock(
+				chunkPrompt,
+				config.bedrock.modelId,
+				config.aws.region,
+			);
 		} else {
 			return sendPromptToLlamaServer(LLAMA_SERVER_URL, chunkPrompt);
 		}

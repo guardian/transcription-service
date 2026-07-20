@@ -108,6 +108,7 @@ export const bedrockLlmJob = async (
 	const bedrockResponse = await sendPromptToBedrock(
 		request.prompt,
 		config.bedrock.modelId,
+		config.aws.region,
 	);
 	const s3Result = await putObject(
 		s3Client,

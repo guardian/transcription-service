@@ -16,9 +16,10 @@ import { LlmPrompt } from '@guardian/transcription-service-common';
 export const sendPromptToBedrock = async (
 	prompts: LlmPrompt,
 	bedrockModelId: string,
+	awsRegion: string,
 ): Promise<string> => {
 	const client = new BedrockRuntimeClient({
-		region: 'eu-west-1',
+		region: awsRegion,
 		requestHandler: new NodeHttp2Handler({
 			requestTimeout: 10 * 60 * 1000, // 10 minutes
 		}),
