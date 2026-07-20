@@ -3,6 +3,7 @@ import {
 	publishTranscriptionOutput,
 	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
+import { MetricsService } from '@guardian/transcription-service-backend-common/src/metrics';
 import fs from 'node:fs';
 import {
 	LLMJob,
@@ -18,6 +19,7 @@ import { MessageAttributeValue, SQSClient } from '@aws-sdk/client-sqs';
 
 import { gzip } from 'node-gzip';
 import { executeLlmPrompt } from './llm';
+import { ensureLlamaServerRunning } from './llama-server';
 
 export const getS3Keys = (id: string) => ({
 	promptKey: `llm-prompts/${id}.txt`,
@@ -29,6 +31,7 @@ const processTranslationTask = async (
 	config: TranscriptionConfig,
 	backend: LlmBackend,
 	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
+	metrics: MetricsService,
 ): Promise<string> => {
 	const parsedTask = TranslationTask.safeParse(JSON.parse(taskData));
 	if (!parsedTask.success) {
@@ -46,6 +49,10 @@ const processTranslationTask = async (
 			},
 		}));
 
+	if (backend === 'LOCAL') {
+		await ensureLlamaServerRunning(config);
+	}
+
 	const promptOutputs: TranslationField[] = [];
 	for (const prompt of prompts) {
 		const result = await executeLlmPrompt(
@@ -53,6 +60,7 @@ const processTranslationTask = async (
 			config,
 			backend,
 			setMessageVisibility,
+			metrics,
 		);
 		promptOutputs.push({
 			name: prompt.fieldName,
@@ -67,6 +75,7 @@ const processLLmPrompt = async (
 	config: TranscriptionConfig,
 	backend: LlmBackend,
 	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
+	metrics: MetricsService,
 ) => {
 	const parsedPrompts = LlmPrompt.safeParse(JSON.parse(taskData));
 	if (!parsedPrompts.success) {
@@ -77,6 +86,7 @@ const processLLmPrompt = async (
 		config,
 		backend,
 		setMessageVisibility,
+		metrics,
 	);
 };
 
@@ -86,6 +96,7 @@ export const processLLMOrTranslationJob = async (
 	config: TranscriptionConfig,
 	sqsClient: SQSClient,
 	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
+	metrics: MetricsService,
 	messageAttributes?: Record<string, MessageAttributeValue>,
 ) => {
 	logger.info(`Processing LLM job with id ${job.id}`);
@@ -99,12 +110,14 @@ export const processLLMOrTranslationJob = async (
 					config,
 					job.backend,
 					setMessageVisibility,
+					metrics,
 				)
 			: await processTranslationTask(
 					taskData,
 					config,
 					job.backend,
 					setMessageVisibility,
+					metrics,
 				);
 
 	const gzippedResult = await gzip(llmResult);

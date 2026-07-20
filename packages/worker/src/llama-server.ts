@@ -8,18 +8,19 @@ import {
 import { LlmPrompt } from '@guardian/transcription-service-common';
 import { z } from 'zod';
 import { Agent } from 'undici';
-import { PARALLEL_JOBS } from './llm';
 
-type ServerConfig = {
+export const LOCAL_LLAMA_PARALLEL_JOBS = 2;
+
+export type ServerConfig = {
 	modelPath: string;
 	executable: string;
 	libPath?: string;
+	port: string;
+	serverUrl: string;
 };
 
-const PORT = '9080';
-export const LLAMA_SERVER_URL = `http://localhost:${PORT}`;
-
-const getServerConfig = (config: TranscriptionConfig): ServerConfig => {
+export const getServerConfig = (config: TranscriptionConfig): ServerConfig => {
+	const port = process.env.LLAMA_SERVER_PORT || '9080';
 	return {
 		modelPath: config.llamacpp.modelPath,
 		executable: 'llama-server',
@@ -27,6 +28,8 @@ const getServerConfig = (config: TranscriptionConfig): ServerConfig => {
 			config.llamacpp.installDirectory && config.app.stage !== 'DEV'
 				? `${config.llamacpp.installDirectory}/lib/`
 				: undefined,
+		port: port,
+		serverUrl: `http://localhost:${port}`,
 	};
 };
 
@@ -77,18 +80,12 @@ export const ensureLlamaServerRunning = async (
 	return result;
 };
 
-export const startLlamaServer = async (
-	config: TranscriptionConfig,
-): Promise<ChildProcess> => {
-	logger.info('Starting llama-server...');
-
-	const { modelPath, executable, libPath } = getServerConfig(config);
-
-	const args = [
+export const getLlamaServerArgs = (config: ServerConfig): string[] => {
+	return [
 		'-m',
-		modelPath,
+		config.modelPath,
 		'--port',
-		PORT,
+		`${config.port}`,
 		'-c',
 		'24576', // 24k context — large docs exceed the default ~4k
 		'-ngl',
@@ -96,19 +93,33 @@ export const startLlamaServer = async (
 		'-fa',
 		'on', // flash attention reduces memory footprint - seems generally sensible to turn on where supported
 		'--parallel',
-		PARALLEL_JOBS.toString(),
+		LOCAL_LLAMA_PARALLEL_JOBS.toString(),
+		// disable cache - there's no real overlap between tasks we send to llama-server
+		'--no-cache-prompt',
+		'--cache-ram',
+		'0',
 	];
+};
+
+export const startLlamaServer = async (
+	config: TranscriptionConfig,
+): Promise<ChildProcess> => {
+	logger.info('Starting llama-server...');
+
+	const serverConfig = getServerConfig(config);
+
+	const args = getLlamaServerArgs(serverConfig);
 
 	logger.info(`Starting llama-server with args: ${args.join(' ')}`);
 
 	const childProcess = spawnBackgroundProcess(
 		'llama-server',
-		executable,
+		serverConfig.executable,
 		args,
-		libPath ? { LD_LIBRARY_PATH: libPath } : {},
+		serverConfig.libPath ? { LD_LIBRARY_PATH: serverConfig.libPath } : {},
 	);
 
-	await waitForLlamaServer(LLAMA_SERVER_URL);
+	await waitForLlamaServer(serverConfig.serverUrl);
 
 	return childProcess;
 };

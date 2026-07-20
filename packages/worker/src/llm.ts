@@ -9,19 +9,24 @@ import {
 import { TranscriptionConfig } from '@guardian/transcription-service-backend-common/src/config';
 import { logger } from '@guardian/transcription-service-backend-common';
 import {
-	ensureLlamaServerRunning,
-	LLAMA_SERVER_URL,
+	MetricsService,
+	llmTokensPerSecondMetric,
+	secondsForLlmJobMetric,
+} from '@guardian/transcription-service-backend-common/src/metrics';
+import {
+	getServerConfig,
+	LOCAL_LLAMA_PARALLEL_JOBS,
 	sendPromptToLlamaServer,
 } from './llama-server';
 
 // To begin with we limit each request to roughly this many tokens of source text. The system prompt and
 // the small fragment note we add are extra, but the model's context window has headroom for them.
-export const MAX_INPUT_TOKENS_PER_CHUNK = 5000;
+export const MAX_INPUT_TOKENS_PER_CHUNK = 3000;
 
 // For setting sqs visibility timeout - allow 10 minutes per chunk (based off basic testing of 2 jobs)
 export const SECONDS_PER_CHUNK = 60 * 10;
 
-export const PARALLEL_JOBS = 2;
+const BEDROCK_PARALLEL_JOBS = 10;
 
 // Both backends use Qwen models which share a tokenizer close to cl100k_base.
 const enc = getEncoding('cl100k_base');
@@ -83,16 +88,28 @@ export const splitPromptIntoChunks = async (
 const runAndCombinePrompts = async (
 	prompts: LlmPrompt[],
 	runPrompt: (prompt: LlmPrompt) => Promise<string>,
+	parallelJobs: number,
 ): Promise<string> => {
-	const outputs: string[] = [];
-	for (let i = 0; i < prompts.length; i += PARALLEL_JOBS) {
-		logger.info(
-			`Running prompts ${i + 1} to ${Math.min(i + PARALLEL_JOBS, prompts.length)} of ${prompts.length}`,
-		);
-		const chunk = prompts.slice(i, i + PARALLEL_JOBS);
-		const results = await Promise.all(chunk.map(runPrompt));
-		outputs.push(...results);
-	}
+	const outputs: string[] = new Array<string>(prompts.length);
+	let nextIndex = 0;
+
+	// Each worker pulls the next unprocessed prompt until none remain, keeping up to
+	// PARALLEL_JOBS prompts in flight at all times. Note this only works because
+	// javascript is single threaded, so we won't get multiple workers updating nextIndex at the same time.
+	const worker = async () => {
+		// store current index and update in one go
+		let index = nextIndex++;
+		while (index < prompts.length) {
+			logger.info(`Running prompt ${index + 1} of ${prompts.length}`);
+			outputs[index] = await runPrompt(prompts[index]!);
+			logger.info(`Completed prompt ${index + 1} of ${prompts.length}`);
+			index = nextIndex++;
+		}
+	};
+
+	const workerCount = Math.min(parallelJobs, prompts.length);
+	await Promise.all(Array.from({ length: workerCount }, worker));
+
 	return outputs.join('');
 };
 
@@ -101,6 +118,7 @@ export const executeLlmPrompt = async (
 	config: TranscriptionConfig,
 	backend: LlmBackend,
 	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
+	metrics: MetricsService,
 ): Promise<string> => {
 	const { prompts, maskLookup } = await splitPromptIntoChunks(prompt);
 
@@ -110,10 +128,6 @@ export const executeLlmPrompt = async (
 	);
 	await setMessageVisibility(visibilityTimeout);
 
-	if (backend === 'LOCAL') {
-		await ensureLlamaServerRunning(config);
-	}
-
 	const sendPrompt = async (chunkPrompt: LlmPrompt) => {
 		if (backend === 'BEDROCK') {
 			return sendPromptToBedrock(
@@ -122,12 +136,48 @@ export const executeLlmPrompt = async (
 				config.aws.region,
 			);
 		} else {
-			return sendPromptToLlamaServer(LLAMA_SERVER_URL, chunkPrompt);
+			return sendPromptToLlamaServer(
+				getServerConfig(config).serverUrl,
+				chunkPrompt,
+			);
 		}
 	};
 
-	const combined = await runAndCombinePrompts(prompts, (chunkPrompt) =>
-		sendPrompt(chunkPrompt),
+	const parallelJobs =
+		backend === 'BEDROCK' ? BEDROCK_PARALLEL_JOBS : LOCAL_LLAMA_PARALLEL_JOBS;
+
+	const startTime = Date.now();
+	const combined = await runAndCombinePrompts(
+		prompts,
+		(chunkPrompt) => sendPrompt(chunkPrompt),
+		parallelJobs,
 	);
-	return restoreMaskedItems(combined, maskLookup);
+	const result = restoreMaskedItems(combined, maskLookup);
+
+	const durationSeconds = (Date.now() - startTime) / 1000;
+	const outputTokens = estimateTokens(result);
+	const tokensPerSecond =
+		durationSeconds > 0 ? outputTokens / durationSeconds : 0;
+
+	logger.info(
+		`LLM prompt completed in ${durationSeconds.toFixed(1)}s (${outputTokens} output tokens, ${tokensPerSecond.toFixed(1)} tokens/s, backend: ${backend})`,
+		{
+			llmPromptTimeSeconds: durationSeconds,
+			llmOutputTokens: outputTokens,
+			llmTokensPerSecond: tokensPerSecond,
+			llmBackend: backend,
+		},
+	);
+
+	const backendDimension = { Name: 'Backend', Value: backend };
+	await Promise.all([
+		metrics.putMetric(secondsForLlmJobMetric(durationSeconds), [
+			backendDimension,
+		]),
+		metrics.putMetric(llmTokensPerSecondMetric(tokensPerSecond), [
+			backendDimension,
+		]),
+	]);
+
+	return result;
 };

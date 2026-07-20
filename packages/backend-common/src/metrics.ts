@@ -40,6 +40,17 @@ export const transcriptionRateMetric = (value: number): Metric => ({
 	value,
 });
 
+export const llmTokensPerSecondMetric = (value: number): Metric => ({
+	name: `LlmTokensPerSecond`,
+	value,
+});
+
+export const secondsForLlmJobMetric = (value: number): Metric => ({
+	name: `SecondsForLlmJob`,
+	value,
+	unit: 'Seconds',
+});
+
 export const mediaDownloadJobMetric: Metric = {
 	name: `MediaDownloadJob`,
 	value: 1,
