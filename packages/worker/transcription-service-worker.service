@@ -12,6 +12,7 @@ Environment="LD_LIBRARY_PATH=/usr/local/cuda/lib:/usr/local/cuda/lib64"
 Environment="PATH=/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
 Environment="CUDA_HOME=/usr/local/cuda"
 Environment="HF_HUB_OFFLINE=1"
+Environment="PYTHONSAFEPATH=1"
 
 [Install]
 WantedBy=multi-user.target
