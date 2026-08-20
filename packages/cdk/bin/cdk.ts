@@ -1,5 +1,6 @@
 import 'source-map-support/register';
 import { GuRoot } from '@guardian/cdk/lib/constructs/root';
+import { QueueGardens } from '../lib/queue-gardens';
 import { TranscriptionServiceRepository } from '../lib/repository';
 import { TranscriptionService } from '../lib/transcription-service';
 import { TranscriptionServiceUniversalInfra } from '../lib/universal-infra';
@@ -39,4 +40,15 @@ export const guStacks = [
 			env,
 		},
 	),
+
+	new QueueGardens(app, 'QueueGardens-CODE', {
+		stack,
+		stage: 'CODE',
+		env,
+	}),
+	new QueueGardens(app, 'QueueGardens-PROD', {
+		stack,
+		stage: 'PROD',
+		env,
+	}),
 ];
