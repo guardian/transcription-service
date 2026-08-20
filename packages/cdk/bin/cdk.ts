@@ -1,5 +1,6 @@
 import 'source-map-support/register';
 import { GuRoot } from '@guardian/cdk/lib/constructs/root';
+import { App } from 'aws-cdk-lib';
 import { QueueGardens } from '../lib/queue-gardens';
 import { TranscriptionServiceRepository } from '../lib/repository';
 import { TranscriptionService } from '../lib/transcription-service';
@@ -9,6 +10,20 @@ const stack = 'investigations';
 const env = { region: 'eu-west-1' };
 
 const app = new GuRoot();
+
+/** local/DEV QueueGardens
+ *  We define a DEV QueueGardens here, with an explicit .synth() so that when we
+ *  run test-update, we get a generated template, which is explicitly un[git]ignored
+ *  and so checked-in (and kept up to date as a result of the snapshot testing).
+ *  This can then be instantiated locally with localstack, minitstack or whatever.
+ */
+const localApp = new App({ outdir: 'cdk.out' });
+const localQueueGardens = new QueueGardens(localApp, 'QueueGardens-DEV', {
+	stack,
+	stage: 'DEV',
+	env,
+});
+localApp.synth();
 
 export const guStacks = [
 	new TranscriptionService(app, 'TranscriptionService-CODE', {
@@ -53,4 +68,9 @@ export const guStacks = [
 		stage: 'PROD',
 		env,
 	}),
+	localQueueGardens,
 ];
+
+console.log(
+	'QueueGardens-DEV template generated in cdk.out/QueueGardens-DEV.template.json',
+);
