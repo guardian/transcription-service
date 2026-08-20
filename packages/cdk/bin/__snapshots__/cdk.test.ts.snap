@@ -10735,46 +10735,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SSMinvestigationsqueueHIGHprioritypublicdomainmediadownload90E6E549": {
-      "Properties": {
-        "Description": "QueueGardens CODE queue for media-download tasks with a HIGH priority, for public-domain stuff",
-        "Name": "/investigations-queues/CODE/HIGH-priority/public-domain/media-download/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "CODE",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueHIGHprioritypublicdomainmediadownload75308A45",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SSMinvestigationsqueueHIGHprioritypublicdomainsnapshotting9F454361": {
-      "Properties": {
-        "Description": "QueueGardens CODE queue for snapshotting tasks with a HIGH priority, for public-domain stuff",
-        "Name": "/investigations-queues/CODE/HIGH-priority/public-domain/snapshotting/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "CODE",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueHIGHprioritypublicdomainsnapshotting6B6D5965",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "SSMinvestigationsqueueHIGHprioritypublicdomaintranscription189F6E29": {
       "Properties": {
         "Description": "QueueGardens CODE queue for transcription tasks with a HIGH priority, for public-domain stuff",
@@ -10849,46 +10809,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
         "Value": {
           "Fn::GetAtt": [
             "investigationsqueueHIGHpriorityregularsensitivityaiprompt94528DFE",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SSMinvestigationsqueueHIGHpriorityregularsensitivitymediadownload39EC7843": {
-      "Properties": {
-        "Description": "QueueGardens CODE queue for media-download tasks with a HIGH priority, for regular-sensitivity stuff",
-        "Name": "/investigations-queues/CODE/HIGH-priority/regular-sensitivity/media-download/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "CODE",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueHIGHpriorityregularsensitivitymediadownload53DE962E",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SSMinvestigationsqueueHIGHpriorityregularsensitivitysnapshottingB62E1504": {
-      "Properties": {
-        "Description": "QueueGardens CODE queue for snapshotting tasks with a HIGH priority, for regular-sensitivity stuff",
-        "Name": "/investigations-queues/CODE/HIGH-priority/regular-sensitivity/snapshotting/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "CODE",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueHIGHpriorityregularsensitivitysnapshottingB4AA479E",
             "Arn",
           ],
         },
@@ -10975,46 +10895,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SSMinvestigationsqueueLOWprioritypublicdomainmediadownload380FD801": {
-      "Properties": {
-        "Description": "QueueGardens CODE queue for media-download tasks with a LOW priority, for public-domain stuff",
-        "Name": "/investigations-queues/CODE/LOW-priority/public-domain/media-download/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "CODE",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueLOWprioritypublicdomainmediadownloadC10436A2",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SSMinvestigationsqueueLOWprioritypublicdomainsnapshottingF84E86A5": {
-      "Properties": {
-        "Description": "QueueGardens CODE queue for snapshotting tasks with a LOW priority, for public-domain stuff",
-        "Name": "/investigations-queues/CODE/LOW-priority/public-domain/snapshotting/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "CODE",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueLOWprioritypublicdomainsnapshotting28A79839",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "SSMinvestigationsqueueLOWprioritypublicdomaintranscription85B2696D": {
       "Properties": {
         "Description": "QueueGardens CODE queue for transcription tasks with a LOW priority, for public-domain stuff",
@@ -11089,46 +10969,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
         "Value": {
           "Fn::GetAtt": [
             "investigationsqueueLOWpriorityregularsensitivityaiprompt7C4457E5",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SSMinvestigationsqueueLOWpriorityregularsensitivitymediadownload54CFB8F0": {
-      "Properties": {
-        "Description": "QueueGardens CODE queue for media-download tasks with a LOW priority, for regular-sensitivity stuff",
-        "Name": "/investigations-queues/CODE/LOW-priority/regular-sensitivity/media-download/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "CODE",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueLOWpriorityregularsensitivitymediadownload29703E67",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SSMinvestigationsqueueLOWpriorityregularsensitivitysnapshotting78CE0148": {
-      "Properties": {
-        "Description": "QueueGardens CODE queue for snapshotting tasks with a LOW priority, for regular-sensitivity stuff",
-        "Name": "/investigations-queues/CODE/LOW-priority/regular-sensitivity/snapshotting/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "CODE",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueLOWpriorityregularsensitivitysnapshotting9D0878B7",
             "Arn",
           ],
         },
@@ -11215,46 +11055,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SSMinvestigationsqueueSTANDARDprioritypublicdomainmediadownloadE82A8DF9": {
-      "Properties": {
-        "Description": "QueueGardens CODE queue for media-download tasks with a STANDARD priority, for public-domain stuff",
-        "Name": "/investigations-queues/CODE/STANDARD-priority/public-domain/media-download/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "CODE",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueSTANDARDprioritypublicdomainmediadownloadA49D2544",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SSMinvestigationsqueueSTANDARDprioritypublicdomainsnapshotting3F8D81D1": {
-      "Properties": {
-        "Description": "QueueGardens CODE queue for snapshotting tasks with a STANDARD priority, for public-domain stuff",
-        "Name": "/investigations-queues/CODE/STANDARD-priority/public-domain/snapshotting/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "CODE",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueSTANDARDprioritypublicdomainsnapshotting254CC7EF",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "SSMinvestigationsqueueSTANDARDprioritypublicdomaintranscriptionE2DF2E9B": {
       "Properties": {
         "Description": "QueueGardens CODE queue for transcription tasks with a STANDARD priority, for public-domain stuff",
@@ -11335,46 +11135,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SSMinvestigationsqueueSTANDARDpriorityregularsensitivitymediadownload9C05CF7A": {
-      "Properties": {
-        "Description": "QueueGardens CODE queue for media-download tasks with a STANDARD priority, for regular-sensitivity stuff",
-        "Name": "/investigations-queues/CODE/STANDARD-priority/regular-sensitivity/media-download/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "CODE",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueSTANDARDpriorityregularsensitivitymediadownloadC9E1F351",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SSMinvestigationsqueueSTANDARDpriorityregularsensitivitysnapshotting6E245F82": {
-      "Properties": {
-        "Description": "QueueGardens CODE queue for snapshotting tasks with a STANDARD priority, for regular-sensitivity stuff",
-        "Name": "/investigations-queues/CODE/STANDARD-priority/regular-sensitivity/snapshotting/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "CODE",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueSTANDARDpriorityregularsensitivitysnapshotting9C6BECD4",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "SSMinvestigationsqueueSTANDARDpriorityregularsensitivitytranscription668EFD8C": {
       "Properties": {
         "Description": "QueueGardens CODE queue for transcription tasks with a STANDARD priority, for regular-sensitivity stuff",
@@ -11439,58 +11199,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
       "DeletionPolicy": "Delete",
       "Properties": {
         "QueueName": "investigations-DLQ_HIGH-priority_public-domain_ai-prompt_CODE",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQHIGHprioritypublicdomainmediadownloadF062E087": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_HIGH-priority_public-domain_media-download_CODE",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQHIGHprioritypublicdomainsnapshotting282F7148": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_HIGH-priority_public-domain_snapshotting_CODE",
         "Tags": [
           {
             "Key": "gu:cdk:version",
@@ -11617,58 +11325,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
     },
-    "investigationsDLQHIGHpriorityregularsensitivitymediadownload1016C994": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_HIGH-priority_regular-sensitivity_media-download_CODE",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQHIGHpriorityregularsensitivitysnapshotting2E5BF66F": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_HIGH-priority_regular-sensitivity_snapshotting_CODE",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
     "investigationsDLQHIGHpriorityregularsensitivitytranscription2DC8B646": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -11751,58 +11407,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
       "DeletionPolicy": "Delete",
       "Properties": {
         "QueueName": "investigations-DLQ_LOW-priority_public-domain_ai-prompt_CODE",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQLOWprioritypublicdomainmediadownload3EC7C01B": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_LOW-priority_public-domain_media-download_CODE",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQLOWprioritypublicdomainsnapshotting459E6C9A": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_LOW-priority_public-domain_snapshotting_CODE",
         "Tags": [
           {
             "Key": "gu:cdk:version",
@@ -11929,58 +11533,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
     },
-    "investigationsDLQLOWpriorityregularsensitivitymediadownloadA1E64D1A": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_LOW-priority_regular-sensitivity_media-download_CODE",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQLOWpriorityregularsensitivitysnapshotting1E0C34DD": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_LOW-priority_regular-sensitivity_snapshotting_CODE",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
     "investigationsDLQLOWpriorityregularsensitivitytranscriptionFBB8366F": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -12063,58 +11615,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
       "DeletionPolicy": "Delete",
       "Properties": {
         "QueueName": "investigations-DLQ_STANDARD-priority_public-domain_ai-prompt_CODE",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQSTANDARDprioritypublicdomainmediadownloadC0F8F9E6": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_STANDARD-priority_public-domain_media-download_CODE",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQSTANDARDprioritypublicdomainsnapshotting38B2A4C5": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_STANDARD-priority_public-domain_snapshotting_CODE",
         "Tags": [
           {
             "Key": "gu:cdk:version",
@@ -12241,58 +11741,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
     },
-    "investigationsDLQSTANDARDpriorityregularsensitivitymediadownloadD2E761E7": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_STANDARD-priority_regular-sensitivity_media-download_CODE",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQSTANDARDpriorityregularsensitivitysnapshottingDDE5EE10": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_STANDARD-priority_regular-sensitivity_snapshotting_CODE",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
     "investigationsDLQSTANDARDpriorityregularsensitivitytranscriptionB705C837": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -12379,76 +11827,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
           "deadLetterTargetArn": {
             "Fn::GetAtt": [
               "investigationsDLQHIGHprioritypublicdomainaiprompt8EA7DD2E",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueHIGHprioritypublicdomainmediadownload75308A45": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_HIGH-priority_public-domain_media-download_CODE",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQHIGHprioritypublicdomainmediadownloadF062E087",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueHIGHprioritypublicdomainsnapshotting6B6D5965": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_HIGH-priority_public-domain_snapshotting_CODE",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQHIGHprioritypublicdomainsnapshotting282F7148",
               "Arn",
             ],
           },
@@ -12616,76 +11994,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
     },
-    "investigationsqueueHIGHpriorityregularsensitivitymediadownload53DE962E": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_HIGH-priority_regular-sensitivity_media-download_CODE",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQHIGHpriorityregularsensitivitymediadownload1016C994",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueHIGHpriorityregularsensitivitysnapshottingB4AA479E": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_HIGH-priority_regular-sensitivity_snapshotting_CODE",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQHIGHpriorityregularsensitivitysnapshotting2E5BF66F",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
     "investigationsqueueHIGHpriorityregularsensitivitytranscriptionEED4AF0D": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -12799,76 +12107,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
           "deadLetterTargetArn": {
             "Fn::GetAtt": [
               "investigationsDLQLOWprioritypublicdomainaiprompt70425DE3",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueLOWprioritypublicdomainmediadownloadC10436A2": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_LOW-priority_public-domain_media-download_CODE",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQLOWprioritypublicdomainmediadownload3EC7C01B",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueLOWprioritypublicdomainsnapshotting28A79839": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_LOW-priority_public-domain_snapshotting_CODE",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQLOWprioritypublicdomainsnapshotting459E6C9A",
               "Arn",
             ],
           },
@@ -13036,76 +12274,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
     },
-    "investigationsqueueLOWpriorityregularsensitivitymediadownload29703E67": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_LOW-priority_regular-sensitivity_media-download_CODE",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQLOWpriorityregularsensitivitymediadownloadA1E64D1A",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueLOWpriorityregularsensitivitysnapshotting9D0878B7": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_LOW-priority_regular-sensitivity_snapshotting_CODE",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQLOWpriorityregularsensitivitysnapshotting1E0C34DD",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
     "investigationsqueueLOWpriorityregularsensitivitytranscription07855EC6": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -13219,76 +12387,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
           "deadLetterTargetArn": {
             "Fn::GetAtt": [
               "investigationsDLQSTANDARDprioritypublicdomainaiprompt786CDDB9",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueSTANDARDprioritypublicdomainmediadownloadA49D2544": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_STANDARD-priority_public-domain_media-download_CODE",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQSTANDARDprioritypublicdomainmediadownloadC0F8F9E6",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueSTANDARDprioritypublicdomainsnapshotting254CC7EF": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_STANDARD-priority_public-domain_snapshotting_CODE",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQSTANDARDprioritypublicdomainsnapshotting38B2A4C5",
               "Arn",
             ],
           },
@@ -13456,76 +12554,6 @@ exports[`Giant's stacks should match the snapshots 5`] = `
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
     },
-    "investigationsqueueSTANDARDpriorityregularsensitivitymediadownloadC9E1F351": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_STANDARD-priority_regular-sensitivity_media-download_CODE",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQSTANDARDpriorityregularsensitivitymediadownloadD2E761E7",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueSTANDARDpriorityregularsensitivitysnapshotting9C6BECD4": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_STANDARD-priority_regular-sensitivity_snapshotting_CODE",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQSTANDARDpriorityregularsensitivitysnapshottingDDE5EE10",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
     "investigationsqueueSTANDARDpriorityregularsensitivitytranscription5747071F": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -13662,46 +12690,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SSMinvestigationsqueueHIGHprioritypublicdomainmediadownload90E6E549": {
-      "Properties": {
-        "Description": "QueueGardens PROD queue for media-download tasks with a HIGH priority, for public-domain stuff",
-        "Name": "/investigations-queues/PROD/HIGH-priority/public-domain/media-download/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "PROD",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueHIGHprioritypublicdomainmediadownload75308A45",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SSMinvestigationsqueueHIGHprioritypublicdomainsnapshotting9F454361": {
-      "Properties": {
-        "Description": "QueueGardens PROD queue for snapshotting tasks with a HIGH priority, for public-domain stuff",
-        "Name": "/investigations-queues/PROD/HIGH-priority/public-domain/snapshotting/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "PROD",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueHIGHprioritypublicdomainsnapshotting6B6D5965",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "SSMinvestigationsqueueHIGHprioritypublicdomaintranscription189F6E29": {
       "Properties": {
         "Description": "QueueGardens PROD queue for transcription tasks with a HIGH priority, for public-domain stuff",
@@ -13776,46 +12764,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
         "Value": {
           "Fn::GetAtt": [
             "investigationsqueueHIGHpriorityregularsensitivityaiprompt94528DFE",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SSMinvestigationsqueueHIGHpriorityregularsensitivitymediadownload39EC7843": {
-      "Properties": {
-        "Description": "QueueGardens PROD queue for media-download tasks with a HIGH priority, for regular-sensitivity stuff",
-        "Name": "/investigations-queues/PROD/HIGH-priority/regular-sensitivity/media-download/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "PROD",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueHIGHpriorityregularsensitivitymediadownload53DE962E",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SSMinvestigationsqueueHIGHpriorityregularsensitivitysnapshottingB62E1504": {
-      "Properties": {
-        "Description": "QueueGardens PROD queue for snapshotting tasks with a HIGH priority, for regular-sensitivity stuff",
-        "Name": "/investigations-queues/PROD/HIGH-priority/regular-sensitivity/snapshotting/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "PROD",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueHIGHpriorityregularsensitivitysnapshottingB4AA479E",
             "Arn",
           ],
         },
@@ -13902,46 +12850,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SSMinvestigationsqueueLOWprioritypublicdomainmediadownload380FD801": {
-      "Properties": {
-        "Description": "QueueGardens PROD queue for media-download tasks with a LOW priority, for public-domain stuff",
-        "Name": "/investigations-queues/PROD/LOW-priority/public-domain/media-download/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "PROD",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueLOWprioritypublicdomainmediadownloadC10436A2",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SSMinvestigationsqueueLOWprioritypublicdomainsnapshottingF84E86A5": {
-      "Properties": {
-        "Description": "QueueGardens PROD queue for snapshotting tasks with a LOW priority, for public-domain stuff",
-        "Name": "/investigations-queues/PROD/LOW-priority/public-domain/snapshotting/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "PROD",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueLOWprioritypublicdomainsnapshotting28A79839",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "SSMinvestigationsqueueLOWprioritypublicdomaintranscription85B2696D": {
       "Properties": {
         "Description": "QueueGardens PROD queue for transcription tasks with a LOW priority, for public-domain stuff",
@@ -14016,46 +12924,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
         "Value": {
           "Fn::GetAtt": [
             "investigationsqueueLOWpriorityregularsensitivityaiprompt7C4457E5",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SSMinvestigationsqueueLOWpriorityregularsensitivitymediadownload54CFB8F0": {
-      "Properties": {
-        "Description": "QueueGardens PROD queue for media-download tasks with a LOW priority, for regular-sensitivity stuff",
-        "Name": "/investigations-queues/PROD/LOW-priority/regular-sensitivity/media-download/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "PROD",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueLOWpriorityregularsensitivitymediadownload29703E67",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SSMinvestigationsqueueLOWpriorityregularsensitivitysnapshotting78CE0148": {
-      "Properties": {
-        "Description": "QueueGardens PROD queue for snapshotting tasks with a LOW priority, for regular-sensitivity stuff",
-        "Name": "/investigations-queues/PROD/LOW-priority/regular-sensitivity/snapshotting/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "PROD",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueLOWpriorityregularsensitivitysnapshotting9D0878B7",
             "Arn",
           ],
         },
@@ -14142,46 +13010,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SSMinvestigationsqueueSTANDARDprioritypublicdomainmediadownloadE82A8DF9": {
-      "Properties": {
-        "Description": "QueueGardens PROD queue for media-download tasks with a STANDARD priority, for public-domain stuff",
-        "Name": "/investigations-queues/PROD/STANDARD-priority/public-domain/media-download/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "PROD",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueSTANDARDprioritypublicdomainmediadownloadA49D2544",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SSMinvestigationsqueueSTANDARDprioritypublicdomainsnapshotting3F8D81D1": {
-      "Properties": {
-        "Description": "QueueGardens PROD queue for snapshotting tasks with a STANDARD priority, for public-domain stuff",
-        "Name": "/investigations-queues/PROD/STANDARD-priority/public-domain/snapshotting/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "PROD",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueSTANDARDprioritypublicdomainsnapshotting254CC7EF",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "SSMinvestigationsqueueSTANDARDprioritypublicdomaintranscriptionE2DF2E9B": {
       "Properties": {
         "Description": "QueueGardens PROD queue for transcription tasks with a STANDARD priority, for public-domain stuff",
@@ -14262,46 +13090,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SSMinvestigationsqueueSTANDARDpriorityregularsensitivitymediadownload9C05CF7A": {
-      "Properties": {
-        "Description": "QueueGardens PROD queue for media-download tasks with a STANDARD priority, for regular-sensitivity stuff",
-        "Name": "/investigations-queues/PROD/STANDARD-priority/regular-sensitivity/media-download/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "PROD",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueSTANDARDpriorityregularsensitivitymediadownloadC9E1F351",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SSMinvestigationsqueueSTANDARDpriorityregularsensitivitysnapshotting6E245F82": {
-      "Properties": {
-        "Description": "QueueGardens PROD queue for snapshotting tasks with a STANDARD priority, for regular-sensitivity stuff",
-        "Name": "/investigations-queues/PROD/STANDARD-priority/regular-sensitivity/snapshotting/arn",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "PROD",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "investigationsqueueSTANDARDpriorityregularsensitivitysnapshotting9C6BECD4",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "SSMinvestigationsqueueSTANDARDpriorityregularsensitivitytranscription668EFD8C": {
       "Properties": {
         "Description": "QueueGardens PROD queue for transcription tasks with a STANDARD priority, for regular-sensitivity stuff",
@@ -14366,58 +13154,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
       "DeletionPolicy": "Delete",
       "Properties": {
         "QueueName": "investigations-DLQ_HIGH-priority_public-domain_ai-prompt_PROD",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQHIGHprioritypublicdomainmediadownloadF062E087": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_HIGH-priority_public-domain_media-download_PROD",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQHIGHprioritypublicdomainsnapshotting282F7148": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_HIGH-priority_public-domain_snapshotting_PROD",
         "Tags": [
           {
             "Key": "gu:cdk:version",
@@ -14544,58 +13280,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
     },
-    "investigationsDLQHIGHpriorityregularsensitivitymediadownload1016C994": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_HIGH-priority_regular-sensitivity_media-download_PROD",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQHIGHpriorityregularsensitivitysnapshotting2E5BF66F": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_HIGH-priority_regular-sensitivity_snapshotting_PROD",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
     "investigationsDLQHIGHpriorityregularsensitivitytranscription2DC8B646": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -14678,58 +13362,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
       "DeletionPolicy": "Delete",
       "Properties": {
         "QueueName": "investigations-DLQ_LOW-priority_public-domain_ai-prompt_PROD",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQLOWprioritypublicdomainmediadownload3EC7C01B": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_LOW-priority_public-domain_media-download_PROD",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQLOWprioritypublicdomainsnapshotting459E6C9A": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_LOW-priority_public-domain_snapshotting_PROD",
         "Tags": [
           {
             "Key": "gu:cdk:version",
@@ -14856,58 +13488,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
     },
-    "investigationsDLQLOWpriorityregularsensitivitymediadownloadA1E64D1A": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_LOW-priority_regular-sensitivity_media-download_PROD",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQLOWpriorityregularsensitivitysnapshotting1E0C34DD": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_LOW-priority_regular-sensitivity_snapshotting_PROD",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
     "investigationsDLQLOWpriorityregularsensitivitytranscriptionFBB8366F": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -14990,58 +13570,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
       "DeletionPolicy": "Delete",
       "Properties": {
         "QueueName": "investigations-DLQ_STANDARD-priority_public-domain_ai-prompt_PROD",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQSTANDARDprioritypublicdomainmediadownloadC0F8F9E6": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_STANDARD-priority_public-domain_media-download_PROD",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQSTANDARDprioritypublicdomainsnapshotting38B2A4C5": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_STANDARD-priority_public-domain_snapshotting_PROD",
         "Tags": [
           {
             "Key": "gu:cdk:version",
@@ -15168,58 +13696,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
     },
-    "investigationsDLQSTANDARDpriorityregularsensitivitymediadownloadD2E761E7": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_STANDARD-priority_regular-sensitivity_media-download_PROD",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsDLQSTANDARDpriorityregularsensitivitysnapshottingDDE5EE10": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-DLQ_STANDARD-priority_regular-sensitivity_snapshotting_PROD",
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
     "investigationsDLQSTANDARDpriorityregularsensitivitytranscriptionB705C837": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -15306,76 +13782,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
           "deadLetterTargetArn": {
             "Fn::GetAtt": [
               "investigationsDLQHIGHprioritypublicdomainaiprompt8EA7DD2E",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueHIGHprioritypublicdomainmediadownload75308A45": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_HIGH-priority_public-domain_media-download_PROD",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQHIGHprioritypublicdomainmediadownloadF062E087",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueHIGHprioritypublicdomainsnapshotting6B6D5965": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_HIGH-priority_public-domain_snapshotting_PROD",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQHIGHprioritypublicdomainsnapshotting282F7148",
               "Arn",
             ],
           },
@@ -15543,76 +13949,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
     },
-    "investigationsqueueHIGHpriorityregularsensitivitymediadownload53DE962E": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_HIGH-priority_regular-sensitivity_media-download_PROD",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQHIGHpriorityregularsensitivitymediadownload1016C994",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueHIGHpriorityregularsensitivitysnapshottingB4AA479E": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_HIGH-priority_regular-sensitivity_snapshotting_PROD",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQHIGHpriorityregularsensitivitysnapshotting2E5BF66F",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
     "investigationsqueueHIGHpriorityregularsensitivitytranscriptionEED4AF0D": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -15726,76 +14062,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
           "deadLetterTargetArn": {
             "Fn::GetAtt": [
               "investigationsDLQLOWprioritypublicdomainaiprompt70425DE3",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueLOWprioritypublicdomainmediadownloadC10436A2": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_LOW-priority_public-domain_media-download_PROD",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQLOWprioritypublicdomainmediadownload3EC7C01B",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueLOWprioritypublicdomainsnapshotting28A79839": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_LOW-priority_public-domain_snapshotting_PROD",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQLOWprioritypublicdomainsnapshotting459E6C9A",
               "Arn",
             ],
           },
@@ -15963,76 +14229,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
     },
-    "investigationsqueueLOWpriorityregularsensitivitymediadownload29703E67": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_LOW-priority_regular-sensitivity_media-download_PROD",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQLOWpriorityregularsensitivitymediadownloadA1E64D1A",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueLOWpriorityregularsensitivitysnapshotting9D0878B7": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_LOW-priority_regular-sensitivity_snapshotting_PROD",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQLOWpriorityregularsensitivitysnapshotting1E0C34DD",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
     "investigationsqueueLOWpriorityregularsensitivitytranscription07855EC6": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -16173,76 +14369,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
     },
-    "investigationsqueueSTANDARDprioritypublicdomainmediadownloadA49D2544": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_STANDARD-priority_public-domain_media-download_PROD",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQSTANDARDprioritypublicdomainmediadownloadC0F8F9E6",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueSTANDARDprioritypublicdomainsnapshotting254CC7EF": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_STANDARD-priority_public-domain_snapshotting_PROD",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQSTANDARDprioritypublicdomainsnapshotting38B2A4C5",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
     "investigationsqueueSTANDARDprioritypublicdomaintranscriptionEA1108CF": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -16356,76 +14482,6 @@ exports[`Giant's stacks should match the snapshots 6`] = `
           "deadLetterTargetArn": {
             "Fn::GetAtt": [
               "investigationsDLQSTANDARDpriorityregularsensitivityaipromptDBF59486",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueSTANDARDpriorityregularsensitivitymediadownloadC9E1F351": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_STANDARD-priority_regular-sensitivity_media-download_PROD",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQSTANDARDpriorityregularsensitivitymediadownloadD2E761E7",
-              "Arn",
-            ],
-          },
-          "maxReceiveCount": 3,
-        },
-        "Tags": [
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/transcription-service",
-          },
-          {
-            "Key": "Stack",
-            "Value": "investigations",
-          },
-          {
-            "Key": "Stage",
-            "Value": "PROD",
-          },
-        ],
-      },
-      "Type": "AWS::SQS::Queue",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "investigationsqueueSTANDARDpriorityregularsensitivitysnapshotting9C6BECD4": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "QueueName": "investigations-queue_STANDARD-priority_regular-sensitivity_snapshotting_PROD",
-        "RedrivePolicy": {
-          "deadLetterTargetArn": {
-            "Fn::GetAtt": [
-              "investigationsDLQSTANDARDpriorityregularsensitivitysnapshottingDDE5EE10",
               "Arn",
             ],
           },

@@ -17,11 +17,11 @@ const priorityLevelToQueueProps = {
 
 // TODO for each consider linking to the type definition for the payload
 const activityTypes = [
-	'media-download',
+	// 'media-download',
 	'transcription',
 	'translation',
 	'visual-ocr',
-	'snapshotting',
+	// 'snapshotting',
 	'ai-prompt',
 ] as const;
 
