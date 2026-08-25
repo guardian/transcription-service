@@ -1,7 +1,7 @@
 import 'source-map-support/register';
 import { GuRoot } from '@guardian/cdk/lib/constructs/root';
 import { App } from 'aws-cdk-lib';
-import { QueueGardens } from '../lib/queue-gardens';
+import { QueueGardensStack } from '../lib/queue-gardens-stack';
 import { TranscriptionServiceRepository } from '../lib/repository';
 import { TranscriptionService } from '../lib/transcription-service';
 import { TranscriptionServiceUniversalInfra } from '../lib/universal-infra';
@@ -42,12 +42,12 @@ export const guStacks = [
 		},
 	),
 
-	new QueueGardens(app, 'QueueGardens-CODE', {
+	new QueueGardensStack(app, 'QueueGardens-CODE', {
 		stack,
 		stage: 'CODE',
 		env,
 	}),
-	new QueueGardens(app, 'QueueGardens-PROD', {
+	new QueueGardensStack(app, 'QueueGardens-PROD', {
 		stack,
 		stage: 'PROD',
 		env,
@@ -61,7 +61,7 @@ export const guStacks = [
  *  This can then be instantiated locally with localstack, minitstack or whatever.
  */
 const localApp = new App({ outdir: 'cdk.out' });
-new QueueGardens(localApp, 'QueueGardens-LOCAL', {
+new QueueGardensStack(localApp, 'QueueGardens-LOCAL', {
 	stack,
 	stage: 'LOCAL',
 	env,
