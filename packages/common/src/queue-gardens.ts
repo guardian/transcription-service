@@ -17,6 +17,7 @@ export const activityTypes = [
 	// 'snapshotting', // standalone queue, doesn't need the priority/sensitivity
 	'ai-prompt',
 ] as const;
+export type ActivityType = (typeof activityTypes)[number];
 
 // used to determine where the activity takes place
 export const sensitivityLevels = [
@@ -24,3 +25,24 @@ export const sensitivityLevels = [
 	'regular-sensitivity', // non-public documents, which we should only process in AWS/on-prem
 	// "super-sensitive" // super sensitive documents are only process by the offline giant in the bunker
 ] as const;
+export type SensitivityLevel = (typeof sensitivityLevels)[number];
+
+export const buildVerifiedQueueName =
+	(
+		priorityLevel: PriorityLevel,
+		sensitivityLevel: SensitivityLevel,
+		activityType: ActivityType,
+	) =>
+	(
+		queueType: 'queue' | 'DLQ',
+		maybeStage?: string, // optional because we also want to build logical IDs for the queues, which don't have the stage suffix
+	) => {
+		const suffix = maybeStage ? `_${maybeStage}` : '';
+		const potentialName = `investigations-${queueType}_${priorityLevel.toUpperCase()}-priority_${sensitivityLevel}_${activityType}${suffix}`;
+		if (potentialName.length > 80) {
+			throw Error(
+				`Queue name "${potentialName}" exceeds the maximum length of 80 characters (by ${potentialName.length - 80})`,
+			);
+		}
+		return potentialName;
+	};
