@@ -2910,8 +2910,6 @@ service transcription-service-worker start",
             {
               "Action": [
                 "dynamodb:BatchGetItem",
-                "dynamodb:GetRecords",
-                "dynamodb:GetShardIterator",
                 "dynamodb:Query",
                 "dynamodb:GetItem",
                 "dynamodb:Scan",
@@ -2930,16 +2928,26 @@ service transcription-service-worker start",
                     "Arn",
                   ],
                 },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
                 {
-                  "Ref": "AWS::NoValue",
+                  "Fn::GetAtt": [
+                    "TranscriptTableA6F8B506",
+                    "Arn",
+                  ],
                 },
               ],
             },
             {
               "Action": [
                 "dynamodb:BatchGetItem",
-                "dynamodb:GetRecords",
-                "dynamodb:GetShardIterator",
                 "dynamodb:Query",
                 "dynamodb:GetItem",
                 "dynamodb:Scan",
@@ -2958,8 +2966,20 @@ service transcription-service-worker start",
                     "Arn",
                   ],
                 },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
                 {
-                  "Ref": "AWS::NoValue",
+                  "Fn::GetAtt": [
+                    "EventsTableD24865E5",
+                    "Arn",
+                  ],
                 },
               ],
             },
@@ -3266,6 +3286,9 @@ service transcription-service-worker start",
         "transcriptionserviceapitranscriptionserviceCODEproxyE456CCE5",
         "transcriptionserviceapitranscriptionserviceCODEANY7371795C",
       ],
+      "Metadata": {
+        "aws:cdk:do-not-refactor": true,
+      },
       "Properties": {
         "Description": "API for transcription service frontend",
         "RestApiId": {
@@ -3747,8 +3770,6 @@ service transcription-service-worker start",
             {
               "Action": [
                 "dynamodb:BatchGetItem",
-                "dynamodb:GetRecords",
-                "dynamodb:GetShardIterator",
                 "dynamodb:Query",
                 "dynamodb:GetItem",
                 "dynamodb:Scan",
@@ -3767,8 +3788,20 @@ service transcription-service-worker start",
                     "Arn",
                   ],
                 },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
                 {
-                  "Ref": "AWS::NoValue",
+                  "Fn::GetAtt": [
+                    "TranscriptTableA6F8B506",
+                    "Arn",
+                  ],
                 },
               ],
             },
@@ -4001,8 +4034,6 @@ service transcription-service-worker start",
             {
               "Action": [
                 "dynamodb:BatchGetItem",
-                "dynamodb:GetRecords",
-                "dynamodb:GetShardIterator",
                 "dynamodb:Query",
                 "dynamodb:GetItem",
                 "dynamodb:Scan",
@@ -4021,8 +4052,20 @@ service transcription-service-worker start",
                     "Arn",
                   ],
                 },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
                 {
-                  "Ref": "AWS::NoValue",
+                  "Fn::GetAtt": [
+                    "TranscriptTableA6F8B506",
+                    "Arn",
+                  ],
                 },
               ],
             },
@@ -4862,6 +4905,24 @@ service transcription-service-worker start",
         "Description": "Manages worker capacity by updating the desired capacity of ASG based on queue length",
         "ScheduleExpression": "rate(1 minute)",
         "State": "ENABLED",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
         "Targets": [
           {
             "Arn": {
@@ -7997,8 +8058,6 @@ service transcription-service-worker start",
             {
               "Action": [
                 "dynamodb:BatchGetItem",
-                "dynamodb:GetRecords",
-                "dynamodb:GetShardIterator",
                 "dynamodb:Query",
                 "dynamodb:GetItem",
                 "dynamodb:Scan",
@@ -8017,16 +8076,26 @@ service transcription-service-worker start",
                     "Arn",
                   ],
                 },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
                 {
-                  "Ref": "AWS::NoValue",
+                  "Fn::GetAtt": [
+                    "TranscriptTableA6F8B506",
+                    "Arn",
+                  ],
                 },
               ],
             },
             {
               "Action": [
                 "dynamodb:BatchGetItem",
-                "dynamodb:GetRecords",
-                "dynamodb:GetShardIterator",
                 "dynamodb:Query",
                 "dynamodb:GetItem",
                 "dynamodb:Scan",
@@ -8045,8 +8114,20 @@ service transcription-service-worker start",
                     "Arn",
                   ],
                 },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
                 {
-                  "Ref": "AWS::NoValue",
+                  "Fn::GetAtt": [
+                    "EventsTableD24865E5",
+                    "Arn",
+                  ],
                 },
               ],
             },
@@ -8353,6 +8434,9 @@ service transcription-service-worker start",
         "transcriptionserviceapitranscriptionservicePRODproxy1198D587",
         "transcriptionserviceapitranscriptionservicePRODANY8854BB84",
       ],
+      "Metadata": {
+        "aws:cdk:do-not-refactor": true,
+      },
       "Properties": {
         "Description": "API for transcription service frontend",
         "RestApiId": {
@@ -8960,8 +9044,6 @@ service transcription-service-worker start",
             {
               "Action": [
                 "dynamodb:BatchGetItem",
-                "dynamodb:GetRecords",
-                "dynamodb:GetShardIterator",
                 "dynamodb:Query",
                 "dynamodb:GetItem",
                 "dynamodb:Scan",
@@ -8980,8 +9062,20 @@ service transcription-service-worker start",
                     "Arn",
                   ],
                 },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
                 {
-                  "Ref": "AWS::NoValue",
+                  "Fn::GetAtt": [
+                    "TranscriptTableA6F8B506",
+                    "Arn",
+                  ],
                 },
               ],
             },
@@ -9340,8 +9434,6 @@ service transcription-service-worker start",
             {
               "Action": [
                 "dynamodb:BatchGetItem",
-                "dynamodb:GetRecords",
-                "dynamodb:GetShardIterator",
                 "dynamodb:Query",
                 "dynamodb:GetItem",
                 "dynamodb:Scan",
@@ -9360,8 +9452,20 @@ service transcription-service-worker start",
                     "Arn",
                   ],
                 },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
                 {
-                  "Ref": "AWS::NoValue",
+                  "Fn::GetAtt": [
+                    "TranscriptTableA6F8B506",
+                    "Arn",
+                  ],
                 },
               ],
             },
@@ -10327,6 +10431,24 @@ service transcription-service-worker start",
         "Description": "Manages worker capacity by updating the desired capacity of ASG based on queue length",
         "ScheduleExpression": "rate(1 minute)",
         "State": "ENABLED",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
         "Targets": [
           {
             "Arn": {
@@ -10442,6 +10564,10 @@ exports[`Giant's stacks should match the snapshots 3`] = `
             "Value": "guardian/transcription-service",
           },
           {
+            "Key": "gu:riff-raff:project",
+            "Value": "investigations::transcription-service-repository",
+          },
+          {
             "Key": "Stack",
             "Value": "investigations",
           },
@@ -10533,6 +10659,10 @@ exports[`Giant's stacks should match the snapshots 3`] = `
             "Value": "guardian/transcription-service",
           },
           {
+            "Key": "gu:riff-raff:project",
+            "Value": "investigations::transcription-service-repository",
+          },
+          {
             "Key": "Stack",
             "Value": "investigations",
           },
@@ -10614,6 +10744,10 @@ exports[`Giant's stacks should match the snapshots 3`] = `
             "Value": "guardian/transcription-service",
           },
           {
+            "Key": "gu:riff-raff:project",
+            "Value": "investigations::transcription-service-repository",
+          },
+          {
             "Key": "Stack",
             "Value": "investigations",
           },
@@ -10657,6 +10791,7 @@ exports[`Giant's stacks should match the snapshots 4`] = `
           "Stage": "PROD",
           "gu:cdk:version": "TEST",
           "gu:repo": "guardian/transcription-service",
+          "gu:riff-raff:project": "investigations::transcription-service-universal-infra",
         },
         "Type": "String",
         "Value": {
@@ -10690,6 +10825,10 @@ exports[`Giant's stacks should match the snapshots 4`] = `
           {
             "Key": "gu:repo",
             "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "gu:riff-raff:project",
+            "Value": "investigations::transcription-service-universal-infra",
           },
           {
             "Key": "Stack",
