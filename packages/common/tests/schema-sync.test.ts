@@ -15,6 +15,26 @@ describe('Worker Interface Types Schema Sync', () => {
 	let savedSchema: Record<string, unknown>;
 	let generatedSchema: Record<string, unknown>;
 
+	// named types are emitted once under $defs and referenced via $ref, to avoid
+	// repeating large schemas (e.g. the language code enums) throughout the file
+	const resolveRef = (
+		schema: Record<string, unknown> | undefined,
+	): Record<string, unknown> => {
+		const ref = schema?.$ref;
+		if (typeof ref !== 'string') return schema ?? {};
+		const name = ref.replace('#/$defs/', '');
+		const defs = savedSchema.$defs as Record<string, Record<string, unknown>>;
+		return defs[name] ?? {};
+	};
+
+	const getType = (name: string): Record<string, unknown> => {
+		const properties = savedSchema.properties as Record<
+			string,
+			Record<string, unknown>
+		>;
+		return resolveRef(properties[name]);
+	};
+
 	beforeAll(() => {
 		// Read the saved schema file
 		const schemaContent = fs.readFileSync(schemaPath, 'utf-8');
@@ -42,21 +62,20 @@ describe('Worker Interface Types Schema Sync', () => {
 	});
 
 	it('should have correct enum values for JobType', () => {
-		const properties = savedSchema.properties as Record<string, unknown>;
-		const jobTypeSchema = properties.JobType as Record<string, unknown>;
-		expect(jobTypeSchema.enum).toEqual(JobType.options);
+		expect(getType('JobType').enum).toEqual(JobType.options);
 	});
 
 	it('should have correct discriminated union for WorkerJob', () => {
-		const properties = savedSchema.properties as Record<string, unknown>;
-		const workerJob = properties.WorkerJob as Record<string, unknown>;
+		const workerJob = getType('WorkerJob');
 		// Zod 4 uses oneOf for discriminated unions
 		expect(workerJob.oneOf).toBeDefined();
 		expect(Array.isArray(workerJob.oneOf)).toBe(true);
 		expect((workerJob.oneOf as unknown[]).length).toBe(JobType.options.length);
 
 		// Each variant should have the jobType discriminator as a const
-		const variants = workerJob.oneOf as Array<Record<string, unknown>>;
+		const variants = (workerJob.oneOf as Array<Record<string, unknown>>).map(
+			resolveRef,
+		);
 		const jobTypes = variants.map((variant) => {
 			const props = variant.properties as Record<string, unknown>;
 			const jobType = props.jobType as Record<string, unknown>;

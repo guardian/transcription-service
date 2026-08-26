@@ -56,8 +56,23 @@ export const workerInterfaceSchemaNames = Object.keys(workerInterfaceSchemas);
 
 export const WorkerInterfaceTypes = z.object(workerInterfaceSchemas);
 
+/**
+ * Give each named schema an `id` so that zod emits it once under `$defs` and
+ * references it via `$ref` everywhere it is used, rather than inlining a copy.
+ * Without this the (very long) language code enums are repeated for every type
+ * that uses them, which makes the generated schema file enormous.
+ */
+const registerSchemaIds = () => {
+	for (const [name, schema] of Object.entries(workerInterfaceSchemas)) {
+		z.globalRegistry.add(schema as z.ZodType, { id: name });
+	}
+};
+
 /** Generates the JSON Schema document for all worker interface types. */
-export const buildWorkerInterfaceJsonSchema = (): Record<string, unknown> => ({
-	$schema: JSON_SCHEMA_DIALECT,
-	...z.toJSONSchema(WorkerInterfaceTypes, { target: JSON_SCHEMA_TARGET }),
-});
+export const buildWorkerInterfaceJsonSchema = (): Record<string, unknown> => {
+	registerSchemaIds();
+	return {
+		$schema: JSON_SCHEMA_DIALECT,
+		...z.toJSONSchema(WorkerInterfaceTypes, { target: JSON_SCHEMA_TARGET }),
+	};
+};

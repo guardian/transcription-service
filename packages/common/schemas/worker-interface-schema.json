@@ -3,6 +3,95 @@
 	"type": "object",
 	"properties": {
 		"OutputLanguageCode": {
+			"$ref": "#/$defs/OutputLanguageCode"
+		},
+		"Transcripts": {
+			"$ref": "#/$defs/Transcripts"
+		},
+		"TranscriptionMetadata": {
+			"$ref": "#/$defs/TranscriptionMetadata"
+		},
+		"TranscriptionEngine": {
+			"$ref": "#/$defs/TranscriptionEngine"
+		},
+		"LlmBackend": {
+			"$ref": "#/$defs/LlmBackend"
+		},
+		"InputLanguageCode": {
+			"$ref": "#/$defs/InputLanguageCode"
+		},
+		"JobType": {
+			"$ref": "#/$defs/JobType"
+		},
+		"Job": {
+			"$ref": "#/$defs/Job"
+		},
+		"TranscriptionJob": {
+			"$ref": "#/$defs/TranscriptionJob"
+		},
+		"LLMJob": {
+			"$ref": "#/$defs/LLMJob"
+		},
+		"LLMTranslationJob": {
+			"$ref": "#/$defs/LLMTranslationJob"
+		},
+		"WorkerJob": {
+			"$ref": "#/$defs/WorkerJob"
+		},
+		"LlmPrompt": {
+			"$ref": "#/$defs/LlmPrompt"
+		},
+		"TranslationField": {
+			"$ref": "#/$defs/TranslationField"
+		},
+		"TranslationTask": {
+			"$ref": "#/$defs/TranslationTask"
+		},
+		"OutputBase": {
+			"$ref": "#/$defs/OutputBase"
+		},
+		"TranscriptionOutputSuccess": {
+			"$ref": "#/$defs/TranscriptionOutputSuccess"
+		},
+		"TranscriptionOutputFailure": {
+			"$ref": "#/$defs/TranscriptionOutputFailure"
+		},
+		"LLMOutputSuccess": {
+			"$ref": "#/$defs/LLMOutputSuccess"
+		},
+		"LLMOutputFailure": {
+			"$ref": "#/$defs/LLMOutputFailure"
+		},
+		"TranscriptionResult": {
+			"$ref": "#/$defs/TranscriptionResult"
+		}
+	},
+	"required": [
+		"OutputLanguageCode",
+		"Transcripts",
+		"TranscriptionMetadata",
+		"TranscriptionEngine",
+		"LlmBackend",
+		"InputLanguageCode",
+		"JobType",
+		"Job",
+		"TranscriptionJob",
+		"LLMJob",
+		"LLMTranslationJob",
+		"WorkerJob",
+		"LlmPrompt",
+		"TranslationField",
+		"TranslationTask",
+		"OutputBase",
+		"TranscriptionOutputSuccess",
+		"TranscriptionOutputFailure",
+		"LLMOutputSuccess",
+		"LLMOutputFailure",
+		"TranscriptionResult"
+	],
+	"additionalProperties": false,
+	"$defs": {
+		"OutputLanguageCode": {
 			"type": "string",
 			"enum": [
 				"UNKNOWN",
@@ -106,7 +195,8 @@
 				"jw",
 				"su",
 				"yue"
-			]
+			],
+			"id": "OutputLanguageCode"
 		},
 		"Transcripts": {
 			"type": "object",
@@ -122,116 +212,14 @@
 				}
 			},
 			"required": ["srt", "text", "json"],
-			"additionalProperties": false
+			"additionalProperties": false,
+			"id": "Transcripts"
 		},
 		"TranscriptionMetadata": {
 			"type": "object",
 			"properties": {
 				"detectedLanguageCode": {
-					"type": "string",
-					"enum": [
-						"UNKNOWN",
-						"en",
-						"zh",
-						"de",
-						"es",
-						"ru",
-						"ko",
-						"fr",
-						"ja",
-						"pt",
-						"tr",
-						"pl",
-						"ca",
-						"nl",
-						"ar",
-						"sv",
-						"it",
-						"id",
-						"hi",
-						"fi",
-						"vi",
-						"he",
-						"uk",
-						"el",
-						"ms",
-						"cs",
-						"ro",
-						"da",
-						"hu",
-						"ta",
-						"no",
-						"th",
-						"ur",
-						"hr",
-						"bg",
-						"lt",
-						"la",
-						"mi",
-						"ml",
-						"cy",
-						"sk",
-						"te",
-						"fa",
-						"lv",
-						"bn",
-						"sr",
-						"az",
-						"sl",
-						"kn",
-						"et",
-						"mk",
-						"br",
-						"eu",
-						"is",
-						"hy",
-						"ne",
-						"mn",
-						"bs",
-						"kk",
-						"sq",
-						"sw",
-						"gl",
-						"mr",
-						"pa",
-						"si",
-						"km",
-						"sn",
-						"yo",
-						"so",
-						"af",
-						"oc",
-						"ka",
-						"be",
-						"tg",
-						"sd",
-						"gu",
-						"am",
-						"yi",
-						"lo",
-						"uz",
-						"fo",
-						"ht",
-						"ps",
-						"tk",
-						"nn",
-						"mt",
-						"sa",
-						"lb",
-						"my",
-						"bo",
-						"tl",
-						"mg",
-						"as",
-						"tt",
-						"haw",
-						"ln",
-						"ha",
-						"ba",
-						"jw",
-						"su",
-						"yue"
-					]
+					"$ref": "#/$defs/OutputLanguageCode"
 				},
 				"loadTimeMs": {
 					"type": "number"
@@ -241,15 +229,18 @@
 				}
 			},
 			"required": ["detectedLanguageCode"],
-			"additionalProperties": false
+			"additionalProperties": false,
+			"id": "TranscriptionMetadata"
 		},
 		"TranscriptionEngine": {
 			"type": "string",
-			"enum": ["whisperx"]
+			"enum": ["whisperx"],
+			"id": "TranscriptionEngine"
 		},
 		"LlmBackend": {
 			"type": "string",
-			"enum": ["LOCAL", "BEDROCK"]
+			"enum": ["LOCAL", "BEDROCK"],
+			"id": "LlmBackend"
 		},
 		"InputLanguageCode": {
 			"type": "string",
@@ -355,11 +346,13 @@
 				"jw",
 				"su",
 				"yue"
-			]
+			],
+			"id": "InputLanguageCode"
 		},
 		"JobType": {
 			"type": "string",
-			"enum": ["transcribe", "llm", "llm-translation"]
+			"enum": ["transcribe", "llm", "llm-translation"],
+			"id": "JobType"
 		},
 		"Job": {
 			"type": "object",
@@ -397,8 +390,7 @@
 					"additionalProperties": false
 				},
 				"jobType": {
-					"type": "string",
-					"enum": ["transcribe", "llm", "llm-translation"]
+					"$ref": "#/$defs/JobType"
 				},
 				"ingestion": {
 					"type": "string"
@@ -414,7 +406,8 @@
 				"combinedOutputUrl",
 				"jobType"
 			],
-			"additionalProperties": false
+			"additionalProperties": false,
+			"id": "Job"
 		},
 		"TranscriptionJob": {
 			"type": "object",
@@ -459,110 +452,7 @@
 					"type": "string"
 				},
 				"languageCode": {
-					"type": "string",
-					"enum": [
-						"auto",
-						"en",
-						"zh",
-						"de",
-						"es",
-						"ru",
-						"ko",
-						"fr",
-						"ja",
-						"pt",
-						"tr",
-						"pl",
-						"ca",
-						"nl",
-						"ar",
-						"sv",
-						"it",
-						"id",
-						"hi",
-						"fi",
-						"vi",
-						"he",
-						"uk",
-						"el",
-						"ms",
-						"cs",
-						"ro",
-						"da",
-						"hu",
-						"ta",
-						"no",
-						"th",
-						"ur",
-						"hr",
-						"bg",
-						"lt",
-						"la",
-						"mi",
-						"ml",
-						"cy",
-						"sk",
-						"te",
-						"fa",
-						"lv",
-						"bn",
-						"sr",
-						"az",
-						"sl",
-						"kn",
-						"et",
-						"mk",
-						"br",
-						"eu",
-						"is",
-						"hy",
-						"ne",
-						"mn",
-						"bs",
-						"kk",
-						"sq",
-						"sw",
-						"gl",
-						"mr",
-						"pa",
-						"si",
-						"km",
-						"sn",
-						"yo",
-						"so",
-						"af",
-						"oc",
-						"ka",
-						"be",
-						"tg",
-						"sd",
-						"gu",
-						"am",
-						"yi",
-						"lo",
-						"uz",
-						"fo",
-						"ht",
-						"ps",
-						"tk",
-						"nn",
-						"mt",
-						"sa",
-						"lb",
-						"my",
-						"bo",
-						"tl",
-						"mg",
-						"as",
-						"tt",
-						"haw",
-						"ln",
-						"ha",
-						"ba",
-						"jw",
-						"su",
-						"yue"
-					]
+					"$ref": "#/$defs/InputLanguageCode"
 				},
 				"translate": {
 					"type": "boolean"
@@ -571,8 +461,7 @@
 					"type": "boolean"
 				},
 				"engine": {
-					"type": "string",
-					"enum": ["whisperx"]
+					"$ref": "#/$defs/TranscriptionEngine"
 				}
 			},
 			"required": [
@@ -589,7 +478,8 @@
 				"diarize",
 				"engine"
 			],
-			"additionalProperties": false
+			"additionalProperties": false,
+			"id": "TranscriptionJob"
 		},
 		"LLMJob": {
 			"type": "object",
@@ -634,8 +524,7 @@
 					"type": "string"
 				},
 				"backend": {
-					"type": "string",
-					"enum": ["LOCAL", "BEDROCK"]
+					"$ref": "#/$defs/LlmBackend"
 				}
 			},
 			"required": [
@@ -649,7 +538,8 @@
 				"jobType",
 				"backend"
 			],
-			"additionalProperties": false
+			"additionalProperties": false,
+			"id": "LLMJob"
 		},
 		"LLMTranslationJob": {
 			"type": "object",
@@ -694,8 +584,7 @@
 					"type": "string"
 				},
 				"backend": {
-					"type": "string",
-					"enum": ["LOCAL", "BEDROCK"]
+					"$ref": "#/$defs/LlmBackend"
 				}
 			},
 			"required": [
@@ -709,306 +598,22 @@
 				"jobType",
 				"backend"
 			],
-			"additionalProperties": false
+			"additionalProperties": false,
+			"id": "LLMTranslationJob"
 		},
 		"WorkerJob": {
 			"oneOf": [
 				{
-					"type": "object",
-					"properties": {
-						"id": {
-							"type": "string"
-						},
-						"originalFilename": {
-							"type": "string"
-						},
-						"inputSignedUrl": {
-							"type": "string"
-						},
-						"sentTimestamp": {
-							"type": "string"
-						},
-						"userEmail": {
-							"type": "string"
-						},
-						"transcriptDestinationService": {
-							"type": "string",
-							"enum": ["TranscriptionService", "Giant"]
-						},
-						"combinedOutputUrl": {
-							"type": "object",
-							"properties": {
-								"url": {
-									"type": "string"
-								},
-								"key": {
-									"type": "string"
-								}
-							},
-							"required": ["url", "key"],
-							"additionalProperties": false
-						},
-						"jobType": {
-							"type": "string",
-							"const": "llm"
-						},
-						"ingestion": {
-							"type": "string"
-						},
-						"backend": {
-							"type": "string",
-							"enum": ["LOCAL", "BEDROCK"]
-						}
-					},
-					"required": [
-						"id",
-						"originalFilename",
-						"inputSignedUrl",
-						"sentTimestamp",
-						"userEmail",
-						"transcriptDestinationService",
-						"combinedOutputUrl",
-						"jobType",
-						"backend"
-					],
-					"additionalProperties": false
+					"$ref": "#/$defs/LLMJob"
 				},
 				{
-					"type": "object",
-					"properties": {
-						"id": {
-							"type": "string"
-						},
-						"originalFilename": {
-							"type": "string"
-						},
-						"inputSignedUrl": {
-							"type": "string"
-						},
-						"sentTimestamp": {
-							"type": "string"
-						},
-						"userEmail": {
-							"type": "string"
-						},
-						"transcriptDestinationService": {
-							"type": "string",
-							"enum": ["TranscriptionService", "Giant"]
-						},
-						"combinedOutputUrl": {
-							"type": "object",
-							"properties": {
-								"url": {
-									"type": "string"
-								},
-								"key": {
-									"type": "string"
-								}
-							},
-							"required": ["url", "key"],
-							"additionalProperties": false
-						},
-						"jobType": {
-							"type": "string",
-							"const": "transcribe"
-						},
-						"ingestion": {
-							"type": "string"
-						},
-						"languageCode": {
-							"type": "string",
-							"enum": [
-								"auto",
-								"en",
-								"zh",
-								"de",
-								"es",
-								"ru",
-								"ko",
-								"fr",
-								"ja",
-								"pt",
-								"tr",
-								"pl",
-								"ca",
-								"nl",
-								"ar",
-								"sv",
-								"it",
-								"id",
-								"hi",
-								"fi",
-								"vi",
-								"he",
-								"uk",
-								"el",
-								"ms",
-								"cs",
-								"ro",
-								"da",
-								"hu",
-								"ta",
-								"no",
-								"th",
-								"ur",
-								"hr",
-								"bg",
-								"lt",
-								"la",
-								"mi",
-								"ml",
-								"cy",
-								"sk",
-								"te",
-								"fa",
-								"lv",
-								"bn",
-								"sr",
-								"az",
-								"sl",
-								"kn",
-								"et",
-								"mk",
-								"br",
-								"eu",
-								"is",
-								"hy",
-								"ne",
-								"mn",
-								"bs",
-								"kk",
-								"sq",
-								"sw",
-								"gl",
-								"mr",
-								"pa",
-								"si",
-								"km",
-								"sn",
-								"yo",
-								"so",
-								"af",
-								"oc",
-								"ka",
-								"be",
-								"tg",
-								"sd",
-								"gu",
-								"am",
-								"yi",
-								"lo",
-								"uz",
-								"fo",
-								"ht",
-								"ps",
-								"tk",
-								"nn",
-								"mt",
-								"sa",
-								"lb",
-								"my",
-								"bo",
-								"tl",
-								"mg",
-								"as",
-								"tt",
-								"haw",
-								"ln",
-								"ha",
-								"ba",
-								"jw",
-								"su",
-								"yue"
-							]
-						},
-						"translate": {
-							"type": "boolean"
-						},
-						"diarize": {
-							"type": "boolean"
-						},
-						"engine": {
-							"type": "string",
-							"enum": ["whisperx"]
-						}
-					},
-					"required": [
-						"id",
-						"originalFilename",
-						"inputSignedUrl",
-						"sentTimestamp",
-						"userEmail",
-						"transcriptDestinationService",
-						"combinedOutputUrl",
-						"jobType",
-						"languageCode",
-						"translate",
-						"diarize",
-						"engine"
-					],
-					"additionalProperties": false
+					"$ref": "#/$defs/TranscriptionJob"
 				},
 				{
-					"type": "object",
-					"properties": {
-						"id": {
-							"type": "string"
-						},
-						"originalFilename": {
-							"type": "string"
-						},
-						"inputSignedUrl": {
-							"type": "string"
-						},
-						"sentTimestamp": {
-							"type": "string"
-						},
-						"userEmail": {
-							"type": "string"
-						},
-						"transcriptDestinationService": {
-							"type": "string",
-							"enum": ["TranscriptionService", "Giant"]
-						},
-						"combinedOutputUrl": {
-							"type": "object",
-							"properties": {
-								"url": {
-									"type": "string"
-								},
-								"key": {
-									"type": "string"
-								}
-							},
-							"required": ["url", "key"],
-							"additionalProperties": false
-						},
-						"jobType": {
-							"type": "string",
-							"const": "llm-translation"
-						},
-						"ingestion": {
-							"type": "string"
-						},
-						"backend": {
-							"type": "string",
-							"enum": ["LOCAL", "BEDROCK"]
-						}
-					},
-					"required": [
-						"id",
-						"originalFilename",
-						"inputSignedUrl",
-						"sentTimestamp",
-						"userEmail",
-						"transcriptDestinationService",
-						"combinedOutputUrl",
-						"jobType",
-						"backend"
-					],
-					"additionalProperties": false
+					"$ref": "#/$defs/LLMTranslationJob"
 				}
-			]
+			],
+			"id": "WorkerJob"
 		},
 		"LlmPrompt": {
 			"type": "object",
@@ -1024,7 +629,8 @@
 				}
 			},
 			"required": ["user"],
-			"additionalProperties": false
+			"additionalProperties": false,
+			"id": "LlmPrompt"
 		},
 		"TranslationField": {
 			"type": "object",
@@ -1037,7 +643,8 @@
 				}
 			},
 			"required": ["name", "text"],
-			"additionalProperties": false
+			"additionalProperties": false,
+			"id": "TranslationField"
 		},
 		"TranslationTask": {
 			"type": "object",
@@ -1048,22 +655,13 @@
 				"fields": {
 					"type": "array",
 					"items": {
-						"type": "object",
-						"properties": {
-							"name": {
-								"type": "string"
-							},
-							"text": {
-								"type": "string"
-							}
-						},
-						"required": ["name", "text"],
-						"additionalProperties": false
+						"$ref": "#/$defs/TranslationField"
 					}
 				}
 			},
 			"required": ["systemPrompt", "fields"],
-			"additionalProperties": false
+			"additionalProperties": false,
+			"id": "TranslationTask"
 		},
 		"OutputBase": {
 			"type": "object",
@@ -1076,7 +674,8 @@
 				}
 			},
 			"required": ["id", "userEmail"],
-			"additionalProperties": false
+			"additionalProperties": false,
+			"id": "OutputBase"
 		},
 		"TranscriptionOutputSuccess": {
 			"type": "object",
@@ -1095,110 +694,7 @@
 					"const": "SUCCESS"
 				},
 				"languageCode": {
-					"type": "string",
-					"enum": [
-						"UNKNOWN",
-						"en",
-						"zh",
-						"de",
-						"es",
-						"ru",
-						"ko",
-						"fr",
-						"ja",
-						"pt",
-						"tr",
-						"pl",
-						"ca",
-						"nl",
-						"ar",
-						"sv",
-						"it",
-						"id",
-						"hi",
-						"fi",
-						"vi",
-						"he",
-						"uk",
-						"el",
-						"ms",
-						"cs",
-						"ro",
-						"da",
-						"hu",
-						"ta",
-						"no",
-						"th",
-						"ur",
-						"hr",
-						"bg",
-						"lt",
-						"la",
-						"mi",
-						"ml",
-						"cy",
-						"sk",
-						"te",
-						"fa",
-						"lv",
-						"bn",
-						"sr",
-						"az",
-						"sl",
-						"kn",
-						"et",
-						"mk",
-						"br",
-						"eu",
-						"is",
-						"hy",
-						"ne",
-						"mn",
-						"bs",
-						"kk",
-						"sq",
-						"sw",
-						"gl",
-						"mr",
-						"pa",
-						"si",
-						"km",
-						"sn",
-						"yo",
-						"so",
-						"af",
-						"oc",
-						"ka",
-						"be",
-						"tg",
-						"sd",
-						"gu",
-						"am",
-						"yi",
-						"lo",
-						"uz",
-						"fo",
-						"ht",
-						"ps",
-						"tk",
-						"nn",
-						"mt",
-						"sa",
-						"lb",
-						"my",
-						"bo",
-						"tl",
-						"mg",
-						"as",
-						"tt",
-						"haw",
-						"ln",
-						"ha",
-						"ba",
-						"jw",
-						"su",
-						"yue"
-					]
+					"$ref": "#/$defs/OutputLanguageCode"
 				},
 				"combinedOutputKey": {
 					"type": "string"
@@ -1226,7 +722,8 @@
 				"includesTranslation",
 				"translationRequested"
 			],
-			"additionalProperties": false
+			"additionalProperties": false,
+			"id": "TranscriptionOutputSuccess"
 		},
 		"TranscriptionOutputFailure": {
 			"type": "object",
@@ -1255,7 +752,8 @@
 				"status",
 				"noAudioDetected"
 			],
-			"additionalProperties": false
+			"additionalProperties": false,
+			"id": "TranscriptionOutputFailure"
 		},
 		"LLMOutputSuccess": {
 			"type": "object",
@@ -1275,7 +773,8 @@
 				}
 			},
 			"required": ["id", "userEmail", "status", "outputKey"],
-			"additionalProperties": false
+			"additionalProperties": false,
+			"id": "LLMOutputSuccess"
 		},
 		"LLMOutputFailure": {
 			"type": "object",
@@ -1292,189 +791,25 @@
 				}
 			},
 			"required": ["id", "userEmail", "status"],
-			"additionalProperties": false
+			"additionalProperties": false,
+			"id": "LLMOutputFailure"
 		},
 		"TranscriptionResult": {
 			"type": "object",
 			"properties": {
 				"transcripts": {
-					"type": "object",
-					"properties": {
-						"srt": {
-							"type": "string"
-						},
-						"text": {
-							"type": "string"
-						},
-						"json": {
-							"type": "string"
-						}
-					},
-					"required": ["srt", "text", "json"],
-					"additionalProperties": false
+					"$ref": "#/$defs/Transcripts"
 				},
 				"transcriptTranslations": {
-					"type": "object",
-					"properties": {
-						"srt": {
-							"type": "string"
-						},
-						"text": {
-							"type": "string"
-						},
-						"json": {
-							"type": "string"
-						}
-					},
-					"required": ["srt", "text", "json"],
-					"additionalProperties": false
+					"$ref": "#/$defs/Transcripts"
 				},
 				"metadata": {
-					"type": "object",
-					"properties": {
-						"detectedLanguageCode": {
-							"type": "string",
-							"enum": [
-								"UNKNOWN",
-								"en",
-								"zh",
-								"de",
-								"es",
-								"ru",
-								"ko",
-								"fr",
-								"ja",
-								"pt",
-								"tr",
-								"pl",
-								"ca",
-								"nl",
-								"ar",
-								"sv",
-								"it",
-								"id",
-								"hi",
-								"fi",
-								"vi",
-								"he",
-								"uk",
-								"el",
-								"ms",
-								"cs",
-								"ro",
-								"da",
-								"hu",
-								"ta",
-								"no",
-								"th",
-								"ur",
-								"hr",
-								"bg",
-								"lt",
-								"la",
-								"mi",
-								"ml",
-								"cy",
-								"sk",
-								"te",
-								"fa",
-								"lv",
-								"bn",
-								"sr",
-								"az",
-								"sl",
-								"kn",
-								"et",
-								"mk",
-								"br",
-								"eu",
-								"is",
-								"hy",
-								"ne",
-								"mn",
-								"bs",
-								"kk",
-								"sq",
-								"sw",
-								"gl",
-								"mr",
-								"pa",
-								"si",
-								"km",
-								"sn",
-								"yo",
-								"so",
-								"af",
-								"oc",
-								"ka",
-								"be",
-								"tg",
-								"sd",
-								"gu",
-								"am",
-								"yi",
-								"lo",
-								"uz",
-								"fo",
-								"ht",
-								"ps",
-								"tk",
-								"nn",
-								"mt",
-								"sa",
-								"lb",
-								"my",
-								"bo",
-								"tl",
-								"mg",
-								"as",
-								"tt",
-								"haw",
-								"ln",
-								"ha",
-								"ba",
-								"jw",
-								"su",
-								"yue"
-							]
-						},
-						"loadTimeMs": {
-							"type": "number"
-						},
-						"totalTimeMs": {
-							"type": "number"
-						}
-					},
-					"required": ["detectedLanguageCode"],
-					"additionalProperties": false
+					"$ref": "#/$defs/TranscriptionMetadata"
 				}
 			},
 			"required": ["transcripts", "metadata"],
-			"additionalProperties": false
+			"additionalProperties": false,
+			"id": "TranscriptionResult"
 		}
-	},
-	"required": [
-		"OutputLanguageCode",
-		"Transcripts",
-		"TranscriptionMetadata",
-		"TranscriptionEngine",
-		"LlmBackend",
-		"InputLanguageCode",
-		"JobType",
-		"Job",
-		"TranscriptionJob",
-		"LLMJob",
-		"LLMTranslationJob",
-		"WorkerJob",
-		"LlmPrompt",
-		"TranslationField",
-		"TranslationTask",
-		"OutputBase",
-		"TranscriptionOutputSuccess",
-		"TranscriptionOutputFailure",
-		"LLMOutputSuccess",
-		"LLMOutputFailure",
-		"TranscriptionResult"
-	],
-	"additionalProperties": false
+	}
 }
