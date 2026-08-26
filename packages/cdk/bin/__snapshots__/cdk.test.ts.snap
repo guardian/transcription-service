@@ -10769,6 +10769,7 @@ exports[`Giant's stacks should match the snapshots 4`] = `
   "Metadata": {
     "gu:cdk:constructs": [
       "GuS3Bucket",
+      "GuDeveloperPolicyExperimental",
     ],
     "gu:cdk:version": "TEST",
   },
@@ -10842,6 +10843,42 @@ exports[`Giant's stacks should match the snapshots 4`] = `
       },
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
+    },
+    "TransciptionServiceLocalPolicy96151C46": {
+      "Properties": {
+        "Description": "Run investigations transcription service locally",
+        "Path": "/developer-policy/guardian/transcription-service/investigations/PROD/run-investigations-transcription-service-locally/",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ssm:GetParameter",
+                "ssm:GetParameters",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/DEV/TranscriptionServiceUniversalInfra/transcription-service/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "cloudwatch:PutMetricData",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::ManagedPolicy",
     },
   },
 }
