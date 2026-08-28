@@ -4,6 +4,7 @@ import { GuS3Bucket } from '@guardian/cdk/lib/constructs/s3';
 import type { App } from 'aws-cdk-lib';
 import { CfnOutput } from 'aws-cdk-lib';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
+import { devPolicy } from './dev-policy';
 
 export class TranscriptionServiceUniversalInfra extends GuStack {
 	constructor(scope: App, id: string, props: GuStackProps) {
@@ -22,5 +23,7 @@ export class TranscriptionServiceUniversalInfra extends GuStack {
 		new CfnOutput(this, 'LayerBucket', {
 			value: layerBucket.bucketArn,
 		});
+
+		devPolicy(this);
 	}
 }
