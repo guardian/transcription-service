@@ -8,7 +8,7 @@
 			"plugins": ["com.github.l34130.mise", "NodeJS", "com.github.copilot"]
 		}
 	},
-	"forwardPorts": [9103, 4566],
+	"forwardPorts": [9103, 3040, 4566],
 	"image": "mcr.microsoft.com/devcontainers/base:ubuntu26.04",
 	"remoteUser": "vscode",
 	"features": {
