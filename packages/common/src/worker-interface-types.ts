@@ -51,7 +51,7 @@ export const Job = z.object({
 	inputSignedUrl: z.string(),
 	sentTimestamp: z.string(),
 	userEmail: z.string(),
-	transcriptDestinationService: z.enum(DestinationService),
+	transcriptDestinationService: z.nativeEnum(DestinationService),
 	combinedOutputUrl: SignedUrl,
 	jobType: JobType,
 	ingestion: z.optional(z.string()),
