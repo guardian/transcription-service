@@ -56,6 +56,15 @@ If you're finding the end to end testing painful due to how long it takes whispe
 looking for SHAKIRA MODE: npm run gpu-worker::shakira. This skips tedious transcription and just returns shakira lyrics,
 which is all anyone really needs.
 
+## Using a dev container
+
+You can run the client and api of the transcription service inside a dev container. Other services should also work,
+but have not been tested. We are using https://github.com/guardian/devenv to handle dev container configuration. To
+run the dev container, open the project in vscode or intellij and use the .devcontainer/user/devcontainer.json configuration
+to start your container. Note that whilst the dev container is running you will not be able to run the app locally outside
+the container, even if it's not running inside the container, as the container takes over the ports the app uses to run.
+You'll need to run dev-nginx outside the container.
+
 ## Emulating a production deployment
 
 Occasionally you will want to develop something which relies on the specific ways we deploy into production.
