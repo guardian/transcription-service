@@ -8,7 +8,7 @@ npm install
 
 case "$(uname -s)" in
   Darwin)
-    brew install llama.cpp pyenv pipenv
+    brew install llama.cpp pyenv pipenv ffmpeg
     dev-nginx setup-app nginx/nginx-mapping.yml
     ;;
   Linux)
@@ -20,7 +20,8 @@ case "$(uname -s)" in
       awscli \
       llama.cpp \
       pipenv \
-      pyenv
+      pyenv \
+      ffmpeg
     ;;
   *)
     echo "Unsupported OS: $(uname -s)"
