@@ -1,5 +1,5 @@
 {
-	"extends": "@guardian/tsconfig/tsconfig.json",
+	"extends": "../../tsconfig.json",
 	"compilerOptions": {
 		"allowJs": true,
 		"allowSyntheticDefaultImports": true,
@@ -7,19 +7,17 @@
 		"forceConsistentCasingInFileNames": true,
 		"isolatedModules": true,
 		"lib": ["esnext"],
-		"module": "commonjs",
-		"moduleResolution": "node",
 		"noEmit": false,
 		"noFallthroughCasesInSwitch": true,
 		"outDir": "../../build/api",
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"strict": true,
-		"target": "esnext",
+		"target": "esnext"
 	},
 	"include": ["src"],
 	"ts-node": {
-		"files": true,
+		"files": true
 	},
-	"files": ["src/types/express/index.d.ts"],
+	"files": ["src/types/express/index.d.ts"]
 }
