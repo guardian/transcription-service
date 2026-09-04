@@ -90,6 +90,9 @@ jobs:
           npm run worker::test
           npm run worker::build
           npm run worker::package
+      - name: Run common tests
+        run: |
+          npm run common::test
       - name: CDK synth
         # Note testing and linting is done in separate cdk-snapshot-test workflow
         run: |
