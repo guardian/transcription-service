@@ -24,7 +24,7 @@ export const uploadToS3 = async (
 	try {
 		const response = await fetch(url, {
 			method: 'PUT',
-			body: blob,
+			body: blob as RequestInit['body'],
 			headers: {
 				...contentEncodingHeader,
 			},
