@@ -2,9 +2,8 @@
 	"name": "@guardian/transcription-service-common",
 	"version": "1.0.0",
 	"dependencies": {
-		"zod": "4.3.6"
+		"zod": "4.5.4"
 	},
-	"devDependencies": {},
 	"private": true,
 	"main": "src/index.ts",
 	"files": [
