@@ -15,7 +15,7 @@
 		"flowbite-react": "0.7.8",
 		"history": "5.3.0",
 		"jwt-decode": "4.0.0",
-		"next": "14.2.25",
+		"next": "15.5.21",
 		"react": "18",
 		"react-dom": "18"
 	},
