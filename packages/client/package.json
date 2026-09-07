@@ -4,7 +4,7 @@
 	"private": true,
 	"prettier": "@guardian/prettier",
 	"scripts": {
-		"dev": "next dev",
+		"dev": "next dev -p 3040",
 		"build": "next build",
 		"lint": "next lint"
 	},
