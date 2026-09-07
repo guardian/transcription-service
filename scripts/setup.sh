@@ -12,7 +12,8 @@ case "$(uname -s)" in
     dev-nginx setup-app nginx/nginx-mapping.yml
     ;;
   Linux)
-    echo "Running in linux (probably a dev container) NOTE: If this is the first time you have run Lurch you'll need to run dev-nginx outside the container by running the below command on your host machine:"
+    echo "Running in linux (probably a dev container) NOTE: If this is the first time you have run the app locally you'll"
+    echo "need to run dev-nginx outside the container by running the below command on your host machine:"
     echo "dev-nginx setup-app nginx/nginx-mapping.yml"
     echo "Detected Linux, installing packages with apt..."
     sudo apt-get update
