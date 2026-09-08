@@ -654,8 +654,9 @@ const getApp = async () => {
 	const clientPages = ['export', 'viewer', 'prompt', 'translate'];
 
 	if (runningOnAws) {
-		// Exported route data directories must not redirect requests for HTML pages otherwise the app gets confused
-		// between e.g. the 'export' directory and export.html
+		// see https://expressjs.com/en/resources/middleware/serve-static/#redirect
+		// having redirects on can cause us problems due to files generated in the build process by next.js
+		// a bit more detail here https://github.com/guardian/transcription-service/pull/338
 		app.use(express.static('client', { redirect: false }));
 		app.get('/:page', (req, res) => {
 			if (req.params.page && !clientPages.includes(req.params.page)) {
