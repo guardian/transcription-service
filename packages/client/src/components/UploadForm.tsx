@@ -379,7 +379,7 @@ export const UploadForm = () => {
 						id="file-radio"
 						name="media-type"
 						value="file"
-						checked={mediaSource === 'file'}
+						defaultChecked={mediaSource === 'file'}
 						onClick={() => setMediaSource('file')}
 					/>
 					<Label htmlFor="file-radio">File</Label>
@@ -387,7 +387,7 @@ export const UploadForm = () => {
 						id="url-radio"
 						name="media-type"
 						value="url"
-						checked={mediaSource === 'url'}
+						defaultChecked={mediaSource === 'url'}
 						onClick={() => setMediaSource('url')}
 					/>
 					<Label htmlFor="url-radio">URL</Label>
@@ -411,7 +411,7 @@ export const UploadForm = () => {
 							</div>
 							<div className={'ml-3'}>
 								{mediaUrlInputs.map((input, index) => (
-									<>
+									<React.Fragment key={index}>
 										<TextInput
 											id={`media-url-${index}`}
 											placeholder="e.g. https://www.youtube.com?v=abc123"
@@ -427,7 +427,7 @@ export const UploadForm = () => {
 											}}
 										/>
 										<hr className="h-0.5 my-2 bg-gray-200 border-0 dark:bg-gray-700" />
-									</>
+									</React.Fragment>
 								))}
 								<Button
 									size={'sm'}
@@ -487,12 +487,13 @@ export const UploadForm = () => {
 								color: languageSelectColor,
 								borderColor: languageSelectColor,
 							}}
+							value={mediaFileLanguageCode ?? ''}
 							onChange={(e) => {
 								setMediaFileLanguageCode(e.target.value as InputLanguageCode);
 								setLanguageCodeValid(true);
 							}}
 						>
-							<option disabled selected>
+							<option disabled value="">
 								Select a language
 							</option>
 							{languageCodes.map((languageCode: InputLanguageCode) => (
@@ -512,8 +513,9 @@ export const UploadForm = () => {
 								value="English translation"
 							/>
 							<p className="font-light">
-								If you select this option the email we send you will provide access 
-								to both the original transcription and an English translation.
+								If you select this option the email we send you will provide
+								access to both the original transcription and an English
+								translation.
 							</p>
 						</div>
 						<div className={'ml-3'}>
