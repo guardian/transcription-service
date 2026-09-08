@@ -654,7 +654,10 @@ const getApp = async () => {
 	const clientPages = ['export', 'viewer', 'prompt', 'translate'];
 
 	if (runningOnAws) {
-		app.use(express.static('client'));
+		// see https://expressjs.com/en/resources/middleware/serve-static/#redirect
+		// having redirects on can cause us problems due to files generated in the build process by next.js
+		// a bit more detail here https://github.com/guardian/transcription-service/pull/338
+		app.use(express.static('client', { redirect: false }));
 		app.get('/:page', (req, res) => {
 			if (req.params.page && !clientPages.includes(req.params.page)) {
 				res
@@ -671,6 +674,7 @@ const getApp = async () => {
 			app.use(
 				express.static(
 					path.resolve(__dirname, '..', '..', '..', 'packages/client/out'),
+					{ redirect: false },
 				),
 			);
 			app.get('/:page', (req: Request, res: Response) => {
