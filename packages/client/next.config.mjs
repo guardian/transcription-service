@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+	allowedDevOrigins: ['transcribe.local.dev-gutools.co.uk'],
 	reactStrictMode: true,
 	output: 'export',
 	rewrites: async () => {
