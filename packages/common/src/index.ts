@@ -3,3 +3,4 @@ export * from './utils';
 export * from './constants';
 export * from './languages';
 export * from './worker-interface-types';
+export * from './worker-interface-schema';
