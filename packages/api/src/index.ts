@@ -654,7 +654,9 @@ const getApp = async () => {
 	const clientPages = ['export', 'viewer', 'prompt', 'translate'];
 
 	if (runningOnAws) {
-		app.use(express.static('client'));
+		// Exported route data directories must not redirect requests for HTML pages otherwise the app gets confused
+		// between e.g. the 'export' directory and export.html
+		app.use(express.static('client', { redirect: false }));
 		app.get('/:page', (req, res) => {
 			if (req.params.page && !clientPages.includes(req.params.page)) {
 				res
@@ -671,6 +673,7 @@ const getApp = async () => {
 			app.use(
 				express.static(
 					path.resolve(__dirname, '..', '..', '..', 'packages/client/out'),
+					{ redirect: false },
 				),
 			);
 			app.get('/:page', (req: Request, res: Response) => {
