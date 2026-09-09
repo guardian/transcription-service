@@ -2,7 +2,7 @@
 	"name": "@guardian/transcription-service-common",
 	"version": "1.0.0",
 	"dependencies": {
-		"zod": "4.3.6"
+		"zod": "4.5.4"
 	},
 	"devDependencies": {
 		"@types/jest": "29.5.13",
