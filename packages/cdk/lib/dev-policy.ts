@@ -10,9 +10,13 @@ export const devPolicy = (stack: GuStack) => {
 		statements: [
 			new PolicyStatement({
 				effect: Effect.ALLOW,
-				actions: ['ssm:GetParameter', 'ssm:GetParameters'],
+				actions: [
+					'ssm:GetParameter',
+					'ssm:GetParameters',
+					'ssm:GetParametersByPath',
+				],
 				resources: [
-					`arn:aws:ssm:${stack.region}:${stack.account}:parameter/DEV/${stack.stackName}/transcription-service/*`,
+					`arn:aws:ssm:${stack.region}:${stack.account}:parameter/DEV/${stack.stack}/transcription-service/*`,
 				],
 			}),
 			new PolicyStatement({
