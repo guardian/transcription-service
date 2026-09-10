@@ -1,4 +1,6 @@
-import type { ChildProcess } from 'child_process';
+import { execFile, type ChildProcess } from 'child_process';
+import { promisify } from 'node:util';
+import { createHash, randomUUID } from 'node:crypto';
 import {
 	killProcess,
 	logger,
@@ -111,6 +113,29 @@ export const startLlamaServer = async (
 	const args = getLlamaServerArgs(serverConfig);
 
 	logger.info(`Starting llama-server with args: ${args.join(' ')}`);
+	try {
+		const { stdout, stderr } = await promisify(execFile)(
+			serverConfig.executable,
+			['--version'],
+			{
+				timeout: 5000,
+				maxBuffer: 64 * 1024,
+				env: {
+					...process.env,
+					...(serverConfig.libPath
+						? { LD_LIBRARY_PATH: serverConfig.libPath }
+						: {}),
+				},
+			},
+		);
+		logger.info('llama-server runtime diagnostics', {
+			llamaVersion: `${stdout}\n${stderr}`.trim(),
+			nodeVersion: process.version,
+			modelPath: serverConfig.modelPath,
+		});
+	} catch {
+		logger.warn('Could not read llama-server version; continuing startup');
+	}
 
 	const childProcess = spawnBackgroundProcess(
 		'llama-server',
@@ -171,14 +196,86 @@ const llamaDispatcher = new Agent({
 	bodyTimeout: 10 * 60 * 1000, // 10 minutes
 });
 
+// Inspect metadata before schema parsing: Zod strips fields such as reasoning_content.
+// Never include generated text or prompts in these diagnostics.
+const asRecord = (value: unknown): Record<string, unknown> =>
+	value !== null && typeof value === 'object' && !Array.isArray(value)
+		? (value as Record<string, unknown>)
+		: {};
+
+const textMetadata = (value: unknown) => ({
+	type: value === null ? 'null' : typeof value,
+	length: typeof value === 'string' ? value.length : undefined,
+	trimmedLength: typeof value === 'string' ? value.trim().length : undefined,
+});
+
+export const summarizeLlamaResponse = (json: unknown) => {
+	const response = asRecord(json);
+	const choices = Array.isArray(response.choices) ? response.choices : [];
+	const usage = asRecord(response.usage);
+	return {
+		responseId: typeof response.id === 'string' ? response.id : undefined,
+		responseModel:
+			typeof response.model === 'string' ? response.model : undefined,
+		choiceCount: choices.length,
+		promptTokens:
+			typeof usage.prompt_tokens === 'number' ? usage.prompt_tokens : undefined,
+		completionTokens:
+			typeof usage.completion_tokens === 'number'
+				? usage.completion_tokens
+				: undefined,
+		choices: choices.map((value) => {
+			const choice = asRecord(value);
+			const message = asRecord(choice.message);
+			return {
+				finishReason:
+					typeof choice.finish_reason === 'string'
+						? choice.finish_reason
+						: undefined,
+				content: textMetadata(message.content),
+				reasoningContent: textMetadata(message.reasoning_content),
+				toolCallCount: Array.isArray(message.tool_calls)
+					? message.tool_calls.length
+					: 0,
+			};
+		}),
+	};
+};
+
+// The shared logger accepts scalar metadata; encode nested diagnostics as JSON.
+const logMetadata = (
+	metadata: Record<string, unknown>,
+): Record<string, string | number> =>
+	Object.fromEntries(
+		Object.entries(metadata)
+			.filter(([, value]) => value !== undefined)
+			.map(([key, value]) => [
+				key,
+				typeof value === 'string' || typeof value === 'number'
+					? value
+					: JSON.stringify(value),
+			]),
+	);
+
 export const sendPromptToLlamaServer = async (
 	url: string,
 	prompts: LlmPrompt,
+	chunkIndex?: number,
 ): Promise<string> => {
 	const messages = buildMessages(prompts);
+	const body = JSON.stringify({ messages });
+	const startedAt = Date.now();
+	const requestMetadata = {
+		llamaRequestId: randomUUID(),
+		chunkIndex,
+		requestSha256: createHash('sha256').update(body).digest('hex'),
+		messageRoles: messages.map((message) => message.role),
+		messageLengths: messages.map((message) => message.content.length),
+	};
 
 	logger.info(
 		`Sending prompt to llama-server at ${url} (${messages.length} messages, user prompt length: ${prompts.user.length} chars)`,
+		logMetadata(requestMetadata),
 	);
 
 	const response = await fetch(`${url}/v1/chat/completions`, {
@@ -186,9 +283,7 @@ export const sendPromptToLlamaServer = async (
 		headers: {
 			'Content-Type': 'application/json',
 		},
-		body: JSON.stringify({
-			messages,
-		}),
+		body,
 		signal: AbortSignal.timeout(10 * 60 * 1000), // 10 minutes – generation on a T4 can exceed the default 5min undici timeout
 		// @ts-expect-error — dispatcher is supported by Node.js fetch but not in the standard RequestInit types
 		dispatcher: llamaDispatcher,
@@ -202,19 +297,38 @@ export const sendPromptToLlamaServer = async (
 	}
 
 	const json = await response.json();
+	const responseMetadata = {
+		...requestMetadata,
+		status: response.status,
+		elapsedMs: Date.now() - startedAt,
+		...summarizeLlamaResponse(json),
+	};
+	logger.info(
+		'llama-server response diagnostics',
+		logMetadata(responseMetadata),
+	);
 	const result = LlamaChatResponse.safeParse(json);
 
 	if (!result.success) {
+		logger.error(
+			'Failed to parse response from llama-server',
+			responseMetadata,
+		);
 		throw new Error('Failed to parse response from llama-server');
 	}
 
 	const content = result.data.choices[0]?.message.content;
 	if (!content) {
+		logger.error(
+			'llama-server returned an empty response',
+			logMetadata(responseMetadata),
+		);
 		throw new Error('llama-server returned an empty response');
 	}
 
 	logger.info(
 		`Received response from llama-server (response length: ${content.length} chars)`,
+		logMetadata(requestMetadata),
 	);
 
 	return content;

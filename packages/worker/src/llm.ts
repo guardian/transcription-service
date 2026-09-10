@@ -87,7 +87,7 @@ export const splitPromptIntoChunks = async (
 
 const runAndCombinePrompts = async (
 	prompts: LlmPrompt[],
-	runPrompt: (prompt: LlmPrompt) => Promise<string>,
+	runPrompt: (prompt: LlmPrompt, chunkIndex: number) => Promise<string>,
 	parallelJobs: number,
 ): Promise<string> => {
 	const outputs: string[] = new Array<string>(prompts.length);
@@ -101,7 +101,7 @@ const runAndCombinePrompts = async (
 		let index = nextIndex++;
 		while (index < prompts.length) {
 			logger.info(`Running prompt ${index + 1} of ${prompts.length}`);
-			outputs[index] = await runPrompt(prompts[index]!);
+			outputs[index] = await runPrompt(prompts[index]!, index + 1);
 			logger.info(`Completed prompt ${index + 1} of ${prompts.length}`);
 			index = nextIndex++;
 		}
@@ -128,7 +128,7 @@ export const executeLlmPrompt = async (
 	);
 	await setMessageVisibility(visibilityTimeout);
 
-	const sendPrompt = async (chunkPrompt: LlmPrompt) => {
+	const sendPrompt = async (chunkPrompt: LlmPrompt, chunkIndex: number) => {
 		if (backend === 'BEDROCK') {
 			return sendPromptToBedrock(
 				chunkPrompt,
@@ -139,6 +139,7 @@ export const executeLlmPrompt = async (
 			return sendPromptToLlamaServer(
 				getServerConfig(config).serverUrl,
 				chunkPrompt,
+				chunkIndex,
 			);
 		}
 	};
@@ -149,7 +150,7 @@ export const executeLlmPrompt = async (
 	const startTime = Date.now();
 	const combined = await runAndCombinePrompts(
 		prompts,
-		(chunkPrompt) => sendPrompt(chunkPrompt),
+		(chunkPrompt, chunkIndex) => sendPrompt(chunkPrompt, chunkIndex),
 		parallelJobs,
 	);
 	const result = restoreMaskedItems(combined, maskLookup);
