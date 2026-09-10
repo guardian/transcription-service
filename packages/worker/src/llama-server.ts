@@ -180,10 +180,10 @@ export const waitForLlamaServer = async (
 
 const buildMessages = (prompts: LlmPrompt): LlamaChatMessage[] => {
 	const messages: LlamaChatMessage[] = [];
-	messages.push({ role: 'user', content: prompts.user });
 	if (prompts.system) {
 		messages.push({ role: 'system', content: prompts.system });
 	}
+	messages.push({ role: 'user', content: prompts.user });
 	if (prompts.assistant) {
 		messages.push({ role: 'assistant', content: prompts.assistant });
 	}
@@ -263,7 +263,10 @@ export const sendPromptToLlamaServer = async (
 	chunkIndex?: number,
 ): Promise<string> => {
 	const messages = buildMessages(prompts);
-	const body = JSON.stringify({ messages });
+	const body = JSON.stringify({
+		messages,
+		chat_template_kwargs: { enable_thinking: false },
+	});
 	const startedAt = Date.now();
 	const requestMetadata = {
 		llamaRequestId: randomUUID(),
