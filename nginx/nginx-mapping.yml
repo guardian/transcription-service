@@ -2,7 +2,7 @@ name: transcription-service
 mappings:
   - prefix: transcribe
     port: 3040
-    websocket: /_next/webpack-hmr
+    websocket: /_next/hmr
     client_max_body_size: 128m
   - prefix: api.transcribe
     port: 9103

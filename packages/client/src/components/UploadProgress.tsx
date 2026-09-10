@@ -20,7 +20,7 @@ export const UploadProgress = ({
 
 			<ul className="max-w-md space-y-2 text-gray-500 list-inside dark:text-gray-400">
 				{Object.entries(uploads).map(([key, value]) => (
-					<li className="flex items-center">
+					<li key={key} className="flex items-center">
 						<span className={'mr-1'}>{iconForStatus(value)}</span>
 						{key} {value === RequestStatus.Invalid && ' (invalid url)'}
 					</li>
