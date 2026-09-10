@@ -26,6 +26,8 @@ export const guStacks = [
 		stack,
 		stage: 'PROD', // TODO probably ought to be INFRA?
 		env,
+		// PROD only, so must be its own riff-raff project (see riff-raff-repository.yaml)
+		riffRaffProjectName: 'investigations::transcription-service-repository',
 	}),
 
 	// This is another stack which is used for both code/prod - but as repository already existed I made a new stack to avoid
@@ -37,6 +39,8 @@ export const guStacks = [
 			stack,
 			stage: 'PROD', // TODO probably ought to be INFRA?
 			env,
+			riffRaffProjectName:
+				'investigations::transcription-service-universal-infra',
 		},
 	),
 ];

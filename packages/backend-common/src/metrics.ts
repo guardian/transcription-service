@@ -69,6 +69,12 @@ export class MetricsService {
 	}
 
 	async putMetric(metric: Metric, extraDimensions: Dimension[] = []) {
+		if (this.stage === 'DEV') {
+			console.log(
+				`Running locally so skipping cloudwatch putMetric for metric ${metric.name} with value ${metric.value}`,
+			);
+			return;
+		}
 		await putMetricData(this.cloudwatchClient, {
 			Namespace: `TranscriptionService`,
 			MetricData: [
