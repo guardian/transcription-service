@@ -155,10 +155,10 @@ export const waitForLlamaServer = async (
 
 const buildMessages = (prompts: LlmPrompt): LlamaChatMessage[] => {
 	const messages: LlamaChatMessage[] = [];
-	messages.push({ role: 'user', content: prompts.user });
 	if (prompts.system) {
 		messages.push({ role: 'system', content: prompts.system });
 	}
+	messages.push({ role: 'user', content: prompts.user });
 	if (prompts.assistant) {
 		messages.push({ role: 'assistant', content: prompts.assistant });
 	}
@@ -188,6 +188,7 @@ export const sendPromptToLlamaServer = async (
 		},
 		body: JSON.stringify({
 			messages,
+			chat_template_kwargs: { enable_thinking: false },
 		}),
 		signal: AbortSignal.timeout(10 * 60 * 1000), // 10 minutes – generation on a T4 can exceed the default 5min undici timeout
 		// @ts-expect-error — dispatcher is supported by Node.js fetch but not in the standard RequestInit types
