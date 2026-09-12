@@ -15,6 +15,19 @@ describe('Worker Interface Types Schema Sync', () => {
 	let savedSchema: Record<string, unknown>;
 	let generatedSchema: Record<string, unknown>;
 
+	/** Resolves a top-level type by following its `#/$defs/<name>` reference. */
+	const resolveType = (typeName: string): Record<string, unknown> => {
+		const properties = savedSchema.properties as Record<string, unknown>;
+		const property = properties[typeName] as Record<string, unknown>;
+		const ref = property.$ref as string | undefined;
+		if (!ref) {
+			return property;
+		}
+		expect(ref).toEqual(`#/$defs/${typeName}`);
+		const defs = savedSchema.$defs as Record<string, unknown>;
+		return defs[typeName] as Record<string, unknown>;
+	};
+
 	beforeAll(() => {
 		// Read the saved schema file
 		const schemaContent = fs.readFileSync(schemaPath, 'utf-8');
@@ -36,29 +49,41 @@ describe('Worker Interface Types Schema Sync', () => {
 
 	it('should contain all expected type schemas', () => {
 		const properties = savedSchema.properties as Record<string, unknown>;
+		const defs = savedSchema.$defs as Record<string, unknown>;
 		workerInterfaceSchemaNames.forEach((typeName) => {
 			expect(properties).toHaveProperty(typeName);
+			// each named type is hoisted into $defs and referenced via $ref
+			expect(properties[typeName]).toEqual({
+				$ref: `#/$defs/${typeName}`,
+			});
+			expect(defs).toHaveProperty(typeName);
 		});
 	});
 
 	it('should have correct enum values for JobType', () => {
-		const properties = savedSchema.properties as Record<string, unknown>;
-		const jobTypeSchema = properties.JobType as Record<string, unknown>;
+		const jobTypeSchema = resolveType('JobType');
 		expect(jobTypeSchema.enum).toEqual(JobType.options);
 	});
 
 	it('should have correct discriminated union for WorkerJob', () => {
-		const properties = savedSchema.properties as Record<string, unknown>;
-		const workerJob = properties.WorkerJob as Record<string, unknown>;
+		const workerJob = resolveType('WorkerJob');
 		// Zod 4 uses oneOf for discriminated unions
 		expect(workerJob.oneOf).toBeDefined();
 		expect(Array.isArray(workerJob.oneOf)).toBe(true);
 		expect((workerJob.oneOf as unknown[]).length).toBe(JobType.options.length);
 
-		// Each variant should have the jobType discriminator as a const
+		// Each variant is a $ref to its own definition, and should have the
+		// jobType discriminator as a const
+		const defs = savedSchema.$defs as Record<string, unknown>;
 		const variants = workerJob.oneOf as Array<Record<string, unknown>>;
 		const jobTypes = variants.map((variant) => {
-			const props = variant.properties as Record<string, unknown>;
+			const ref = variant.$ref as string;
+			expect(ref).toMatch(/^#\/\$defs\//);
+			const resolved = defs[ref.replace('#/$defs/', '')] as Record<
+				string,
+				unknown
+			>;
+			const props = resolved.properties as Record<string, unknown>;
 			const jobType = props.jobType as Record<string, unknown>;
 			return jobType.const;
 		});

@@ -110,11 +110,30 @@ export type TranslationTask = z.infer<typeof TranslationTask>;
 export const OutputBase = z.object({
 	id: z.string(),
 	userEmail: z.string(),
+	status: z.string(),
 });
 
 const TranscriptionOutputBase = OutputBase.extend({
 	originalFilename: z.string(),
 });
+
+export const botBlocked = z.literal('BOT_BLOCKED');
+export const MediaDownloadFailureReason = z.enum([
+	'FAILURE',
+	'INVALID_URL',
+	'BOT_BLOCKED',
+]);
+export type MediaDownloadFailureReason = z.infer<
+	typeof MediaDownloadFailureReason
+>;
+
+export const MediaDownloadFailure = OutputBase.extend({
+	status: z.literal('MEDIA_DOWNLOAD_FAILURE'),
+	failureReason: MediaDownloadFailureReason,
+	url: z.string(),
+});
+
+export type MediaDownloadFailure = z.infer<typeof MediaDownloadFailure>;
 
 export const TranscriptionOutputSuccess = TranscriptionOutputBase.extend({
 	// status must be kept in sync with https://github.com/guardian/giant/blob/main/backend/app/extraction/ExternalTranscriptionExtractor.scala#L76
@@ -143,6 +162,16 @@ export const TranscriptionOutputFailure = TranscriptionOutputBase.extend({
 	status: z.literal('TRANSCRIPTION_FAILURE'),
 	noAudioDetected: z.boolean(),
 });
+
+export const TranscriptionOutput = z.discriminatedUnion('status', [
+	TranscriptionOutputSuccess,
+	TranscriptionOutputFailure,
+	MediaDownloadFailure,
+	LLMOutputSuccess,
+	LLMOutputFailure,
+]);
+
+export type TranscriptionOutput = z.infer<typeof TranscriptionOutput>;
 
 export const TranscriptionResult = z.object({
 	transcripts: Transcripts,

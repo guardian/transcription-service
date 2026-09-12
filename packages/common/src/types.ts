@@ -2,14 +2,10 @@ import { z } from 'zod';
 import {
 	InputLanguageCode,
 	LlmBackend,
-	LLMOutputFailure,
-	LLMOutputSuccess,
 	LlmPrompt,
-	OutputBase,
-	TranscriptionOutputSuccess,
-	TranscriptionOutputFailure,
 	TranscriptionResult,
 	OutputLanguageCode,
+	botBlocked,
 } from './worker-interface-types';
 
 export const inputToOutputLanguageCode = (
@@ -67,8 +63,6 @@ export const isMediaMetadata = (obj: unknown): obj is MediaMetadata => {
 	return typeof mediaMetadata.title === 'string';
 };
 
-const botBlocked = z.literal('BOT_BLOCKED');
-
 export const ExternalJobOutput = z.object({
 	id: z.string(),
 	taskId: z.string(),
@@ -93,54 +87,6 @@ export const WebpageSnapshot = z.object({
 	title: z.string(),
 });
 export type WebpageSnapshot = z.infer<typeof WebpageSnapshot>;
-
-export const MediaDownloadFailureReason = z.union([
-	z.literal('FAILURE'),
-	z.literal('INVALID_URL'),
-	botBlocked,
-]);
-export type MediaDownloadFailureReason = z.infer<
-	typeof MediaDownloadFailureReason
->;
-
-export const MediaDownloadFailure = OutputBase.extend({
-	status: z.literal('MEDIA_DOWNLOAD_FAILURE'),
-	failureReason: MediaDownloadFailureReason,
-	url: z.string(),
-});
-
-export type MediaDownloadFailure = z.infer<typeof MediaDownloadFailure>;
-
-export const TranscriptionOutput = z.union([
-	TranscriptionOutputSuccess,
-	TranscriptionOutputFailure,
-	MediaDownloadFailure,
-	LLMOutputSuccess,
-	LLMOutputFailure,
-]);
-
-export const transcriptionOutputIsSuccess = (
-	output: TranscriptionOutput,
-): output is TranscriptionOutputSuccess => output.status === 'SUCCESS';
-
-export const transcriptionOutputIsTranscriptionFailure = (
-	output: TranscriptionOutput,
-): output is TranscriptionOutputFailure =>
-	output.status === 'TRANSCRIPTION_FAILURE';
-
-export const transcriptionOutputIsMediaDownloadFailure = (
-	output: TranscriptionOutput,
-): output is MediaDownloadFailure => output.status === 'MEDIA_DOWNLOAD_FAILURE';
-
-export const transcriptionOutputIsLLMSuccess = (
-	output: TranscriptionOutput,
-): output is LLMOutputSuccess => output.status === 'LLM_SUCCESS';
-
-export const transcriptionOutputIsLLMFailure = (
-	output: TranscriptionOutput,
-): output is LLMOutputFailure => output.status === 'LLM_FAILURE';
-
-export type TranscriptionOutput = z.infer<typeof TranscriptionOutput>;
 
 export const SignedUrlResponseBody = z.object({
 	presignedS3Url: z.string(),
