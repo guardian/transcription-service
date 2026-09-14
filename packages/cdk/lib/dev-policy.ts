@@ -21,6 +21,19 @@ export const devPolicy = (stack: GuStack) => {
 			}),
 			new PolicyStatement({
 				effect: Effect.ALLOW,
+				actions: ['s3:GetObject', 's3:PutObject'],
+				resources: [
+					`arn:aws:s3:::transcription-service-source-media-dev/*`,
+					`arn:aws:s3:::transcription-service-output-dev/*`,
+				],
+			}),
+			new PolicyStatement({
+				effect: Effect.ALLOW,
+				actions: ['ses:SendEmail', 'ses:SendRawEmail'],
+				resources: ['*'],
+			}),
+			new PolicyStatement({
+				effect: Effect.ALLOW,
 				actions: ['cloudwatch:PutMetricData'],
 				resources: ['*'],
 			}),
