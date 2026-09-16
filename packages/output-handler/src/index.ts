@@ -12,18 +12,13 @@ import {
 	writeDynamoItem,
 } from '@guardian/transcription-service-backend-common/src/dynamodb';
 import {
-	transcriptionOutputIsSuccess,
 	TranscriptionOutputSuccess,
 	TranscriptionOutputFailure,
-	transcriptionOutputIsTranscriptionFailure,
 	TranscriptionDynamoItem,
-	transcriptionOutputIsMediaDownloadFailure,
 	MediaDownloadFailure,
 	ONE_WEEK_IN_SECONDS,
 	MediaDownloadFailureReason,
 	ABOUT_THIS_TOOL_YOUTUBE,
-	transcriptionOutputIsLLMSuccess,
-	transcriptionOutputIsLLMFailure,
 	LLMOutputFailure,
 	LlmDynamoItem,
 } from '@guardian/transcription-service-common';
@@ -275,52 +270,72 @@ export const processMessage = async (event: unknown) => {
 
 	for (const record of parsedEvent.data.Records) {
 		const transcriptionOutput = record.body;
-		if (transcriptionOutputIsSuccess(transcriptionOutput)) {
-			logger.info(`handling transcription success`);
-			await handleTranscriptionSuccess(
-				config,
-				transcriptionOutput,
-				sesClient,
-				metrics,
-			);
-		} else if (transcriptionOutputIsTranscriptionFailure(transcriptionOutput)) {
-			logger.info(
-				`Handling transcription failure. Transcription output: ${JSON.stringify(transcriptionOutput)}`,
-			);
-			const sourceMediaDownloadUrl = await getSignedDownloadUrl(
-				config.aws,
-				config.app.sourceMediaBucket,
-				transcriptionOutput.id,
-				ONE_WEEK_IN_SECONDS,
-				transcriptionOutput.originalFilename,
-			);
-			await handleTranscriptionFailure(
-				config,
-				transcriptionOutput,
-				sesClient,
-				metrics,
-				sourceMediaDownloadUrl,
-			);
-		} else if (transcriptionOutputIsMediaDownloadFailure(transcriptionOutput)) {
-			logger.info(
-				`Handling media download failure. Output: ${JSON.stringify(transcriptionOutput)}`,
-			);
-			await handleMediaDownloadFailure(
-				config,
-				transcriptionOutput,
-				sesClient,
-				metrics,
-			);
-		} else if (transcriptionOutputIsLLMSuccess(transcriptionOutput)) {
-			logger.info(
-				`Handling LLM success. Output: ${JSON.stringify(transcriptionOutput)}`,
-			);
-			await saveLllmOutput(config, transcriptionOutput, metrics);
-		} else if (transcriptionOutputIsLLMFailure(transcriptionOutput)) {
-			logger.info(
-				`Handling LLM failure. Output: ${JSON.stringify(transcriptionOutput)}`,
-			);
-			await handleLLMFailure(config, transcriptionOutput, metrics);
+		switch (transcriptionOutput.status) {
+			case 'SUCCESS': {
+				logger.info(`handling transcription success`);
+				await handleTranscriptionSuccess(
+					config,
+					transcriptionOutput,
+					sesClient,
+					metrics,
+				);
+				break;
+			}
+			case 'TRANSCRIPTION_FAILURE': {
+				logger.info(
+					`Handling transcription failure. Transcription output: ${JSON.stringify(transcriptionOutput)}`,
+				);
+				const sourceMediaDownloadUrl = await getSignedDownloadUrl(
+					config.aws,
+					config.app.sourceMediaBucket,
+					transcriptionOutput.id,
+					ONE_WEEK_IN_SECONDS,
+					transcriptionOutput.originalFilename,
+				);
+				await handleTranscriptionFailure(
+					config,
+					transcriptionOutput,
+					sesClient,
+					metrics,
+					sourceMediaDownloadUrl,
+				);
+				break;
+			}
+			case 'MEDIA_DOWNLOAD_FAILURE': {
+				logger.info(
+					`Handling media download failure. Output: ${JSON.stringify(transcriptionOutput)}`,
+				);
+				await handleMediaDownloadFailure(
+					config,
+					transcriptionOutput,
+					sesClient,
+					metrics,
+				);
+				break;
+			}
+			case 'LLM_SUCCESS': {
+				logger.info(
+					`Handling LLM success. Output: ${JSON.stringify(transcriptionOutput)}`,
+				);
+				await saveLllmOutput(config, transcriptionOutput, metrics);
+				break;
+			}
+			case 'LLM_FAILURE': {
+				logger.info(
+					`Handling LLM failure. Output: ${JSON.stringify(transcriptionOutput)}`,
+				);
+				await handleLLMFailure(config, transcriptionOutput, metrics);
+				break;
+			}
+			default: {
+				// exhaustiveness check - adding a new output status without
+				// handling it here will fail the build
+				const unhandled: never = transcriptionOutput;
+				logger.error(
+					`Unhandled transcription output status: ${JSON.stringify(unhandled)}`,
+				);
+				await metrics.putMetric(FailureMetric);
+			}
 		}
 	}
 };
