@@ -8,7 +8,7 @@ npm install
 
 case "$(uname -s)" in
   Darwin)
-    brew install llama.cpp pyenv pipenv ffmpeg
+    brew install llama.cpp pyenv uv ffmpeg
     dev-nginx setup-app nginx/nginx-mapping.yml
     ;;
   Linux)
@@ -20,7 +20,7 @@ case "$(uname -s)" in
     sudo apt-get install -y \
       awscli \
       llama.cpp \
-      pipenv \
+      uv \
       pyenv \
       ffmpeg
     ;;
@@ -54,7 +54,7 @@ echo ""
 echo "Installing whisperX dependencies (required to run gpu worker locally)"
 echo ""
 
-pipenv install
+uv sync
 
 echo ""
 echo "Saving model to use for llama.cpp to /etc/gu/models."
