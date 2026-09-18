@@ -10,6 +10,7 @@ import {
 	TranscriptionDynamoItem,
 	YoutubeEventDynamoItem,
 	LlmDynamoItem,
+	OcrDynamoItem,
 } from '@guardian/transcription-service-common';
 import { AwsConfig } from './types';
 
@@ -28,7 +29,11 @@ export const getDynamoClient = (
 export const writeDynamoItem = async (
 	client: DynamoDBDocumentClient,
 	tableName: string,
-	item: TranscriptionDynamoItem | YoutubeEventDynamoItem | LlmDynamoItem,
+	item:
+		| TranscriptionDynamoItem
+		| YoutubeEventDynamoItem
+		| LlmDynamoItem
+		| OcrDynamoItem,
 ) => {
 	const command = new PutCommand({
 		TableName: tableName,
@@ -194,4 +199,18 @@ export const getLlmItem = async (
 		// };
 	}
 	return { status: 'SUCCESS', item: parsedItem.data };
+};
+
+export const getOcrItem = async (
+	client: DynamoDBDocumentClient,
+	tableName: string,
+	id: string,
+	userEmail: string,
+): Promise<OcrDynamoItem | undefined> => {
+	// Let database errors propagate: only a missing item means still pending.
+	const result = await client.send(
+		new GetCommand({ TableName: tableName, Key: { id } }),
+	);
+	if (!result.Item || result.Item.userEmail !== userEmail) return undefined;
+	return OcrDynamoItem.parse(result.Item);
 };

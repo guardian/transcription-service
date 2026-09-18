@@ -322,6 +322,7 @@ export class TranscriptionService extends GuStack {
 			`${APP_NAME}-output-queue`,
 			{
 				queueName: `${APP_NAME}-output-queue-${this.stage}`,
+				visibilityTimeout: Duration.minutes(12),
 			},
 		);
 
@@ -698,6 +699,8 @@ export class TranscriptionService extends GuStack {
 			{
 				fileName: 'output-handler.zip',
 				handler: 'index.outputHandler',
+				timeout: Duration.minutes(2),
+				memorySize: 2048,
 				runtime: Runtime.NODEJS_20_X,
 				app: `${APP_NAME}-output-handler`,
 				errorPercentageMonitoring:
@@ -712,13 +715,14 @@ export class TranscriptionService extends GuStack {
 			},
 		);
 
+		outputBucket.grantPut(outputHandlerLambda);
 		transcriptTable.grantReadWriteData(outputHandlerLambda);
 		transcriptTable.grantReadWriteData(apiLambda);
 		eventsTable.grantReadWriteData(apiLambda);
 
 		// trigger output-handler lambda from queue
 		outputHandlerLambda.addEventSource(
-			new SqsEventSource(transcriptionOutputQueue),
+			new SqsEventSource(transcriptionOutputQueue, { batchSize: 1 }),
 		);
 
 		outputHandlerLambda.addToRolePolicy(

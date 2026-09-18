@@ -5,6 +5,7 @@
 	"main": "index.js",
 	"scripts": {
 		"build": "esbuild --bundle --platform=node --target=node20 --outfile=dist/index.js src/index.ts",
+		"test": "esbuild --bundle --platform=node --outfile=dist/ocr.test.cjs src/ocr.test.ts && node --test dist/ocr.test.cjs",
 		"start": "STAGE=DEV nodemon src/index.ts"
 	},
 	"keywords": [],
