@@ -57,6 +57,8 @@ export const processOcrJob = async (
 		'--redo-ocr',
 		'--plugin',
 		'ocrmypdf_rapidocr',
+		'--rapidocr-config-path',
+		'rapidocr/rapidocr-config.yaml',
 		'-l',
 		job.settings.ocrLanguage,
 		downloadedFilePath,
