@@ -353,7 +353,7 @@
 		},
 		"JobType": {
 			"type": "string",
-			"enum": ["transcribe", "llm", "llm-translation"]
+			"enum": ["transcribe", "llm", "llm-translation", "ocr"]
 		},
 		"Job": {
 			"type": "object",
@@ -607,6 +607,72 @@
 					"$ref": "#/$defs/TranscriptionJob"
 				},
 				{
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "string"
+						},
+						"originalFilename": {
+							"type": "string"
+						},
+						"inputSignedUrl": {
+							"type": "string"
+						},
+						"sentTimestamp": {
+							"type": "string"
+						},
+						"userEmail": {
+							"type": "string"
+						},
+						"transcriptDestinationService": {
+							"type": "string",
+							"enum": ["TranscriptionService", "Giant"]
+						},
+						"combinedOutputUrl": {
+							"type": "object",
+							"properties": {
+								"url": {
+									"type": "string"
+								},
+								"key": {
+									"type": "string"
+								}
+							},
+							"required": ["url", "key"],
+							"additionalProperties": false
+						},
+						"jobType": {
+							"type": "string",
+							"const": "ocr"
+						},
+						"ingestion": {
+							"type": "string"
+						},
+						"settings": {
+							"type": "object",
+							"properties": {
+								"ocrLanguage": {
+									"type": "string"
+								}
+							},
+							"required": ["ocrLanguage"],
+							"additionalProperties": false
+						}
+					},
+					"required": [
+						"id",
+						"originalFilename",
+						"inputSignedUrl",
+						"sentTimestamp",
+						"userEmail",
+						"transcriptDestinationService",
+						"combinedOutputUrl",
+						"jobType",
+						"settings"
+					],
+					"additionalProperties": false
+				},
+				{
 					"$ref": "#/$defs/LLMTranslationJob"
 				}
 			]
@@ -817,6 +883,43 @@
 				},
 				{
 					"$ref": "#/$defs/LLMOutputFailure"
+				},
+				{
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "string"
+						},
+						"userEmail": {
+							"type": "string"
+						},
+						"status": {
+							"type": "string",
+							"const": "OCR_SUCCESS"
+						},
+						"outputKey": {
+							"type": "string"
+						}
+					},
+					"required": ["id", "userEmail", "status", "outputKey"],
+					"additionalProperties": false
+				},
+				{
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "string"
+						},
+						"userEmail": {
+							"type": "string"
+						},
+						"status": {
+							"type": "string",
+							"const": "OCR_FAILURE"
+						}
+					},
+					"required": ["id", "userEmail", "status"],
+					"additionalProperties": false
 				}
 			]
 		},
