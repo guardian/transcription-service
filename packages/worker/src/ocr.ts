@@ -53,12 +53,17 @@ export const processOcrJob = async (
 	const pdfOutputPath = `${downloadedFilePath}.ocr.pdf`;
 	const base64OutputPath = `${pdfOutputPath}.base64`;
 
+	const configPath =
+		config.app.stage === 'DEV'
+			? 'rapidocr/rapidocr-config-dev.yaml'
+			: '/opt/transcription-service/rapidocr-config.yaml';
+
 	await runSpawnCommand('ocrmypdf', 'ocrmypdf', [
 		'--redo-ocr',
 		'--plugin',
 		'ocrmypdf_rapidocr',
 		'--rapidocr-config-path',
-		'rapidocr/rapidocr-config.yaml',
+		configPath,
 		'-l',
 		job.settings.ocrLanguage,
 		downloadedFilePath,
