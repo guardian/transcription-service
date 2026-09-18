@@ -23,7 +23,7 @@ modules:
 forwardPorts:
   - 9103 # API
   - 3040 # client
-  - 4566 # localstack
+#  - 4566 # localstack
 
 # Optional: Mount directories from host to container
 # mounts:

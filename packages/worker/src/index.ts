@@ -40,6 +40,7 @@ import {
 	processTranscriptionJob,
 	publishTranscriptionOutputFailure,
 } from './transcribe';
+import { processOcrJob } from './ocr';
 
 const POLLING_INTERVAL_SECONDS = 15;
 
@@ -291,6 +292,15 @@ const pollTranscriptionQueue = async (
 				sqsClient,
 				setMessageVisibility,
 				metrics,
+				preservedAttributes,
+			);
+		} else if (jobType === 'ocr') {
+			await processOcrJob(
+				job,
+				downloadedFile,
+				config,
+				sqsClient,
+				setMessageVisibility,
 				preservedAttributes,
 			);
 		} else {
