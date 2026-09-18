@@ -14,7 +14,11 @@ BUCKET=$(aws --region "$REGION" ssm get-parameter \
   --query Parameter.Value --output text)
 aws --region "$REGION" s3 cp "$1" "s3://$BUCKET/$FILENAME"
 INPUT_URL=$(aws --region "$REGION" s3 presign "s3://$BUCKET/$FILENAME" --expires-in 43200)
+<<<<<<< HEAD
 OUTPUT_KEY="${FILENAME%.*}.output.json"
+=======
+OUTPUT_KEY="${FILENAME%.*}.output.pdf"
+>>>>>>> f3bcf66 (Add basic OCR functionality to transcription service)
 # aws s3 presign only supports GET; boto3 signs the worker's PUT request.
 OUTPUT_URL=$(python3 - "$REGION" "$BUCKET" "$OUTPUT_KEY" <<'PY'
 import sys
