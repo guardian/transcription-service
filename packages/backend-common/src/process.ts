@@ -14,9 +14,14 @@ export type ProcessName =
 	| 'downloadMedia'
 	| 'getContainer'
 	| 'createNewContainer'
-	| 'llama-server';
+	| 'llama-server'
+	| 'ocrmypdf'
+	| 'base64'
+	| 'pdfinfo';
 
 const processesWithHiddenStdout: ProcessName[] = ['transcribe'];
+
+export type SpawnCommandOutput = { stdout: string } | { stderr: string };
 
 export const runSpawnCommand = (
 	processName: ProcessName,
@@ -24,9 +29,7 @@ export const runSpawnCommand = (
 	args: ReadonlyArray<string>,
 	logImmediately: boolean = false,
 	rejectOnFailure: boolean = true,
-	maybeLoggingCallback?: (
-		data: { stdout: string } | { stderr: string },
-	) => void,
+	maybeLoggingCallback?: (data: SpawnCommandOutput) => void,
 ): Promise<ProcessResult> => {
 	logger.info(
 		`Running process ${processName} with command: ${cmd} ${args.join(' ')}`,
