@@ -98,6 +98,7 @@ export const processOcrJob = async (
 	const pageNumRegex = /^Pages:\s+(\d+)/m;
 	const match = pdfInfoOut.match(pageNumRegex);
 	const numPages = match && match[1] ? parseInt(match[1], 10) : undefined;
+
 	// 10 second per page or 120 seconds per megabyte. Each language requires a separate ocr job
 	const estimatedOcrTimeSeconds =
 		job.settings.ocrLanguages.length *
