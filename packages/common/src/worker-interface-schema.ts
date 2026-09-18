@@ -24,6 +24,10 @@ import {
 	WorkerJob,
 	TranscriptionOutput,
 	MediaDownloadFailure,
+	OcrJob,
+	OcrOutputFailure,
+	OcrOutputSuccess,
+	OcrOutput,
 } from './worker-interface-types';
 
 const JSON_SCHEMA_TARGET = 'draft-2020-12' as const;
@@ -43,6 +47,7 @@ export const workerInterfaceSchemas = {
 	LLMJob,
 	LLMTranslationJob,
 	WorkerJob,
+	OcrJob,
 	LlmPrompt,
 	TranslationField,
 	TranslationTask,
@@ -51,6 +56,9 @@ export const workerInterfaceSchemas = {
 	TranscriptionOutputFailure,
 	LLMOutputSuccess,
 	LLMOutputFailure,
+	OcrOutputSuccess,
+	OcrOutputFailure,
+	OcrOutput,
 	TranscriptionResult,
 	TranscriptionOutput,
 	MediaDownloadFailure,
