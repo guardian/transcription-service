@@ -351,6 +351,13 @@ const pollTranscriptionQueue = async (
 					llmFailure,
 					preservedAttributes,
 				);
+			} else if (job.jobType === 'ocr') {
+				await publishTranscriptionOutput(
+					sqsClient,
+					config.app.destinationQueueUrls[job.transcriptDestinationService],
+					{ id: job.id, userEmail: job.userEmail, status: 'OCR_FAILURE' },
+					preservedAttributes,
+				);
 			} else {
 				await publishTranscriptionOutputFailure(
 					sqsClient,
