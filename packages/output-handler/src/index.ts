@@ -1,3 +1,4 @@
+import { handleOcrOutput } from './ocr';
 import { Handler } from 'aws-lambda';
 import { sendEmail, getSESClient } from './ses';
 import { IncomingSQSEvent } from './sqs-event-types';
@@ -311,6 +312,11 @@ export const processMessage = async (event: unknown) => {
 					sesClient,
 					metrics,
 				);
+				break;
+			}
+			case 'OCR_SUCCESS':
+			case 'OCR_FAILURE': {
+				await handleOcrOutput(config, transcriptionOutput);
 				break;
 			}
 			case 'LLM_SUCCESS': {

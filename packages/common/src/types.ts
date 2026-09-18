@@ -293,3 +293,38 @@ export const TranscriptionItemWithTranscript = z.object({
 export type TranscriptionItemWithTranscript = z.infer<
 	typeof TranscriptionItemWithTranscript
 >;
+
+export const OcrRequestBody = z.object({
+	s3Key: z.string().min(1),
+	fileName: z
+		.string()
+		.min(1)
+		.refine((name) => /\.pdf$/i.test(name), 'Expected a PDF file'),
+	ocrLanguage: z
+		.string()
+		.regex(/^[a-z]{3}(\+[a-z]{3})*$/)
+		.default('eng'),
+});
+export type OcrRequestBody = z.infer<typeof OcrRequestBody>;
+
+const OcrItemBase = z.object({
+	id: z.string(),
+	userEmail: z.string(),
+	completedAt: z.string(),
+});
+export const OcrDynamoItem = z.discriminatedUnion('status', [
+	OcrItemBase.extend({
+		status: z.literal('OCR_SUCCESS'),
+		outputKey: z.string(),
+	}),
+	OcrItemBase.extend({
+		status: z.literal('OCR_FAILURE'),
+		errorMessage: z.string(),
+	}),
+]);
+export type OcrDynamoItem = z.infer<typeof OcrDynamoItem>;
+export const OcrResult = z.discriminatedUnion('status', [
+	z.object({ status: z.literal('OCR_SUCCESS'), downloadUrl: z.string() }),
+	z.object({ status: z.literal('OCR_FAILURE'), errorMessage: z.string() }),
+]);
+export type OcrResult = z.infer<typeof OcrResult>;

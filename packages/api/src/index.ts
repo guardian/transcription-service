@@ -1,4 +1,5 @@
 import express from 'express';
+import { createOcrRouter } from './ocr';
 import asyncHandler from 'express-async-handler';
 import serverlessExpress from '@codegenie/serverless-express';
 import bodyParser from 'body-parser';
@@ -233,6 +234,12 @@ const getApp = async () => {
 			res.send(JSON.stringify(clientConfig));
 		}),
 	]);
+
+	apiRouter.use(
+		'/ocr',
+		checkAuth,
+		createOcrRouter(config, sqsClient, dynamoClient),
+	);
 
 	apiRouter.post('/llm-prompt', [
 		checkAuth,
