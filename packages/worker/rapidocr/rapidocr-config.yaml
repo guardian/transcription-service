@@ -11,9 +11,9 @@ Global:
   width_height_ratio: 8
   return_word_box: false
   return_single_char_box: false
-  font_path: null
+  font_path: ${Global.model_root_dir}/FZYTK.TTF
   log_level: info
-  model_root_dir: null
+  model_root_dir: ${oc.env:HOME}/.cache/rapidocr
 EngineConfig:
   onnxruntime:
     intra_op_num_threads: -1
