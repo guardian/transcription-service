@@ -1398,13 +1398,12 @@ aws s3 cp --quiet s3://",
                   },
                   "/investigations/CODE/transcription-service-models/models.zip /opt/dlami/nvme/models.zip
 unzip /opt/dlami/nvme/models.zip -d /opt/dlami/nvme/
-rm -rf /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface /home/ubuntu/.cache/rapidocr
+rm -rf /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface
 chown -R ubuntu:ubuntu /opt/dlami/nvme/models
 mkdir -p /home/ubuntu/.cache
 [ -d /opt/dlami/nvme/models/torch ] && ln -s /opt/dlami/nvme/models/torch /home/ubuntu/.cache/torch || true
 [ -d /opt/dlami/nvme/models/huggingface ] && ln -s /opt/dlami/nvme/models/huggingface /home/ubuntu/.cache/huggingface || true
-ln -s /opt/dlami/nvme/models/rapidocr /home/ubuntu/.cache/rapidocr
-chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface /home/ubuntu/.cache/rapidocr
+chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface
 aws s3 cp s3://",
                   {
                     "Ref": "DistributionBucketName",
@@ -6364,13 +6363,12 @@ aws s3 cp --quiet s3://",
                   },
                   "/investigations/PROD/transcription-service-models/models.zip /opt/dlami/nvme/models.zip
 unzip /opt/dlami/nvme/models.zip -d /opt/dlami/nvme/
-rm -rf /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface /home/ubuntu/.cache/rapidocr
+rm -rf /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface
 chown -R ubuntu:ubuntu /opt/dlami/nvme/models
 mkdir -p /home/ubuntu/.cache
 [ -d /opt/dlami/nvme/models/torch ] && ln -s /opt/dlami/nvme/models/torch /home/ubuntu/.cache/torch || true
 [ -d /opt/dlami/nvme/models/huggingface ] && ln -s /opt/dlami/nvme/models/huggingface /home/ubuntu/.cache/huggingface || true
-ln -s /opt/dlami/nvme/models/rapidocr /home/ubuntu/.cache/rapidocr
-chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface /home/ubuntu/.cache/rapidocr
+chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface
 aws s3 cp s3://",
                   {
                     "Ref": "DistributionBucketName",
