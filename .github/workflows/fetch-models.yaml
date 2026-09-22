@@ -93,7 +93,7 @@ jobs:
           HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
           HF_HUB_DOWNLOAD_TIMEOUT: '120'
         run: |
-          python whisperx-model-fetch/download_whisperx_models.py \
+          python model-fetch/download_whisperx_models.py \
             --whisper-models \
             --diarization-models \
             --huggingface-token "$HUGGINGFACE_TOKEN"
