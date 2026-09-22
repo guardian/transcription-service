@@ -70,10 +70,12 @@ export const processOcrJob = async (
 		pdfOutputPath,
 	]);
 
-	await runSpawnCommand('base64', 'base64', [
-		'-i',
+	// Use redirection because GNU (Linux) and BSD (macOS) base64 flags differ.
+	await runSpawnCommand('base64', 'sh', [
+		'-c',
+		'base64 < "$1" > "$2"',
+		'base64',
 		pdfOutputPath,
-		'-o',
 		base64OutputPath,
 	]);
 
