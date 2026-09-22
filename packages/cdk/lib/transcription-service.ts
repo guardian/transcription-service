@@ -84,7 +84,9 @@ export class TranscriptionService extends GuStack {
 		const workerAutoscalingGroupName = `transcription-service-workers-${this.stage}`;
 		const gpuWorkerAutoscalingGroupName = `transcription-service-gpu-workers-${this.stage}`;
 
-		if (!props.env?.region) throw new Error('region not provided in props');
+		if (!props.env?.region) {
+			throw new Error('region not provided in props');
+		}
 
 		const gpuWorkerAmi = new GuAmiParameter(this, {
 			app: `${APP_NAME}-gpu-worker`,
@@ -307,7 +309,9 @@ export class TranscriptionService extends GuStack {
 
 		// The custom domain name mapped to this API
 		const apiDomain = apiLambda.api.domainName;
-		if (!apiDomain) throw new Error('api lambda domainName is undefined');
+		if (!apiDomain) {
+			throw new Error('api lambda domainName is undefined');
+		}
 
 		// CNAME mapping between API Gateway and the custom
 		new GuCname(this, 'transcription DNS entry', {

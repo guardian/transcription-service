@@ -16,8 +16,7 @@
 		"@guardian/transcription-service-common": "1.0.0"
 	},
 	"devDependencies": {
-		"@guardian/eslint-config": "7.0.1",
-		"@guardian/eslint-config-typescript": "8.0.0",
+		"@guardian/eslint-config": "9.0.0",
 		"@guardian/prettier": "5.0.0",
 		"@guardian/tsconfig": "0.2.0",
 		"@types/jest": "29.5.13",
@@ -32,7 +31,10 @@
 		"source-map-support": "0.5.21",
 		"ts-jest": "29.2.5",
 		"ts-node": "10.9.2",
-		"typescript": "5.1.6"
+		"typescript": "5.9.3",
+		"@typescript-eslint/parser": "8.69.0",
+		"@typescript-eslint/eslint-plugin": "8.69.0",
+		"tslib": "2.8.1"
 	},
 	"prettier": "@guardian/prettier",
 	"jest": {
@@ -53,18 +55,22 @@
 			"jest": true
 		},
 		"extends": [
-			"@guardian/eslint-config-typescript"
+			"@guardian/eslint-config",
+			"plugin:@typescript-eslint/recommended-type-checked"
 		],
 		"parserOptions": {
 			"ecmaVersion": 2020,
-			"sourceType": "module"
+			"sourceType": "module",
+			"project": "./tsconfig.json"
 		},
 		"plugins": [
 			"@typescript-eslint"
 		],
 		"rules": {
 			"@typescript-eslint/no-inferrable-types": 0,
-			"import/no-namespace": 2
+			"import/no-namespace": 2,
+			"@typescript-eslint/no-unnecessary-condition": 2,
+			"@typescript-eslint/consistent-type-imports": 2
 		},
 		"ignorePatterns": [
 			"**/*.js",
@@ -72,6 +78,7 @@
 			"cdk.out",
 			".eslintrc.js",
 			"jest.config.js"
-		]
+		],
+		"parser": "@typescript-eslint/parser"
 	}
 }
