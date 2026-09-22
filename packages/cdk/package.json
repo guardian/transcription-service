@@ -34,20 +34,10 @@
 		"typescript": "5.9.3",
 		"@typescript-eslint/parser": "8.69.0",
 		"@typescript-eslint/eslint-plugin": "8.69.0",
-		"tslib": "2.8.1"
+		"tslib": "2.8.1",
+		"eslint-import-resolver-typescript": "3.10.1"
 	},
 	"prettier": "@guardian/prettier",
-	"jest": {
-		"testMatch": [
-			"<rootDir>/{lib,bin}/**/*.test.ts"
-		],
-		"transform": {
-			"^.+\\.tsx?$": "ts-jest"
-		},
-		"setupFilesAfterEnv": [
-			"./jest.setup.js"
-		]
-	},
 	"eslintConfig": {
 		"root": true,
 		"env": {
@@ -79,6 +69,11 @@
 			".eslintrc.js",
 			"jest.config.js"
 		],
-		"parser": "@typescript-eslint/parser"
+		"parser": "@typescript-eslint/parser",
+		"settings": {
+			"import/resolver": {
+				"typescript": true
+			}
+		}
 	}
 }
