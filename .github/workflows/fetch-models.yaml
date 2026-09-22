@@ -84,7 +84,7 @@ jobs:
       - name: Download and verify RapidOCR models for offline OCR
         run: |
           python model-fetch/download_rapidocr_models.py --output-dir models/rapidocr
-          python model-fetch/verify_offline.py --models-dir models/rapidocr
+          python model-fetch/verify_rapidocr_offline.py --models-dir models/rapidocr
 
       - name: Download all models needed to run whisperx model from Hugging Face
         env:
