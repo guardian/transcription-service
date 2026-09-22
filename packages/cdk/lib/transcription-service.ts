@@ -231,6 +231,7 @@ export class TranscriptionService extends GuStack {
 				layerVersionName: 'FFMpegLayer',
 				compatibleArchitectures: [Architecture.X86_64],
 				compatibleRuntimes: [
+					Runtime.NODEJS_24_X,
 					Runtime.NODEJS_22_X,
 					Runtime.NODEJS_20_X,
 					Runtime.NODEJS_18_X,
@@ -241,7 +242,7 @@ export class TranscriptionService extends GuStack {
 		const apiLambda = new GuApiLambda(this, 'transcription-service-api', {
 			fileName: 'api.zip',
 			handler: 'index.api',
-			runtime: Runtime.NODEJS_20_X,
+			runtime: Runtime.NODEJS_24_X,
 			monitoringConfiguration: {
 				noMonitoring: true,
 			},
@@ -697,7 +698,7 @@ export class TranscriptionService extends GuStack {
 			{
 				fileName: 'output-handler.zip',
 				handler: 'index.outputHandler',
-				runtime: Runtime.NODEJS_20_X,
+				runtime: Runtime.NODEJS_24_X,
 				app: `${APP_NAME}-output-handler`,
 				errorPercentageMonitoring:
 					this.stage === 'PROD'
@@ -782,6 +783,7 @@ export class TranscriptionService extends GuStack {
 				layerVersionName: 'ChromiumLayer',
 				compatibleArchitectures: [Architecture.ARM_64],
 				compatibleRuntimes: [
+					Runtime.NODEJS_24_X,
 					Runtime.NODEJS_22_X,
 					Runtime.NODEJS_20_X,
 					Runtime.NODEJS_18_X,
@@ -795,7 +797,7 @@ export class TranscriptionService extends GuStack {
 			{
 				fileName: 'webpage-snapshot.zip',
 				handler: 'index.webpageSnapshot',
-				runtime: Runtime.NODEJS_20_X,
+				runtime: Runtime.NODEJS_24_X,
 				architecture: Architecture.ARM_64,
 				timeout: webpageSnapshotLambdaTimeout,
 				memorySize: 2048,
@@ -827,7 +829,7 @@ export class TranscriptionService extends GuStack {
 			{
 				fileName: 'media-export.zip',
 				handler: 'index.mediaExport',
-				runtime: Runtime.NODEJS_20_X,
+				runtime: Runtime.NODEJS_24_X,
 				app: `${APP_NAME}-media-export`,
 				ephemeralStorageSize: Size.mebibytes(10240),
 				memorySize: 2048,
@@ -870,7 +872,7 @@ export class TranscriptionService extends GuStack {
 			{
 				fileName: 'worker-capacity-manager.zip',
 				handler: 'index.workerCapacityManager',
-				runtime: Runtime.NODEJS_20_X,
+				runtime: Runtime.NODEJS_24_X,
 				app: `${APP_NAME}-worker-capacity-manager`,
 			},
 		);
