@@ -367,8 +367,8 @@ export class TranscriptionService extends GuStack {
 			// create symlinks for torch/huggingface dirs if they exist in the downloaded folder
 			`[ -d /opt/dlami/nvme/models/torch ] && ln -s /opt/dlami/nvme/models/torch /home/ubuntu/.cache/torch || true`,
 			`[ -d /opt/dlami/nvme/models/huggingface ] && ln -s /opt/dlami/nvme/models/huggingface /home/ubuntu/.cache/huggingface || true`,
-			`ln -s /opt/dlami/nvme/models/rapidocr /home/ubuntu/.cache/rapidocr`,
-			`chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface /home/ubuntu/.cache/rapidocr`,
+			`[ -d /opt/dlami/nvme/models/rapidocr ] &&  ln -s /opt/dlami/nvme/models/rapidocr /home/ubuntu/.cache/rapidocr || true`,
+			`chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface /home/ubuntu/.cache/rapidocr || true`,
 			// Set up transcription service worker
 			`aws s3 cp ${baseS3DistPath}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
 			`dpkg -i transcription-service-worker_1.0.0_all.deb`,
