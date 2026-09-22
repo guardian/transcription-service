@@ -658,7 +658,7 @@ const getApp = async () => {
 
 	app.use('/api', apiRouter);
 
-	const clientPages = ['export', 'viewer', 'prompt', 'translate'];
+	const clientPages = ['export', 'viewer', 'prompt', 'translate', 'ocr'];
 
 	if (runningOnAws) {
 		// see https://expressjs.com/en/resources/middleware/serve-static/#redirect
