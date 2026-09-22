@@ -12,7 +12,7 @@ from rapidocr.utils.parse_parameters import ParseParams
 
 DEFAULT_CONFIG = (
     Path(__file__).resolve().parents[1]
-    / "packages/worker/rapidocr/rapidocr-config.yaml"
+    / "packages/worker/rapidocr/rapidocr-config.local.yaml"
 )
 
 

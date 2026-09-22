@@ -55,8 +55,8 @@ export const processOcrJob = async (
 
 	const configPath =
 		config.app.stage === 'DEV'
-			? 'rapidocr/rapidocr-config-dev.yaml'
-			: '/opt/transcription-service/rapidocr-config.yaml';
+			? 'rapidocr/rapidocr-config.local.yaml'
+			: '/opt/transcription-service/rapidocr-config.prod.yaml';
 
 	await runSpawnCommand('ocrmypdf', 'ocrmypdf', [
 		'--redo-ocr',
