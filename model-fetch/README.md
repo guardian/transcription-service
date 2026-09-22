@@ -23,7 +23,7 @@ dictionaries are embedded in these ONNX models.
 The workflow also runs `verify_rapidocr_offline.py` to initialize and run every recognizer
 with HTTP requests and socket connections blocked before uploading the archive.
 
-We tell rapidocr what models to use in `packages/worker/rapidocr/rapidocr-config.yaml`. If
+We tell rapidocr what models to use in `packages/worker/rapidocr/rapidocr-config.local.yaml`. If
 that file is changed then the rapidocr download/verify scripts may need to be adjusted accordingly
 
 The current configuration uses PP-OCRv6 small detection, the v4 classifier, and
@@ -43,3 +43,10 @@ The fetch environment uses RapidOCR 3.9.2. Keep the worker AMI's RapidOCR versio
 aligned with this pin; a different model registry may expect different filenames
 or checksums. The AMI also needs rapidocr[rtl] for Arabic recognition - see
 https://github.com/RapidAI/RapidOCR/blob/main/python/rapidocr/utils/utils.py#L21
+
+Local development and model-fetch verification use `rapidocr-config.local.yaml`
+with CPU inference. Deployed workers (CODE and PROD) use
+`rapidocr-config.prod.yaml`, which enables ONNX Runtime CUDA on GPU 0. FPM bundles
+only the production config. Both configs use the same models and cache paths;
+keep their model settings aligned. The worker AMI must provide `onnxruntime-gpu`
+and compatible CUDA/cuDNN libraries.
