@@ -44,15 +44,6 @@ environment and run the worker. We use [uv](https://docs.astral.sh/uv/) to manag
 
 The same python environment can be used to test changes to the model download python script.
 
-To enqueue an OCR job for `toast_sandwich_en_wiki.pdf` on the local GPU worker queue, with LocalStack and the worker running:
-
-```bash
-bash scripts/trigger-ocr-from-localstack-sqs.sh
-```
-
-The script requires a working AWS CLI, `jq`, and Node.js. Refresh the sample PDF's presigned S3 URL in the script
-when it expires. Each run generates a unique job ID so repeated submissions are processed.
-
 ## Testing the integration with giant
 
 To perform and end to end test locally:

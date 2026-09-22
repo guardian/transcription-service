@@ -8,7 +8,7 @@ within the tools themselves to fetch the models - hence these python scripts.
 
 ## whisperx
 
-The simpler of the two scripts. Note that the script is setup to support fetchingf the alignment models,
+The simpler of the two scripts. Note that the script is setup to support fetching the alignment models,
 we don't use alignment in whisperx at the moment - see the github action for the current params passed
 to the script.
 
@@ -17,8 +17,7 @@ to the script.
 The downloader reads the worker's configuration and RapidOCR's pinned model
 registry. It downloads the configured detector and classifier, every recognition
 model matching the configured version and size, and the default visualization
-font. SHA-256 checks must pass before the archive is uploaded. Recognition
-dictionaries are embedded in these ONNX models.
+font. SHA-256 checks must pass before the archive is uploaded.
 
 The workflow also runs `verify_rapidocr_offline.py` to initialize and run every recognizer
 with HTTP requests and socket connections blocked before uploading the archive.
@@ -40,13 +39,9 @@ uv run --no-project --with-requirements model-fetch/requirements.txt python rapi
 ```
 
 The fetch environment uses RapidOCR 3.9.2. Keep the worker AMI's RapidOCR version
-aligned with this pin; a different model registry may expect different filenames
-or checksums. The AMI also needs rapidocr[rtl] for Arabic recognition - see
-https://github.com/RapidAI/RapidOCR/blob/main/python/rapidocr/utils/utils.py#L21
+aligned with this.
 
 Local development and model-fetch verification use `rapidocr-config.local.yaml`
 with CPU inference. Deployed workers (CODE and PROD) use
-`rapidocr-config.prod.yaml`, which enables ONNX Runtime CUDA on GPU 0. FPM bundles
-only the production config. Both configs use the same models and cache paths;
-keep their model settings aligned. The worker AMI must provide `onnxruntime-gpu`
-and compatible CUDA/cuDNN libraries.
+`rapidocr-config.prod.yaml`, which enables ONNX Runtime CUDA, which should be faster
+on the gpu instances.
