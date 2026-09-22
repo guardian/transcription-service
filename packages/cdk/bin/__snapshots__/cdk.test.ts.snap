@@ -194,6 +194,7 @@ exports[`Giant's stacks should match the snapshots 1`] = `
           "arm64",
         ],
         "CompatibleRuntimes": [
+          "nodejs24.x",
           "nodejs22.x",
           "nodejs20.x",
           "nodejs18.x",
@@ -381,6 +382,7 @@ exports[`Giant's stacks should match the snapshots 1`] = `
           "x86_64",
         ],
         "CompatibleRuntimes": [
+          "nodejs24.x",
           "nodejs22.x",
           "nodejs20.x",
           "nodejs18.x",
@@ -2695,7 +2697,7 @@ service transcription-service-worker start",
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs24.x",
         "Tags": [
           {
             "Key": "App",
@@ -2910,8 +2912,6 @@ service transcription-service-worker start",
             {
               "Action": [
                 "dynamodb:BatchGetItem",
-                "dynamodb:GetRecords",
-                "dynamodb:GetShardIterator",
                 "dynamodb:Query",
                 "dynamodb:GetItem",
                 "dynamodb:Scan",
@@ -2930,16 +2930,26 @@ service transcription-service-worker start",
                     "Arn",
                   ],
                 },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
                 {
-                  "Ref": "AWS::NoValue",
+                  "Fn::GetAtt": [
+                    "TranscriptTableA6F8B506",
+                    "Arn",
+                  ],
                 },
               ],
             },
             {
               "Action": [
                 "dynamodb:BatchGetItem",
-                "dynamodb:GetRecords",
-                "dynamodb:GetShardIterator",
                 "dynamodb:Query",
                 "dynamodb:GetItem",
                 "dynamodb:Scan",
@@ -2958,8 +2968,20 @@ service transcription-service-worker start",
                     "Arn",
                   ],
                 },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
                 {
-                  "Ref": "AWS::NoValue",
+                  "Fn::GetAtt": [
+                    "EventsTableD24865E5",
+                    "Arn",
+                  ],
                 },
               ],
             },
@@ -3266,6 +3288,9 @@ service transcription-service-worker start",
         "transcriptionserviceapitranscriptionserviceCODEproxyE456CCE5",
         "transcriptionserviceapitranscriptionserviceCODEANY7371795C",
       ],
+      "Metadata": {
+        "aws:cdk:do-not-refactor": true,
+      },
       "Properties": {
         "Description": "API for transcription service frontend",
         "RestApiId": {
@@ -3600,7 +3625,7 @@ service transcription-service-worker start",
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs24.x",
         "Tags": [
           {
             "Key": "App",
@@ -3747,8 +3772,6 @@ service transcription-service-worker start",
             {
               "Action": [
                 "dynamodb:BatchGetItem",
-                "dynamodb:GetRecords",
-                "dynamodb:GetShardIterator",
                 "dynamodb:Query",
                 "dynamodb:GetItem",
                 "dynamodb:Scan",
@@ -3767,8 +3790,20 @@ service transcription-service-worker start",
                     "Arn",
                   ],
                 },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
                 {
-                  "Ref": "AWS::NoValue",
+                  "Fn::GetAtt": [
+                    "TranscriptTableA6F8B506",
+                    "Arn",
+                  ],
                 },
               ],
             },
@@ -3867,7 +3902,7 @@ service transcription-service-worker start",
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs24.x",
         "Tags": [
           {
             "Key": "App",
@@ -4001,8 +4036,6 @@ service transcription-service-worker start",
             {
               "Action": [
                 "dynamodb:BatchGetItem",
-                "dynamodb:GetRecords",
-                "dynamodb:GetShardIterator",
                 "dynamodb:Query",
                 "dynamodb:GetItem",
                 "dynamodb:Scan",
@@ -4021,8 +4054,20 @@ service transcription-service-worker start",
                     "Arn",
                   ],
                 },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
                 {
-                  "Ref": "AWS::NoValue",
+                  "Fn::GetAtt": [
+                    "TranscriptTableA6F8B506",
+                    "Arn",
+                  ],
                 },
               ],
             },
@@ -4278,7 +4323,7 @@ service transcription-service-worker start",
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs24.x",
         "Tags": [
           {
             "Key": "App",
@@ -4625,7 +4670,7 @@ service transcription-service-worker start",
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs24.x",
         "Tags": [
           {
             "Key": "App",
@@ -4862,6 +4907,24 @@ service transcription-service-worker start",
         "Description": "Manages worker capacity by updating the desired capacity of ASG based on queue length",
         "ScheduleExpression": "rate(1 minute)",
         "State": "ENABLED",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
         "Targets": [
           {
             "Arn": {
@@ -5094,6 +5157,7 @@ exports[`Giant's stacks should match the snapshots 2`] = `
           "arm64",
         ],
         "CompatibleRuntimes": [
+          "nodejs24.x",
           "nodejs22.x",
           "nodejs20.x",
           "nodejs18.x",
@@ -5331,6 +5395,7 @@ exports[`Giant's stacks should match the snapshots 2`] = `
           "x86_64",
         ],
         "CompatibleRuntimes": [
+          "nodejs24.x",
           "nodejs22.x",
           "nodejs20.x",
           "nodejs18.x",
@@ -7782,7 +7847,7 @@ service transcription-service-worker start",
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs24.x",
         "Tags": [
           {
             "Key": "App",
@@ -7997,8 +8062,6 @@ service transcription-service-worker start",
             {
               "Action": [
                 "dynamodb:BatchGetItem",
-                "dynamodb:GetRecords",
-                "dynamodb:GetShardIterator",
                 "dynamodb:Query",
                 "dynamodb:GetItem",
                 "dynamodb:Scan",
@@ -8017,16 +8080,26 @@ service transcription-service-worker start",
                     "Arn",
                   ],
                 },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
                 {
-                  "Ref": "AWS::NoValue",
+                  "Fn::GetAtt": [
+                    "TranscriptTableA6F8B506",
+                    "Arn",
+                  ],
                 },
               ],
             },
             {
               "Action": [
                 "dynamodb:BatchGetItem",
-                "dynamodb:GetRecords",
-                "dynamodb:GetShardIterator",
                 "dynamodb:Query",
                 "dynamodb:GetItem",
                 "dynamodb:Scan",
@@ -8045,8 +8118,20 @@ service transcription-service-worker start",
                     "Arn",
                   ],
                 },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
                 {
-                  "Ref": "AWS::NoValue",
+                  "Fn::GetAtt": [
+                    "EventsTableD24865E5",
+                    "Arn",
+                  ],
                 },
               ],
             },
@@ -8353,6 +8438,9 @@ service transcription-service-worker start",
         "transcriptionserviceapitranscriptionservicePRODproxy1198D587",
         "transcriptionserviceapitranscriptionservicePRODANY8854BB84",
       ],
+      "Metadata": {
+        "aws:cdk:do-not-refactor": true,
+      },
       "Properties": {
         "Description": "API for transcription service frontend",
         "RestApiId": {
@@ -8687,7 +8775,7 @@ service transcription-service-worker start",
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs24.x",
         "Tags": [
           {
             "Key": "App",
@@ -8960,8 +9048,6 @@ service transcription-service-worker start",
             {
               "Action": [
                 "dynamodb:BatchGetItem",
-                "dynamodb:GetRecords",
-                "dynamodb:GetShardIterator",
                 "dynamodb:Query",
                 "dynamodb:GetItem",
                 "dynamodb:Scan",
@@ -8980,8 +9066,20 @@ service transcription-service-worker start",
                     "Arn",
                   ],
                 },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
                 {
-                  "Ref": "AWS::NoValue",
+                  "Fn::GetAtt": [
+                    "TranscriptTableA6F8B506",
+                    "Arn",
+                  ],
                 },
               ],
             },
@@ -9080,7 +9178,7 @@ service transcription-service-worker start",
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs24.x",
         "Tags": [
           {
             "Key": "App",
@@ -9340,8 +9438,6 @@ service transcription-service-worker start",
             {
               "Action": [
                 "dynamodb:BatchGetItem",
-                "dynamodb:GetRecords",
-                "dynamodb:GetShardIterator",
                 "dynamodb:Query",
                 "dynamodb:GetItem",
                 "dynamodb:Scan",
@@ -9360,8 +9456,20 @@ service transcription-service-worker start",
                     "Arn",
                   ],
                 },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
                 {
-                  "Ref": "AWS::NoValue",
+                  "Fn::GetAtt": [
+                    "TranscriptTableA6F8B506",
+                    "Arn",
+                  ],
                 },
               ],
             },
@@ -9617,7 +9725,7 @@ service transcription-service-worker start",
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs24.x",
         "Tags": [
           {
             "Key": "App",
@@ -10090,7 +10198,7 @@ service transcription-service-worker start",
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs24.x",
         "Tags": [
           {
             "Key": "App",
@@ -10327,6 +10435,24 @@ service transcription-service-worker start",
         "Description": "Manages worker capacity by updating the desired capacity of ASG based on queue length",
         "ScheduleExpression": "rate(1 minute)",
         "State": "ENABLED",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
         "Targets": [
           {
             "Arn": {

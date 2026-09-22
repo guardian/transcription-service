@@ -1,5 +1,5 @@
 import 'source-map-support/register';
-import { GuRoot } from '@guardian/cdk/lib/constructs/root';
+import { App } from 'aws-cdk-lib';
 import { TranscriptionServiceRepository } from '../lib/repository';
 import { TranscriptionService } from '../lib/transcription-service';
 import { TranscriptionServiceUniversalInfra } from '../lib/universal-infra';
@@ -7,7 +7,8 @@ import { TranscriptionServiceUniversalInfra } from '../lib/universal-infra';
 const stack = 'investigations';
 const env = { region: 'eu-west-1' };
 
-const app = new GuRoot();
+// CI uses the handwritten riff-raff.yaml files in this directory.
+const app = new App();
 
 export const guStacks = [
 	new TranscriptionService(app, 'TranscriptionService-CODE', {
