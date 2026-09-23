@@ -1,4 +1,5 @@
 import {
+	OcrData,
 	OcrJob,
 	OcrOutput,
 	OcrOutputSuccess,
@@ -48,54 +49,73 @@ export const processOcrJob = async (
 		? numPages * 10
 		: pdfFileSizeMB * 120;
 
-	await setMessageVisibility(estimatedOcrTimeSeconds);
-
-	const pdfOutputPath = `${downloadedFilePath}.ocr.pdf`;
-	const base64OutputPath = `${pdfOutputPath}.base64`;
-
 	const configPath =
 		config.app.stage === 'DEV'
 			? 'rapidocr/rapidocr-config.local.yaml'
 			: '/opt/transcription-service/rapidocr-config.prod.yaml';
 
-	await runSpawnCommand('ocrmypdf', 'ocrmypdf', [
-		'--redo-ocr',
-		'--plugin',
-		'ocrmypdf_rapidocr',
-		'--rapidocr-config-path',
-		configPath,
-		'-l',
-		job.settings.ocrLanguage,
-		downloadedFilePath,
-		pdfOutputPath,
-	]);
-
-	// Use redirection because GNU (Linux) and BSD (macOS) base64 flags differ.
-	await runSpawnCommand('base64', 'sh', [
-		'-c',
-		'base64 < "$1" > "$2"',
-		'base64',
-		pdfOutputPath,
-		base64OutputPath,
-	]);
-
-	const base64FileSize = fs.statSync(base64OutputPath).size;
-
-	// the transcription service runs on instances with 16gb memory so let's error on anything bigger than 10GB to allow
-	// some headroom
-	if (base64FileSize > OUTPUT_SIZE_LIMIT) {
-		throw new Error(
-			`OCR output file too large to load into memory (larger than ${OUTPUT_SIZE_LIMIT_GB}GB). Giving up ocr job.`,
+	const ocrData: OcrData[] = [];
+	let totalBase64Size = 0;
+	// Run languages separately, as each produces its own PDF and text layer.
+	for (const [index, language] of job.settings.ocrLanguages.entries()) {
+		await setMessageVisibility(
+			Math.min(
+				43200,
+				Math.max(
+					60,
+					estimatedOcrTimeSeconds * (job.settings.ocrLanguages.length - index),
+				),
+			),
 		);
+		const pdfOutputPath = `${downloadedFilePath}.${index}.ocr.pdf`;
+		const base64OutputPath = `${pdfOutputPath}.base64`;
+		try {
+			await runSpawnCommand('ocrmypdf', 'ocrmypdf', [
+				job.settings.initialFlag ?? '--redo-ocr',
+				'--plugin',
+				'ocrmypdf_rapidocr',
+				'--rapidocr-config-path',
+				configPath,
+				'-l',
+				language,
+				...(job.settings.dpi === undefined
+					? []
+					: ['--image-dpi', String(job.settings.dpi)]),
+				downloadedFilePath,
+				pdfOutputPath,
+			]);
+
+			// Use redirection because GNU (Linux) and BSD (macOS) base64 flags differ.
+			await runSpawnCommand('base64', 'sh', [
+				'-c',
+				'base64 < "$1" > "$2"',
+				'base64',
+				pdfOutputPath,
+				base64OutputPath,
+			]);
+
+			totalBase64Size += fs.statSync(base64OutputPath).size;
+			// Apply the memory guard to the combined output across all languages.
+			if (totalBase64Size > OUTPUT_SIZE_LIMIT) {
+				throw new Error(
+					`OCR output file too large to load into memory (larger than ${OUTPUT_SIZE_LIMIT_GB}GB). Giving up ocr job.`,
+				);
+			}
+			ocrData.push({
+				language,
+				pdfBase64: fs.readFileSync(base64OutputPath, 'utf-8'),
+			});
+		} finally {
+			fs.rmSync(pdfOutputPath, { force: true });
+			fs.rmSync(base64OutputPath, { force: true });
+		}
 	}
 
-	const ocrOutput: OcrOutput = {
-		outputPdfBase64: fs.readFileSync(base64OutputPath, 'utf-8'),
-	};
+	const ocrOutput: OcrOutput = { ocrData };
 	const uploadResult = await uploadToS3(
 		job.combinedOutputUrl.url,
 		Buffer.from(JSON.stringify(ocrOutput)),
-		false, // gzip as, especially results from giant document translations, output will be quite large
+		false, // OCR output is plain JSON; Giant reads it without gzip decoding
 	);
 	if (!uploadResult.isSuccess) {
 		throw new Error(

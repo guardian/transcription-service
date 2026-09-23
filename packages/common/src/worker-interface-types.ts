@@ -74,7 +74,11 @@ export const LLMJob = Job.extend({
 export type LLMJob = z.infer<typeof LLMJob>;
 
 export const OcrSettings = z.object({
-	ocrLanguage: z.string(),
+	ocrLanguages: z.array(z.string().min(1)).min(1),
+	initialFlag: z.enum(['--redo-ocr', '--skip-text', '--force-ocr']).optional(),
+	dpi: z.number().int().positive().optional(),
+	// The source PDF and initial flag are sufficient for future colour-profile,
+	// decryption and exit-code retry handling. Those behaviours are not yet implemented.
 });
 export type OcrSettings = z.infer<typeof OcrSettings>;
 
@@ -164,8 +168,14 @@ export const LLMOutputSuccess = OutputBase.extend({
 });
 export type LLMOutputSuccess = z.infer<typeof LLMOutputSuccess>;
 
+export const OcrData = z.object({
+	language: z.string(),
+	pdfBase64: z.string(),
+});
+export type OcrData = z.infer<typeof OcrData>;
+
 export const OcrOutput = z.object({
-	outputPdfBase64: z.string(),
+	ocrData: z.array(OcrData),
 });
 export type OcrOutput = z.infer<typeof OcrOutput>;
 
