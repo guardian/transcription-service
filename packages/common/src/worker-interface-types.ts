@@ -77,8 +77,6 @@ export const OcrSettings = z.object({
 	ocrLanguages: z.array(z.string().min(1)).min(1),
 	initialFlag: z.enum(['--redo-ocr', '--skip-text', '--force-ocr']).optional(),
 	dpi: z.number().int().positive().optional(),
-	// The source PDF and initial flag are sufficient for future colour-profile,
-	// decryption and exit-code retry handling. Those behaviours are not yet implemented.
 });
 export type OcrSettings = z.infer<typeof OcrSettings>;
 

@@ -298,6 +298,7 @@ const pollTranscriptionQueue = async (
 			await processOcrJob(
 				job,
 				downloadedFile,
+				destinationDirectory,
 				config,
 				sqsClient,
 				setMessageVisibility,
