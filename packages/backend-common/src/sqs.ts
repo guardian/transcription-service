@@ -66,6 +66,7 @@ export const isSqsFailure = (
 export const FORWARDED_MESSAGE_ATTRIBUTE_NAMES = [
 	'GiantBlobUri',
 	'GiantExtractorName',
+	'GiantIngestion',
 ];
 
 export const getForwardedMessageAttributes = (
