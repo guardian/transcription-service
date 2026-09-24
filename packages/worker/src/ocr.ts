@@ -1,7 +1,6 @@
 import {
 	OcrData,
 	OcrJob,
-	OcrOutput,
 	OcrOutputSuccess,
 	uploadToS3,
 } from '@guardian/transcription-service-common';
@@ -18,6 +17,57 @@ import path from 'path';
 const OUTPUT_SIZE_LIMIT_GB = 10;
 const ONE_MB = 1024 * 1024;
 const OUTPUT_SIZE_LIMIT = OUTPUT_SIZE_LIMIT_GB * 1024 * ONE_MB; // 10GB
+
+const runOcrMyPdf = async (
+	job: OcrJob,
+	language: string,
+	sourceFile: string,
+	stage: string,
+	workingDirectory: string,
+): Promise<string> => {
+	const pdfOutputPath = `${workingDirectory}/${path.basename(sourceFile)}.${language}.ocr.pdf`;
+	const configPath =
+		stage === 'DEV'
+			? 'rapidocr/rapidocr-config.local.yaml'
+			: '/opt/transcription-service/rapidocr-config.prod.yaml';
+	await runSpawnCommand('ocrmypdf', 'ocrmypdf', [
+		job.settings.initialFlag ?? '--redo-ocr',
+		'--plugin',
+		'ocrmypdf_rapidocr',
+		'--rapidocr-config-path',
+		configPath,
+		'-l',
+		language,
+		...(job.settings.dpi === undefined
+			? []
+			: ['--image-dpi', String(job.settings.dpi)]),
+		sourceFile,
+		pdfOutputPath,
+	]);
+	return pdfOutputPath;
+};
+
+const copyFileAsBase64 = async (
+	sourceFile: string,
+	workingDirectory: string,
+): Promise<string> => {
+	const base64OutputPath = `${workingDirectory}/${path.basename(sourceFile)}.base64`;
+	// Use redirection because GNU (Linux) and BSD (macOS) base64 flags differ.
+	await runSpawnCommand('base64', 'sh', [
+		'-c',
+		'base64 < "$1" > "$2"',
+		'base64',
+		sourceFile,
+		base64OutputPath,
+	]);
+	return base64OutputPath;
+};
+
+type OcrOutputData = {
+	language: string;
+	base64OutPath: string;
+	totalBase64Size: number;
+};
 
 const runOcrMyPdf = async (
 	job: OcrJob,
@@ -152,7 +202,6 @@ export const processOcrJob = async (
 				pdfBase64: fs.readFileSync(outputData.base64OutPath, 'utf-8'),
 			}),
 		);
-
 		const ocrOutput: OcrOutput = { ocrData };
 		const uploadResult = await uploadToS3(
 			job.combinedOutputUrl.url,
