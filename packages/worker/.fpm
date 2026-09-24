@@ -8,3 +8,4 @@
 -p dist
 
 dist/index.js=/opt/transcription-service/index.js transcription-service-worker.service=/lib/systemd/system/transcription-service-worker.service sample-media/sample.wav=/opt/transcription-service/sample.wav
+rapidocr/rapidocr-config.prod.yaml=/opt/transcription-service/rapidocr-config.prod.yaml

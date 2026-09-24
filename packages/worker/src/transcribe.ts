@@ -9,6 +9,7 @@ import {
 import { logger } from '@guardian/transcription-service-backend-common';
 import {
 	InputLanguageCode,
+	Job,
 	languageCodes,
 	OutputLanguageCode,
 	TranscriptionEngine,
@@ -276,7 +277,7 @@ export const runWhisperX = async (
 export const publishTranscriptionOutputFailure = async (
 	sqsClient: SQSClient,
 	destination: string,
-	job: TranscriptionJob,
+	job: Job,
 	noAudioDetected: boolean = false,
 	messageAttributes?: Record<string, MessageAttributeValue>,
 ) => {

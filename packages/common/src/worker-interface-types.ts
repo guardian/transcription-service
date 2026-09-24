@@ -42,7 +42,7 @@ const SignedUrl = z.object({
 });
 export type SignedUrl = z.infer<typeof SignedUrl>;
 
-export const JobType = z.enum(['transcribe', 'llm', 'llm-translation']);
+export const JobType = z.enum(['transcribe', 'llm', 'llm-translation', 'ocr']);
 export type JobType = z.infer<typeof JobType>;
 
 export const Job = z.object({
@@ -73,6 +73,17 @@ export const LLMJob = Job.extend({
 });
 export type LLMJob = z.infer<typeof LLMJob>;
 
+export const OcrSettings = z.object({
+	ocrLanguage: z.string(),
+});
+export type OcrSettings = z.infer<typeof OcrSettings>;
+
+export const OcrJob = Job.extend({
+	jobType: z.literal('ocr'),
+	settings: OcrSettings,
+});
+export type OcrJob = z.infer<typeof OcrJob>;
+
 export const LLMTranslationJob = LLMJob.extend({
 	jobType: z.literal('llm-translation'),
 });
@@ -82,6 +93,7 @@ export type LLMTranslationJob = z.infer<typeof LLMTranslationJob>;
 export const WorkerJob = z.discriminatedUnion('jobType', [
 	LLMJob,
 	TranscriptionJob,
+	OcrJob,
 	LLMTranslationJob,
 ]);
 
@@ -152,6 +164,22 @@ export const LLMOutputSuccess = OutputBase.extend({
 });
 export type LLMOutputSuccess = z.infer<typeof LLMOutputSuccess>;
 
+export const OcrOutput = z.object({
+	outputPdfBase64: z.string(),
+});
+export type OcrOutput = z.infer<typeof OcrOutput>;
+
+export const OcrOutputSuccess = OutputBase.extend({
+	status: z.literal('OCR_SUCCESS'),
+	outputKey: z.string(),
+});
+export type OcrOutputSuccess = z.infer<typeof OcrOutputSuccess>;
+
+export const OcrOutputFailure = OutputBase.extend({
+	status: z.literal('OCR_FAILURE'),
+});
+export type OcrOutputFailure = z.infer<typeof OcrOutputFailure>;
+
 export const LLMOutputFailure = OutputBase.extend({
 	status: z.literal('LLM_FAILURE'),
 });
@@ -169,6 +197,8 @@ export const TranscriptionOutput = z.discriminatedUnion('status', [
 	MediaDownloadFailure,
 	LLMOutputSuccess,
 	LLMOutputFailure,
+	OcrOutputSuccess,
+	OcrOutputFailure,
 ]);
 
 export type TranscriptionOutput = z.infer<typeof TranscriptionOutput>;

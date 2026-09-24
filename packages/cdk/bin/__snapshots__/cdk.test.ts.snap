@@ -3860,7 +3860,7 @@ service transcription-service-worker start",
         "LoggingConfig": {
           "LogFormat": "JSON",
         },
-        "MemorySize": 512,
+        "MemorySize": 2048,
         "Role": {
           "Fn::GetAtt": [
             "transcriptionserviceoutputhandlerServiceRoleF2BC6254",
@@ -3890,7 +3890,7 @@ service transcription-service-worker start",
             "Value": "CODE",
           },
         ],
-        "Timeout": 30,
+        "Timeout": 120,
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -3994,6 +3994,31 @@ service transcription-service-worker start",
                       "Ref": "AWS::AccountId",
                     },
                     ":parameter/CODE/investigations/transcription-service-output-handler/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "TranscriptionServiceOutputBucketTranscriptionservice35996ED2",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
                   ],
                 ],
               },
@@ -4151,6 +4176,7 @@ service transcription-service-worker start",
     },
     "transcriptionserviceoutputhandlerSqsEventSourceTranscriptionServiceCODEtranscriptionserviceoutputqueueDF3B6644E9119159": {
       "Properties": {
+        "BatchSize": 1,
         "EventSourceArn": {
           "Fn::GetAtt": [
             "transcriptionserviceoutputqueue2A0B1C70",
@@ -4207,6 +4233,7 @@ service transcription-service-worker start",
             "Value": "CODE",
           },
         ],
+        "VisibilityTimeout": 720,
       },
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
@@ -9073,7 +9100,7 @@ service transcription-service-worker start",
         "LoggingConfig": {
           "LogFormat": "JSON",
         },
-        "MemorySize": 512,
+        "MemorySize": 2048,
         "Role": {
           "Fn::GetAtt": [
             "transcriptionserviceoutputhandlerServiceRoleF2BC6254",
@@ -9103,7 +9130,7 @@ service transcription-service-worker start",
             "Value": "PROD",
           },
         ],
-        "Timeout": 30,
+        "Timeout": 120,
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -9339,6 +9366,31 @@ service transcription-service-worker start",
             },
             {
               "Action": [
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "TranscriptionServiceOutputBucketTranscriptionservice35996ED2",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
                 "dynamodb:BatchGetItem",
                 "dynamodb:GetRecords",
                 "dynamodb:GetShardIterator",
@@ -9490,6 +9542,7 @@ service transcription-service-worker start",
     },
     "transcriptionserviceoutputhandlerSqsEventSourceTranscriptionServicePRODtranscriptionserviceoutputqueue6540E458FF8161FD": {
       "Properties": {
+        "BatchSize": 1,
         "EventSourceArn": {
           "Fn::GetAtt": [
             "transcriptionserviceoutputqueue2A0B1C70",
@@ -9546,6 +9599,7 @@ service transcription-service-worker start",
             "Value": "PROD",
           },
         ],
+        "VisibilityTimeout": 720,
       },
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
