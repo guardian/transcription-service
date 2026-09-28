@@ -966,8 +966,7 @@
 				"CHILD_PROCESS_ERROR",
 				"ENCRYPTED_PDF",
 				"INVALID_CONFIG",
-				"OTHER_ERROR",
-				"CTRL_C"
+				"OTHER_ERROR"
 			]
 		},
 		"OcrOutput": {

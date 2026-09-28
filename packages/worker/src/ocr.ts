@@ -70,7 +70,6 @@ const exitCodeFailures: Record<number, [OcrMyPdfFailureReason, string]> = {
 	],
 	9: ['INVALID_CONFIG', 'Tesseract rejected its configuration.'],
 	15: ['OTHER_ERROR', 'OCRmyPDF failed with an unspecified error.'],
-	130: ['CTRL_C', 'OCRmyPDF was interrupted by Ctrl+C.'],
 };
 
 export const checkNeedsRgbConversion = async (
