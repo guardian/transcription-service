@@ -231,7 +231,7 @@ const getNumPages = async (sourceFile: string): Promise<number | undefined> => {
 	return match && match[1] ? parseInt(match[1], 10) : undefined;
 };
 
-const runOcrJob = async (
+export const runOcrJob = async (
 	job: OcrJob,
 	downloadedFilePath: string,
 	workingDirectory: string,
@@ -336,34 +336,4 @@ const runOcrJob = async (
 			userEmail: output.userEmail,
 		},
 	);
-};
-
-// Publishing a terminal failure completes this job normally, so index.ts deletes
-// the input message only after the failure notification has been sent successfully.
-export const processOcrJob = async (
-	job: OcrJob,
-	downloadedFilePath: string,
-	workingDirectory: string,
-	config: TranscriptionConfig,
-	sqsClient: SQSClient,
-	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
-	messageAttributes?: Record<string, MessageAttributeValue>,
-) => {
-	const failure = await runOcrJob(
-		job,
-		downloadedFilePath,
-		workingDirectory,
-		config,
-		sqsClient,
-		setMessageVisibility,
-		messageAttributes,
-	);
-	if (failure) {
-		await publishTranscriptionOutput(
-			sqsClient,
-			config.app.destinationQueueUrls[job.transcriptDestinationService],
-			ocrFailureOutput(job, failure),
-			messageAttributes,
-		);
-	}
 };
