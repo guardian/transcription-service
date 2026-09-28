@@ -193,13 +193,16 @@ export const publishTranscriptionOutput = async (
 	output: TranscriptionOutput,
 	messageAttributes?: Record<string, MessageAttributeValue>,
 ) => {
-	await sendMessage(
+	const result = await sendMessage(
 		client,
 		queueUrl,
 		JSON.stringify(output),
 		output.id,
 		messageAttributes,
 	);
+	if (isSqsFailure(result)) {
+		throw new Error(`Failed to publish worker output: ${result.errorMsg}`);
+	}
 };
 
 export const changeMessageVisibility = async (

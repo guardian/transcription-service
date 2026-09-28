@@ -183,8 +183,26 @@ export const OcrOutputSuccess = OutputBase.extend({
 });
 export type OcrOutputSuccess = z.infer<typeof OcrOutputSuccess>;
 
+// Failures corresponding to Giant's invokeOcrMyPdf exit-code handling.
+// Exit codes 4 and 10 produce usable PDFs and are treated as success.
+export const OcrMyPdfFailureReason = z.enum([
+	'BAD_ARGS',
+	'INPUT_FILE',
+	'MISSING_DEPENDENCY',
+	'FILE_ACCESS_ERROR',
+	'ALREADY_DONE_OCR',
+	'CHILD_PROCESS_ERROR',
+	'ENCRYPTED_PDF',
+	'INVALID_CONFIG',
+	'OTHER_ERROR',
+	'CTRL_C',
+]);
+export type OcrMyPdfFailureReason = z.infer<typeof OcrMyPdfFailureReason>;
+
 export const OcrOutputFailure = OutputBase.extend({
 	status: z.literal('OCR_FAILURE'),
+	failureReason: OcrMyPdfFailureReason,
+	message: z.string(),
 });
 export type OcrOutputFailure = z.infer<typeof OcrOutputFailure>;
 

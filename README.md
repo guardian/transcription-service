@@ -44,6 +44,21 @@ environment and run the worker. We use [uv](https://docs.astral.sh/uv/) to manag
 
 The same python environment can be used to test changes to the model download python script.
 
+## OCR recovery and failures
+
+The GPU worker runs OCRmyPDF separately for each requested language. It checks whether RGB colour conversion is needed,
+retries input errors (exit code 2) with `--skip-text`, and tries `qpdf --decrypt` for encrypted PDFs (exit code 8) before
+retrying with `--redo-ocr`. Each recovery is attempted at most once per language. Exit codes 4 and 10 are accepted because
+OCRmyPDF still produces an output PDF, matching Giant's behaviour. `qpdf` must be installed on the worker; it is included
+in the local setup script.
+
+Terminal OCR failures publish `OCR_FAILURE` immediately. The original job is acknowledged only after that notification
+is sent. Externally interrupted processes remain eligible for retry.
+
+`OcrOutputFailure` includes `failureReason` (an `OcrMyPdfFailureReason`) and `message`. Failure notifications retain the
+incoming Giant message attributes. After changing these shared types, run `npm run common::generate-schema` to update
+`packages/common/schemas/worker-interface-schema.json` for consumers such as Giant.
+
 ## Testing the integration with giant
 
 To perform and end to end test locally:

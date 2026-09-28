@@ -17,7 +17,8 @@ export type ProcessName =
 	| 'llama-server'
 	| 'ocrmypdf'
 	| 'base64'
-	| 'pdfinfo';
+	| 'pdfinfo'
+	| 'qpdf';
 
 const processesWithHiddenStdout: ProcessName[] = ['transcribe'];
 
@@ -69,7 +70,7 @@ export const runSpawnCommand = (
 			const result = {
 				stdout: stdout.join(''),
 				stderr: stderr.join(''),
-				code: code || undefined,
+				code: code ?? undefined,
 			};
 			if (logStdout) {
 				logger.info(
