@@ -195,7 +195,6 @@ export const OcrMyPdfFailureReason = z.enum([
 	'ENCRYPTED_PDF',
 	'INVALID_CONFIG',
 	'OTHER_ERROR',
-	'CTRL_C',
 ]);
 export type OcrMyPdfFailureReason = z.infer<typeof OcrMyPdfFailureReason>;
 
