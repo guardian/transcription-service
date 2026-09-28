@@ -40,11 +40,7 @@ import {
 	processTranscriptionJob,
 	publishTranscriptionOutputFailure,
 } from './transcribe';
-import {
-	ocrFailureOutput,
-	OcrProcessInterruptedError,
-	processOcrJob,
-} from './ocr';
+import { ocrFailureOutput, processOcrJob } from './ocr';
 
 const POLLING_INTERVAL_SECONDS = 15;
 
@@ -343,10 +339,7 @@ const pollTranscriptionQueue = async (
 		const receiveCount = parseInt(
 			taskMessage.Attributes?.ApproximateReceiveCount || defaultReceiveCount,
 		);
-		if (
-			receiveCount >= MAX_RECEIVE_COUNT &&
-			!(error instanceof OcrProcessInterruptedError)
-		) {
+		if (receiveCount >= MAX_RECEIVE_COUNT) {
 			if (job.jobType === 'llm' || job.jobType === 'llm-translation') {
 				const llmFailure: LLMOutputFailure = {
 					id: job.id,
