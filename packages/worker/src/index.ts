@@ -40,7 +40,11 @@ import {
 	processTranscriptionJob,
 	publishTranscriptionOutputFailure,
 } from './transcribe';
-import { processOcrJob } from './ocr';
+import {
+	ocrFailureOutput,
+	OcrProcessInterruptedError,
+	processOcrJob,
+} from './ocr';
 
 const POLLING_INTERVAL_SECONDS = 15;
 
@@ -339,7 +343,10 @@ const pollTranscriptionQueue = async (
 		const receiveCount = parseInt(
 			taskMessage.Attributes?.ApproximateReceiveCount || defaultReceiveCount,
 		);
-		if (receiveCount >= MAX_RECEIVE_COUNT) {
+		if (
+			receiveCount >= MAX_RECEIVE_COUNT &&
+			!(error instanceof OcrProcessInterruptedError)
+		) {
 			if (job.jobType === 'llm' || job.jobType === 'llm-translation') {
 				const llmFailure: LLMOutputFailure = {
 					id: job.id,
@@ -356,7 +363,14 @@ const pollTranscriptionQueue = async (
 				await publishTranscriptionOutput(
 					sqsClient,
 					config.app.destinationQueueUrls[job.transcriptDestinationService],
-					{ id: job.id, userEmail: job.userEmail, status: 'OCR_FAILURE' },
+					ocrFailureOutput(job, {
+						isSuccess: false,
+						failureReason: 'OTHER_ERROR',
+						message:
+							error instanceof Error
+								? error.message
+								: `OCR job failed: ${JSON.stringify(error)}`,
+					}),
 					preservedAttributes,
 				);
 			} else {
