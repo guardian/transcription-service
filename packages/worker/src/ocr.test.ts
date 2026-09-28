@@ -14,7 +14,7 @@ import {
 	runSpawnCommand,
 	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
-import { OcrProcessInterruptedError, processOcrJob, runOcrMyPdf } from './ocr';
+import { processOcrJob, runOcrMyPdf } from './ocr';
 
 jest.mock('@guardian/transcription-service-common', () => ({
 	...jest.requireActual('@guardian/transcription-service-common'),
@@ -161,8 +161,6 @@ describe('processOcrJob', () => {
 			[input],
 			false,
 			false,
-			undefined,
-			{ env: undefined },
 		);
 		const args = jest
 			.mocked(runSpawnCommand)
@@ -243,44 +241,16 @@ describe('processOcrJob', () => {
 		expect(ocrCalls()).toHaveLength(2);
 	});
 
-	it('returns an interrupted failure result for external termination', async () => {
-		returnOcrExitCodes([143]);
+	it('returns an ordinary failure result for an unknown exit code', async () => {
+		returnOcrExitCodes([42]);
 		await expect(
 			runOcrMyPdf(job, 'eng', input, config.app.stage, directory),
 		).resolves.toEqual({
 			isSuccess: false,
 			failureReason: 'OTHER_ERROR',
-			message: expect.stringContaining('exit code 143'),
-			interrupted: true,
+			message: expect.stringContaining('code 42'),
 		});
 	});
-
-	it.each(['pdfinfo', 'ocrmypdf'])(
-		'reports a missing %s executable as a terminal failure',
-		async (command) => {
-			const implementation = jest
-				.mocked(runSpawnCommand)
-				.getMockImplementation()!;
-			jest.mocked(runSpawnCommand).mockImplementation(async (...args) => {
-				if (args[0] === command) {
-					throw Object.assign(new Error('not installed'), { code: 'ENOENT' });
-				}
-				return implementation(...args);
-			});
-			await processOcrJob(job, input, directory, config, sqs, visibility);
-			expect(publishTranscriptionOutput).toHaveBeenCalledWith(
-				sqs,
-				'output-queue',
-				expect.objectContaining({
-					failureReason: 'MISSING_DEPENDENCY',
-					message: `Required program ${command} is missing.`,
-				}),
-				undefined,
-			);
-			expect(uploadToS3).not.toHaveBeenCalled();
-			expect(fs.readdirSync(directory)).toEqual(['input.pdf']);
-		},
-	);
 
 	it('retries input errors once with skip-text', async () => {
 		job.settings = { ocrLanguages: ['eng'], initialFlag: '--redo-ocr' };
@@ -304,8 +274,6 @@ describe('processOcrJob', () => {
 			['--decrypt', input, decrypted],
 			false,
 			false,
-			undefined,
-			{ env: { TMPDIR: path.join(directory, 'ocr') } },
 		);
 		expect(ocrCalls().map((call) => call[2][0])).toEqual([
 			'--force-ocr',
@@ -350,13 +318,13 @@ describe('processOcrJob', () => {
 		const implementation = jest
 			.mocked(runSpawnCommand)
 			.getMockImplementation()!;
-		jest
-			.mocked(runSpawnCommand)
-			.mockImplementation(async (...args) =>
-				args[0] === 'qpdf'
-					? { code: 2, stdout: '', stderr: 'invalid password' }
-					: implementation(...args),
-			);
+		jest.mocked(runSpawnCommand).mockImplementation(async (...args) => {
+			if (args[0] !== 'qpdf') return implementation(...args);
+			const result = { code: 2, stdout: '', stderr: 'invalid password' };
+			// Match the real runner: nonzero exits reject unless explicitly allowed.
+			if (args[4] ?? true) throw result;
+			return result;
+		});
 		await processOcrJob(job, input, directory, config, sqs, visibility);
 		expect(publishTranscriptionOutput).toHaveBeenCalledWith(
 			sqs,
@@ -426,7 +394,7 @@ describe('processOcrJob', () => {
 		[8, 'ENCRYPTED_PDF'],
 		[9, 'INVALID_CONFIG'],
 		[15, 'OTHER_ERROR'],
-		[130, 'CTRL_C'],
+		[42, 'OTHER_ERROR'],
 	])(
 		'reports exit code %s as %s without waiting for SQS retries',
 		async (code, failureReason) => {
@@ -460,42 +428,30 @@ describe('processOcrJob', () => {
 		},
 	);
 
-	it.each([143, 42])(
-		'leaves interrupted/unknown exit code %s available for retry',
-		async (code) => {
-			returnOcrExitCodes([code]);
-			await expect(
-				processOcrJob(job, input, directory, config, sqs, visibility),
-			).rejects.toBeInstanceOf(OcrProcessInterruptedError);
-			expect(publishTranscriptionOutput).not.toHaveBeenCalled();
-		},
-	);
-
-	it('reports SIGINT as Ctrl+C and leaves SIGTERM available for retry', async () => {
+	it('reports OTHER_ERROR when OCR returns no exit code', async () => {
 		const implementation = jest
 			.mocked(runSpawnCommand)
 			.getMockImplementation()!;
-		let signal: NodeJS.Signals = 'SIGINT';
 		jest
 			.mocked(runSpawnCommand)
 			.mockImplementation(async (...args) =>
 				args[0] === 'ocrmypdf' && args[2].includes('--plugin')
-					? { code: undefined, signal, stdout: '', stderr: 'interrupted' }
+					? { code: undefined, stdout: '', stderr: '' }
 					: implementation(...args),
 			);
 		await processOcrJob(job, input, directory, config, sqs, visibility);
 		expect(publishTranscriptionOutput).toHaveBeenCalledWith(
 			sqs,
 			'output-queue',
-			expect.objectContaining({ failureReason: 'CTRL_C' }),
+			expect.objectContaining({
+				status: 'OCR_FAILURE',
+				failureReason: 'OTHER_ERROR',
+				message: 'Failed to get exit code from ocrmypdf',
+			}),
 			undefined,
 		);
-		jest.mocked(publishTranscriptionOutput).mockClear();
-		signal = 'SIGTERM';
-		await expect(
-			processOcrJob(job, input, directory, config, sqs, visibility),
-		).rejects.toBeInstanceOf(OcrProcessInterruptedError);
-		expect(publishTranscriptionOutput).not.toHaveBeenCalled();
+		expect(uploadToS3).not.toHaveBeenCalled();
+		expect(fs.readdirSync(directory)).toEqual(['input.pdf']);
 	});
 
 	it('discards successful languages when a later language has a terminal failure', async () => {
@@ -514,28 +470,6 @@ describe('processOcrJob', () => {
 			undefined,
 		);
 		expect(fs.readdirSync(directory)).toEqual(['input.pdf']);
-	});
-
-	it('reports a missing qpdf executable as a missing dependency', async () => {
-		returnOcrExitCodes([8]);
-		const implementation = jest
-			.mocked(runSpawnCommand)
-			.getMockImplementation()!;
-		jest.mocked(runSpawnCommand).mockImplementation(async (...args) => {
-			if (args[0] === 'qpdf')
-				throw Object.assign(new Error('not installed'), { code: 'ENOENT' });
-			return implementation(...args);
-		});
-		await processOcrJob(job, input, directory, config, sqs, visibility);
-		expect(publishTranscriptionOutput).toHaveBeenCalledWith(
-			sqs,
-			'output-queue',
-			expect.objectContaining({
-				failureReason: 'MISSING_DEPENDENCY',
-				message: expect.stringContaining('qpdf'),
-			}),
-			undefined,
-		);
 	});
 
 	it('uses the file-size visibility estimate when pdfinfo fails on an encrypted PDF', async () => {

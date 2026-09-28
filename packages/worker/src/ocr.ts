@@ -115,13 +115,13 @@ export const runOcrMyPdf = async (
 		stage === 'DEV'
 			? 'rapidocr/rapidocr-config.local.yaml'
 			: '/opt/transcription-service/rapidocr-config.prod.yaml';
+	const needsRgbConversion = await checkNeedsRgbConversion(sourceFile);
 
 	const process = async (
 		ocrMyPdfMode: string,
 		retriedExitCodes: ReadonlySet<number> = new Set(),
 		input: string = sourceFile,
 	): Promise<OcrMyPdfResult> => {
-		const needsRgbConversion = await checkNeedsRgbConversion(sourceFile);
 		const dpiArg = job.settings.dpi
 			? ['--image-dpi', String(job.settings.dpi)]
 			: [];
@@ -164,11 +164,13 @@ export const runOcrMyPdf = async (
 				workingDirectory,
 				`${path.basename(sourceFile)}.${language}.decrypt.pdf`,
 			);
-			const decrypted = await runSpawnCommand('qpdf', 'qpdf', [
-				'--decrypt',
-				sourceFile,
-				decryptedPath,
-			]);
+			const decrypted = await runSpawnCommand(
+				'qpdf',
+				'qpdf',
+				['--decrypt', sourceFile, decryptedPath],
+				false,
+				false,
+			);
 			if (decrypted.code === 0) {
 				logger.info(`Retrying OCR in ${language} after decrypting the PDF`);
 				return process(
