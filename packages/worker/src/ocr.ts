@@ -1,6 +1,7 @@
 import {
 	OcrData,
 	OcrJob,
+	OcrOutput,
 	OcrOutputSuccess,
 	uploadToS3,
 } from '@guardian/transcription-service-common';
@@ -151,9 +152,10 @@ export const processOcrJob = async (
 			}),
 		);
 
+		const ocrOutput: OcrOutput = { ocrData };
 		const uploadResult = await uploadToS3(
 			job.combinedOutputUrl.url,
-			Buffer.from(JSON.stringify(ocrData)),
+			Buffer.from(JSON.stringify(ocrOutput)),
 			false, // OCR output is plain JSON; Giant reads it without gzip decoding
 		);
 		if (!uploadResult.isSuccess) {
@@ -163,7 +165,7 @@ export const processOcrJob = async (
 		}
 		logger.info('Successfully uploaded OCR results to S3');
 	} finally {
-		fs.rmSync(ocrDirectory, { force: true });
+		fs.rmSync(ocrDirectory, { recursive: true, force: true });
 	}
 
 	const output: OcrOutputSuccess = {

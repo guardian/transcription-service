@@ -88,7 +88,15 @@ describe('processOcrJob', () => {
 	afterEach(() => fs.rmSync(directory, { recursive: true, force: true }));
 
 	it('runs each language with the requested options and uploads language-tagged PDFs before publishing success', async () => {
-		await processOcrJob(job, input, config, sqs, visibility, attributes);
+		await processOcrJob(
+			job,
+			input,
+			directory,
+			config,
+			sqs,
+			visibility,
+			attributes,
+		);
 		const calls = jest
 			.mocked(runSpawnCommand)
 			.mock.calls.filter(([name]) => name === 'ocrmypdf');
@@ -105,7 +113,7 @@ describe('processOcrJob', () => {
 				'--image-dpi',
 				'300',
 				input,
-				`${input}.${i}.ocr.pdf`,
+				path.join(directory, 'ocr', `input.pdf.${language}.ocr.pdf`),
 			]);
 		}
 		const uploaded = OcrOutput.parse(
@@ -120,7 +128,7 @@ describe('processOcrJob', () => {
 			['eng', 'pdf in eng'],
 			['fra', 'pdf in fra'],
 		]);
-		expect(visibility.mock.calls).toEqual([[200], [100]]);
+		expect(visibility.mock.calls).toEqual([[200]]);
 		expect(publishTranscriptionOutput).toHaveBeenCalledWith(
 			sqs,
 			'output-queue',
@@ -140,7 +148,7 @@ describe('processOcrJob', () => {
 
 	it('defaults to redo-ocr and discovers the page count using pdfinfo', async () => {
 		job.settings = { ocrLanguages: ['eng'] };
-		await processOcrJob(job, input, config, sqs, visibility);
+		await processOcrJob(job, input, directory, config, sqs, visibility);
 		expect(runSpawnCommand).toHaveBeenCalledWith(
 			'pdfinfo',
 			'pdfinfo',
@@ -167,7 +175,7 @@ describe('processOcrJob', () => {
 			return implementation(...args);
 		});
 		await expect(
-			processOcrJob(job, input, config, sqs, visibility),
+			processOcrJob(job, input, directory, config, sqs, visibility),
 		).rejects.toThrow('OCR failed');
 		expect(uploadToS3).not.toHaveBeenCalled();
 		expect(publishTranscriptionOutput).not.toHaveBeenCalled();
@@ -179,9 +187,10 @@ describe('processOcrJob', () => {
 			.mocked(uploadToS3)
 			.mockResolvedValue({ isSuccess: false, errorMsg: 'upload failed' });
 		await expect(
-			processOcrJob(job, input, config, sqs, visibility),
+			processOcrJob(job, input, directory, config, sqs, visibility),
 		).rejects.toThrow('upload failed');
 		expect(publishTranscriptionOutput).not.toHaveBeenCalled();
+		expect(fs.readdirSync(directory)).toEqual(['input.pdf']);
 	});
 
 	it('rejects jobs without any OCR languages', () => {
