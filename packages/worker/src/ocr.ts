@@ -51,25 +51,44 @@ export const ocrFailureOutput = (
 	message: failure.message,
 });
 
-const exitCodeFailures: Record<number, [OcrMyPdfFailureReason, string]> = {
-	1: ['BAD_ARGS', 'Invalid arguments.'],
-	2: ['INPUT_FILE', 'The input file does not seem to be a valid PDF.'],
-	3: [
-		'MISSING_DEPENDENCY',
-		'An external program required by OCRmyPDF is missing.',
-	],
-	5: [
-		'FILE_ACCESS_ERROR',
-		'Insufficient permissions to read the input or write the output.',
-	],
-	6: ['ALREADY_DONE_OCR', 'The file already appears to contain text.'],
-	7: ['CHILD_PROCESS_ERROR', 'An OCRmyPDF child process failed.'],
-	8: [
-		'ENCRYPTED_PDF',
-		'The input PDF is encrypted and could not be decrypted.',
-	],
-	9: ['INVALID_CONFIG', 'Tesseract rejected its configuration.'],
-	15: ['OTHER_ERROR', 'OCRmyPDF failed with an unspecified error.'],
+const exitCodeFailures: Record<
+	number,
+	{ status: OcrMyPdfFailureReason; statusMessage: string }
+> = {
+	1: { status: 'BAD_ARGS', statusMessage: 'Invalid arguments.' },
+	2: {
+		status: 'INPUT_FILE',
+		statusMessage: 'The input file does not seem to be a valid PDF.',
+	},
+	3: {
+		status: 'MISSING_DEPENDENCY',
+		statusMessage: 'An external program required by OCRmyPDF is missing.',
+	},
+	5: {
+		status: 'FILE_ACCESS_ERROR',
+		statusMessage:
+			'Insufficient permissions to read the input or write the output.',
+	},
+	6: {
+		status: 'ALREADY_DONE_OCR',
+		statusMessage: 'The file already appears to contain text.',
+	},
+	7: {
+		status: 'CHILD_PROCESS_ERROR',
+		statusMessage: 'An OCRmyPDF child process failed.',
+	},
+	8: {
+		status: 'ENCRYPTED_PDF',
+		statusMessage: 'The input PDF is encrypted and could not be decrypted.',
+	},
+	9: {
+		status: 'INVALID_CONFIG',
+		statusMessage: 'Tesseract rejected its configuration.',
+	},
+	15: {
+		status: 'OTHER_ERROR',
+		statusMessage: 'OCRmyPDF failed with an unspecified error.',
+	},
 };
 
 export const checkNeedsRgbConversion = async (
@@ -194,8 +213,8 @@ export const runOcrMyPdf = async (
 		const failure = exitCodeFailures[code];
 		return {
 			isSuccess: false,
-			failureReason: failure ? failure[0] : 'OTHER_ERROR',
-			message: `OCRmyPDF exited with code ${code} for ${language}: ${failure ? failure[1] : ''} ${result.stderr.slice(-8000)}`,
+			failureReason: failure ? failure.status : 'OTHER_ERROR',
+			message: `OCRmyPDF exited with code ${code} for ${language}: ${failure ? failure.statusMessage : ''} ${result.stderr.slice(-8000)}`,
 		};
 	};
 	return process(job.settings.initialFlag ?? '--redo-ocr');
