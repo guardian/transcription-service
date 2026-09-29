@@ -14,7 +14,8 @@ import fs from 'node:fs';
 import { MessageAttributeValue, SQSClient } from '@aws-sdk/client-sqs';
 
 const OUTPUT_SIZE_LIMIT_GB = 10;
-const OUTPUT_SIZE_LIMIT = OUTPUT_SIZE_LIMIT_GB * 1024 * 1024 * 1024; // 10GB
+const ONE_MB = 1024 * 1024;
+const OUTPUT_SIZE_LIMIT = OUTPUT_SIZE_LIMIT_GB * 1024 * ONE_MB; // 10GB
 
 export const processOcrJob = async (
 	job: OcrJob,
@@ -25,7 +26,7 @@ export const processOcrJob = async (
 	messageAttributes?: Record<string, MessageAttributeValue>,
 ) => {
 	const pdfFileSizeBytes = fs.statSync(downloadedFilePath).size;
-	const pdfFileSizeMB = Math.ceil(pdfFileSizeBytes / (1024 * 1024));
+	const pdfFileSizeMB = Math.ceil(pdfFileSizeBytes / ONE_MB);
 	// use pdfinfo to get the page count
 	let pdfInfoOut = '';
 	await runSpawnCommand(
