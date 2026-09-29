@@ -1388,6 +1388,7 @@ exports[`Giant's stacks should match the snapshots 1`] = `
                 [
                   "#!/bin/bash
 set -x
+set -e
 export STAGE=CODE
 export AWS_REGION=eu-west-1
 rm /usr/local/cuda
@@ -1398,12 +1399,13 @@ aws s3 cp --quiet s3://",
                   },
                   "/investigations/CODE/transcription-service-models/models.zip /opt/dlami/nvme/models.zip
 unzip /opt/dlami/nvme/models.zip -d /opt/dlami/nvme/
-rm -rf /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface
+rm -rf /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface /home/ubuntu/.cache/rapidocr
 chown -R ubuntu:ubuntu /opt/dlami/nvme/models
 mkdir -p /home/ubuntu/.cache
 [ -d /opt/dlami/nvme/models/torch ] && ln -s /opt/dlami/nvme/models/torch /home/ubuntu/.cache/torch || true
 [ -d /opt/dlami/nvme/models/huggingface ] && ln -s /opt/dlami/nvme/models/huggingface /home/ubuntu/.cache/huggingface || true
-chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface
+[ -d /opt/dlami/nvme/models/rapidocr ] &&  ln -s /opt/dlami/nvme/models/rapidocr /home/ubuntu/.cache/rapidocr || true
+chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface /home/ubuntu/.cache/rapidocr || true
 aws s3 cp s3://",
                   {
                     "Ref": "DistributionBucketName",
@@ -3893,7 +3895,7 @@ service transcription-service-worker start",
         "LoggingConfig": {
           "LogFormat": "JSON",
         },
-        "MemorySize": 2048,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "transcriptionserviceoutputhandlerServiceRoleF2BC6254",
@@ -3923,7 +3925,7 @@ service transcription-service-worker start",
             "Value": "CODE",
           },
         ],
-        "Timeout": 120,
+        "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -4027,31 +4029,6 @@ service transcription-service-worker start",
                       "Ref": "AWS::AccountId",
                     },
                     ":parameter/CODE/investigations/transcription-service-output-handler/*",
-                  ],
-                ],
-              },
-            },
-            {
-              "Action": [
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    {
-                      "Fn::GetAtt": [
-                        "TranscriptionServiceOutputBucketTranscriptionservice35996ED2",
-                        "Arn",
-                      ],
-                    },
-                    "/*",
                   ],
                 ],
               },
@@ -4219,7 +4196,6 @@ service transcription-service-worker start",
     },
     "transcriptionserviceoutputhandlerSqsEventSourceTranscriptionServiceCODEtranscriptionserviceoutputqueueDF3B6644E9119159": {
       "Properties": {
-        "BatchSize": 1,
         "EventSourceArn": {
           "Fn::GetAtt": [
             "transcriptionserviceoutputqueue2A0B1C70",
@@ -4276,7 +4252,6 @@ service transcription-service-worker start",
             "Value": "CODE",
           },
         ],
-        "VisibilityTimeout": 720,
       },
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
@@ -6414,6 +6389,7 @@ exports[`Giant's stacks should match the snapshots 2`] = `
                 [
                   "#!/bin/bash
 set -x
+set -e
 export STAGE=PROD
 export AWS_REGION=eu-west-1
 rm /usr/local/cuda
@@ -6424,12 +6400,13 @@ aws s3 cp --quiet s3://",
                   },
                   "/investigations/PROD/transcription-service-models/models.zip /opt/dlami/nvme/models.zip
 unzip /opt/dlami/nvme/models.zip -d /opt/dlami/nvme/
-rm -rf /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface
+rm -rf /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface /home/ubuntu/.cache/rapidocr
 chown -R ubuntu:ubuntu /opt/dlami/nvme/models
 mkdir -p /home/ubuntu/.cache
 [ -d /opt/dlami/nvme/models/torch ] && ln -s /opt/dlami/nvme/models/torch /home/ubuntu/.cache/torch || true
 [ -d /opt/dlami/nvme/models/huggingface ] && ln -s /opt/dlami/nvme/models/huggingface /home/ubuntu/.cache/huggingface || true
-chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface
+[ -d /opt/dlami/nvme/models/rapidocr ] &&  ln -s /opt/dlami/nvme/models/rapidocr /home/ubuntu/.cache/rapidocr || true
+chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface /home/ubuntu/.cache/rapidocr || true
 aws s3 cp s3://",
                   {
                     "Ref": "DistributionBucketName",
@@ -9194,7 +9171,7 @@ service transcription-service-worker start",
         "LoggingConfig": {
           "LogFormat": "JSON",
         },
-        "MemorySize": 2048,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "transcriptionserviceoutputhandlerServiceRoleF2BC6254",
@@ -9224,7 +9201,7 @@ service transcription-service-worker start",
             "Value": "PROD",
           },
         ],
-        "Timeout": 120,
+        "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -9460,31 +9437,6 @@ service transcription-service-worker start",
             },
             {
               "Action": [
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    {
-                      "Fn::GetAtt": [
-                        "TranscriptionServiceOutputBucketTranscriptionservice35996ED2",
-                        "Arn",
-                      ],
-                    },
-                    "/*",
-                  ],
-                ],
-              },
-            },
-            {
-              "Action": [
                 "dynamodb:BatchGetItem",
                 "dynamodb:Query",
                 "dynamodb:GetItem",
@@ -9646,7 +9598,6 @@ service transcription-service-worker start",
     },
     "transcriptionserviceoutputhandlerSqsEventSourceTranscriptionServicePRODtranscriptionserviceoutputqueue6540E458FF8161FD": {
       "Properties": {
-        "BatchSize": 1,
         "EventSourceArn": {
           "Fn::GetAtt": [
             "transcriptionserviceoutputqueue2A0B1C70",
@@ -9703,7 +9654,6 @@ service transcription-service-worker start",
             "Value": "PROD",
           },
         ],
-        "VisibilityTimeout": 720,
       },
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
