@@ -20,7 +20,8 @@ export type ProcessName =
 	| 'pdfinfo'
 	| 'qpdf';
 
-const processesWithHiddenStdout: ProcessName[] = ['transcribe'];
+// transcript text and pdf metadata should be kept from the logs
+const processesWithHiddenStdout: ProcessName[] = ['transcribe', 'pdfinfo'];
 
 export type SpawnCommandOutput = { stdout: string } | { stderr: string };
 
