@@ -1,0 +1,13 @@
+#whisperx-model-fetch
+
+torchaudio
+pyannote.audio
+huggingface_hub
+
+# rapidocr-model-fetch
+
+# Keep aligned with the RapidOCR version installed in the worker AMI.
+rapidocr==3.9.2
+# Used by the offline smoke check; OCR runs on CPU in the model-fetch workflow.
+onnxruntime==1.23.2
+python-bidi==0.6.7

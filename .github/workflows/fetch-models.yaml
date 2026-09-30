@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/fetch-models.yaml'
-      - 'whisperx-model-fetch/**'
+      - 'model-fetch/**'
 
 jobs:
   models:
@@ -67,11 +67,8 @@ jobs:
         with:
           python-version: '3.10'
           cache: 'pip'
-          cache-dependency-path: whisperx-model-fetch/requirements.txt
-
-      - name: Install Python dependencies for whisperx model fetch
-        run: |
-          pip install -r whisperx-model-fetch/requirements.txt
+          cache-dependency-path: |
+            model-fetch/requirements.txt
 
       - name: Download Qwen3-4B GGUF model from Hugging Face
         run: |
@@ -80,6 +77,15 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.HUGGINGFACE_TOKEN }}" \
             "https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q4_K_M.gguf"
 
+      - name: Install Python dependencies for whisperx/rapidocr model fetch
+        run: |
+          pip install -r model-fetch/requirements.txt
+
+      - name: Download and verify RapidOCR models for offline OCR
+        run: |
+          python model-fetch/download_rapidocr_models.py --output-dir models/rapidocr
+          python model-fetch/verify_rapidocr_offline.py --models-dir models/rapidocr
+
       - name: Download all models needed to run whisperx model from Hugging Face
         env:
           HF_HOME: ${{ github.workspace }}/models/huggingface
@@ -87,7 +93,7 @@ jobs:
           HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
           HF_HUB_DOWNLOAD_TIMEOUT: '120'
         run: |
-          python whisperx-model-fetch/download_whisperx_models.py \
+          python model-fetch/download_whisperx_models.py \
             --whisper-models \
             --diarization-models \
             --huggingface-token "$HUGGINGFACE_TOKEN"

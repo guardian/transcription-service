@@ -1,7 +1,9 @@
 [project]
 name = "transcription-service"
 version = "1.0.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11,<3.14"
 dependencies = [
+    "ocrmypdf>=17.3.0",
+    "ocrmypdf-rapidocr==1.0.1",
     "whisperx==3.8.5",
 ]

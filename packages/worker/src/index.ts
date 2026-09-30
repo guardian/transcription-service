@@ -40,6 +40,7 @@ import {
 	processTranscriptionJob,
 	publishTranscriptionOutputFailure,
 } from './transcribe';
+import { processOcrJob } from './ocr';
 
 const POLLING_INTERVAL_SECONDS = 15;
 
@@ -293,6 +294,15 @@ const pollTranscriptionQueue = async (
 				metrics,
 				preservedAttributes,
 			);
+		} else if (jobType === 'ocr') {
+			await processOcrJob(
+				job,
+				downloadedFile,
+				config,
+				sqsClient,
+				setMessageVisibility,
+				preservedAttributes,
+			);
 		} else {
 			await processTranscriptionJob(
 				job,
@@ -339,6 +349,13 @@ const pollTranscriptionQueue = async (
 					sqsClient,
 					config.app.destinationQueueUrls[job.transcriptDestinationService],
 					llmFailure,
+					preservedAttributes,
+				);
+			} else if (job.jobType === 'ocr') {
+				await publishTranscriptionOutput(
+					sqsClient,
+					config.app.destinationQueueUrls[job.transcriptDestinationService],
+					{ id: job.id, userEmail: job.userEmail, status: 'OCR_FAILURE' },
 					preservedAttributes,
 				);
 			} else {
