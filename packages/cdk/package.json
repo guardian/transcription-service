@@ -7,8 +7,8 @@
 		"test": "jest",
 		"test-update": "jest -u",
 		"format": "prettier --write \"{lib,bin}/**/*.ts\"",
-		"lint": "eslint lib/** bin/** --ext .ts --no-error-on-unmatched-pattern",
-		"lint-fix": "eslint --fix lib/** bin/** --ext .ts --no-error-on-unmatched-pattern",
+		"lint": "eslint \"{lib,bin}/**/*.ts\" --no-error-on-unmatched-pattern",
+		"lint-fix": "npm run lint -- --fix",
 		"synth": "CONTAINER_VERSION=${CONTAINER_VERSION:-$(git rev-parse --abbrev-ref HEAD)} cdk synth --path-metadata false --version-reporting false",
 		"diff": "cdk diff --path-metadata false --version-reporting false"
 	},
@@ -16,62 +16,22 @@
 		"@guardian/transcription-service-common": "1.0.0"
 	},
 	"devDependencies": {
-		"@guardian/eslint-config": "7.0.1",
-		"@guardian/eslint-config-typescript": "8.0.0",
+		"@guardian/eslint-config": "14.0.1",
 		"@guardian/prettier": "5.0.0",
 		"@guardian/tsconfig": "0.2.0",
 		"@types/jest": "29.5.13",
 		"@types/node": "20.11.5",
-		"@guardian/cdk": "61.10.1",
-		"aws-cdk-lib": "2.200.1",
-		"cdk": "2.1018.1",
-		"constructs": "10.4.2",
-		"eslint": "8.57.1",
+		"@guardian/cdk": "64.7.0",
+		"aws-cdk": "2.1142.0",
+		"aws-cdk-lib": "2.270.0",
+		"constructs": "10.8.1",
+		"eslint": "9.39.2",
 		"jest": "29.7.0",
 		"prettier": "3.3.3",
 		"source-map-support": "0.5.21",
 		"ts-jest": "29.2.5",
 		"ts-node": "10.9.2",
-		"typescript": "5.1.6"
+		"typescript": "5.9.3"
 	},
-	"prettier": "@guardian/prettier",
-	"jest": {
-		"testMatch": [
-			"<rootDir>/{lib,bin}/**/*.test.ts"
-		],
-		"transform": {
-			"^.+\\.tsx?$": "ts-jest"
-		},
-		"setupFilesAfterEnv": [
-			"./jest.setup.js"
-		]
-	},
-	"eslintConfig": {
-		"root": true,
-		"env": {
-			"node": true,
-			"jest": true
-		},
-		"extends": [
-			"@guardian/eslint-config-typescript"
-		],
-		"parserOptions": {
-			"ecmaVersion": 2020,
-			"sourceType": "module"
-		},
-		"plugins": [
-			"@typescript-eslint"
-		],
-		"rules": {
-			"@typescript-eslint/no-inferrable-types": 0,
-			"import/no-namespace": 2
-		},
-		"ignorePatterns": [
-			"**/*.js",
-			"node_modules",
-			"cdk.out",
-			".eslintrc.js",
-			"jest.config.js"
-		]
-	}
+	"prettier": "@guardian/prettier"
 }
