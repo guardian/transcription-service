@@ -113,8 +113,10 @@ export const checkNeedsRgbConversion = async (
 		false,
 		false,
 	);
-	return [probe.stdout, probe.stderr].some((output) =>
-		output.includes('ColorConversionNeededError:'),
+	return [probe.stdout, probe.stderr].some(
+		(output) =>
+			output.includes('ColorConversionNeededError:') ||
+			output.includes('Convert it to a common color space'),
 	);
 };
 
