@@ -126,6 +126,7 @@ export const runOcrMyPdf = async (
 	sourceFile: string,
 	stage: string,
 	workingDirectory: string,
+	maybeAbortSignal: AbortSignal | undefined,
 ): Promise<OcrMyPdfResult> => {
 	const pdfOutputPath = path.join(
 		workingDirectory,
@@ -163,6 +164,7 @@ export const runOcrMyPdf = async (
 			],
 			false,
 			false,
+			maybeAbortSignal
 		);
 		const { code } = result;
 		// 0: success
@@ -260,6 +262,7 @@ export const runOcrJob = async (
 	sqsClient: SQSClient,
 	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
 	messageAttributes?: Record<string, MessageAttributeValue>,
+	maybeAbortSignal?: AbortSignal | undefined,
 ): Promise<OcrMyPdfFailure | void> => {
 	const pdfFileSizeBytes = fs.statSync(downloadedFilePath).size;
 
@@ -287,6 +290,7 @@ export const runOcrJob = async (
 				downloadedFilePath,
 				config.app.stage,
 				ocrDirectory,
+				maybeAbortSignal
 			);
 			if (!result.isSuccess) return result;
 
@@ -325,6 +329,7 @@ export const runOcrJob = async (
 			job.combinedOutputUrl.url,
 			Buffer.from(JSON.stringify(ocrOutput)),
 			false, // OCR output is plain JSON; Giant reads it without gzip decoding
+			maybeAbortSignal
 		);
 		if (!uploadResult.isSuccess) {
 			throw new Error(

@@ -21,6 +21,7 @@ import {
 } from '@guardian/transcription-service-backend-common/src/llm';
 import { MetricsService } from '@guardian/transcription-service-backend-common/src/metrics';
 import { S3Client } from '@aws-sdk/client-s3';
+import { buildQueueUrl } from '@guardian/transcription-service-common/src/queue-gardens';
 
 type SendLlmFailure = {
 	status: 'failure';
@@ -73,9 +74,18 @@ export const sendLlmJob = async (
 		backend: request.backend,
 	};
 
+	const queueUrl = buildQueueUrl(
+		config.app.queuesBaseUrl,
+		'queue',
+		'high',
+		'regular-sensitivity',
+		'ai-prompt',
+		config.app.stage,
+	);
+
 	const sendResult = await sendMessage(
 		sqsClient,
-		config.app.gpuTaskQueueUrl,
+		queueUrl,
 		JSON.stringify(job),
 		id,
 	);
@@ -89,7 +99,7 @@ export const sendLlmJob = async (
 	logger.info('API successfully sent LLM job to task queue', {
 		id,
 		userEmail,
-		queue: config.app.gpuTaskQueueUrl,
+		queueUrl,
 	});
 	return {
 		status: 'success',

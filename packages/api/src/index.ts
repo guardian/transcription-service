@@ -218,7 +218,7 @@ const getApp = async () => {
 				id: s3Key,
 				filename: body.data.fileName,
 				userEmail,
-				gpuQueue: config.app.gpuTaskQueueUrl,
+				queueUrl: sendResult.queueUrl,
 			});
 			res.send('Message sent');
 		}),

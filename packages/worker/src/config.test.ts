@@ -74,9 +74,7 @@ it.each([undefined, '4567', '14567'])(
 		const config = await getConfig();
 		const origin = `http://localhost:${port ?? '4566'}`;
 		expect(config.dev?.localstackEndpoint).toBe(origin);
-		expect(config.app.gpuTaskQueueUrl).toBe(
-			`${origin}/000000000000/gpu-tasks.fifo`,
-		);
+		expect(config.app.queuesBaseUrl).toBe(`${origin}/000000000000/`);
 		expect(config.app.mediaDownloadQueueUrl).toBe(
 			`${origin}/000000000000/media-download`,
 		);
@@ -96,7 +94,7 @@ it.each(['CODE', 'PROD'])(
 		process.env.LOCALSTACK_PORT = '4567';
 		const config = await getConfig();
 		expect(config.dev).toBeUndefined();
-		expect(config.app.gpuTaskQueueUrl).toBe(`${endpoint}/gpu-tasks.fifo`);
+		expect(config.app.queuesBaseUrl).toBe(`${endpoint}/`);
 		expect(config.app.deadLetterQueueUrl).toBe(`${endpoint}/dead-letters.fifo`);
 		expect(config.app.mediaDownloadQueueUrl).toBe(`${endpoint}/media-download`);
 		expect(Object.values(config.app.destinationQueueUrls)).toEqual([

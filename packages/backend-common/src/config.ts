@@ -14,8 +14,8 @@ export interface TranscriptionConfig {
 	app: {
 		secret: string;
 		rootUrl: string;
-		gpuTaskQueueUrl: string;
-		deadLetterQueueUrl?: string;
+		queuesBaseUrl: string;
+		deadLetterQueueUrl?: string; // FIXME this should probably use the dedicated DLQs from queue-gardens (but is there another for media-download???)
 		mediaDownloadQueueUrl: string;
 		stage: string;
 		app: string;
@@ -148,9 +148,9 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		stage === 'DEV'
 			? `http://localhost:${process.env.LOCALSTACK_PORT ?? '4566'}/000000000000/`
 			: findParameter(parameters, paramPath, 'endpoint');
+	const queuesBaseUrl = `${endpoint.replace(/\/$/, '')}/`;
 	const queueUrl = (parameterName: string) =>
-		`${endpoint.replace(/\/$/, '')}/${findParameter(parameters, paramPath, parameterName)}`;
-	const gpuTaskQueueUrl = queueUrl('gpuTaskQueueName');
+		`${queuesBaseUrl}${findParameter(parameters, paramPath, parameterName)}`;
 	const mediaDownloadQueueUrl = queueUrl('mediaDownloadQueueName');
 	const deadLetterQueueUrl =
 		stage === 'DEV' ? undefined : queueUrl('deadLetterQueueName');
@@ -265,7 +265,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		app: {
 			rootUrl: appRootUrl,
 			secret: appSecret,
-			gpuTaskQueueUrl,
+			queuesBaseUrl,
 			deadLetterQueueUrl,
 			mediaDownloadQueueUrl,
 			stage,

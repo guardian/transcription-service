@@ -7,14 +7,15 @@ import {
 	sensitivityLevels,
 } from '@guardian/transcription-service-common/src/queue-gardens';
 import type { App } from 'aws-cdk-lib';
-// eslint-disable-next-line import/no-namespace -- code reads better if prefixed by sqs.
-import * as sqs from 'aws-cdk-lib/aws-sqs';
+import type { QueueProps } from 'aws-cdk-lib/aws-sqs';
+import { Queue } from 'aws-cdk-lib/aws-sqs';
 
+// TODO keep in mind the pre-signed URLs w.r.t. expiry, is there a better way to achieve the sharing between apps
 const priorityLevelToQueueProps = {
 	high: {},
 	standard: {},
 	low: {}, //TODO probably a much longer expiry and higher retry allowance (application will need to shorten the visibility timeout to zero if cancelled)
-} as const satisfies Record<PriorityLevel, sqs.QueueProps>;
+} as const satisfies Record<PriorityLevel, QueueProps>;
 
 export class QueueGardensStack extends GuStack {
 	constructor(scope: App, id: string, props: GuStackProps) {
@@ -32,11 +33,11 @@ export class QueueGardensStack extends GuStack {
 					);
 
 					// TODO consider shared DLQs (by moving this definition up nested for-loops)
-					const deadLetterQueue = new sqs.Queue(this, buildQueueName('DLQ'), {
+					const deadLetterQueue = new Queue(this, buildQueueName('DLQ'), {
 						queueName: buildQueueName('DLQ', this.stage),
 					});
 
-					new sqs.Queue(this, buildQueueName('queue'), {
+					new Queue(this, buildQueueName('queue'), {
 						...priorityBasedQueueProps,
 						queueName: buildQueueName('queue', this.stage),
 						deadLetterQueue: {
@@ -44,6 +45,9 @@ export class QueueGardensStack extends GuStack {
 							maxReceiveCount: MAX_RECEIVE_COUNT,
 						},
 					});
+
+					// IMPORTANT: permissions to read/write from these queues are defined
+					// in the consuming stacks (using buildQueueName to lookup)
 				}
 			}
 		}
