@@ -14,7 +14,8 @@ export interface TranscriptionConfig {
 	app: {
 		secret: string;
 		rootUrl: string;
-		gpuTaskQueueUrl: string;
+		queuesBaseUrl: string;
+		// gpuTaskQueueUrl: string;
 		deadLetterQueueUrl?: string;
 		mediaDownloadQueueUrl: string;
 		stage: string;

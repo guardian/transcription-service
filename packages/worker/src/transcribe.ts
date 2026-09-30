@@ -72,6 +72,7 @@ export const getFfmpegParams = (
 
 export const runFfmpeg = async (
 	ffmpegParams: string[],
+	maybeAbortSignal: AbortSignal | undefined,
 ): Promise<FfmpegResult | undefined> => {
 	try {
 		const res = await runSpawnCommand(
@@ -80,6 +81,7 @@ export const runFfmpeg = async (
 			ffmpegParams,
 			true,
 			false,
+			maybeAbortSignal,
 		);
 
 		const duration = getDuration(res.stderr);
@@ -120,6 +122,7 @@ export const runTranscription = async (
 	languageCode: InputLanguageCode,
 	translate: boolean,
 	metrics: MetricsService,
+	maybeAbortSignal: AbortSignal | undefined,
 ) => {
 	try {
 		const { fileName, metadata } = await runWhisperX(
@@ -127,6 +130,7 @@ export const runTranscription = async (
 			languageCode,
 			translate,
 			metrics,
+			maybeAbortSignal,
 		);
 
 		const outputDir = translate
@@ -158,15 +162,27 @@ export const getTranscriptionText = async (
 	languageCode: InputLanguageCode,
 	translate: boolean,
 	metrics: MetricsService,
+	maybeAbortSignal: AbortSignal | undefined,
 ): Promise<TranscriptionResult> => {
 	if (process.env.SHAKIRA_MODE) {
 		// in shakira mode, all input transcribes to shakira
 		return SHAKIRA;
 	}
 	if (translate) {
-		return transcribeAndTranslate(whisperBaseParams, metrics, languageCode);
+		return transcribeAndTranslate(
+			whisperBaseParams,
+			metrics,
+			languageCode,
+			maybeAbortSignal,
+		);
 	}
-	return runTranscription(whisperBaseParams, languageCode, translate, metrics);
+	return runTranscription(
+		whisperBaseParams,
+		languageCode,
+		translate,
+		metrics,
+		maybeAbortSignal,
+	);
 };
 
 const regexExtract = (text: string, regex: RegExp): string | undefined => {
@@ -189,8 +205,9 @@ const extractWhisperXStdoutData = (stdout: string): TranscriptionMetadata => {
 export const runWhisperX = async (
 	whisperBaseParams: WhisperBaseParams,
 	languageCode: InputLanguageCode,
-	translate: boolean,
+	shouldTranslate: boolean,
 	metrics: MetricsService,
+	maybeAbortSignal: AbortSignal | undefined,
 ) => {
 	// Kill llama-server if running to free VRAM for whisperx
 	stopLlamaServer();
@@ -200,7 +217,7 @@ export const runWhisperX = async (
 	const model = whisperBaseParams.model;
 	const languageCodeParam =
 		languageCode === 'auto' ? [] : ['--language', languageCode];
-	const translateParam = translate ? ['--task', 'translate'] : [];
+	const translateParam = shouldTranslate ? ['--task', 'translate'] : [];
 	const diarizeParam = diarize ? [`--diarize`] : [];
 
 	// below settings deal with differences between DEV and CODE/PROD environments
@@ -215,7 +232,7 @@ export const runWhisperX = async (
 	const huggingfaceTokenParam =
 		stage === 'DEV' && huggingFaceToken ? ['--hf_token', huggingFaceToken] : [];
 
-	const outputDir = translate
+	const outputDir = shouldTranslate
 		? whisperBaseParams.translationDirectory
 		: whisperBaseParams.baseDirectory;
 
@@ -241,6 +258,7 @@ export const runWhisperX = async (
 			],
 			false,
 			true,
+			maybeAbortSignal,
 			(data) => {
 				if (!secondsForWhisperXStartup && 'stdout' in data) {
 					secondsForWhisperXStartup = (Date.now() - startEpochMillis) / 1000;
@@ -314,7 +332,8 @@ export const processTranscriptionJob = async (
 	maybeEnqueuedAtEpochMillis: number | undefined,
 	interruptionTime: Date | undefined,
 	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
-	preservedAttributes?: Record<string, MessageAttributeValue>,
+	preservedAttributes: Record<string, MessageAttributeValue>,
+	maybeAbortSignal: AbortSignal | undefined,
 ) => {
 	logger.info(
 		`Fetched transcription job with id ${job.id}, engine ${job.engine}`,
@@ -330,7 +349,7 @@ export const processTranscriptionJob = async (
 
 	const ffmpegParams = getFfmpegParams(filePath, wavPath);
 
-	const ffmpegResult = await runFfmpeg(ffmpegParams);
+	const ffmpegResult = await runFfmpeg(ffmpegParams, maybeAbortSignal);
 
 	if (
 		ffmpegResult === undefined ||
@@ -339,6 +358,7 @@ export const processTranscriptionJob = async (
 		// when ffmpeg fails to transcribe, move message to the dead letter
 		// queue
 		if (!isDev && config.app.deadLetterQueueUrl) {
+			// FIXME this can be done automatically based on the read count of the queue item
 			logger.error(
 				`'ffmpeg failed, moving message with message id ${taskMessage.MessageId} to dead letter queue`,
 			);
@@ -409,6 +429,7 @@ export const processTranscriptionJob = async (
 		job.languageCode,
 		job.translate,
 		metrics,
+		maybeAbortSignal,
 	);
 
 	const transcriptionEndTime = new Date();
@@ -444,6 +465,7 @@ export const processTranscriptionJob = async (
 	await uploadedCombinedResultsToS3(
 		job.combinedOutputUrl.url,
 		transcriptResult,
+		maybeAbortSignal,
 	);
 
 	const transcriptionOutput: TranscriptionOutputSuccess = {

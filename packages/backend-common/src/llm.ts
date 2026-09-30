@@ -17,6 +17,7 @@ export const sendPromptToBedrock = async (
 	prompts: LlmPrompt,
 	bedrockModelId: string,
 	awsRegion: string,
+	maybeAbortSignal: AbortSignal | undefined,
 ): Promise<string> => {
 	const client = new BedrockRuntimeClient({
 		region: awsRegion,
@@ -53,7 +54,9 @@ export const sendPromptToBedrock = async (
 		`Sending prompt to Bedrock model ${bedrockModelId} (user prompt length: ${prompts.user.length} chars).`,
 	);
 
-	const response = await client.send(command);
+	const response = await client.send(command, {
+		abortSignal: maybeAbortSignal,
+	});
 	const content = response.output?.message?.content?.[0]?.text;
 	if (!content) {
 		throw new Error('Bedrock returned an empty response');

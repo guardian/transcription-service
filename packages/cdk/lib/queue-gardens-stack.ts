@@ -10,6 +10,7 @@ import type { App } from 'aws-cdk-lib';
 // eslint-disable-next-line import/no-namespace -- code reads better if prefixed by sqs.
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 
+// TODO keep in mind the pre-signed URLs w.r.t. expiry, is there a better way to achieve the sharing between apps
 const priorityLevelToQueueProps = {
 	high: {},
 	standard: {},
@@ -44,6 +45,8 @@ export class QueueGardensStack extends GuStack {
 							maxReceiveCount: MAX_RECEIVE_COUNT,
 						},
 					});
+
+					// FIXME grant permissions to these queues (probably not here but where they're used/needed
 				}
 			}
 		}

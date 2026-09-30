@@ -174,12 +174,16 @@ const llamaDispatcher = new Agent({
 export const sendPromptToLlamaServer = async (
 	url: string,
 	prompts: LlmPrompt,
+	maybeAbortSignal: AbortSignal | undefined,
 ): Promise<string> => {
 	const messages = buildMessages(prompts);
 
 	logger.info(
 		`Sending prompt to llama-server at ${url} (${messages.length} messages, user prompt length: ${prompts.user.length} chars)`,
 	);
+
+	// 10 minutes – generation on a T4 can exceed the default 5min undici timeout
+	const timeout = AbortSignal.timeout(10 * 60 * 1000);
 
 	const response = await fetch(`${url}/v1/chat/completions`, {
 		method: 'POST',
@@ -189,7 +193,9 @@ export const sendPromptToLlamaServer = async (
 		body: JSON.stringify({
 			messages,
 		}),
-		signal: AbortSignal.timeout(10 * 60 * 1000), // 10 minutes – generation on a T4 can exceed the default 5min undici timeout
+		signal: maybeAbortSignal
+			? AbortSignal.any([maybeAbortSignal, timeout])
+			: timeout,
 		// @ts-expect-error — dispatcher is supported by Node.js fetch but not in the standard RequestInit types
 		dispatcher: llamaDispatcher,
 	});

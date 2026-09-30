@@ -29,7 +29,7 @@ import {
 	secondsFromEnqueueToStartMetric,
 	attemptNumberMetric,
 } from '@guardian/transcription-service-backend-common/src/metrics';
-import { SQSClient } from '@aws-sdk/client-sqs';
+import { Message, SQSClient } from '@aws-sdk/client-sqs';
 import { setTimeout } from 'timers/promises';
 import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import { checkSpotInterrupt } from './spot-termination';
@@ -40,6 +40,14 @@ import {
 	processTranscriptionJob,
 	publishTranscriptionOutputFailure,
 } from './transcribe';
+import {
+	ActivityType,
+	buildQueueUrl,
+} from '@guardian/transcription-service-common/src/queue-gardens';
+import {
+	priorityLevels,
+	sensitivityLevels,
+} from '@guardian/transcription-service-common/src/queue-gardens';
 
 const POLLING_INTERVAL_SECONDS = 15;
 
@@ -48,6 +56,8 @@ let INTERRUPTION_TIME: Date | undefined = undefined;
 let CURRENT_MESSAGE_RECEIPT_HANDLE: string | undefined = undefined;
 export const setInterruptionTime = (time: Date) => (INTERRUPTION_TIME = time);
 export const getCurrentReceiptHandle = () => CURRENT_MESSAGE_RECEIPT_HANDLE;
+
+let maybeCurrentIdleTaskAborter: AbortController | null = null;
 
 const main = async () => {
 	// This time won't be accurate if the app restarts. I went for this rather than
@@ -69,20 +79,22 @@ const main = async () => {
 
 	const autoScalingClient = getASGClient(config.aws);
 	const asgName = `transcription-service-gpu-workers-${config.app.stage}`;
-	const queueUrl = config.app.gpuTaskQueueUrl;
 
-	logger.info(`Worker reading from queue ${queueUrl}`);
+	const activityTypesThisWorkerProcesses = [
+		'transcription',
+		'translation',
+	] as const satisfies ActivityType[];
 
 	if (config.app.stage !== 'DEV') {
 		// start job to regularly check the instance interruption (Note: deliberately not using await here so the job
 		// runs in the background)
-		checkSpotInterrupt(sqsClient, queueUrl);
+		checkSpotInterrupt(sqsClient, queueUrl); // FIXME figure out an alternate input than the queueUrl
 	}
 
-	let pollCount = 0;
+	let overalPollCount = 0;
 	// keep polling unless instance is scheduled for termination
-	while (!INTERRUPTION_TIME) {
-		pollCount += 1;
+	whileLoop: while (!INTERRUPTION_TIME) {
+		overalPollCount += 1;
 		const shouldTerminate =
 			config.app.stage !== 'DEV' &&
 			(await newArtifactAvailable(
@@ -102,16 +114,89 @@ const main = async () => {
 			instanceId,
 		);
 		if (config.app.stage === 'DEV' || lifecycleState === 'InService') {
-			await pollTranscriptionQueue(
-				pollCount,
-				sqsClient,
-				queueUrl,
-				autoScalingClient,
-				asgName,
-				metrics,
-				config,
-				instanceId,
-			);
+			// prefer 'high' over 'standard', and actually kill 'low' if anything comes in on the 'high'/'standard'
+			for (const priorityLevel of priorityLevels) {
+				// always prefer 'regular-sensitivity' here, as something else might pick up 'public-domain' (but still process 'public-domain' when there's no 'regular-sensitivity' jobs)
+				for (const sensitivityLevel of sensitivityLevels) {
+					// take it in turns for the activityType
+					for (const activityTypeThisWorkerProcesses of activityTypesThisWorkerProcesses) {
+						//TODO see if we can store what activityType was LAST processed so we can understand warm-up time impact
+						// from swapping between activity types (e.g. transcription vs translation) and if we can improve throughput
+						// by processing the same activity type in a row
+
+						const queueUrl = buildQueueUrl(
+							config.app.queuesBaseUrl,
+							'queue',
+							priorityLevel,
+							sensitivityLevel,
+							activityTypeThisWorkerProcesses,
+							config.app.stage, // FIXME need to address LOCAL vs DEV
+						);
+
+						const shouldOnlyProcessIfIdleAndIsThereforeCancellable =
+							priorityLevel === 'low';
+
+						if (
+							shouldOnlyProcessIfIdleAndIsThereforeCancellable &&
+							maybeCurrentIdleTaskAborter
+						) {
+							// idle task already in progress and this is low priority, so continue through the loops
+							continue;
+						}
+
+						const maybeMessage = await pollQueue(
+							overalPollCount,
+							sqsClient,
+							queueUrl,
+							autoScalingClient,
+							asgName,
+							config,
+							instanceId,
+						);
+
+						if (!maybeMessage) {
+							// no message on the queue, so continue through the loops to check the next queue
+							continue;
+						}
+
+						if (maybeCurrentIdleTaskAborter) {
+							console.log(
+								`New higher priority work has arrived, aborting current idle task. Waiting 5s for it to exit before starting the new work.`,
+							);
+							maybeCurrentIdleTaskAborter.abort(
+								'New higher priority work has arrived.',
+							);
+							await setTimeout(5000);
+						}
+
+						const workPromise = doWorkIfAny(
+							maybeMessage,
+							sqsClient,
+							queueUrl,
+							autoScalingClient,
+							asgName,
+							metrics,
+							config,
+							instanceId,
+						);
+
+						if (shouldOnlyProcessIfIdleAndIsThereforeCancellable) {
+							maybeCurrentIdleTaskAborter = new AbortController();
+							workPromise.finally(() => {
+								// regardless of success/failure, when this idle task concludes clear the reference
+								maybeCurrentIdleTaskAborter = null;
+								// TODO reset the visibility of the message so that it returns to front its queue
+							});
+						} else {
+							const result = await workPromise;
+							if (result !== null) {
+								// something was processed, so go back to the top of the while loop to start with the highest priority
+								continue whileLoop;
+							}
+						}
+					}
+				}
+			}
 		} else {
 			logger.warn(
 				`instance in state ${lifecycleState} - waiting until it goes to InService.`,
@@ -121,21 +206,19 @@ const main = async () => {
 	}
 };
 
-const pollTranscriptionQueue = async (
-	pollCount: number,
+const pollQueue = async (
+	overallPollCount: number,
 	sqsClient: SQSClient,
 	taskQueueUrl: string,
 	autoScalingClient: AutoScalingClient,
 	asgName: string,
-	metrics: MetricsService,
 	config: TranscriptionConfig,
 	instanceId: string,
 ) => {
 	const stage = config.app.stage;
-	const isDev = config.app.stage === 'DEV';
 
 	logger.info(
-		`worker polling ${taskQueueUrl} for transcription task. Poll count = ${pollCount}`,
+		`worker polling ${taskQueueUrl} for task. Overall poll count = ${overallPollCount}`,
 	);
 
 	await updateScaleInProtection(
@@ -169,16 +252,32 @@ const pollTranscriptionQueue = async (
 			instanceId,
 			asgName,
 		);
-		return;
+		return null; // null denotes nothing on the queue
 	}
 
+	return message.message;
+};
+
+const doWorkIfAny = async (
+	taskMessage: Message,
+	sqsClient: SQSClient,
+	taskQueueUrl: string,
+	autoScalingClient: AutoScalingClient,
+	asgName: string,
+	metrics: MetricsService,
+	config: TranscriptionConfig,
+	instanceId: string,
+): Promise<void | null> => {
+	const stage = config.app.stage;
+	const isDev = config.app.stage === 'DEV';
+
 	const attemptNumber = parseInt(
-		message.message.Attributes?.ApproximateReceiveCount ?? '0',
+		taskMessage.Attributes?.ApproximateReceiveCount ?? '0',
 	);
 	await metrics.putMetric(attemptNumberMetric(attemptNumber));
 
 	const maybeSentTimestamp: string | undefined | null =
-		message.message.Attributes?.SentTimestamp;
+		taskMessage.Attributes?.SentTimestamp;
 	const maybeEnqueuedAtEpochMillis = maybeSentTimestamp
 		? parseInt(maybeSentTimestamp)
 		: undefined;
@@ -193,7 +292,6 @@ const pollTranscriptionQueue = async (
 		);
 	}
 
-	const taskMessage = message.message;
 	if (!taskMessage.Body) {
 		logger.error('message missing body');
 		await updateScaleInProtection(
@@ -239,7 +337,7 @@ const pollTranscriptionQueue = async (
 
 	if (!job) {
 		await metrics.putMetric(FailureMetric);
-		logger.error('Failed to parse job message', message);
+		logger.error('Failed to parse job message', taskMessage);
 		await updateScaleInProtection(
 			autoScalingClient,
 			stage,
@@ -277,11 +375,19 @@ const pollTranscriptionQueue = async (
 
 		fs.mkdirSync(destinationDirectory, { recursive: true });
 
+		if (maybeCurrentIdleTaskAborter?.signal.aborted) {
+			return;
+		}
+
 		const downloadedFile = await getObjectWithPresignedUrl(
 			inputSignedUrl,
 			job.id,
 			destinationDirectory,
 		);
+
+		if (maybeCurrentIdleTaskAborter?.signal.aborted) {
+			return;
+		}
 
 		if (jobType === 'llm' || jobType === 'llm-translation') {
 			await processLLMOrTranslationJob(
@@ -292,6 +398,7 @@ const pollTranscriptionQueue = async (
 				setMessageVisibility,
 				metrics,
 				preservedAttributes,
+				maybeCurrentIdleTaskAborter?.signal,
 			);
 		} else {
 			await processTranscriptionJob(
@@ -309,6 +416,7 @@ const pollTranscriptionQueue = async (
 				INTERRUPTION_TIME,
 				setMessageVisibility,
 				preservedAttributes,
+				maybeCurrentIdleTaskAborter?.signal,
 			);
 		}
 
