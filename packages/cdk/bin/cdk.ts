@@ -1,8 +1,8 @@
 import 'source-map-support/register';
+import { GuRoot } from '@guardian/cdk/lib/constructs/root';
 import { TranscriptionServiceRepository } from '../lib/repository';
 import { TranscriptionService } from '../lib/transcription-service';
 import { TranscriptionServiceUniversalInfra } from '../lib/universal-infra';
-import { GuRoot } from '@guardian/cdk/lib/constructs/root';
 
 const stack = 'investigations';
 const env = { region: 'eu-west-1' };
