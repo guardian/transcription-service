@@ -1,14 +1,13 @@
 import 'source-map-support/register';
-import { App } from 'aws-cdk-lib';
 import { TranscriptionServiceRepository } from '../lib/repository';
 import { TranscriptionService } from '../lib/transcription-service';
 import { TranscriptionServiceUniversalInfra } from '../lib/universal-infra';
+import { GuRoot } from '@guardian/cdk/lib/constructs/root';
 
 const stack = 'investigations';
 const env = { region: 'eu-west-1' };
 
-// CI uses the handwritten riff-raff.yaml files in this directory.
-const app = new App();
+const app = new GuRoot();
 
 export const guStacks = [
 	new TranscriptionService(app, 'TranscriptionService-CODE', {
@@ -27,6 +26,7 @@ export const guStacks = [
 		stack,
 		stage: 'PROD', // TODO probably ought to be INFRA?
 		env,
+		riffRaffProjectName: 'transcription-service-repository',
 	}),
 
 	// This is another stack which is used for both code/prod - but as repository already existed I made a new stack to avoid
@@ -38,6 +38,7 @@ export const guStacks = [
 			stack,
 			stage: 'PROD', // TODO probably ought to be INFRA?
 			env,
+			riffRaffProjectName: 'transcription-service-universal-infra',
 		},
 	),
 ];

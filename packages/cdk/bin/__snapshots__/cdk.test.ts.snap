@@ -10568,6 +10568,10 @@ exports[`Giant's stacks should match the snapshots 3`] = `
             "Value": "guardian/transcription-service",
           },
           {
+            "Key": "gu:riff-raff:project",
+            "Value": "transcription-service-repository",
+          },
+          {
             "Key": "Stack",
             "Value": "investigations",
           },
@@ -10659,6 +10663,10 @@ exports[`Giant's stacks should match the snapshots 3`] = `
             "Value": "guardian/transcription-service",
           },
           {
+            "Key": "gu:riff-raff:project",
+            "Value": "transcription-service-repository",
+          },
+          {
             "Key": "Stack",
             "Value": "investigations",
           },
@@ -10740,6 +10748,10 @@ exports[`Giant's stacks should match the snapshots 3`] = `
             "Value": "guardian/transcription-service",
           },
           {
+            "Key": "gu:riff-raff:project",
+            "Value": "transcription-service-repository",
+          },
+          {
             "Key": "Stack",
             "Value": "investigations",
           },
@@ -10783,6 +10795,7 @@ exports[`Giant's stacks should match the snapshots 4`] = `
           "Stage": "PROD",
           "gu:cdk:version": "TEST",
           "gu:repo": "guardian/transcription-service",
+          "gu:riff-raff:project": "transcription-service-universal-infra",
         },
         "Type": "String",
         "Value": {
@@ -10816,6 +10829,10 @@ exports[`Giant's stacks should match the snapshots 4`] = `
           {
             "Key": "gu:repo",
             "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "gu:riff-raff:project",
+            "Value": "transcription-service-universal-infra",
           },
           {
             "Key": "Stack",
