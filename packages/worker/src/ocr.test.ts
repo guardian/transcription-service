@@ -14,7 +14,7 @@ import {
 	runSpawnCommand,
 	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
-import { processOcrJob, runOcrMyPdf } from './ocr';
+import { ocrFailureOutput, runOcrJob, runOcrMyPdf } from './ocr';
 
 jest.mock('@guardian/transcription-service-common', () => ({
 	...jest.requireActual('@guardian/transcription-service-common'),
@@ -38,7 +38,7 @@ const attributes = {
 	},
 };
 
-describe('processOcrJob', () => {
+describe('runOcrJob', () => {
 	let directory: string;
 	let input: string;
 	let job: OcrJob;
@@ -92,15 +92,7 @@ describe('processOcrJob', () => {
 	});
 
 	it('runs each language with the requested options and uploads language-tagged PDFs before publishing success', async () => {
-		await processOcrJob(
-			job,
-			input,
-			directory,
-			config,
-			sqs,
-			visibility,
-			attributes,
-		);
+		await runOcrJob(job, input, directory, config, sqs, visibility, attributes);
 		const calls = jest
 			.mocked(runSpawnCommand)
 			.mock.calls.filter(
@@ -154,7 +146,7 @@ describe('processOcrJob', () => {
 
 	it('defaults to redo-ocr and discovers the page count using pdfinfo', async () => {
 		job.settings = { ocrLanguages: ['eng'] };
-		await processOcrJob(job, input, directory, config, sqs, visibility);
+		await runOcrJob(job, input, directory, config, sqs, visibility);
 		expect(runSpawnCommand).toHaveBeenCalledWith(
 			'pdfinfo',
 			'pdfinfo',
@@ -182,7 +174,7 @@ describe('processOcrJob', () => {
 			return implementation(...args);
 		});
 		await expect(
-			processOcrJob(job, input, directory, config, sqs, visibility),
+			runOcrJob(job, input, directory, config, sqs, visibility),
 		).rejects.toThrow('OCR failed');
 		expect(uploadToS3).not.toHaveBeenCalled();
 		expect(publishTranscriptionOutput).not.toHaveBeenCalled();
@@ -194,7 +186,7 @@ describe('processOcrJob', () => {
 			.mocked(uploadToS3)
 			.mockResolvedValue({ isSuccess: false, errorMsg: 'upload failed' });
 		await expect(
-			processOcrJob(job, input, directory, config, sqs, visibility),
+			runOcrJob(job, input, directory, config, sqs, visibility),
 		).rejects.toThrow('upload failed');
 		expect(publishTranscriptionOutput).not.toHaveBeenCalled();
 		expect(fs.readdirSync(directory)).toEqual(['input.pdf']);
@@ -255,7 +247,7 @@ describe('processOcrJob', () => {
 	it('retries input errors once with skip-text', async () => {
 		job.settings = { ocrLanguages: ['eng'], initialFlag: '--redo-ocr' };
 		returnOcrExitCodes([2, 0]);
-		await processOcrJob(job, input, directory, config, sqs, visibility);
+		await runOcrJob(job, input, directory, config, sqs, visibility);
 		expect(ocrCalls().map((call) => call[2][0])).toEqual([
 			'--redo-ocr',
 			'--skip-text',
@@ -266,7 +258,7 @@ describe('processOcrJob', () => {
 	it('decrypts encrypted PDFs, retries with redo-ocr, and keeps the decrypted input when falling back to skip-text', async () => {
 		job.settings = { ocrLanguages: ['eng'], initialFlag: '--force-ocr' };
 		returnOcrExitCodes([8, 2, 0]);
-		await processOcrJob(job, input, directory, config, sqs, visibility);
+		await runOcrJob(job, input, directory, config, sqs, visibility);
 		const decrypted = path.join(directory, 'ocr', 'input.pdf.eng.decrypt.pdf');
 		expect(runSpawnCommand).toHaveBeenCalledWith(
 			'qpdf',
@@ -290,7 +282,7 @@ describe('processOcrJob', () => {
 	it('does not loop when input and encryption errors alternate', async () => {
 		job.settings.ocrLanguages = ['eng'];
 		returnOcrExitCodes([2, 8, 2, 8]);
-		await processOcrJob(
+		const result = await runOcrJob(
 			job,
 			input,
 			directory,
@@ -300,16 +292,12 @@ describe('processOcrJob', () => {
 			attributes,
 		);
 		expect(ocrCalls()).toHaveLength(3);
-		expect(publishTranscriptionOutput).toHaveBeenCalledWith(
-			sqs,
-			'output-queue',
-			expect.objectContaining({
-				status: 'OCR_FAILURE',
-				failureReason: 'INPUT_FILE',
-				message: expect.stringContaining('code 2'),
-			}),
-			attributes,
-		);
+		expect(result).toEqual({
+			isSuccess: false,
+			failureReason: 'INPUT_FILE',
+			message: expect.stringContaining('code 2'),
+		});
+		expect(publishTranscriptionOutput).not.toHaveBeenCalled();
 	});
 
 	it('reports encrypted PDF failure when qpdf cannot decrypt it', async () => {
@@ -325,16 +313,20 @@ describe('processOcrJob', () => {
 			if (args[4] ?? true) throw result;
 			return result;
 		});
-		await processOcrJob(job, input, directory, config, sqs, visibility);
-		expect(publishTranscriptionOutput).toHaveBeenCalledWith(
+		const result = await runOcrJob(
+			job,
+			input,
+			directory,
+			config,
 			sqs,
-			'output-queue',
-			expect.objectContaining({
-				failureReason: 'ENCRYPTED_PDF',
-				message: expect.stringContaining('invalid password'),
-			}),
-			undefined,
+			visibility,
 		);
+		expect(result).toEqual({
+			isSuccess: false,
+			failureReason: 'ENCRYPTED_PDF',
+			message: expect.stringContaining('invalid password'),
+		});
+		expect(publishTranscriptionOutput).not.toHaveBeenCalled();
 		expect(ocrCalls()).toHaveLength(1);
 	});
 
@@ -356,7 +348,7 @@ describe('processOcrJob', () => {
 						}
 					: implementation(...args),
 			);
-			await processOcrJob(job, input, directory, config, sqs, visibility);
+			await runOcrJob(job, input, directory, config, sqs, visibility);
 			expect(
 				jest
 					.mocked(runSpawnCommand)
@@ -374,7 +366,7 @@ describe('processOcrJob', () => {
 		async (code) => {
 			job.settings.ocrLanguages = ['eng'];
 			returnOcrExitCodes([code]);
-			await processOcrJob(job, input, directory, config, sqs, visibility);
+			await runOcrJob(job, input, directory, config, sqs, visibility);
 			expect(publishTranscriptionOutput).toHaveBeenCalledWith(
 				sqs,
 				'output-queue',
@@ -396,11 +388,11 @@ describe('processOcrJob', () => {
 		[15, 'OTHER_ERROR'],
 		[42, 'OTHER_ERROR'],
 	])(
-		'reports exit code %s as %s without waiting for SQS retries',
+		'returns exit code %s as %s for the caller to report',
 		async (code, failureReason) => {
 			job.settings.ocrLanguages = ['eng'];
 			returnOcrExitCodes([Number(code), Number(code)]);
-			await processOcrJob(
+			const result = await runOcrJob(
 				job,
 				input,
 				directory,
@@ -409,20 +401,12 @@ describe('processOcrJob', () => {
 				visibility,
 				attributes,
 			);
-			const output = OcrOutputFailure.parse(
-				jest.mocked(publishTranscriptionOutput).mock.calls[0]![2],
-			);
-			expect(output).toEqual({
-				id: job.id,
-				userEmail: job.userEmail,
-				status: 'OCR_FAILURE',
+			expect(result).toEqual({
+				isSuccess: false,
 				failureReason,
 				message: expect.stringContaining(`diagnostic for ${code}`),
 			});
-			expect(publishTranscriptionOutput).toHaveBeenCalledTimes(1);
-			expect(jest.mocked(publishTranscriptionOutput).mock.calls[0]![3]).toBe(
-				attributes,
-			);
+			expect(publishTranscriptionOutput).not.toHaveBeenCalled();
 			expect(uploadToS3).not.toHaveBeenCalled();
 			expect(fs.readdirSync(directory)).toEqual(['input.pdf']);
 		},
@@ -439,36 +423,42 @@ describe('processOcrJob', () => {
 					? { code: undefined, stdout: '', stderr: '' }
 					: implementation(...args),
 			);
-		await processOcrJob(job, input, directory, config, sqs, visibility);
-		expect(publishTranscriptionOutput).toHaveBeenCalledWith(
+		const result = await runOcrJob(
+			job,
+			input,
+			directory,
+			config,
 			sqs,
-			'output-queue',
-			expect.objectContaining({
-				status: 'OCR_FAILURE',
-				failureReason: 'OTHER_ERROR',
-				message: 'Failed to get exit code from ocrmypdf',
-			}),
-			undefined,
+			visibility,
 		);
+		expect(result).toEqual({
+			isSuccess: false,
+			failureReason: 'OTHER_ERROR',
+			message: 'Failed to get exit code from ocrmypdf',
+		});
+		expect(publishTranscriptionOutput).not.toHaveBeenCalled();
 		expect(uploadToS3).not.toHaveBeenCalled();
 		expect(fs.readdirSync(directory)).toEqual(['input.pdf']);
 	});
 
 	it('discards successful languages when a later language has a terminal failure', async () => {
 		returnOcrExitCodes([0, 3]);
-		await processOcrJob(job, input, directory, config, sqs, visibility);
+		const result = await runOcrJob(
+			job,
+			input,
+			directory,
+			config,
+			sqs,
+			visibility,
+		);
 		expect(ocrCalls()).toHaveLength(2);
 		expect(uploadToS3).not.toHaveBeenCalled();
-		expect(publishTranscriptionOutput).toHaveBeenCalledTimes(1);
-		expect(publishTranscriptionOutput).toHaveBeenCalledWith(
-			sqs,
-			'output-queue',
-			expect.objectContaining({
-				failureReason: 'MISSING_DEPENDENCY',
-				message: expect.stringContaining('fra'),
-			}),
-			undefined,
-		);
+		expect(publishTranscriptionOutput).not.toHaveBeenCalled();
+		expect(result).toEqual({
+			isSuccess: false,
+			failureReason: 'MISSING_DEPENDENCY',
+			message: expect.stringContaining('fra'),
+		});
 		expect(fs.readdirSync(directory)).toEqual(['input.pdf']);
 	});
 
@@ -485,18 +475,34 @@ describe('processOcrJob', () => {
 					? { code: 1, stdout: '', stderr: 'encrypted' }
 					: implementation(...args),
 			);
-		await processOcrJob(job, input, directory, config, sqs, visibility);
+		await runOcrJob(job, input, directory, config, sqs, visibility);
 		expect(visibility).toHaveBeenCalledWith(120);
 	});
 
-	it('propagates failure-notification errors so the input message is not acknowledged', async () => {
-		returnOcrExitCodes([1]);
+	it('propagates success-notification errors to the caller', async () => {
 		jest
 			.mocked(publishTranscriptionOutput)
 			.mockRejectedValue(new Error('SQS unavailable'));
 		await expect(
-			processOcrJob(job, input, directory, config, sqs, visibility),
+			runOcrJob(job, input, directory, config, sqs, visibility),
 		).rejects.toThrow('SQS unavailable');
+		expect(uploadToS3).toHaveBeenCalledTimes(1);
+		expect(fs.readdirSync(directory)).toEqual(['input.pdf']);
+	});
+
+	it('builds a schema-valid failure output with the job identity and error details', () => {
+		const output = ocrFailureOutput(job, {
+			isSuccess: false,
+			failureReason: 'INPUT_FILE',
+			message: 'Invalid input PDF',
+		});
+		expect(OcrOutputFailure.parse(output)).toEqual({
+			id: job.id,
+			userEmail: job.userEmail,
+			status: 'OCR_FAILURE',
+			failureReason: 'INPUT_FILE',
+			message: 'Invalid input PDF',
+		});
 	});
 
 	it('rejects jobs without any OCR languages', () => {
