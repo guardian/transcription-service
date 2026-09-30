@@ -1,3 +1,4 @@
+// IMPORTANT: the order is crucial here, when it's iterated over in the worker for example
 export const priorityLevels = [
 	// trumps standard, but will let the current standard level job complete - might result in higher cost services being used to clear
 	'high',
@@ -27,6 +28,18 @@ export const sensitivityLevels = [
 ] as const;
 export type SensitivityLevel = (typeof sensitivityLevels)[number];
 
+type QueueType = 'queue' | 'DLQ';
+
+export const buildQueueUrl = (
+	queuesBaseUrl: string,
+	queueType: QueueType,
+	priorityLevel: PriorityLevel,
+	sensitivityLevel: SensitivityLevel,
+	activityType: ActivityType,
+	stage: string,
+) =>
+	`${queuesBaseUrl}${buildVerifiedQueueName(priorityLevel, sensitivityLevel, activityType)(queueType, stage)}`;
+
 export const buildVerifiedQueueName =
 	(
 		priorityLevel: PriorityLevel,
@@ -34,7 +47,7 @@ export const buildVerifiedQueueName =
 		activityType: ActivityType,
 	) =>
 	(
-		queueType: 'queue' | 'DLQ',
+		queueType: QueueType,
 		maybeStage?: string, // optional because we also want to build logical IDs for the queues, which don't have the stage suffix
 	) => {
 		const suffix = maybeStage ? `_${maybeStage}` : '';

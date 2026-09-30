@@ -14,10 +14,11 @@ export interface TranscriptionConfig {
 	app: {
 		secret: string;
 		rootUrl: string;
-		gpuTaskQueueUrl: string;
-		deadLetterQueueUrl?: string;
+		queuesBaseUrl: string;
+		deadLetterQueueUrl?: string; // FIXME this should probably use the dedicated DLQs from queue-gardens (but is there another for media-download???)
 		mediaDownloadQueueUrl: string;
 		stage: string;
+		queueGardensStage: string;
 		app: string;
 		emailNotificationFromAddress: string;
 		sourceMediaBucket: string;
@@ -144,11 +145,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 	});
 
 	logger.info(`Parameters fetched: ${parameterNames.join(', ')}`);
-	const gpuTaskQueueUrl = findParameter(
-		parameters,
-		paramPath,
-		'gpuTaskQueueUrl',
-	);
+	const queuesBaseUrl = findParameter(parameters, paramPath, 'queuesBaseUrl');
 	const mediaDownloadQueueUrl = findParameter(
 		parameters,
 		paramPath,
@@ -244,7 +241,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 
 	const devConfiguration =
 		stage === 'DEV'
-			? devConfig(parameters, paramPath, gpuTaskQueueUrl)
+			? devConfig(parameters, paramPath, queuesBaseUrl)
 			: undefined;
 
 	const workerArtifactBucket = findParameter(
@@ -278,10 +275,11 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 		app: {
 			rootUrl: appRootUrl,
 			secret: appSecret,
-			gpuTaskQueueUrl,
+			queuesBaseUrl,
 			deadLetterQueueUrl,
 			mediaDownloadQueueUrl,
 			stage,
+			queueGardensStage: stage === 'DEV' ? 'LOCAL' : stage,
 			app,
 			sourceMediaBucket,
 			emailNotificationFromAddress,

@@ -16,6 +16,7 @@ import {
 	ONE_WEEK_IN_SECONDS,
 	WorkerJob,
 } from '@guardian/transcription-service-common';
+import { buildQueueUrl } from '@guardian/transcription-service-common/src/queue-gardens';
 import {
 	getSignedUploadUrl,
 	TranscriptionConfig,
@@ -25,6 +26,7 @@ import { AwsConfig, AWSStatus } from './types';
 
 interface SendSuccess {
 	status: AWSStatus.Success;
+	queueUrl: string;
 	messageId: string;
 }
 
@@ -38,6 +40,7 @@ interface DeleteSuccess {
 }
 
 interface SQSFailure {
+	queueUrl: string;
 	status: AWSStatus.Failure;
 	error?: unknown;
 	errorMsg?: string;
@@ -108,7 +111,14 @@ export const generateOutputSignedUrlAndSendMessage = async (
 
 	const engine: TranscriptionEngine = 'whisperx';
 
-	const queue = config.app.gpuTaskQueueUrl;
+	const queueUrl = buildQueueUrl(
+		config.app.queuesBaseUrl,
+		'queue',
+		'high', // this is as a result of UI action so should use high priority queue
+		'regular-sensitivity', // TODO add tickbox to transcription service for sensitivity (perhaps assume public if downloading)
+		'transcription',
+		config.app.queueGardensStage,
+	);
 
 	const job: TranscriptionJob = {
 		id: s3Key, // id of the source file
@@ -126,7 +136,7 @@ export const generateOutputSignedUrlAndSendMessage = async (
 	};
 	const messageResult = await sendMessage(
 		client,
-		queue,
+		queueUrl,
 		JSON.stringify(job),
 		s3Key,
 	);

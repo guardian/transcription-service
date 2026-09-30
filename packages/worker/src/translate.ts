@@ -40,17 +40,28 @@ export const transcribeAndTranslate = async (
 	whisperBaseParams: WhisperBaseParams,
 	metrics: MetricsService,
 	languageCode: InputLanguageCode,
+	maybeAbortSignal: AbortSignal | undefined,
 ): Promise<TranscriptionResult> => {
-	const run = (translate: boolean, languageCode: InputLanguageCode) =>
-		runTranscription(whisperBaseParams, languageCode, translate, metrics);
 	try {
-		const transcription = await run(false, languageCode);
+		const transcription = await runTranscription(
+			whisperBaseParams,
+			languageCode,
+			false,
+			metrics,
+			maybeAbortSignal,
+		);
 		const translationConfig = getTranslationConfig(
 			languageCode,
 			transcription.metadata.detectedLanguageCode,
 		);
 		if (translationConfig.shouldTranslate && translationConfig.code) {
-			const translation = await run(true, translationConfig.code);
+			const translation = await runTranscription(
+				whisperBaseParams,
+				translationConfig.code,
+				true,
+				metrics,
+				maybeAbortSignal,
+			);
 			return {
 				...transcription,
 				transcriptTranslations: translation.transcripts,

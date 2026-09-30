@@ -119,6 +119,7 @@ export const executeLlmPrompt = async (
 	backend: LlmBackend,
 	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
 	metrics: MetricsService,
+	maybeAbortSignal: AbortSignal | undefined,
 ): Promise<string> => {
 	const { prompts, maskLookup } = await splitPromptIntoChunks(prompt);
 
@@ -134,11 +135,13 @@ export const executeLlmPrompt = async (
 				chunkPrompt,
 				config.bedrock.modelId,
 				config.aws.region,
+				maybeAbortSignal,
 			);
 		} else {
 			return sendPromptToLlamaServer(
 				getServerConfig(config).serverUrl,
 				chunkPrompt,
+				maybeAbortSignal,
 			);
 		}
 	};
