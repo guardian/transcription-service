@@ -24,6 +24,7 @@ import { CfnPipe } from 'aws-cdk-lib/aws-pipes';
 import type { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import type { Topic } from 'aws-cdk-lib/aws-sns';
+import type { IQueue } from 'aws-cdk-lib/aws-sqs';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { JsonPath } from 'aws-cdk-lib/aws-stepfunctions';
 import { addSubscription } from './util';
@@ -34,7 +35,7 @@ export const makeMediaDownloadService = (
 	APP_NAME: string,
 	apiLambda: GuLambdaFunction,
 	alarmTopicArn: string,
-	transcriptionGpuTaskQueue: Queue,
+	taskQueues: IQueue[],
 	transcriptionOutputQueue: Queue,
 	sourceMediaBucket: Bucket,
 	outputBucket: Bucket,
@@ -127,7 +128,7 @@ export const makeMediaDownloadService = (
 				effect: Effect.ALLOW,
 				actions: ['sqs:SendMessage'],
 				resources: [
-					transcriptionGpuTaskQueue.queueArn,
+					...taskQueues.map((_) => _.queueArn),
 					transcriptionOutputQueue.queueArn,
 				],
 			}),

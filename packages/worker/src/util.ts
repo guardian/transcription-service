@@ -8,9 +8,15 @@ import { gzip } from 'node-gzip';
 export const uploadedCombinedResultsToS3 = async (
 	combinedOutputUrl: string,
 	result: TranscriptionResult,
+	maybeAbortSignal: AbortSignal | undefined,
 ) => {
 	const gzippedResult: Buffer = await gzip(JSON.stringify(result));
-	const response = await uploadToS3(combinedOutputUrl, gzippedResult, true);
+	const response = await uploadToS3(
+		combinedOutputUrl,
+		gzippedResult,
+		true,
+		maybeAbortSignal,
+	);
 	if (!response.isSuccess) {
 		throw new Error(
 			`Could not upload combined results to S3! ${response.errorMsg}`,

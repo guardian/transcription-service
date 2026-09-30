@@ -5,14 +5,15 @@ import {
 	METADATA_SERVICE_URL,
 } from '@guardian/transcription-service-backend-common';
 import { SQSClient } from '@aws-sdk/client-sqs';
-import { getCurrentReceiptHandle, setInterruptionTime } from './index';
+import {
+	getCurrentQueueUrl,
+	getCurrentReceiptHandle,
+	setInterruptionTime,
+} from './index';
 
 const CHECK_FREQUENCY = 10;
 
-export const checkSpotInterrupt = async (
-	client: SQSClient,
-	queueUrl: string,
-) => {
+export const checkSpotInterrupt = async (client: SQSClient) => {
 	const imdsToken = await getIMDSToken();
 	const url = `${METADATA_SERVICE_URL}/latest/meta-data/spot/instance-action`;
 	try {
@@ -32,6 +33,7 @@ export const checkSpotInterrupt = async (
 				);
 				// Interrupt warning occurs 2 minutes before termination
 				const receiptHandle = getCurrentReceiptHandle();
+				const queueUrl = getCurrentQueueUrl();
 				if (!receiptHandle) {
 					return;
 				}
@@ -40,7 +42,7 @@ export const checkSpotInterrupt = async (
 				try {
 					await changeMessageVisibility(
 						client,
-						queueUrl,
+						queueUrl!,
 						receiptHandle,
 						secondsUntilTermination,
 					);
@@ -62,8 +64,5 @@ export const checkSpotInterrupt = async (
 	} catch (e) {
 		console.error('Error during spot termination check', e);
 	}
-	setTimeout(
-		() => checkSpotInterrupt(client, queueUrl),
-		1000 * CHECK_FREQUENCY,
-	);
+	setTimeout(() => checkSpotInterrupt(client), 1000 * CHECK_FREQUENCY);
 };

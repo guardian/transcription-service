@@ -23,6 +23,12 @@ import { GuLambdaFunction } from '@guardian/cdk/lib/constructs/lambda';
 import { GuS3Bucket } from '@guardian/cdk/lib/constructs/s3';
 import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
 import {
+	activityTypes,
+	buildVerifiedQueueName,
+	priorityLevels,
+	sensitivityLevels,
+} from '@guardian/transcription-service-common/src/queue-gardens';
+import {
 	type App,
 	aws_events_targets,
 	CfnOutput,
@@ -65,7 +71,7 @@ import { Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
-import { makeAlarms } from './alarms';
+import { makeAlarms, TAG_ALARM_FOR_OLD_MESSAGES, TAG_IS_DLQ } from './alarms';
 import { makeMediaDownloadService } from './media-download-service';
 import { addSubscription } from './util';
 
@@ -614,57 +620,101 @@ export class TranscriptionService extends GuStack {
 			},
 		);
 
-		const transcriptionDeadLetterQueue = new Queue(
-			this,
-			`${APP_NAME}-task-dead-letter-queue`,
-			{
+		// FIXME remove once giant changes are released
+		{
+			const transcriptionDeadLetterQueue = new Queue(
+				this,
+				`${APP_NAME}-task-dead-letter-queue`,
+				{
+					fifo: true,
+					queueName: `${APP_NAME}-task-dead-letter-queue-${this.stage}.fifo`,
+					contentBasedDeduplication: true,
+					// allow enough time to investigate/debug why messages end up in the DLQ
+					retentionPeriod: Duration.days(14),
+				},
+			);
+
+			// SQS queue for transcription tasks from API lambda to worker EC2 instances // TODO probably copy some of this over to queue gardens definitions
+			const taskQueueProps = {
 				fifo: true,
-				queueName: `${APP_NAME}-task-dead-letter-queue-${this.stage}.fifo`,
+				queueName: `${APP_NAME}-task-queue-${this.stage}.fifo`,
+				// this is the default. 30 seconds should be enough time to get the
+				// size of the file from s3 and estimate transcription time. If it's
+				// not, we'll need to increase visibilityTimeout
+				visibilityTimeout: Duration.seconds(30),
+				// contentBasedDeduplication takes a sha-256 hash of the message body to use as the deduplication ID. In future
+				// we might choose to use a hash of the actual file to be transcribed instead (but I can't really think where
+				// that would be particularly helpful)
 				contentBasedDeduplication: true,
-				// allow enough time to investigate/debug why messages end up in the DLQ
-				retentionPeriod: Duration.days(14),
-			},
+				deadLetterQueue: {
+					queue: transcriptionDeadLetterQueue,
+					maxReceiveCount: MAX_RECEIVE_COUNT,
+				},
+			};
+
+			const transcriptionGpuTaskQueue = new Queue(
+				this,
+				`${APP_NAME}-gpu-task-queue`,
+				{
+					...taskQueueProps,
+					queueName: `${APP_NAME}-gpu-task-queue-${this.stage}.fifo`,
+				},
+			);
+			new StringParameter(this, 'GPUTaskQueueUrlParameter', {
+				parameterName: `/${ssmPath}/gpuTaskQueueUrl`,
+				stringValue: transcriptionGpuTaskQueue.queueUrl,
+			});
+
+			// allow API lambda to write to queue
+			transcriptionGpuTaskQueue.grantSendMessages(apiLambda);
+
+			// allow worker to receive message from queue
+			transcriptionGpuTaskQueue.grantConsumeMessages(transcriptionGpuWorkerASG);
+
+			// allow worker to write messages to the dead letter queue
+			transcriptionDeadLetterQueue.grantSendMessages(transcriptionGpuWorkerASG); // TODO should the worker even be writing direct to the DLQ??
+		}
+
+		const queueGardens = activityTypes.flatMap((activityType) =>
+			sensitivityLevels.flatMap((sensitivityLevel) =>
+				priorityLevels.map((priorityLevel) => {
+					const getQueueName = buildVerifiedQueueName(
+						priorityLevel,
+						sensitivityLevel,
+						activityType,
+					);
+
+					const queue = Queue.fromQueueArn(
+						this,
+						getQueueName('queue'), // sans stage
+						`arn:aws:sqs:${this.region}:${this.account}:${getQueueName('queue', this.stage)}`,
+					);
+					if (priorityLevel !== 'low') {
+						// we expect long lived items in the low priority queue
+						Tags.of(queue).add(TAG_ALARM_FOR_OLD_MESSAGES, 'true');
+						Tags.of(queue).add(TAG_IS_DLQ, 'false');
+					}
+
+					queue.grantConsumeMessages(transcriptionGpuWorkerASG);
+
+					queue.grantSendMessages(apiLambda);
+					// NOTE giant does its own granting
+
+					const dlq = Queue.fromQueueArn(
+						this,
+						getQueueName('DLQ'),
+						`arn:aws:sqs:${this.region}:${this.account}:${getQueueName('DLQ', this.stage)}`,
+					);
+					Tags.of(dlq).add(TAG_ALARM_FOR_OLD_MESSAGES, 'true');
+					Tags.of(dlq).add(TAG_IS_DLQ, 'true');
+
+					return {
+						queue,
+						dlq,
+					};
+				}),
+			),
 		);
-
-		// SQS queue for transcription tasks from API lambda to worker EC2 instances
-		const taskQueueProps = {
-			fifo: true,
-			queueName: `${APP_NAME}-task-queue-${this.stage}.fifo`,
-			// this is the default. 30 seconds should be enough time to get the
-			// size of the file from s3 and estimate transcription time. If it's
-			// not, we'll need to increase visibilityTimeout
-			visibilityTimeout: Duration.seconds(30),
-			// contentBasedDeduplication takes a sha-256 hash of the message body to use as the deduplication ID. In future
-			// we might choose to use a hash of the actual file to be transcribed instead (but I can't really think where
-			// that would be particularly helpful)
-			contentBasedDeduplication: true,
-			deadLetterQueue: {
-				queue: transcriptionDeadLetterQueue,
-				maxReceiveCount: MAX_RECEIVE_COUNT,
-			},
-		};
-
-		const transcriptionGpuTaskQueue = new Queue(
-			this,
-			`${APP_NAME}-gpu-task-queue`,
-			{
-				...taskQueueProps,
-				queueName: `${APP_NAME}-gpu-task-queue-${this.stage}.fifo`,
-			},
-		);
-		new StringParameter(this, 'GPUTaskQueueUrlParameter', {
-			parameterName: `/${ssmPath}/gpuTaskQueueUrl`,
-			stringValue: transcriptionGpuTaskQueue.queueUrl,
-		});
-
-		// allow API lambda to write to queue
-		transcriptionGpuTaskQueue.grantSendMessages(apiLambda);
-
-		// allow worker to receive message from queue
-		transcriptionGpuTaskQueue.grantConsumeMessages(transcriptionGpuWorkerASG);
-
-		// allow worker to write messages to the dead letter queue
-		transcriptionDeadLetterQueue.grantSendMessages(transcriptionGpuWorkerASG);
 
 		const alarmTopicArn = new GuStringParameter(
 			this,
@@ -699,7 +749,7 @@ export class TranscriptionService extends GuStack {
 			APP_NAME,
 			apiLambda,
 			alarmTopicArn,
-			transcriptionGpuTaskQueue,
+			queueGardens.map((_) => _.queue),
 			transcriptionOutputQueue,
 			sourceMediaBucket,
 			outputBucket,
@@ -930,7 +980,7 @@ export class TranscriptionService extends GuStack {
 			new PolicyStatement({
 				effect: Effect.ALLOW,
 				actions: ['sqs:GetQueueAttributes'],
-				resources: [transcriptionGpuTaskQueue.queueArn],
+				resources: queueGardens.map((_) => _.queue.queueArn),
 			}),
 		);
 
@@ -947,13 +997,7 @@ export class TranscriptionService extends GuStack {
 
 		// alarms
 		if (isProd) {
-			makeAlarms(
-				this,
-				transcriptionGpuTaskQueue,
-				transcriptionDeadLetterQueue,
-				transcriptionGpuWorkerASG,
-				alarmTopicArn,
-			);
+			makeAlarms(this, transcriptionGpuWorkerASG, alarmTopicArn);
 		}
 	}
 }

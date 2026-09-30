@@ -66,7 +66,7 @@ describe('processOcrJob', () => {
 		jest
 			.mocked(runSpawnCommand)
 			.mockImplementation(
-				async (name, _command, args, _log, _reject, callback) => {
+				async (name, _command, args, _log, _reject, _maybeAbortSignal, callback) => {
 					if (name === 'pdfinfo') callback?.({ stdout: 'Pages: 10\n' });
 					if (name === 'ocrmypdf') {
 						fs.writeFileSync(
@@ -155,6 +155,7 @@ describe('processOcrJob', () => {
 			[input],
 			false,
 			true,
+			undefined,
 			expect.any(Function),
 		);
 		const args = jest

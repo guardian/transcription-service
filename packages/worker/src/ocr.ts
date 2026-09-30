@@ -25,26 +25,34 @@ const runOcrMyPdf = async (
 	sourceFile: string,
 	stage: string,
 	workingDirectory: string,
+	maybeAbortSignal: AbortSignal | undefined,
 ): Promise<string> => {
 	const pdfOutputPath = `${workingDirectory}/${path.basename(sourceFile)}.${language}.ocr.pdf`;
 	const configPath =
 		stage === 'DEV'
 			? 'rapidocr/rapidocr-config.local.yaml'
 			: '/opt/transcription-service/rapidocr-config.prod.yaml';
-	await runSpawnCommand('ocrmypdf', 'ocrmypdf', [
-		job.settings.initialFlag ?? '--redo-ocr',
-		'--plugin',
-		'ocrmypdf_rapidocr',
-		'--rapidocr-config-path',
-		configPath,
-		'-l',
-		language,
-		...(job.settings.dpi === undefined
-			? []
-			: ['--image-dpi', String(job.settings.dpi)]),
-		sourceFile,
-		pdfOutputPath,
-	]);
+	await runSpawnCommand(
+		'ocrmypdf',
+		'ocrmypdf',
+		[
+			job.settings.initialFlag ?? '--redo-ocr',
+			'--plugin',
+			'ocrmypdf_rapidocr',
+			'--rapidocr-config-path',
+			configPath,
+			'-l',
+			language,
+			...(job.settings.dpi === undefined
+				? []
+				: ['--image-dpi', String(job.settings.dpi)]),
+			sourceFile,
+			pdfOutputPath,
+		],
+		undefined, // use default for logImmediately
+		undefined, // use default for rejectOnFailure
+		maybeAbortSignal,
+	);
 	return pdfOutputPath;
 };
 
@@ -78,6 +86,7 @@ export const processOcrJob = async (
 	sqsClient: SQSClient,
 	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
 	messageAttributes?: Record<string, MessageAttributeValue>,
+	maybeAbortSignal?: AbortSignal | undefined,
 ) => {
 	const pdfFileSizeBytes = fs.statSync(downloadedFilePath).size;
 	const pdfFileSizeMB = Math.ceil(pdfFileSizeBytes / ONE_MB);
@@ -89,6 +98,7 @@ export const processOcrJob = async (
 		[downloadedFilePath],
 		false,
 		true,
+		maybeAbortSignal,
 		(data) => {
 			if ('stdout' in data) {
 				pdfInfoOut += data.stdout;
@@ -119,6 +129,7 @@ export const processOcrJob = async (
 				downloadedFilePath,
 				config.app.stage,
 				ocrDirectory,
+				maybeAbortSignal
 			);
 
 			const base64OutputPath = await copyFileAsBase64(
@@ -157,6 +168,7 @@ export const processOcrJob = async (
 			job.combinedOutputUrl.url,
 			Buffer.from(JSON.stringify(ocrOutput)),
 			false, // OCR output is plain JSON; Giant reads it without gzip decoding
+			maybeAbortSignal
 		);
 		if (!uploadResult.isSuccess) {
 			throw new Error(

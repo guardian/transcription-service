@@ -10,17 +10,40 @@ import { getMaxCapacity, setDesiredCapacity } from './asg';
 import { getSQSQueueLengthIncludingInvisible } from './sqs';
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
+import {
+	activityTypes,
+	buildQueueUrl,
+	priorityLevels,
+	sensitivityLevels,
+} from '@guardian/transcription-service-common/src/queue-gardens';
 
 const updateASGCapacity = async (
 	asgClient: AutoScalingClient,
 	sqsClient: SQSClient,
-	queueUrl: string,
+	queuesBaseUrl: string,
 	asgName: string,
-	absoluteMinCapacity: number = 0,
+	stage: string,
 ) => {
-	const totalMessagesInQueue = await getSQSQueueLengthIncludingInvisible(
-		sqsClient,
-		queueUrl,
+	const absoluteMinCapacity = stage === 'PROD' ? 1 : 0; // always have at least 1 GPU worker in PROD
+
+	const queueLengths = await Promise.all(
+		activityTypes.flatMap((activityType) =>
+			sensitivityLevels.flatMap((sensitivityLevel) =>
+				priorityLevels
+					.filter((_) => _ !== 'low') // we rely on the permanent instance to handle low priority jobs, so we don't want to scale based on them
+					.flatMap((priorityLevel) => {
+						const queueUrl = buildQueueUrl(
+							queuesBaseUrl,
+							'queue',
+							priorityLevel,
+							sensitivityLevel,
+							activityType,
+							stage,
+						);
+						return getSQSQueueLengthIncludingInvisible(sqsClient, queueUrl);
+					}),
+			),
+		),
 	);
 
 	const asgMaxCapacity = await getMaxCapacity(asgClient, asgName);
@@ -32,6 +55,10 @@ const updateASGCapacity = async (
 	if (absoluteMinCapacity > asgMaxCapacity) {
 		throw new Error("absoluteMinCapacity can't be greater than asgMaxCapacity");
 	}
+
+	const totalMessagesInQueue = queueLengths.reduce(
+		(acc, current) => acc + current,
+	);
 
 	const minCapacity = Math.min(totalMessagesInQueue, asgMaxCapacity);
 
@@ -56,9 +83,9 @@ const updateASGsCapacity = async () => {
 	await updateASGCapacity(
 		asgClient,
 		sqsClient,
-		config.app.gpuTaskQueueUrl,
+		config.app.queuesBaseUrl,
 		gpuAsgName,
-		config.app.stage === 'PROD' ? 1 : 0, // always have at least 1 GPU worker in PROD
+		config.app.stage,
 	);
 };
 const handler: Handler = async () => {
