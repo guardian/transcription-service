@@ -38,7 +38,7 @@ jobs:
           registry: ${{ env.GITHUB_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6.3.0
         name: Configure AWS credentials for pushing to ECR
         with:
           role-to-assume: ${{ secrets.INVESTIGATIONS_GITHUB_ACTIONS_ROLE_ARN }}
