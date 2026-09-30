@@ -197,7 +197,6 @@ exports[`Giant's stacks should match the snapshots 1`] = `
           "nodejs24.x",
           "nodejs22.x",
           "nodejs20.x",
-          "nodejs18.x",
         ],
         "Content": {
           "S3Bucket": {
@@ -385,7 +384,6 @@ exports[`Giant's stacks should match the snapshots 1`] = `
           "nodejs24.x",
           "nodejs22.x",
           "nodejs20.x",
-          "nodejs18.x",
         ],
         "Content": {
           "S3Bucket": {
@@ -5160,7 +5158,6 @@ exports[`Giant's stacks should match the snapshots 2`] = `
           "nodejs24.x",
           "nodejs22.x",
           "nodejs20.x",
-          "nodejs18.x",
         ],
         "Content": {
           "S3Bucket": {
@@ -5398,7 +5395,6 @@ exports[`Giant's stacks should match the snapshots 2`] = `
           "nodejs24.x",
           "nodejs22.x",
           "nodejs20.x",
-          "nodejs18.x",
         ],
         "Content": {
           "S3Bucket": {

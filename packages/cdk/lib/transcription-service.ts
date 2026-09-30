@@ -208,6 +208,8 @@ export class TranscriptionService extends GuStack {
 			});
 		}
 
+		const nodeRuntime = Runtime.NODEJS_24_X;
+
 		const layerBucket = new GuStringParameter(this, 'LayerBucketArn', {
 			fromSSM: true,
 			default: '/investigations/transcription-service/lambdaLayerBucketArn',
@@ -236,7 +238,6 @@ export class TranscriptionService extends GuStack {
 					Runtime.NODEJS_24_X,
 					Runtime.NODEJS_22_X,
 					Runtime.NODEJS_20_X,
-					Runtime.NODEJS_18_X,
 				],
 			},
 		);
@@ -244,7 +245,7 @@ export class TranscriptionService extends GuStack {
 		const apiLambda = new GuApiLambda(this, 'transcription-service-api', {
 			fileName: 'api.zip',
 			handler: 'index.api',
-			runtime: Runtime.NODEJS_24_X,
+			runtime: nodeRuntime,
 			monitoringConfiguration: {
 				noMonitoring: true,
 			},
@@ -702,7 +703,7 @@ export class TranscriptionService extends GuStack {
 			{
 				fileName: 'output-handler.zip',
 				handler: 'index.outputHandler',
-				runtime: Runtime.NODEJS_24_X,
+				runtime: nodeRuntime,
 				app: `${APP_NAME}-output-handler`,
 				errorPercentageMonitoring:
 					this.stage === 'PROD'
@@ -790,7 +791,6 @@ export class TranscriptionService extends GuStack {
 					Runtime.NODEJS_24_X,
 					Runtime.NODEJS_22_X,
 					Runtime.NODEJS_20_X,
-					Runtime.NODEJS_18_X,
 				],
 			},
 		);
@@ -801,7 +801,7 @@ export class TranscriptionService extends GuStack {
 			{
 				fileName: 'webpage-snapshot.zip',
 				handler: 'index.webpageSnapshot',
-				runtime: Runtime.NODEJS_24_X,
+				runtime: nodeRuntime,
 				architecture: Architecture.ARM_64,
 				timeout: webpageSnapshotLambdaTimeout,
 				memorySize: 2048,
@@ -833,7 +833,7 @@ export class TranscriptionService extends GuStack {
 			{
 				fileName: 'media-export.zip',
 				handler: 'index.mediaExport',
-				runtime: Runtime.NODEJS_24_X,
+				runtime: nodeRuntime,
 				app: `${APP_NAME}-media-export`,
 				ephemeralStorageSize: Size.mebibytes(10240),
 				memorySize: 2048,
@@ -876,7 +876,7 @@ export class TranscriptionService extends GuStack {
 			{
 				fileName: 'worker-capacity-manager.zip',
 				handler: 'index.workerCapacityManager',
-				runtime: Runtime.NODEJS_24_X,
+				runtime: nodeRuntime,
 				app: `${APP_NAME}-worker-capacity-manager`,
 			},
 		);
