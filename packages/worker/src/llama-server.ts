@@ -8,6 +8,7 @@ import {
 import { LlmPrompt } from '@guardian/transcription-service-common';
 import { z } from 'zod';
 import { Agent } from 'undici';
+import { MAX_INPUT_TOKENS_PER_CHUNK } from './llm';
 
 export const LOCAL_LLAMA_PARALLEL_JOBS = 2;
 
@@ -188,7 +189,16 @@ export const sendPromptToLlamaServer = async (
 		},
 		body: JSON.stringify({
 			messages,
+			stop: ['<|im_end|>', '<|im_start|>', '<|endoftext|>'],
+			max_tokens: MAX_INPUT_TOKENS_PER_CHUNK + 1000, // allow some extra tokens for the response
 			chat_template_kwargs: { enable_thinking: false },
+
+			// DRY ("don't repeat yourself") settings - see https://llama-dry-docs.site/view/docs
+			dry_multiplier: 0.8,
+			dry_base: 1.75,
+			dry_allowed_length: 2,
+			// dry_penalty_last_n: -1,
+			dry_sequence_breakers: ['\n', ':', '"', '*'],
 		}),
 		signal: AbortSignal.timeout(10 * 60 * 1000), // 10 minutes – generation on a T4 can exceed the default 5min undici timeout
 		// @ts-expect-error — dispatcher is supported by Node.js fetch but not in the standard RequestInit types
