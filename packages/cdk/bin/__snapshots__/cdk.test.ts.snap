@@ -21,6 +21,7 @@ exports[`Giant's stacks should match the snapshots 1`] = `
       "GuPolicy",
       "GuAllowPolicy",
       "GuCname",
+      "GuStringParameter",
       "GuLoggingStreamNameParameter",
       "GuPolicy",
       "GuAllowPolicy",
@@ -117,6 +118,11 @@ exports[`Giant's stacks should match the snapshots 1`] = `
     },
     "InvestigationsAlarmTopicArn": {
       "Default": "/CODE/investigations/alarmTopicArn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "InvestigationsLogsOpenSearchDomain": {
+      "Default": "/PROD/investigations/investigations-logs/openSearchDomain",
+      "Description": "OpenSearch host for transcription service worker logs",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "InvestigationsLogsSecurityGroupId": {
@@ -1417,6 +1423,28 @@ set -x
 set -e
 export STAGE=CODE
 export AWS_REGION=eu-west-1
+awk 'toupper($0) ~ /^[[:space:]]*\\[/ { output = (toupper($0) ~ /^[[:space:]]*\\[[[:space:]]*OUTPUT[[:space:]]*\\]/) } !output' /etc/td-agent-bit/td-agent.bit.conf > /etc/td-agent-bit/td-agent.bit.conf.tmp
+cat >> /etc/td-agent-bit/td-agent.bit.conf.tmp <<'OUTPUT_CONFIG'
+[OUTPUT]
+    Name es
+    Match *
+    Port 443
+    tls On
+    Host ",
+                  {
+                    "Ref": "InvestigationsLogsOpenSearchDomain",
+                  },
+                  "
+    Logstash_Format      On
+    Logstash_Prefix      transcription-service-logs
+    Logstash_DateFormat  %Y.%m.%d
+    Suppress_Type_Name   On
+    Generate_ID On
+    Retry_Limit False
+OUTPUT_CONFIG
+cat /etc/td-agent-bit/td-agent.bit.conf.tmp > /etc/td-agent-bit/td-agent.bit.conf
+rm /etc/td-agent-bit/td-agent.bit.conf.tmp
+systemctl restart td-agent-bit
 rm /usr/local/cuda
 ln -s /usr/local/cuda-12.8 /usr/local/cuda
 aws s3 cp --quiet s3://",
@@ -5027,6 +5055,7 @@ exports[`Giant's stacks should match the snapshots 2`] = `
       "GuPolicy",
       "GuAllowPolicy",
       "GuCname",
+      "GuStringParameter",
       "GuLoggingStreamNameParameter",
       "GuPolicy",
       "GuAllowPolicy",
@@ -5126,6 +5155,11 @@ exports[`Giant's stacks should match the snapshots 2`] = `
     },
     "InvestigationsAlarmTopicArn": {
       "Default": "/PROD/investigations/alarmTopicArn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "InvestigationsLogsOpenSearchDomain": {
+      "Default": "/PROD/investigations/investigations-logs/openSearchDomain",
+      "Description": "OpenSearch host for transcription service worker logs",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "InvestigationsLogsSecurityGroupId": {
@@ -6464,6 +6498,28 @@ set -x
 set -e
 export STAGE=PROD
 export AWS_REGION=eu-west-1
+awk 'toupper($0) ~ /^[[:space:]]*\\[/ { output = (toupper($0) ~ /^[[:space:]]*\\[[[:space:]]*OUTPUT[[:space:]]*\\]/) } !output' /etc/td-agent-bit/td-agent.bit.conf > /etc/td-agent-bit/td-agent.bit.conf.tmp
+cat >> /etc/td-agent-bit/td-agent.bit.conf.tmp <<'OUTPUT_CONFIG'
+[OUTPUT]
+    Name es
+    Match *
+    Port 443
+    tls On
+    Host ",
+                  {
+                    "Ref": "InvestigationsLogsOpenSearchDomain",
+                  },
+                  "
+    Logstash_Format      On
+    Logstash_Prefix      transcription-service-logs
+    Logstash_DateFormat  %Y.%m.%d
+    Suppress_Type_Name   On
+    Generate_ID On
+    Retry_Limit False
+OUTPUT_CONFIG
+cat /etc/td-agent-bit/td-agent.bit.conf.tmp > /etc/td-agent-bit/td-agent.bit.conf
+rm /etc/td-agent-bit/td-agent.bit.conf.tmp
+systemctl restart td-agent-bit
 rm /usr/local/cuda
 ln -s /usr/local/cuda-12.8 /usr/local/cuda
 aws s3 cp --quiet s3://",
