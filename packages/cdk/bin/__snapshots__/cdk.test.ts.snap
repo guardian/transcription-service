@@ -36,6 +36,7 @@ exports[`Giant's stacks should match the snapshots 1`] = `
       "GuParameterStoreReadPolicy",
       "GuVpcParameter",
       "GuSecurityGroup",
+      "GuStringParameter",
       "GuSubnetListParameter",
       "GuStringParameter",
       "GuSubnetListParameter",
@@ -116,6 +117,11 @@ exports[`Giant's stacks should match the snapshots 1`] = `
     },
     "InvestigationsAlarmTopicArn": {
       "Default": "/CODE/investigations/alarmTopicArn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "InvestigationsLogsSecurityGroupId": {
+      "Default": "/PROD/investigations/investigations-logs/openSearchSecurityGroupId",
+      "Description": "Security group ID for the opensearch cluster used to store transcription service worker logs",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "LayerBucketArn": {
@@ -1232,6 +1238,26 @@ exports[`Giant's stacks should match the snapshots 1`] = `
             "IpProtocol": "tcp",
             "ToPort": 443,
           },
+          {
+            "Description": {
+              "Fn::Join": [
+                "",
+                [
+                  "from ",
+                  {
+                    "Ref": "InvestigationsLogsSecurityGroupId",
+                  },
+                  ":443",
+                ],
+              ],
+            },
+            "DestinationSecurityGroupId": {
+              "Ref": "InvestigationsLogsSecurityGroupId",
+            },
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
         ],
         "Tags": [
           {
@@ -1493,6 +1519,26 @@ service transcription-service-worker start",
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "WorkerSecurityGroup5529CF0B": {
+      "Properties": {
+        "Description": "Security group for the transcription service worker instances",
+        "Name": "/CODE/investigations/transcription-service/workerSecurityGroupId",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "CODE",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "TranscriptionServiceWorkerSGTranscriptionserviceworker6EE23C91",
+            "GroupId",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
     },
     "WriteCloudwatch15686221": {
       "Properties": {
@@ -4996,6 +5042,7 @@ exports[`Giant's stacks should match the snapshots 2`] = `
       "GuParameterStoreReadPolicy",
       "GuVpcParameter",
       "GuSecurityGroup",
+      "GuStringParameter",
       "GuSubnetListParameter",
       "GuStringParameter",
       "GuSubnetListParameter",
@@ -5079,6 +5126,11 @@ exports[`Giant's stacks should match the snapshots 2`] = `
     },
     "InvestigationsAlarmTopicArn": {
       "Default": "/PROD/investigations/alarmTopicArn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "InvestigationsLogsSecurityGroupId": {
+      "Default": "/PROD/investigations/investigations-logs/openSearchSecurityGroupId",
+      "Description": "Security group ID for the opensearch cluster used to store transcription service worker logs",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "LayerBucketArn": {
@@ -6232,6 +6284,26 @@ exports[`Giant's stacks should match the snapshots 2`] = `
             "IpProtocol": "tcp",
             "ToPort": 443,
           },
+          {
+            "Description": {
+              "Fn::Join": [
+                "",
+                [
+                  "from ",
+                  {
+                    "Ref": "InvestigationsLogsSecurityGroupId",
+                  },
+                  ":443",
+                ],
+              ],
+            },
+            "DestinationSecurityGroupId": {
+              "Ref": "InvestigationsLogsSecurityGroupId",
+            },
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
         ],
         "Tags": [
           {
@@ -6543,6 +6615,26 @@ service transcription-service-worker start",
         "TreatMissingData": "ignore",
       },
       "Type": "AWS::CloudWatch::Alarm",
+    },
+    "WorkerSecurityGroup5529CF0B": {
+      "Properties": {
+        "Description": "Security group for the transcription service worker instances",
+        "Name": "/PROD/investigations/transcription-service/workerSecurityGroupId",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "PROD",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "TranscriptionServiceWorkerSGTranscriptionserviceworker6EE23C91",
+            "GroupId",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
     },
     "WriteCloudwatch15686221": {
       "Properties": {

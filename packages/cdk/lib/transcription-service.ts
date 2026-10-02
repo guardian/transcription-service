@@ -456,6 +456,14 @@ export class TranscriptionService extends GuStack {
 			},
 		);
 
+		// save worker security group to param store so it can be read by logs cluster to allow logs from the worker instances
+		new StringParameter(this, 'WorkerSecurityGroup', {
+			stringValue: workerSecurityGroup.securityGroupId,
+			description:
+				'Security group for the transcription service worker instances',
+			parameterName: `/${props.stage}/${props.stack}/${APP_NAME}/workerSecurityGroupId`,
+		});
+
 		const privateEndpointSecurityGroup = Fn.importValue(
 			`internet-enabled-vpc-AWSEndpointSecurityGroup`,
 		);
@@ -467,6 +475,22 @@ export class TranscriptionService extends GuStack {
 
 		workerSecurityGroup.addEgressRule(
 			Peer.prefixList(s3PrefixListId.valueAsString),
+			Port.tcp(443),
+		);
+
+		const investigationsLogsSecurityGroupId = new GuStringParameter(
+			this,
+			'InvestigationsLogsSecurityGroupId',
+			{
+				default: `/PROD/${this.stack}/investigations-logs/openSearchSecurityGroupId`,
+				fromSSM: true,
+				description:
+					'Security group ID for the opensearch cluster used to store transcription service worker logs',
+			},
+		);
+
+		workerSecurityGroup.addEgressRule(
+			Peer.securityGroupId(investigationsLogsSecurityGroupId.valueAsString),
 			Port.tcp(443),
 		);
 
