@@ -46,11 +46,72 @@ The same python environment can be used to test changes to the model download py
 
 ## Testing the integration with giant
 
-To perform and end to end test locally:
+From a sibling giant checkout, run:
 
-- Run giant
-- Make sure you have started localstack and run ./scripts/create-local-queues.sh (see above)
-- Run the transcription service gpu worker: npm run gpu-worker::start
+```bash
+./scripts/start-backend.sh --external
+```
+
+Giant starts its own LocalStack on port **4567**, provisions the resources using this
+repository's script, and runs `npm run gpu-worker::start` with `LOCALSTACK_PORT=4567`.
+It reuses the sibling transcription-service checkout, or clones it if missing.
+`--ts-branch branch-name` selects the branch for a new clone. Install the worker's
+native dependencies and models using the setup instructions above first.
+
+For standalone transcription-service, the default remains port **4566**:
+
+```bash
+docker compose up -d
+./scripts/create-localstack-resources.sh
+npm run gpu-worker::start
+```
+
+The provisioning script accepts a positional port (or `LOCALSTACK_PORT`) and can
+be run repeatedly. To manually use giant's running LocalStack:
+
+```bash
+./scripts/create-localstack-resources.sh 4567
+LOCALSTACK_PORT=4567 npm run gpu-worker::start
+```
+
+### Queue configuration migration
+
+Queue URLs are constructed from an endpoint and queue names. All parameters below
+are relative to `/<STAGE>/investigations/transcription-service/`.
+
+For **CODE/PROD**, CDK creates `endpoint` with the value
+`https://sqs.<region>.amazonaws.com/<account-id>/`, and creates these StringParameters
+from the corresponding queues (including the imported giant output queue):
+
+| New parameter                                | Replaces                                    |
+| -------------------------------------------- | ------------------------------------------- |
+| `gpuTaskQueueName`                           | `gpuTaskQueueUrl`                           |
+| `mediaDownloadQueueName`                     | `mediaDownloadQueueUrl`                     |
+| `deadLetterQueueName`                        | `deadLetterQueueUrl`                        |
+| `destinationQueueNames/transcriptionService` | `destinationQueueUrls/transcriptionService` |
+| `destinationQueueNames/giant`                | `destinationQueueUrls/giant`                |
+
+Deploy the CDK changes before deploying applications that use the new parameters.
+Do not manually create the CODE/PROD parameters that CDK owns. Once all consumers
+have been updated, the old manually managed URL parameters can be removed. CDK
+removes its former `gpuTaskQueueUrl` parameter as part of this migration; coordinate
+that deployment with the application update.
+
+For **DEV**, create the following String parameters in AWS Parameter Store in
+`eu-west-1`, using Janus credentials for the `investigations` profile. The current
+DEV parameters for buckets, models, credentials, etc. are still used; existing URL
+parameters can remain in place.
+
+| Parameter                                    | Value                                            |
+| -------------------------------------------- | ------------------------------------------------ |
+| `gpuTaskQueueName`                           | `transcription-service-gpu-task-queue-DEV.fifo`  |
+| `mediaDownloadQueueName`                     | `transcription-service-media-download-queue-DEV` |
+| `destinationQueueNames/transcriptionService` | `transcription-service-output-queue-DEV`         |
+| `destinationQueueNames/giant`                | `giant-output-queue-DEV.fifo`                    |
+
+DEV needs no `endpoint` parameter: it uses
+`http://localhost:${LOCALSTACK_PORT:-4566}/000000000000/`. The same port is used
+for DynamoDB. The dead-letter queue parameter is only read in CODE/PROD.
 
 If you're finding the end to end testing painful due to how long it takes whisperx to transcribe anything, then you're
 looking for SHAKIRA MODE: npm run gpu-worker::shakira. This skips tedious transcription and just returns shakira lyrics,
