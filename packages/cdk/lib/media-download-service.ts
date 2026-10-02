@@ -25,6 +25,7 @@ import type { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import type { Topic } from 'aws-cdk-lib/aws-sns';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
+import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { JsonPath } from 'aws-cdk-lib/aws-stepfunctions';
 import { addSubscription } from './util';
 
@@ -65,6 +66,11 @@ export const makeMediaDownloadService = (
 			},
 		},
 	);
+
+	new StringParameter(scope, 'MediaDownloadQueueNameParameter', {
+		parameterName: `/${scope.stage}/${scope.stack}/${APP_NAME}/mediaDownloadQueueName`,
+		stringValue: mediaDownloadTaskQueue.queueName,
+	});
 
 	addSubscription(
 		scope,

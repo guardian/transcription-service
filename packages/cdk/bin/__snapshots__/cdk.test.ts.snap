@@ -424,22 +424,6 @@ exports[`Giant's stacks should match the snapshots 1`] = `
       },
       "Type": "AWS::Lambda::LayerVersion",
     },
-    "GPUTaskQueueUrlParameter64941E19": {
-      "Properties": {
-        "Name": "/CODE/investigations/transcription-service/gpuTaskQueueUrl",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "CODE",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Ref": "transcriptionservicegputaskqueue9ECF56C3",
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "GetDistributablePolicyTranscriptionserviceworker2DFD604E": {
       "Properties": {
         "PolicyDocument": {
@@ -729,6 +713,25 @@ exports[`Giant's stacks should match the snapshots 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
+    "MediaDownloadQueueNameParameterDAFF6569": {
+      "Properties": {
+        "Name": "/CODE/investigations/transcription-service/mediaDownloadQueueName",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "CODE",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "transcriptionservicemediadownloadtaskqueue26AAF7A2",
+            "QueueName",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "ParameterStoreReadTranscriptionserviceworkerDFD8F6FE": {
       "Properties": {
         "PolicyDocument": {
@@ -779,6 +782,35 @@ exports[`Giant's stacks should match the snapshots 1`] = `
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "SQSEndpointParameter69FA9ED7": {
+      "Properties": {
+        "Name": "/CODE/investigations/transcription-service/endpoint",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "CODE",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::Join": [
+            "",
+            [
+              "https://sqs.eu-west-1.",
+              {
+                "Ref": "AWS::URLSuffix",
+              },
+              "/",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              "/",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
     },
     "SetInstanceProtection5DD5610F": {
       "Properties": {
@@ -1635,6 +1667,70 @@ service transcription-service-worker start",
       },
       "Type": "AWS::IAM::Policy",
     },
+    "deadLetterQueueNameParameterBF13A6AE": {
+      "Properties": {
+        "Name": "/CODE/investigations/transcription-service/deadLetterQueueName",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "CODE",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "transcriptionservicetaskdeadletterqueue8A13A1F1",
+            "QueueName",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "destinationQueueNamesgiantParameterD722884F": {
+      "Properties": {
+        "Name": "/CODE/investigations/transcription-service/destinationQueueNames/giant",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "CODE",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::Select": [
+            5,
+            {
+              "Fn::Split": [
+                ":",
+                {
+                  "Ref": "GiantTranscriptionOutputQueueArn",
+                },
+              ],
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "destinationQueueNamestranscriptionServiceParameter54B05E7E": {
+      "Properties": {
+        "Name": "/CODE/investigations/transcription-service/destinationQueueNames/transcriptionService",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "CODE",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "transcriptionserviceoutputqueue2A0B1C70",
+            "QueueName",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "eventbridgepiperoleA95C594F": {
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -1669,6 +1765,25 @@ service transcription-service-worker start",
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "gpuTaskQueueNameParameterF1F03573": {
+      "Properties": {
+        "Name": "/CODE/investigations/transcription-service/gpuTaskQueueName",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "CODE",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "transcriptionservicegputaskqueue9ECF56C3",
+            "QueueName",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
     },
     "llamaCppInstallDirectory5130050F": {
       "Properties": {
@@ -5528,22 +5643,6 @@ exports[`Giant's stacks should match the snapshots 2`] = `
       },
       "Type": "AWS::CloudWatch::Alarm",
     },
-    "GPUTaskQueueUrlParameter64941E19": {
-      "Properties": {
-        "Name": "/PROD/investigations/transcription-service/gpuTaskQueueUrl",
-        "Tags": {
-          "Stack": "investigations",
-          "Stage": "PROD",
-          "gu:cdk:version": "TEST",
-          "gu:repo": "guardian/transcription-service",
-        },
-        "Type": "String",
-        "Value": {
-          "Ref": "transcriptionservicegputaskqueue9ECF56C3",
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "GetDistributablePolicyTranscriptionserviceworker2DFD604E": {
       "Properties": {
         "PolicyDocument": {
@@ -5883,6 +5982,25 @@ exports[`Giant's stacks should match the snapshots 2`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
+    "MediaDownloadQueueNameParameterDAFF6569": {
+      "Properties": {
+        "Name": "/PROD/investigations/transcription-service/mediaDownloadQueueName",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "PROD",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "transcriptionservicemediadownloadtaskqueue26AAF7A2",
+            "QueueName",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "ParameterStoreReadTranscriptionserviceworkerDFD8F6FE": {
       "Properties": {
         "PolicyDocument": {
@@ -5933,6 +6051,35 @@ exports[`Giant's stacks should match the snapshots 2`] = `
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "SQSEndpointParameter69FA9ED7": {
+      "Properties": {
+        "Name": "/PROD/investigations/transcription-service/endpoint",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "PROD",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::Join": [
+            "",
+            [
+              "https://sqs.eu-west-1.",
+              {
+                "Ref": "AWS::URLSuffix",
+              },
+              "/",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              "/",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
     },
     "SetInstanceProtection5DD5610F": {
       "Properties": {
@@ -6731,6 +6878,70 @@ service transcription-service-worker start",
       },
       "Type": "AWS::IAM::Policy",
     },
+    "deadLetterQueueNameParameterBF13A6AE": {
+      "Properties": {
+        "Name": "/PROD/investigations/transcription-service/deadLetterQueueName",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "PROD",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "transcriptionservicetaskdeadletterqueue8A13A1F1",
+            "QueueName",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "destinationQueueNamesgiantParameterD722884F": {
+      "Properties": {
+        "Name": "/PROD/investigations/transcription-service/destinationQueueNames/giant",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "PROD",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::Select": [
+            5,
+            {
+              "Fn::Split": [
+                ":",
+                {
+                  "Ref": "GiantTranscriptionOutputQueueArn",
+                },
+              ],
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "destinationQueueNamestranscriptionServiceParameter54B05E7E": {
+      "Properties": {
+        "Name": "/PROD/investigations/transcription-service/destinationQueueNames/transcriptionService",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "PROD",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "transcriptionserviceoutputqueue2A0B1C70",
+            "QueueName",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "eventbridgepiperoleA95C594F": {
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -6765,6 +6976,25 @@ service transcription-service-worker start",
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "gpuTaskQueueNameParameterF1F03573": {
+      "Properties": {
+        "Name": "/PROD/investigations/transcription-service/gpuTaskQueueName",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "PROD",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "transcriptionservicegputaskqueue9ECF56C3",
+            "QueueName",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
     },
     "llamaCppInstallDirectory5130050F": {
       "Properties": {

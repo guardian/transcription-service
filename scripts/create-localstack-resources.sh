@@ -1,146 +1,72 @@
 #!/usr/bin/env bash
-# If the queues already exists the commands should still work, just returning the existing queue url
+set -euo pipefail
+
+# Usage: ./scripts/create-localstack-resources.sh [port]
+LOCALSTACK_PORT=${1:-${LOCALSTACK_PORT:-4566}}
+if [[ $# -gt 1 || ! "$LOCALSTACK_PORT" =~ ^[0-9]+$ ]] || (( LOCALSTACK_PORT < 1 || LOCALSTACK_PORT > 65535 )); then
+  echo "Usage: $0 [port (1-65535, default 4566)]" >&2
+  exit 1
+fi
+
 APP_NAME="transcription-service"
-
+ENDPOINT="http://localhost:${LOCALSTACK_PORT}"
 export AWS_REGION="eu-west-1"
-export AWS_PROFILE="investigations"
+# Provision only local resources; no Janus credentials are needed for this script.
+export AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test
+unset AWS_PROFILE AWS_SESSION_TOKEN
+export AWS_PAGER=""
 
-#########
-##### task dead letter queue
-#########
-DEAD_LETTER_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-task-dead-letter-queue-DEV.fifo --attributes "FifoQueue=true,ContentBasedDeduplication=true" | jq .QueueUrl)
-# We don't install the localstack dns so need to replace the endpoint with localhost
-DEAD_LETTER_QUEUE_URL_LOCALHOST=${DEAD_LETTER_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
+local_aws() {
+  aws --endpoint-url="$ENDPOINT" --region "$AWS_REGION" "$@"
+}
 
-echo "Created queue in localstack, url: ${DEAD_LETTER_QUEUE_URL_LOCALHOST}"
+create_queue() {
+  local name=$1
+  local dead_letter_name=${2:-}
+  local attributes='{}'
+  if [[ "$name" == *.fifo ]]; then
+    attributes='{"FifoQueue":"true","ContentBasedDeduplication":"true"}'
+  fi
+  if [[ -n "$dead_letter_name" ]]; then
+    attributes=$(jq -cn --argjson attributes "$attributes" \
+      --arg arn "arn:aws:sqs:${AWS_REGION}:000000000000:${dead_letter_name}" \
+      '$attributes + {RedrivePolicy: ({deadLetterTargetArn: $arn, maxReceiveCount: "3"} | tojson)}')
+  fi
+  local_aws sqs create-queue --queue-name "$name" --attributes "$attributes"
+}
 
-#########
-##### task queue
-#########
-TASK_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-task-queue-DEV.fifo \
-  --attributes '{
-  "FifoQueue": "true",
-  "ContentBasedDeduplication": "true",
-  "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:transcription-service-task-dead-letter-queue-DEV.fifo\",\"maxReceiveCount\":\"3\"}"
-  }' | jq .QueueUrl)
-# We don't install the localstack dns so need to replace the endpoint with localhost
-TASK_QUEUE_URL_LOCALHOST=${TASK_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
+TASK_DLQ="$APP_NAME-task-dead-letter-queue-DEV.fifo"
+create_queue "$TASK_DLQ"
+create_queue "$APP_NAME-task-queue-DEV.fifo" "$TASK_DLQ"
+create_queue "$APP_NAME-gpu-task-queue-DEV.fifo" "$TASK_DLQ"
+create_queue "$APP_NAME-output-queue-DEV"
+create_queue "$APP_NAME-media-download-queue-DEV"
+create_queue "$APP_NAME-webpage-snapshot-queue-DEV"
 
-echo "Created cpu task queue in localstack, url: ${TASK_QUEUE_URL_LOCALHOST}"
+REMOTE_INGEST_TOPIC=$(local_aws sns create-topic \
+  --name "$APP_NAME-combined-task-topic-DEV" --query TopicArn --output text)
+for queue in "$APP_NAME-webpage-snapshot-queue-DEV" "$APP_NAME-media-download-queue-DEV"; do
+  local_aws sns subscribe --attributes RawMessageDelivery=true \
+    --topic-arn "$REMOTE_INGEST_TOPIC" --protocol sqs \
+    --notification-endpoint "arn:aws:sqs:${AWS_REGION}:000000000000:${queue}"
+done
 
-GPU_TASK_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-gpu-task-queue-DEV.fifo \
-  --attributes '{
-  "FifoQueue": "true",
-  "ContentBasedDeduplication": "true",
-  "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:transcription-service-task-dead-letter-queue-DEV.fifo\",\"maxReceiveCount\":\"3\"}"
-  }' | jq .QueueUrl)
-# We don't install the localstack dns so need to replace the endpoint with localhost
-GPU_TASK_QUEUE_URL_LOCALHOST=${GPU_TASK_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
+# Giant's reply queues live in whichever LocalStack instance was selected.
+create_queue giant-output-dead-letter-queue-DEV.fifo
+create_queue giant-output-queue-DEV.fifo giant-output-dead-letter-queue-DEV.fifo
+create_queue giant-media-download-output-dead-letter-queue-DEV
+create_queue giant-media-download-output-queue-DEV giant-media-download-output-dead-letter-queue-DEV
 
-echo "Created gpu task queue in localstack, url: ${GPU_TASK_QUEUE_URL_LOCALHOST}"
+# Repeated startup must preserve existing tables and their contents.
+TABLES=$(local_aws dynamodb list-tables --output json)
+for table in "$APP_NAME-DEV" "$APP_NAME-events-DEV"; do
+  if ! jq -e --arg table "$table" '.TableNames | index($table) != null' <<< "$TABLES" >/dev/null; then
+    local_aws dynamodb create-table --table-name "$table" \
+      --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
+      --attribute-definitions AttributeName=id,AttributeType=S \
+      --key-schema AttributeName=id,KeyType=HASH
+  fi
+  local_aws dynamodb wait table-exists --table-name "$table"
+done
 
-#########
-##### output queue
-#########
-OUTPUT_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-output-queue-DEV | jq .QueueUrl)
-# We don't install the localstack dns so need to replace the endpoint with localhost
-OUTPUT_QUEUE_URL_LOCALHOST=${OUTPUT_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
-
-echo "Created output queue in localstack, url: ${OUTPUT_QUEUE_URL_LOCALHOST}"
-
-MEDIA_DOWNLOAD_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-media-download-queue-DEV | jq .QueueUrl)
-# We don't install the localstack dns so need to replace the endpoint with localhost
-MEDIA_DOWNLOAD_QUEUE_URL_LOCALHOST=${MEDIA_DOWNLOAD_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
-
-echo "Created media download queue in localstack, url: ${MEDIA_DOWNLOAD_QUEUE_URL_LOCALHOST}"
-
-WEBPAGE_SNAPSHOT_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-webpage-snapshot-queue-DEV  | jq .QueueUrl)
-# We don't install the localstack dns so need to replace the endpoint with localhost
-WEBPAGE_SNAPSHOT_QUEUE_URL_LOCALHOST=${WEBPAGE_SNAPSHOT_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
-
-echo "Created webpage snapshot queue in localstack, url: ${WEBPAGE_SNAPSHOT_QUEUE_URL_LOCALHOST}"
-
-# Combined SNS topic to send to webpage snapshot and media download
-REMOTE_INGEST_TOPIC=$(aws sns create-topic --endpoint-url=http://localhost:4566 --name transcription-service-combined-task-topic-DEV | jq -r .TopicArn)
-
-# subscribe media download and webpage snapshot queues to the topic
-echo $WEBPAGE_SNAPSHOT_QUEUE_ARN
-aws sns subscribe --endpoint-url=http://localhost:4566 --attributes RawMessageDelivery=true --topic-arn $REMOTE_INGEST_TOPIC --protocol sqs --notification-endpoint "arn:aws:sqs:eu-west-1:000000000000:transcription-service-webpage-snapshot-queue-DEV" | cat
-aws sns subscribe --endpoint-url=http://localhost:4566 --attributes RawMessageDelivery=true --topic-arn $REMOTE_INGEST_TOPIC --protocol sqs --notification-endpoint "arn:aws:sqs:eu-west-1:000000000000:transcription-service-media-download-queue-DEV" | cat
-
-echo "Created SNS topic in localstack, arn: ${REMOTE_INGEST_TOPIC}"
-
-
-# ###########
-# Creating output queue for Giant:
-# Giant is a service that uses transcription service to transcribe its audio/video files.
-# Giant pushes messages to the transcription input queue 'transcription-service-task-queue-DEV.fifo'
-# and transcription worker pushes the resulting transcripts into the giant output queue 'giant-output-queue-DEV.fifo'.
-# Since creating multiple localstack containers could add complication, and localstack is
-# only needed for local running, the giant output queue is created in the transcription service localstack.
-# ###########
-
-#########
-##### giant output dead letter queue
-#########
-GIANT_OUTPUT_DEAD_LETTER_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=giant-output-dead-letter-queue-DEV.fifo --attributes "FifoQueue=true,ContentBasedDeduplication=true" | jq .QueueUrl)
-# We don't install the localstack dns so need to replace the endpoint with localhost
-GIANT_OUTPUT_DEAD_LETTER_QUEUE_URL_LOCALHOST=${GIANT_OUTPUT_DEAD_LETTER_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
-
-echo "Created queue in localstack, url: ${GIANT_OUTPUT_DEAD_LETTER_QUEUE_URL_LOCALHOST}"
-
-#########
-##### giant output queue
-#########
-GIANT_OUTPUT_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=giant-output-queue-DEV.fifo \
-  --attributes '{
-  "FifoQueue": "true",
-  "ContentBasedDeduplication": "true",
-  "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:giant-output-dead-letter-queue-DEV.fifo\",\"maxReceiveCount\":\"3\"}"
-  }' | jq .QueueUrl)
-
-
-# We don't install the localstack dns so need to replace the endpoint with localhost
-GIANT_OUTPUT_QUEUE_URL_LOCALHOST=${GIANT_OUTPUT_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
-
-echo "Created queue in localstack, url: ${GIANT_OUTPUT_QUEUE_URL_LOCALHOST}"
-
-
-#########
-##### giant media download output dead letter queue
-#########
-GIANT_MEDIA_DOWNLOAD_OUTPUT_DEAD_LETTER_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=giant-media-download-output-dead-letter-queue-DEV  | jq .QueueUrl)
-# We don't install the localstack dns so need to replace the endpoint with localhost
-GIANT_MEDIA_DOWNLOAD_OUTPUT_DEAD_LETTER_QUEUE_URL_LOCALHOST=${GIANT_MEDIA_DOWNLOAD_OUTPUT_DEAD_LETTER_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
-
-echo "Created queue in localstack, url: ${GIANT_MEDIA_DOWNLOAD_OUTPUT_DEAD_LETTER_QUEUE_URL_LOCALHOST}"
-
-#########
-##### giant media download output queue
-#########
-GIANT_MEDIA_DOWNLOAD_OUTPUT_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=giant-media-download-output-queue-DEV \
-  --attributes '{
-  "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:giant-media-download-output-dead-letter-queue-DEV\",\"maxReceiveCount\":\"3\"}"
-  }' | jq .QueueUrl)
-
-
-# We don't install the localstack dns so need to replace the endpoint with localhost
-GIANT_MEDIA_DOWNLOAD_OUTPUT_QUEUE_URL_LOCALHOST=${GIANT_MEDIA_DOWNLOAD_OUTPUT_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
-
-echo "Created queue in localstack, url: ${GIANT_MEDIA_DOWNLOAD_OUTPUT_QUEUE_URL_LOCALHOST}"
-
-DYNAMODB_ARN=$(aws --endpoint-url=http://localhost:4566 dynamodb create-table \
-                                         --table-name ${APP_NAME}-DEV \
-                                         --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
-                                         --attribute-definitions AttributeName=id,AttributeType=S \
-                                         --key-schema AttributeName=id,KeyType=HASH | jq .TableDescription.TableArn)
-
-echo "Created table, arn: ${DYNAMODB_ARN}"
-
-DYNAMODB_EVENTS_ARN=$(aws --endpoint-url=http://localhost:4566 dynamodb create-table \
-                                         --table-name ${APP_NAME}-events-DEV \
-                                         --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
-                                         --attribute-definitions AttributeName=id,AttributeType=S \
-                                         --key-schema AttributeName=id,KeyType=HASH | jq .TableDescription.TableArn)
-
-echo "Created events table, arn: ${DYNAMODB_EVENTS_ARN}"
+echo "LocalStack resources ready at $ENDPOINT"

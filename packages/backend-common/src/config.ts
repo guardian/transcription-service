@@ -106,15 +106,15 @@ const getEnvVarOrMetadata = async (
 const devConfig = (
 	parameters: Parameter[],
 	paramPath: string,
-	sqsTaskQueueUrl: string,
+	endpoint: string,
 ): TranscriptionConfig['dev'] => {
 	const huggingfaceToken = findParameter(
 		parameters,
 		paramPath,
 		'dev/huggingfaceToken',
 	);
-	// AWS clients take an optional 'endpoint' property that is only needed by localstack. Here we infer the endpoint (http://localhost:4566) from the sqs url
-	const localstackEndpoint = new URL(sqsTaskQueueUrl).origin;
+	// AWS clients need the LocalStack origin, without the SQS account path.
+	const localstackEndpoint = new URL(endpoint).origin;
 	return {
 		huggingfaceToken,
 		localstackEndpoint,
@@ -144,31 +144,20 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 	});
 
 	logger.info(`Parameters fetched: ${parameterNames.join(', ')}`);
-	const gpuTaskQueueUrl = findParameter(
-		parameters,
-		paramPath,
-		'gpuTaskQueueUrl',
-	);
-	const mediaDownloadQueueUrl = findParameter(
-		parameters,
-		paramPath,
-		'mediaDownloadQueueUrl',
-	);
-	const deadLetterQueueUrl =
+	const endpoint =
 		stage === 'DEV'
-			? undefined
-			: findParameter(parameters, paramPath, 'deadLetterQueueUrl');
-	const destinationQueue = findParameter(
-		parameters,
-		paramPath,
-		'destinationQueueUrls/transcriptionService',
+			? `http://localhost:${process.env.LOCALSTACK_PORT ?? '4566'}/000000000000/`
+			: findParameter(parameters, paramPath, 'endpoint');
+	const queueUrl = (parameterName: string) =>
+		`${endpoint.replace(/\/$/, '')}/${findParameter(parameters, paramPath, parameterName)}`;
+	const gpuTaskQueueUrl = queueUrl('gpuTaskQueueName');
+	const mediaDownloadQueueUrl = queueUrl('mediaDownloadQueueName');
+	const deadLetterQueueUrl =
+		stage === 'DEV' ? undefined : queueUrl('deadLetterQueueName');
+	const destinationQueue = queueUrl(
+		'destinationQueueNames/transcriptionService',
 	);
-
-	const giantDestinationQueue = findParameter(
-		parameters,
-		paramPath,
-		'destinationQueueUrls/giant',
-	);
+	const giantDestinationQueue = queueUrl('destinationQueueNames/giant');
 
 	const authClientId = findParameter(parameters, paramPath, 'auth/clientId');
 	const authClientSecret = findParameter(
@@ -243,9 +232,7 @@ export const getConfig = async (): Promise<TranscriptionConfig> => {
 	);
 
 	const devConfiguration =
-		stage === 'DEV'
-			? devConfig(parameters, paramPath, gpuTaskQueueUrl)
-			: undefined;
+		stage === 'DEV' ? devConfig(parameters, paramPath, endpoint) : undefined;
 
 	const workerArtifactBucket = findParameter(
 		parameters,
