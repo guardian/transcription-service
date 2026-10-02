@@ -1494,6 +1494,26 @@ service transcription-service-worker start",
       },
       "Type": "AWS::IAM::Policy",
     },
+    "WorkerSecurityGroup5529CF0B": {
+      "Properties": {
+        "Description": "Security group for the transcription service worker instances",
+        "Name": "/CODE/investigations/transcription-service/workerSecurityGroupId",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "CODE",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "TranscriptionServiceWorkerSGTranscriptionserviceworker6EE23C91",
+            "GroupId",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "WriteCloudwatch15686221": {
       "Properties": {
         "PolicyDocument": {
@@ -6543,6 +6563,26 @@ service transcription-service-worker start",
         "TreatMissingData": "ignore",
       },
       "Type": "AWS::CloudWatch::Alarm",
+    },
+    "WorkerSecurityGroup5529CF0B": {
+      "Properties": {
+        "Description": "Security group for the transcription service worker instances",
+        "Name": "/PROD/investigations/transcription-service/workerSecurityGroupId",
+        "Tags": {
+          "Stack": "investigations",
+          "Stage": "PROD",
+          "gu:cdk:version": "TEST",
+          "gu:repo": "guardian/transcription-service",
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "TranscriptionServiceWorkerSGTranscriptionserviceworker6EE23C91",
+            "GroupId",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
     },
     "WriteCloudwatch15686221": {
       "Properties": {

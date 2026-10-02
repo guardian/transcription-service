@@ -456,6 +456,14 @@ export class TranscriptionService extends GuStack {
 			},
 		);
 
+		// save worker security group to param store so it can be read by logs cluster to allow logs from the worker instances
+		new StringParameter(this, 'WorkerSecurityGroup', {
+			stringValue: workerSecurityGroup.securityGroupId,
+			description:
+				'Security group for the transcription service worker instances',
+			parameterName: `/${props.stage}/${props.stack}/${APP_NAME}/workerSecurityGroupId`,
+		});
+
 		const privateEndpointSecurityGroup = Fn.importValue(
 			`internet-enabled-vpc-AWSEndpointSecurityGroup`,
 		);
