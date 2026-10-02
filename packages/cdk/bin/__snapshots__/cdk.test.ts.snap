@@ -121,7 +121,7 @@ exports[`Giant's stacks should match the snapshots 1`] = `
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "InvestigationsLogsOpenSearchDomain": {
-      "Default": "/PROD/investigations/investigations-logs/openSearchDomain",
+      "Default": "/PROD/investigations/investigations-logs/openSearchDomainEndpoint",
       "Description": "OpenSearch host for transcription service worker logs",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
@@ -1423,27 +1423,16 @@ set -x
 set -e
 export STAGE=CODE
 export AWS_REGION=eu-west-1
-awk 'toupper($0) ~ /^[[:space:]]*\\[/ { output = (toupper($0) ~ /^[[:space:]]*\\[[[:space:]]*OUTPUT[[:space:]]*\\]/) } !output' /etc/td-agent-bit/td-agent.bit.conf > /etc/td-agent-bit/td-agent.bit.conf.tmp
-cat >> /etc/td-agent-bit/td-agent.bit.conf.tmp <<'OUTPUT_CONFIG'
-[OUTPUT]
-    Name es
-    Match *
-    Port 443
-    tls On
-    Host ",
+aws s3 cp s3://",
+                  {
+                    "Ref": "DistributionBucketName",
+                  },
+                  "/investigations/CODE/transcription-service-worker/td-agent-bit.conf /etc/td-agent-bit/td-agent-bit.conf
+sed -i -e 's|<INVESTIGATIONS_LOGS_ENDPOINT>|",
                   {
                     "Ref": "InvestigationsLogsOpenSearchDomain",
                   },
-                  "
-    Logstash_Format      On
-    Logstash_Prefix      transcription-service-logs
-    Logstash_DateFormat  %Y.%m.%d
-    Suppress_Type_Name   On
-    Generate_ID On
-    Retry_Limit False
-OUTPUT_CONFIG
-cat /etc/td-agent-bit/td-agent.bit.conf.tmp > /etc/td-agent-bit/td-agent.bit.conf
-rm /etc/td-agent-bit/td-agent.bit.conf.tmp
+                  "|g' -e 's|<STAGE>|CODE|g' /etc/td-agent-bit/td-agent-bit.conf
 systemctl restart td-agent-bit
 rm /usr/local/cuda
 ln -s /usr/local/cuda-12.8 /usr/local/cuda
@@ -5158,7 +5147,7 @@ exports[`Giant's stacks should match the snapshots 2`] = `
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "InvestigationsLogsOpenSearchDomain": {
-      "Default": "/PROD/investigations/investigations-logs/openSearchDomain",
+      "Default": "/PROD/investigations/investigations-logs/openSearchDomainEndpoint",
       "Description": "OpenSearch host for transcription service worker logs",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
@@ -6498,27 +6487,16 @@ set -x
 set -e
 export STAGE=PROD
 export AWS_REGION=eu-west-1
-awk 'toupper($0) ~ /^[[:space:]]*\\[/ { output = (toupper($0) ~ /^[[:space:]]*\\[[[:space:]]*OUTPUT[[:space:]]*\\]/) } !output' /etc/td-agent-bit/td-agent.bit.conf > /etc/td-agent-bit/td-agent.bit.conf.tmp
-cat >> /etc/td-agent-bit/td-agent.bit.conf.tmp <<'OUTPUT_CONFIG'
-[OUTPUT]
-    Name es
-    Match *
-    Port 443
-    tls On
-    Host ",
+aws s3 cp s3://",
+                  {
+                    "Ref": "DistributionBucketName",
+                  },
+                  "/investigations/PROD/transcription-service-worker/td-agent-bit.conf /etc/td-agent-bit/td-agent-bit.conf
+sed -i -e 's|<INVESTIGATIONS_LOGS_ENDPOINT>|",
                   {
                     "Ref": "InvestigationsLogsOpenSearchDomain",
                   },
-                  "
-    Logstash_Format      On
-    Logstash_Prefix      transcription-service-logs
-    Logstash_DateFormat  %Y.%m.%d
-    Suppress_Type_Name   On
-    Generate_ID On
-    Retry_Limit False
-OUTPUT_CONFIG
-cat /etc/td-agent-bit/td-agent.bit.conf.tmp > /etc/td-agent-bit/td-agent.bit.conf
-rm /etc/td-agent-bit/td-agent.bit.conf.tmp
+                  "|g' -e 's|<STAGE>|PROD|g' /etc/td-agent-bit/td-agent-bit.conf
 systemctl restart td-agent-bit
 rm /usr/local/cuda
 ln -s /usr/local/cuda-12.8 /usr/local/cuda

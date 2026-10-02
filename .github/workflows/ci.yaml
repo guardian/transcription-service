@@ -123,6 +123,7 @@ jobs:
               - target/worker-capacity-manager.zip
             transcription-service-worker:
               - packages/worker/dist/transcription-service-worker_1.0.0_all.deb
+              - packages/worker/fluent-bit/td-agent-bit.conf
       - name: Upload repository project to riff-raff
         uses: guardian/actions-riff-raff@v4
         with:
