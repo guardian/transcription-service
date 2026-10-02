@@ -4,6 +4,15 @@ This directory defines the components to be deployed to AWS.
 
 See [`package.json`](./package.json) for a list of available scripts.
 
+## Lint dependencies
+
+The CDK lint toolchain uses TypeScript 5.9, while the repository root uses TypeScript 6.
+Keep `ts-api-utils` pinned locally to 2.4.0 so npm installs it alongside the CDK
+compiler instead of sharing the root copy. Sharing it mixes TypeScript versions
+with different internal type flags, causing false `no-unnecessary-condition` and
+`only-throw-error` reports. Revisit this pin when upgrading the CDK lint toolchain
+to TypeScript 6.
+
 ## Stacks
 
 NOTE! GuCDK generates riff-raff.yaml files for these projects but we don't use the generated files because they don't

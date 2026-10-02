@@ -478,6 +478,22 @@ export class TranscriptionService extends GuStack {
 			Port.tcp(443),
 		);
 
+		const investigationsLogsSecurityGroupId = new GuStringParameter(
+			this,
+			'InvestigationsLogsSecurityGroupId',
+			{
+				default: `/PROD/${this.stack}/investigations-logs/openSearchSecurityGroupId`,
+				fromSSM: true,
+				description:
+					'Security group ID for the opensearch cluster used to store transcription service worker logs',
+			},
+		);
+
+		workerSecurityGroup.addEgressRule(
+			Peer.securityGroupId(investigationsLogsSecurityGroupId.valueAsString),
+			Port.tcp(443),
+		);
+
 		// The AMI with the nvidia cuda drivers and whisperx installed is enormous
 		const workerVolume = BlockDeviceVolume.ebs(100);
 
