@@ -20,11 +20,11 @@ case "$(uname -s)" in
     sudo apt-get install -y \
       awscli \
       llama.cpp \
-      uv \
       pyenv \
       ffmpeg \
       qpdf
     ;;
+    curl -LsSf https://astral.sh/uv/install.sh | sh
   *)
     echo "Unsupported OS: $(uname -s)"
     exit 1
