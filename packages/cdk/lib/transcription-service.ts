@@ -652,10 +652,28 @@ export class TranscriptionService extends GuStack {
 				queueName: `${APP_NAME}-gpu-task-queue-${this.stage}.fifo`,
 			},
 		);
-		new StringParameter(this, 'GPUTaskQueueUrlParameter', {
-			parameterName: `/${ssmPath}/gpuTaskQueueUrl`,
-			stringValue: transcriptionGpuTaskQueue.queueUrl,
+		new StringParameter(this, 'SQSEndpointParameter', {
+			parameterName: `/${ssmPath}/endpoint`,
+			stringValue: `https://sqs.${this.region}.${this.urlSuffix}/${this.account}/`,
 		});
+		const giantOutputQueue = Queue.fromQueueArn(
+			this,
+			'GiantOutputQueue',
+			giantTranscriptionOutputQueueArn,
+		);
+		const queueNames = {
+			gpuTaskQueueName: transcriptionGpuTaskQueue.queueName,
+			deadLetterQueueName: transcriptionDeadLetterQueue.queueName,
+			'destinationQueueNames/transcriptionService':
+				transcriptionOutputQueue.queueName,
+			'destinationQueueNames/giant': giantOutputQueue.queueName,
+		};
+		for (const [name, value] of Object.entries(queueNames)) {
+			new StringParameter(this, `${name}Parameter`, {
+				parameterName: `/${ssmPath}/${name}`,
+				stringValue: value,
+			});
+		}
 
 		// allow API lambda to write to queue
 		transcriptionGpuTaskQueue.grantSendMessages(apiLambda);
