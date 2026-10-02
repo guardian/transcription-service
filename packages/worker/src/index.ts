@@ -40,7 +40,7 @@ import {
 	processTranscriptionJob,
 	publishTranscriptionOutputFailure,
 } from './transcribe';
-import { processOcrJob } from './ocr';
+import { ocrFailureOutput, runOcrJob } from './ocr';
 
 const POLLING_INTERVAL_SECONDS = 15;
 
@@ -295,7 +295,7 @@ const pollTranscriptionQueue = async (
 				preservedAttributes,
 			);
 		} else if (jobType === 'ocr') {
-			await processOcrJob(
+			const result = await runOcrJob(
 				job,
 				downloadedFile,
 				destinationDirectory,
@@ -304,6 +304,16 @@ const pollTranscriptionQueue = async (
 				setMessageVisibility,
 				preservedAttributes,
 			);
+			if (result && !result.isSuccess) {
+				// tell giant specific failure reason
+				await publishTranscriptionOutput(
+					sqsClient,
+					config.app.destinationQueueUrls[job.transcriptDestinationService],
+					ocrFailureOutput(job, result),
+					preservedAttributes,
+				);
+				// don't throw so that the source message gets cleaned up
+			}
 		} else {
 			await processTranscriptionJob(
 				job,
@@ -356,7 +366,14 @@ const pollTranscriptionQueue = async (
 				await publishTranscriptionOutput(
 					sqsClient,
 					config.app.destinationQueueUrls[job.transcriptDestinationService],
-					{ id: job.id, userEmail: job.userEmail, status: 'OCR_FAILURE' },
+					ocrFailureOutput(job, {
+						isSuccess: false,
+						failureReason: 'OTHER_ERROR',
+						message:
+							error instanceof Error
+								? error.message
+								: `OCR job failed: ${JSON.stringify(error)}`,
+					}),
 					preservedAttributes,
 				);
 			} else {
