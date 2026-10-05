@@ -23,7 +23,7 @@
 		"passport": "0.7.0",
 		"passport-google-oauth2": "0.2.0",
 		"passport-jwt": "4.0.1",
-		"uuid": "9.0.1"
+		"uuid": "14.0.0"
 	},
 	"devDependencies": {
 		"@types/aws-lambda": "8.10.145",
