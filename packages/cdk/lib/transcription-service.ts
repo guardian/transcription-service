@@ -354,11 +354,24 @@ export class TranscriptionService extends GuStack {
 			parameterName: `/${props.stage}/${props.stack}/transcription-service/llamacpp/installDirectory`,
 		});
 
+		const investigationsLogsOpenSearchDomain = new GuStringParameter(
+			this,
+			'InvestigationsLogsOpenSearchDomain',
+			{
+				fromSSM: true,
+				default: `/PROD/${this.stack}/investigations-logs/openSearchDomainEndpoint`,
+				description: 'OpenSearch host for transcription service worker logs',
+			},
+		);
+
 		const userDataCommands = [
 			`set -x`,
 			`set -e`,
 			`export STAGE=${props.stage}`,
 			`export AWS_REGION=${props.env.region}`,
+			`aws s3 cp ${baseS3DistPath}/${workerApp}/td-agent-bit.conf /etc/td-agent-bit/td-agent-bit.conf`,
+			`sed -i -e 's|<INVESTIGATIONS_LOGS_ENDPOINT>|${investigationsLogsOpenSearchDomain.valueAsString}|g' -e 's|<STAGE>|${props.stage}|g' /etc/td-agent-bit/td-agent-bit.conf`,
+			`systemctl restart td-agent-bit`,
 			// set cuda version needed by whisperx - see https://docs.aws.amazon.com/dlami/latest/devguide/tutorial-base.html
 			`rm /usr/local/cuda`,
 			`ln -s /usr/local/cuda-12.8 /usr/local/cuda`,
