@@ -21,6 +21,9 @@ jobs:
         run: npm install
       - name: Build media-download
         run: npm run media-download::build
+      - name: Sanitise branch name
+        id: branch_name
+        run: echo "container_version=${GITHUB_REF_NAME//\//-}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -39,7 +42,7 @@ jobs:
           file: containers/media-download.Dockerfile
           platforms: linux/arm64
           push: true
-          tags: ${{ secrets.MEDIA_DOWNLOAD_ECR_URI }}:${{ github.ref_name }}
+          tags: ${{ secrets.MEDIA_DOWNLOAD_ECR_URI }}:${{ steps.branch_name.outputs.container_version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
@@ -93,10 +96,13 @@ jobs:
       - name: Run common tests
         run: |
           npm run common::test
+      - name: Sanitise branch name
+        id: branch_name
+        run: echo "container_version=${GITHUB_REF_NAME//\//-}" >> "$GITHUB_OUTPUT"
       - name: CDK synth
         # Note testing and linting is done in separate cdk-snapshot-test workflow
         run: |
-          export CONTAINER_VERSION=${{ github.ref_name }}
+          export CONTAINER_VERSION=${{ steps.branch_name.outputs.container_version }}
           npm run cdk::build
           npm run cdk::synth
       - name: Upload to riff-raff
