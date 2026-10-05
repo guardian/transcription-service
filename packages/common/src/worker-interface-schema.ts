@@ -28,6 +28,7 @@ import {
 	OcrSettings,
 	OcrData,
 	OcrOutputFailure,
+	OcrMyPdfFailureReason,
 	OcrOutputSuccess,
 	OcrOutput,
 } from './worker-interface-types';
@@ -62,6 +63,7 @@ export const workerInterfaceSchemas = {
 	LLMOutputFailure,
 	OcrOutputSuccess,
 	OcrOutputFailure,
+	OcrMyPdfFailureReason,
 	OcrOutput,
 	TranscriptionResult,
 	TranscriptionOutput,
