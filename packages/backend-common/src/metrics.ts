@@ -3,6 +3,7 @@ import { getCloudwatchClient, putMetricData } from './cloudwatch';
 import { StandardUnit } from '@aws-sdk/client-cloudwatch';
 import { Dimension } from '@aws-sdk/client-cloudwatch/dist-types/models/models_0';
 import { AwsConfig } from './types';
+import { logger } from './logging';
 
 type Metric = {
 	name: string;
@@ -69,6 +70,13 @@ export class MetricsService {
 	}
 
 	async putMetric(metric: Metric, extraDimensions: Dimension[] = []) {
+		// don't post to cloudwatch in dev mode
+		if (this.stage === 'DEV') {
+			logger.info(
+				`Metric: ${metric.name}, Value: ${metric.value}, Unit: ${metric.unit}`,
+			);
+			return;
+		}
 		await putMetricData(this.cloudwatchClient, {
 			Namespace: `TranscriptionService`,
 			MetricData: [
