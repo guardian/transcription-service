@@ -44,11 +44,11 @@ if (! docker stats --no-stream 1>/dev/null 2>&1); then
 fi
 
 # Starting localstack
-docker-compose up -d
-export AWS_REGION=eu-west-1
-APP_NAME="transcription-service"
-
-$SCRIPT_PATH/create-localstack-resources.sh
+#docker-compose up -d
+#export AWS_REGION=eu-west-1
+#APP_NAME="transcription-service"
+#
+#$SCRIPT_PATH/create-localstack-resources.sh
 
 echo ""
 echo "Installing whisperX dependencies (required to run gpu worker locally)"
