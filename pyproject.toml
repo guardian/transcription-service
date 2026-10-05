@@ -7,3 +7,17 @@ dependencies = [
     "ocrmypdf-rapidocr==1.0.1",
     "whisperx==3.8.5",
 ]
+
+[tool.uv]
+# This override is needed to get whisperx working in a dev container running on macos
+override-dependencies = [
+    # TorchCodec 0.7 has no Linux ARM64 wheel. WhisperX decodes audio with FFmpeg
+    # and passes waveforms to pyannote, which supports this without TorchCodec.
+    # Override the transitive requirement from pyannote as well as WhisperX's.
+    "torchcodec>=0.7.0,<0.8.0; sys_platform != 'linux' or platform_machine != 'aarch64'",
+]
+required-environments = [
+    "sys_platform == 'linux' and platform_machine == 'aarch64'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "sys_platform == 'darwin' and platform_machine == 'arm64'",
+]
