@@ -44,19 +44,29 @@ environment and run the worker. We use [uv](https://docs.astral.sh/uv/) to manag
 
 The same python environment can be used to test changes to the model download python script.
 
+To install just the worker dependencies and models, skipping dev-nginx and all
+Docker/LocalStack setup, run:
+
+```bash
+./scripts/setup.sh --worker-only
+```
+
 ## Testing the integration with giant
 
 From a sibling giant checkout, run:
 
 ```bash
 ./scripts/start-backend.sh --external
+# In a separate terminal, also from giant:
+./scripts/start-external-worker.sh
 ```
 
-Giant starts its own LocalStack on port **4567**, provisions the resources using this
-repository's script, and runs `npm run gpu-worker::start` with `LOCALSTACK_PORT=4567`.
-It reuses the sibling transcription-service checkout, or clones it if missing.
-`--ts-branch branch-name` selects the branch for a new clone. Install the worker's
-native dependencies and models using the setup instructions above first.
+Giant starts its own LocalStack on port **4567**. Its worker script provisions the
+resources using this repository's script and runs `npm run gpu-worker::start` with
+`LOCALSTACK_PORT=4567`. Giant's `scripts/setup.sh` checks for the sibling
+transcription-service checkout and, if missing, clones `main` and runs this
+repository's `scripts/setup.sh --worker-only`. Existing checkouts are left untouched;
+run worker-only setup here if dependencies and models still need to be installed.
 
 For standalone transcription-service, the default remains port **4566**:
 
