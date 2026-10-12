@@ -126,7 +126,7 @@ exports[`Giant's stacks should match the snapshots 1`] = `
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "InvestigationsLogsSecurityGroupId": {
-      "Default": "/PROD/investigations/investigations-logs/openSearchSecurityGroupId",
+      "Default": "/INFRA/investigations/investigations-logs/openSearchSecurityGroupId",
       "Description": "Security group ID for the opensearch cluster used to store transcription service worker logs",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
@@ -5152,7 +5152,7 @@ exports[`Giant's stacks should match the snapshots 2`] = `
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "InvestigationsLogsSecurityGroupId": {
-      "Default": "/PROD/investigations/investigations-logs/openSearchSecurityGroupId",
+      "Default": "/INFRA/investigations/investigations-logs/openSearchSecurityGroupId",
       "Description": "Security group ID for the opensearch cluster used to store transcription service worker logs",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },

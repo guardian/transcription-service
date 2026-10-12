@@ -495,7 +495,7 @@ export class TranscriptionService extends GuStack {
 			this,
 			'InvestigationsLogsSecurityGroupId',
 			{
-				default: `/PROD/${this.stack}/investigations-logs/openSearchSecurityGroupId`,
+				default: `/INFRA/${this.stack}/investigations-logs/openSearchSecurityGroupId`,
 				fromSSM: true,
 				description:
 					'Security group ID for the opensearch cluster used to store transcription service worker logs',
