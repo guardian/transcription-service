@@ -17,9 +17,11 @@ export type ProcessName =
 	| 'llama-server'
 	| 'ocrmypdf'
 	| 'base64'
-	| 'pdfinfo';
+	| 'pdfinfo'
+	| 'qpdf';
 
-const processesWithHiddenStdout: ProcessName[] = ['transcribe'];
+// transcript text and pdf metadata should be kept from the logs
+const processesWithHiddenStdout: ProcessName[] = ['transcribe', 'pdfinfo'];
 
 export type SpawnCommandOutput = { stdout: string } | { stderr: string };
 
@@ -69,7 +71,7 @@ export const runSpawnCommand = (
 			const result = {
 				stdout: stdout.join(''),
 				stderr: stderr.join(''),
-				code: code || undefined,
+				code: code ?? undefined,
 			};
 			if (logStdout) {
 				logger.info(
