@@ -622,6 +622,534 @@ exports[`Giant's stacks should match the snapshots 1`] = `
                 ],
               },
             },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_public-domain_transcription_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_public-domain_transcription_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_public-domain_transcription_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_regular-sensitivity_transcription_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_regular-sensitivity_transcription_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_regular-sensitivity_transcription_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_public-domain_translation_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_public-domain_translation_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_public-domain_translation_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_regular-sensitivity_translation_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_regular-sensitivity_translation_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_regular-sensitivity_translation_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_public-domain_visual-ocr_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_public-domain_visual-ocr_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_public-domain_visual-ocr_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_regular-sensitivity_visual-ocr_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_regular-sensitivity_visual-ocr_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_regular-sensitivity_visual-ocr_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_public-domain_ai-prompt_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_public-domain_ai-prompt_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_public-domain_ai-prompt_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_regular-sensitivity_ai-prompt_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_regular-sensitivity_ai-prompt_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_regular-sensitivity_ai-prompt_CODE",
+                  ],
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -2468,9 +2996,291 @@ service transcription-service-worker start",
               "Effect": "Allow",
               "Resource": [
                 {
-                  "Fn::GetAtt": [
-                    "transcriptionservicegputaskqueue9ECF56C3",
-                    "Arn",
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_public-domain_transcription_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_public-domain_transcription_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_public-domain_transcription_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_regular-sensitivity_transcription_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_regular-sensitivity_transcription_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_regular-sensitivity_transcription_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_public-domain_translation_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_public-domain_translation_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_public-domain_translation_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_regular-sensitivity_translation_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_regular-sensitivity_translation_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_regular-sensitivity_translation_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_public-domain_visual-ocr_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_public-domain_visual-ocr_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_public-domain_visual-ocr_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_regular-sensitivity_visual-ocr_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_regular-sensitivity_visual-ocr_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_regular-sensitivity_visual-ocr_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_public-domain_ai-prompt_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_public-domain_ai-prompt_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_public-domain_ai-prompt_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_regular-sensitivity_ai-prompt_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_regular-sensitivity_ai-prompt_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_regular-sensitivity_ai-prompt_CODE",
+                    ],
                   ],
                 },
                 {
@@ -2725,6 +3535,7 @@ service transcription-service-worker start",
     "transcriptionserviceapi022C22E7": {
       "DependsOn": [
         "transcriptionserviceapiServiceRoleDefaultPolicy0E8B05B2",
+        "transcriptionserviceapiServiceRoleOverflowPolicy1A679648E",
         "transcriptionserviceapiServiceRole0EF40E0F",
       ],
       "Properties": {
@@ -2966,6 +3777,486 @@ service transcription-service-worker start",
               ],
               "Effect": "Allow",
               "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_public-domain_transcription_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_public-domain_transcription_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_public-domain_transcription_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_regular-sensitivity_transcription_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_regular-sensitivity_transcription_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_regular-sensitivity_transcription_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_public-domain_translation_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_public-domain_translation_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_public-domain_translation_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_regular-sensitivity_translation_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_regular-sensitivity_translation_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_regular-sensitivity_translation_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_public-domain_visual-ocr_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_public-domain_visual-ocr_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_public-domain_visual-ocr_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_regular-sensitivity_visual-ocr_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_regular-sensitivity_visual-ocr_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_regular-sensitivity_visual-ocr_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_public-domain_ai-prompt_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_public-domain_ai-prompt_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_public-domain_ai-prompt_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_regular-sensitivity_ai-prompt_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_regular-sensitivity_ai-prompt_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_regular-sensitivity_ai-prompt_CODE",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
                 "Fn::GetAtt": [
                   "transcriptionservicemediadownloadtaskqueue26AAF7A2",
                   "Arn",
@@ -3048,6 +4339,24 @@ service transcription-service-worker start",
                 },
               ],
             },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "transcriptionserviceapiServiceRoleDefaultPolicy0E8B05B2",
+        "Roles": [
+          {
+            "Ref": "transcriptionserviceapiServiceRole0EF40E0F",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "transcriptionserviceapiServiceRoleOverflowPolicy1A679648E": {
+      "Properties": {
+        "Description": "Part of the policies for TranscriptionService-CODE/transcription-service-api/ServiceRole",
+        "Path": "/",
+        "PolicyDocument": {
+          "Statement": [
             {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
@@ -3077,14 +4386,13 @@ service transcription-service-worker start",
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "transcriptionserviceapiServiceRoleDefaultPolicy0E8B05B2",
         "Roles": [
           {
             "Ref": "transcriptionserviceapiServiceRole0EF40E0F",
           },
         ],
       },
-      "Type": "AWS::IAM::Policy",
+      "Type": "AWS::IAM::ManagedPolicy",
     },
     "transcriptionserviceapitranscriptionserviceCODE7E54B653": {
       "Properties": {
@@ -4927,12 +6235,296 @@ service transcription-service-worker start",
             {
               "Action": "sqs:GetQueueAttributes",
               "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "transcriptionservicegputaskqueue9ECF56C3",
-                  "Arn",
-                ],
-              },
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_public-domain_transcription_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_public-domain_transcription_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_public-domain_transcription_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_regular-sensitivity_transcription_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_regular-sensitivity_transcription_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_regular-sensitivity_transcription_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_public-domain_translation_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_public-domain_translation_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_public-domain_translation_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_regular-sensitivity_translation_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_regular-sensitivity_translation_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_regular-sensitivity_translation_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_public-domain_visual-ocr_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_public-domain_visual-ocr_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_public-domain_visual-ocr_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_regular-sensitivity_visual-ocr_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_regular-sensitivity_visual-ocr_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_regular-sensitivity_visual-ocr_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_public-domain_ai-prompt_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_public-domain_ai-prompt_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_public-domain_ai-prompt_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_regular-sensitivity_ai-prompt_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_regular-sensitivity_ai-prompt_CODE",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_regular-sensitivity_ai-prompt_CODE",
+                    ],
+                  ],
+                },
+              ],
             },
             {
               "Action": [
@@ -5333,25 +6925,24 @@ exports[`Giant's stacks should match the snapshots 2`] = `
             "Ref": "InvestigationsAlarmTopicArn",
           },
         ],
-        "AlarmDescription": "A transcription job has been sent to the dead letter queue. This may be because ffmpeg can't convert the file (maybe it's a JPEG) or because the transcription job has failed multiple times.",
+        "AlarmDescription": "A transcription job has been sent to one of the dead letter queues. This may be because ffmpeg can't convert the file (maybe it's a JPEG) or because the transcription job has failed multiple times.",
         "AlarmName": "transcription-service-dead-letter-queue-PROD",
         "ComparisonOperator": "GreaterThanOrEqualToThreshold",
-        "Dimensions": [
+        "EvaluationPeriods": 1,
+        "Metrics": [
           {
-            "Name": "QueueName",
-            "Value": {
-              "Fn::GetAtt": [
-                "transcriptionservicetaskdeadletterqueue8A13A1F1",
-                "QueueName",
-              ],
-            },
+            "Expression": "SELECT MAX(ApproximateAgeOfOldestMessage)
+            FROM SCHEMA("AWS/SQS", QueueName)
+            WHERE tag.shouldAlarmOnOldMessages = 'true'
+            AND tag.isDLQ = 'true'
+            GROUP BY QueueName
+            ORDER BY COUNT() DESC",
+            "Id": "expr_1",
+            "Label": "Old messages in DLQs",
+            "Period": 60,
+            "ReturnData": true,
           },
         ],
-        "EvaluationPeriods": 1,
-        "MetricName": "ApproximateNumberOfMessagesVisible",
-        "Namespace": "AWS/SQS",
-        "Period": 60,
-        "Statistic": "Maximum",
         "Tags": [
           {
             "Key": "gu:cdk:version",
@@ -5642,22 +7233,21 @@ exports[`Giant's stacks should match the snapshots 2`] = `
         "AlarmDescription": "A transcription job has been in the gpu task queue for more than 60 minutes",
         "AlarmName": "transcription-service-gpu-task-queue-PROD",
         "ComparisonOperator": "GreaterThanOrEqualToThreshold",
-        "Dimensions": [
+        "EvaluationPeriods": 1,
+        "Metrics": [
           {
-            "Name": "QueueName",
-            "Value": {
-              "Fn::GetAtt": [
-                "transcriptionservicegputaskqueue9ECF56C3",
-                "QueueName",
-              ],
-            },
+            "Expression": "SELECT MAX(ApproximateAgeOfOldestMessage)
+            FROM SCHEMA("AWS/SQS", QueueName)
+            WHERE tag.shouldAlarmOnOldMessages = 'true'
+            AND tag.isDLQ = 'false'
+            GROUP BY QueueName
+            ORDER BY COUNT() DESC",
+            "Id": "expr_1",
+            "Label": "Old messages in task queues",
+            "Period": 300,
+            "ReturnData": true,
           },
         ],
-        "EvaluationPeriods": 1,
-        "MetricName": "ApproximateAgeOfOldestMessage",
-        "Namespace": "AWS/SQS",
-        "Period": 300,
-        "Statistic": "Maximum",
         "Tags": [
           {
             "Key": "gu:cdk:version",
@@ -5790,6 +7380,534 @@ exports[`Giant's stacks should match the snapshots 2`] = `
                 "Fn::GetAtt": [
                   "transcriptionservicetaskdeadletterqueue8A13A1F1",
                   "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_public-domain_transcription_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_public-domain_transcription_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_public-domain_transcription_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_regular-sensitivity_transcription_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_regular-sensitivity_transcription_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_regular-sensitivity_transcription_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_public-domain_translation_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_public-domain_translation_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_public-domain_translation_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_regular-sensitivity_translation_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_regular-sensitivity_translation_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_regular-sensitivity_translation_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_public-domain_visual-ocr_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_public-domain_visual-ocr_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_public-domain_visual-ocr_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_regular-sensitivity_visual-ocr_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_regular-sensitivity_visual-ocr_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_regular-sensitivity_visual-ocr_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_public-domain_ai-prompt_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_public-domain_ai-prompt_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_public-domain_ai-prompt_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_regular-sensitivity_ai-prompt_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_regular-sensitivity_ai-prompt_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_regular-sensitivity_ai-prompt_PROD",
+                  ],
                 ],
               },
             },
@@ -7631,9 +9749,291 @@ service transcription-service-worker start",
               "Effect": "Allow",
               "Resource": [
                 {
-                  "Fn::GetAtt": [
-                    "transcriptionservicegputaskqueue9ECF56C3",
-                    "Arn",
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_public-domain_transcription_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_public-domain_transcription_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_public-domain_transcription_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_regular-sensitivity_transcription_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_regular-sensitivity_transcription_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_regular-sensitivity_transcription_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_public-domain_translation_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_public-domain_translation_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_public-domain_translation_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_regular-sensitivity_translation_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_regular-sensitivity_translation_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_regular-sensitivity_translation_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_public-domain_visual-ocr_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_public-domain_visual-ocr_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_public-domain_visual-ocr_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_regular-sensitivity_visual-ocr_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_regular-sensitivity_visual-ocr_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_regular-sensitivity_visual-ocr_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_public-domain_ai-prompt_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_public-domain_ai-prompt_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_public-domain_ai-prompt_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_regular-sensitivity_ai-prompt_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_regular-sensitivity_ai-prompt_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_regular-sensitivity_ai-prompt_PROD",
+                    ],
                   ],
                 },
                 {
@@ -7938,6 +10338,7 @@ service transcription-service-worker start",
     "transcriptionserviceapi022C22E7": {
       "DependsOn": [
         "transcriptionserviceapiServiceRoleDefaultPolicy0E8B05B2",
+        "transcriptionserviceapiServiceRoleOverflowPolicy1A679648E",
         "transcriptionserviceapiServiceRole0EF40E0F",
       ],
       "Properties": {
@@ -8179,6 +10580,486 @@ service transcription-service-worker start",
               ],
               "Effect": "Allow",
               "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_public-domain_transcription_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_public-domain_transcription_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_public-domain_transcription_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_regular-sensitivity_transcription_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_regular-sensitivity_transcription_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_regular-sensitivity_transcription_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_public-domain_translation_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_public-domain_translation_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_public-domain_translation_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_regular-sensitivity_translation_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_regular-sensitivity_translation_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_regular-sensitivity_translation_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_public-domain_visual-ocr_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_public-domain_visual-ocr_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_public-domain_visual-ocr_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_regular-sensitivity_visual-ocr_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_regular-sensitivity_visual-ocr_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_regular-sensitivity_visual-ocr_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_public-domain_ai-prompt_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_public-domain_ai-prompt_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_public-domain_ai-prompt_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_HIGH-priority_regular-sensitivity_ai-prompt_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_STANDARD-priority_regular-sensitivity_ai-prompt_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sqs:eu-west-1:",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":investigations-queue_LOW-priority_regular-sensitivity_ai-prompt_PROD",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
                 "Fn::GetAtt": [
                   "transcriptionservicemediadownloadtaskqueue26AAF7A2",
                   "Arn",
@@ -8261,6 +11142,24 @@ service transcription-service-worker start",
                 },
               ],
             },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "transcriptionserviceapiServiceRoleDefaultPolicy0E8B05B2",
+        "Roles": [
+          {
+            "Ref": "transcriptionserviceapiServiceRole0EF40E0F",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "transcriptionserviceapiServiceRoleOverflowPolicy1A679648E": {
+      "Properties": {
+        "Description": "Part of the policies for TranscriptionService-PROD/transcription-service-api/ServiceRole",
+        "Path": "/",
+        "PolicyDocument": {
+          "Statement": [
             {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
@@ -8290,14 +11189,13 @@ service transcription-service-worker start",
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "transcriptionserviceapiServiceRoleDefaultPolicy0E8B05B2",
         "Roles": [
           {
             "Ref": "transcriptionserviceapiServiceRole0EF40E0F",
           },
         ],
       },
-      "Type": "AWS::IAM::Policy",
+      "Type": "AWS::IAM::ManagedPolicy",
     },
     "transcriptionserviceapitranscriptionservicePROD12CB6486": {
       "Properties": {
@@ -10518,12 +13416,296 @@ service transcription-service-worker start",
             {
               "Action": "sqs:GetQueueAttributes",
               "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "transcriptionservicegputaskqueue9ECF56C3",
-                  "Arn",
-                ],
-              },
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_public-domain_transcription_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_public-domain_transcription_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_public-domain_transcription_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_regular-sensitivity_transcription_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_regular-sensitivity_transcription_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_regular-sensitivity_transcription_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_public-domain_translation_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_public-domain_translation_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_public-domain_translation_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_regular-sensitivity_translation_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_regular-sensitivity_translation_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_regular-sensitivity_translation_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_public-domain_visual-ocr_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_public-domain_visual-ocr_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_public-domain_visual-ocr_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_regular-sensitivity_visual-ocr_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_regular-sensitivity_visual-ocr_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_regular-sensitivity_visual-ocr_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_public-domain_ai-prompt_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_public-domain_ai-prompt_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_public-domain_ai-prompt_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_HIGH-priority_regular-sensitivity_ai-prompt_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_STANDARD-priority_regular-sensitivity_ai-prompt_PROD",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:sqs:eu-west-1:",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":investigations-queue_LOW-priority_regular-sensitivity_ai-prompt_PROD",
+                    ],
+                  ],
+                },
+              ],
             },
             {
               "Action": [
@@ -10972,6 +14154,2956 @@ exports[`Giant's stacks should match the snapshots 4`] = `
       },
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
+    },
+  },
+}
+`;
+
+exports[`Giant's stacks should match the snapshots 5`] = `
+{
+  "Metadata": {
+    "gu:cdk:constructs": [],
+    "gu:cdk:version": "TEST",
+  },
+  "Resources": {
+    "investigationsDLQHIGHprioritypublicdomainaiprompt8EA7DD2E": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_HIGH-priority_public-domain_ai-prompt_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQHIGHprioritypublicdomaintranscription81FAE980": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_HIGH-priority_public-domain_transcription_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQHIGHprioritypublicdomaintranslation7F60707E": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_HIGH-priority_public-domain_translation_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQHIGHprioritypublicdomainvisualocr917F4F16": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_HIGH-priority_public-domain_visual-ocr_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQHIGHpriorityregularsensitivityaiprompt0B6F9D5A": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_HIGH-priority_regular-sensitivity_ai-prompt_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQHIGHpriorityregularsensitivitytranscription2DC8B646": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_HIGH-priority_regular-sensitivity_transcription_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQHIGHpriorityregularsensitivitytranslation3C3E2578": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_HIGH-priority_regular-sensitivity_translation_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQHIGHpriorityregularsensitivityvisualocr27A7CE8C": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_HIGH-priority_regular-sensitivity_visual-ocr_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQLOWprioritypublicdomainaiprompt70425DE3": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_LOW-priority_public-domain_ai-prompt_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQLOWprioritypublicdomaintranscription21BA1A2C": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_LOW-priority_public-domain_transcription_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQLOWprioritypublicdomaintranslation0B7B8C47": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_LOW-priority_public-domain_translation_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQLOWprioritypublicdomainvisualocr645FC809": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_LOW-priority_public-domain_visual-ocr_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQLOWpriorityregularsensitivityaiprompt6240AE3F": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_LOW-priority_regular-sensitivity_ai-prompt_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQLOWpriorityregularsensitivitytranscriptionFBB8366F": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_LOW-priority_regular-sensitivity_transcription_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQLOWpriorityregularsensitivitytranslationB93465A5": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_LOW-priority_regular-sensitivity_translation_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQLOWpriorityregularsensitivityvisualocrABA64333": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_LOW-priority_regular-sensitivity_visual-ocr_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQSTANDARDprioritypublicdomainaiprompt786CDDB9": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_STANDARD-priority_public-domain_ai-prompt_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQSTANDARDprioritypublicdomaintranscriptionA2AC096D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_STANDARD-priority_public-domain_transcription_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQSTANDARDprioritypublicdomaintranslation8CE7901E": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_STANDARD-priority_public-domain_translation_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQSTANDARDprioritypublicdomainvisualocr4B745DB6": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_STANDARD-priority_public-domain_visual-ocr_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQSTANDARDpriorityregularsensitivityaipromptDBF59486": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_STANDARD-priority_regular-sensitivity_ai-prompt_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQSTANDARDpriorityregularsensitivitytranscriptionB705C837": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_STANDARD-priority_regular-sensitivity_transcription_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQSTANDARDpriorityregularsensitivitytranslation304AEDC1": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_STANDARD-priority_regular-sensitivity_translation_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQSTANDARDpriorityregularsensitivityvisualocrD05BD0A5": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_STANDARD-priority_regular-sensitivity_visual-ocr_CODE",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueHIGHprioritypublicdomainaiprompt0EB43C28": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_HIGH-priority_public-domain_ai-prompt_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQHIGHprioritypublicdomainaiprompt8EA7DD2E",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueHIGHprioritypublicdomaintranscriptionF92C00BE": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_HIGH-priority_public-domain_transcription_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQHIGHprioritypublicdomaintranscription81FAE980",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueHIGHprioritypublicdomaintranslation52EA9347": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_HIGH-priority_public-domain_translation_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQHIGHprioritypublicdomaintranslation7F60707E",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueHIGHprioritypublicdomainvisualocrD2FCE1A8": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_HIGH-priority_public-domain_visual-ocr_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQHIGHprioritypublicdomainvisualocr917F4F16",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueHIGHpriorityregularsensitivityaiprompt94528DFE": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_HIGH-priority_regular-sensitivity_ai-prompt_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQHIGHpriorityregularsensitivityaiprompt0B6F9D5A",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueHIGHpriorityregularsensitivitytranscriptionEED4AF0D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_HIGH-priority_regular-sensitivity_transcription_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQHIGHpriorityregularsensitivitytranscription2DC8B646",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueHIGHpriorityregularsensitivitytranslationE1032814": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_HIGH-priority_regular-sensitivity_translation_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQHIGHpriorityregularsensitivitytranslation3C3E2578",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueHIGHpriorityregularsensitivityvisualocr91EFA724": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_HIGH-priority_regular-sensitivity_visual-ocr_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQHIGHpriorityregularsensitivityvisualocr27A7CE8C",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueLOWprioritypublicdomainaipromptBE259682": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_LOW-priority_public-domain_ai-prompt_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQLOWprioritypublicdomainaiprompt70425DE3",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueLOWprioritypublicdomaintranscription849489E9": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_LOW-priority_public-domain_transcription_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQLOWprioritypublicdomaintranscription21BA1A2C",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueLOWprioritypublicdomaintranslation0AA164E6": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_LOW-priority_public-domain_translation_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQLOWprioritypublicdomaintranslation0B7B8C47",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueLOWprioritypublicdomainvisualocr8E250DC0": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_LOW-priority_public-domain_visual-ocr_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQLOWprioritypublicdomainvisualocr645FC809",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueLOWpriorityregularsensitivityaiprompt7C4457E5": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_LOW-priority_regular-sensitivity_ai-prompt_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQLOWpriorityregularsensitivityaiprompt6240AE3F",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueLOWpriorityregularsensitivitytranscription07855EC6": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_LOW-priority_regular-sensitivity_transcription_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQLOWpriorityregularsensitivitytranscriptionFBB8366F",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueLOWpriorityregularsensitivitytranslation42E00D4F": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_LOW-priority_regular-sensitivity_translation_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQLOWpriorityregularsensitivitytranslationB93465A5",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueLOWpriorityregularsensitivityvisualocrD8820D34": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_LOW-priority_regular-sensitivity_visual-ocr_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQLOWpriorityregularsensitivityvisualocrABA64333",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueSTANDARDprioritypublicdomainaiprompt204617AE": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_STANDARD-priority_public-domain_ai-prompt_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQSTANDARDprioritypublicdomainaiprompt786CDDB9",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueSTANDARDprioritypublicdomaintranscriptionEA1108CF": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_STANDARD-priority_public-domain_transcription_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQSTANDARDprioritypublicdomaintranscriptionA2AC096D",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueSTANDARDprioritypublicdomaintranslationCBC107DF": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_STANDARD-priority_public-domain_translation_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQSTANDARDprioritypublicdomaintranslation8CE7901E",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueSTANDARDprioritypublicdomainvisualocrF9FF864D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_STANDARD-priority_public-domain_visual-ocr_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQSTANDARDprioritypublicdomainvisualocr4B745DB6",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueSTANDARDpriorityregularsensitivityaiprompt4A4B0DF4": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_STANDARD-priority_regular-sensitivity_ai-prompt_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQSTANDARDpriorityregularsensitivityaipromptDBF59486",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueSTANDARDpriorityregularsensitivitytranscription5747071F": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_STANDARD-priority_regular-sensitivity_transcription_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQSTANDARDpriorityregularsensitivitytranscriptionB705C837",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueSTANDARDpriorityregularsensitivitytranslation9174678C": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_STANDARD-priority_regular-sensitivity_translation_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQSTANDARDpriorityregularsensitivitytranslation304AEDC1",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueSTANDARDpriorityregularsensitivityvisualocrE8E29B4F": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_STANDARD-priority_regular-sensitivity_visual-ocr_CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQSTANDARDpriorityregularsensitivityvisualocrD05BD0A5",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;
+
+exports[`Giant's stacks should match the snapshots 6`] = `
+{
+  "Metadata": {
+    "gu:cdk:constructs": [],
+    "gu:cdk:version": "TEST",
+  },
+  "Resources": {
+    "investigationsDLQHIGHprioritypublicdomainaiprompt8EA7DD2E": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_HIGH-priority_public-domain_ai-prompt_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQHIGHprioritypublicdomaintranscription81FAE980": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_HIGH-priority_public-domain_transcription_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQHIGHprioritypublicdomaintranslation7F60707E": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_HIGH-priority_public-domain_translation_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQHIGHprioritypublicdomainvisualocr917F4F16": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_HIGH-priority_public-domain_visual-ocr_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQHIGHpriorityregularsensitivityaiprompt0B6F9D5A": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_HIGH-priority_regular-sensitivity_ai-prompt_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQHIGHpriorityregularsensitivitytranscription2DC8B646": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_HIGH-priority_regular-sensitivity_transcription_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQHIGHpriorityregularsensitivitytranslation3C3E2578": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_HIGH-priority_regular-sensitivity_translation_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQHIGHpriorityregularsensitivityvisualocr27A7CE8C": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_HIGH-priority_regular-sensitivity_visual-ocr_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQLOWprioritypublicdomainaiprompt70425DE3": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_LOW-priority_public-domain_ai-prompt_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQLOWprioritypublicdomaintranscription21BA1A2C": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_LOW-priority_public-domain_transcription_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQLOWprioritypublicdomaintranslation0B7B8C47": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_LOW-priority_public-domain_translation_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQLOWprioritypublicdomainvisualocr645FC809": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_LOW-priority_public-domain_visual-ocr_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQLOWpriorityregularsensitivityaiprompt6240AE3F": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_LOW-priority_regular-sensitivity_ai-prompt_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQLOWpriorityregularsensitivitytranscriptionFBB8366F": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_LOW-priority_regular-sensitivity_transcription_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQLOWpriorityregularsensitivitytranslationB93465A5": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_LOW-priority_regular-sensitivity_translation_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQLOWpriorityregularsensitivityvisualocrABA64333": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_LOW-priority_regular-sensitivity_visual-ocr_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQSTANDARDprioritypublicdomainaiprompt786CDDB9": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_STANDARD-priority_public-domain_ai-prompt_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQSTANDARDprioritypublicdomaintranscriptionA2AC096D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_STANDARD-priority_public-domain_transcription_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQSTANDARDprioritypublicdomaintranslation8CE7901E": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_STANDARD-priority_public-domain_translation_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQSTANDARDprioritypublicdomainvisualocr4B745DB6": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_STANDARD-priority_public-domain_visual-ocr_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQSTANDARDpriorityregularsensitivityaipromptDBF59486": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_STANDARD-priority_regular-sensitivity_ai-prompt_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQSTANDARDpriorityregularsensitivitytranscriptionB705C837": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_STANDARD-priority_regular-sensitivity_transcription_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQSTANDARDpriorityregularsensitivitytranslation304AEDC1": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_STANDARD-priority_regular-sensitivity_translation_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsDLQSTANDARDpriorityregularsensitivityvisualocrD05BD0A5": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-DLQ_STANDARD-priority_regular-sensitivity_visual-ocr_PROD",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueHIGHprioritypublicdomainaiprompt0EB43C28": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_HIGH-priority_public-domain_ai-prompt_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQHIGHprioritypublicdomainaiprompt8EA7DD2E",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueHIGHprioritypublicdomaintranscriptionF92C00BE": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_HIGH-priority_public-domain_transcription_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQHIGHprioritypublicdomaintranscription81FAE980",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueHIGHprioritypublicdomaintranslation52EA9347": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_HIGH-priority_public-domain_translation_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQHIGHprioritypublicdomaintranslation7F60707E",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueHIGHprioritypublicdomainvisualocrD2FCE1A8": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_HIGH-priority_public-domain_visual-ocr_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQHIGHprioritypublicdomainvisualocr917F4F16",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueHIGHpriorityregularsensitivityaiprompt94528DFE": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_HIGH-priority_regular-sensitivity_ai-prompt_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQHIGHpriorityregularsensitivityaiprompt0B6F9D5A",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueHIGHpriorityregularsensitivitytranscriptionEED4AF0D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_HIGH-priority_regular-sensitivity_transcription_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQHIGHpriorityregularsensitivitytranscription2DC8B646",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueHIGHpriorityregularsensitivitytranslationE1032814": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_HIGH-priority_regular-sensitivity_translation_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQHIGHpriorityregularsensitivitytranslation3C3E2578",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueHIGHpriorityregularsensitivityvisualocr91EFA724": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_HIGH-priority_regular-sensitivity_visual-ocr_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQHIGHpriorityregularsensitivityvisualocr27A7CE8C",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueLOWprioritypublicdomainaipromptBE259682": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_LOW-priority_public-domain_ai-prompt_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQLOWprioritypublicdomainaiprompt70425DE3",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueLOWprioritypublicdomaintranscription849489E9": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_LOW-priority_public-domain_transcription_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQLOWprioritypublicdomaintranscription21BA1A2C",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueLOWprioritypublicdomaintranslation0AA164E6": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_LOW-priority_public-domain_translation_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQLOWprioritypublicdomaintranslation0B7B8C47",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueLOWprioritypublicdomainvisualocr8E250DC0": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_LOW-priority_public-domain_visual-ocr_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQLOWprioritypublicdomainvisualocr645FC809",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueLOWpriorityregularsensitivityaiprompt7C4457E5": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_LOW-priority_regular-sensitivity_ai-prompt_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQLOWpriorityregularsensitivityaiprompt6240AE3F",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueLOWpriorityregularsensitivitytranscription07855EC6": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_LOW-priority_regular-sensitivity_transcription_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQLOWpriorityregularsensitivitytranscriptionFBB8366F",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueLOWpriorityregularsensitivitytranslation42E00D4F": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_LOW-priority_regular-sensitivity_translation_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQLOWpriorityregularsensitivitytranslationB93465A5",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueLOWpriorityregularsensitivityvisualocrD8820D34": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_LOW-priority_regular-sensitivity_visual-ocr_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQLOWpriorityregularsensitivityvisualocrABA64333",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueSTANDARDprioritypublicdomainaiprompt204617AE": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_STANDARD-priority_public-domain_ai-prompt_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQSTANDARDprioritypublicdomainaiprompt786CDDB9",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueSTANDARDprioritypublicdomaintranscriptionEA1108CF": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_STANDARD-priority_public-domain_transcription_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQSTANDARDprioritypublicdomaintranscriptionA2AC096D",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueSTANDARDprioritypublicdomaintranslationCBC107DF": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_STANDARD-priority_public-domain_translation_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQSTANDARDprioritypublicdomaintranslation8CE7901E",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueSTANDARDprioritypublicdomainvisualocrF9FF864D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_STANDARD-priority_public-domain_visual-ocr_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQSTANDARDprioritypublicdomainvisualocr4B745DB6",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueSTANDARDpriorityregularsensitivityaiprompt4A4B0DF4": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_STANDARD-priority_regular-sensitivity_ai-prompt_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQSTANDARDpriorityregularsensitivityaipromptDBF59486",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueSTANDARDpriorityregularsensitivitytranscription5747071F": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_STANDARD-priority_regular-sensitivity_transcription_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQSTANDARDpriorityregularsensitivitytranscriptionB705C837",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueSTANDARDpriorityregularsensitivitytranslation9174678C": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_STANDARD-priority_regular-sensitivity_translation_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQSTANDARDpriorityregularsensitivitytranslation304AEDC1",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "investigationsqueueSTANDARDpriorityregularsensitivityvisualocrE8E29B4F": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "investigations-queue_STANDARD-priority_regular-sensitivity_visual-ocr_PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "investigationsDLQSTANDARDpriorityregularsensitivityvisualocrD05BD0A5",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/transcription-service",
+          },
+          {
+            "Key": "Stack",
+            "Value": "investigations",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
     },
   },
 }

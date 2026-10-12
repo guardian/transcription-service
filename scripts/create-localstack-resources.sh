@@ -5,39 +5,20 @@ APP_NAME="transcription-service"
 export AWS_REGION="eu-west-1"
 export AWS_PROFILE="investigations"
 
-#########
-##### task dead letter queue
-#########
-DEAD_LETTER_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-task-dead-letter-queue-DEV.fifo --attributes "FifoQueue=true,ContentBasedDeduplication=true" | jq .QueueUrl)
-# We don't install the localstack dns so need to replace the endpoint with localhost
-DEAD_LETTER_QUEUE_URL_LOCALHOST=${DEAD_LETTER_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
-
-echo "Created queue in localstack, url: ${DEAD_LETTER_QUEUE_URL_LOCALHOST}"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 #########
-##### task queue
+##### QueueGardens
 #########
-TASK_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-task-queue-DEV.fifo \
-  --attributes '{
-  "FifoQueue": "true",
-  "ContentBasedDeduplication": "true",
-  "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:transcription-service-task-dead-letter-queue-DEV.fifo\",\"maxReceiveCount\":\"3\"}"
-  }' | jq .QueueUrl)
-# We don't install the localstack dns so need to replace the endpoint with localhost
-TASK_QUEUE_URL_LOCALHOST=${TASK_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
 
-echo "Created cpu task queue in localstack, url: ${TASK_QUEUE_URL_LOCALHOST}"
+TEMPLATE_FILE="$SCRIPT_DIR/../packages/cdk/cdk.out/QueueGardens-LOCAL.template.json"
 
-GPU_TASK_QUEUE_URL=$(aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name=$APP_NAME-gpu-task-queue-DEV.fifo \
-  --attributes '{
-  "FifoQueue": "true",
-  "ContentBasedDeduplication": "true",
-  "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:transcription-service-task-dead-letter-queue-DEV.fifo\",\"maxReceiveCount\":\"3\"}"
-  }' | jq .QueueUrl)
-# We don't install the localstack dns so need to replace the endpoint with localhost
-GPU_TASK_QUEUE_URL_LOCALHOST=${GPU_TASK_QUEUE_URL/sqs.eu-west-1.localhost.localstack.cloud/localhost}
+aws --endpoint-url=http://localhost:4566 cloudformation deploy \
+  --stack-name QueueGardens-LOCAL \
+  --template-file ${TEMPLATE_FILE}
 
-echo "Created gpu task queue in localstack, url: ${GPU_TASK_QUEUE_URL_LOCALHOST}"
+echo "Created QueueGardens..."
+aws --endpoint-url=http://localhost:4566 sqs list-queues | cat
 
 #########
 ##### output queue
