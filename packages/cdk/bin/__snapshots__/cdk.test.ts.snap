@@ -121,7 +121,7 @@ exports[`Giant's stacks should match the snapshots 1`] = `
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "InvestigationsLogsOpenSearchDomain": {
-      "Default": "/PROD/investigations/investigations-logs/openSearchDomainEndpoint",
+      "Default": "/INFRA/investigations/investigations-logs/openSearchDomainEndpoint",
       "Description": "OpenSearch host for transcription service worker logs",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
@@ -5147,7 +5147,7 @@ exports[`Giant's stacks should match the snapshots 2`] = `
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "InvestigationsLogsOpenSearchDomain": {
-      "Default": "/PROD/investigations/investigations-logs/openSearchDomainEndpoint",
+      "Default": "/INFRA/investigations/investigations-logs/openSearchDomainEndpoint",
       "Description": "OpenSearch host for transcription service worker logs",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },

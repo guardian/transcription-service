@@ -359,7 +359,7 @@ export class TranscriptionService extends GuStack {
 			'InvestigationsLogsOpenSearchDomain',
 			{
 				fromSSM: true,
-				default: `/PROD/${this.stack}/investigations-logs/openSearchDomainEndpoint`,
+				default: `/INFRA/${this.stack}/investigations-logs/openSearchDomainEndpoint`,
 				description: 'OpenSearch host for transcription service worker logs',
 			},
 		);
