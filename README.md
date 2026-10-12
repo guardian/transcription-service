@@ -115,3 +115,8 @@ in the systemd service file for the transcription service.
 Here's the web page for the DLAMI that we are using: https://docs.aws.amazon.com/dlami/latest/devguide/aws-deep-learning-x86-base-gpu-ami-ubuntu-22-04.html
 This is set in the [deep learning base image in AMIgo](https://amigo.gutools.co.uk/base-images/deep-learning-base-ami-ubuntu-2204)
 and may need to be periodically updated in case we need a more recent version of cuda for whisperx.
+
+## Logs
+
+Note that the transcription sevice doesn't use central ELK - we have a separate logs cluster you can access via a script
+in the investigations-platform repo. See https://github.com/guardian/investigations-platform/pull/746 for details.
