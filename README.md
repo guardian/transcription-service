@@ -84,45 +84,6 @@ be run repeatedly. To manually use giant's running LocalStack:
 LOCALSTACK_PORT=4567 npm run gpu-worker::start
 ```
 
-### Queue configuration migration
-
-Queue URLs are constructed from an endpoint and queue names. All parameters below
-are relative to `/<STAGE>/investigations/transcription-service/`.
-
-For **CODE/PROD**, CDK creates `endpoint` with the value
-`https://sqs.<region>.amazonaws.com/<account-id>/`, and creates these StringParameters
-from the corresponding queues (including the imported giant output queue):
-
-| New parameter                                | Replaces                                    |
-| -------------------------------------------- | ------------------------------------------- |
-| `gpuTaskQueueName`                           | `gpuTaskQueueUrl`                           |
-| `mediaDownloadQueueName`                     | `mediaDownloadQueueUrl`                     |
-| `deadLetterQueueName`                        | `deadLetterQueueUrl`                        |
-| `destinationQueueNames/transcriptionService` | `destinationQueueUrls/transcriptionService` |
-| `destinationQueueNames/giant`                | `destinationQueueUrls/giant`                |
-
-Deploy the CDK changes before deploying applications that use the new parameters.
-Do not manually create the CODE/PROD parameters that CDK owns. Once all consumers
-have been updated, the old manually managed URL parameters can be removed. CDK
-removes its former `gpuTaskQueueUrl` parameter as part of this migration; coordinate
-that deployment with the application update.
-
-For **DEV**, create the following String parameters in AWS Parameter Store in
-`eu-west-1`, using Janus credentials for the `investigations` profile. The current
-DEV parameters for buckets, models, credentials, etc. are still used; existing URL
-parameters can remain in place.
-
-| Parameter                                    | Value                                            |
-| -------------------------------------------- | ------------------------------------------------ |
-| `gpuTaskQueueName`                           | `transcription-service-gpu-task-queue-DEV.fifo`  |
-| `mediaDownloadQueueName`                     | `transcription-service-media-download-queue-DEV` |
-| `destinationQueueNames/transcriptionService` | `transcription-service-output-queue-DEV`         |
-| `destinationQueueNames/giant`                | `giant-output-queue-DEV.fifo`                    |
-
-DEV needs no `endpoint` parameter: it uses
-`http://localhost:${LOCALSTACK_PORT:-4566}/000000000000/`. The same port is used
-for DynamoDB. The dead-letter queue parameter is only read in CODE/PROD.
-
 If you're finding the end to end testing painful due to how long it takes whisperx to transcribe anything, then you're
 looking for SHAKIRA MODE: npm run gpu-worker::shakira. This skips tedious transcription and just returns shakira lyrics,
 which is all anyone really needs.
