@@ -15,7 +15,7 @@
 		"@guardian/transcription-service-common": "1.0.0",
 		"@heroicons/react": "2.1.5",
 		"flowbite": "2.5.2",
-		"flowbite-react": "0.7.8",
+		"flowbite-react": "0.12.17",
 		"history": "5.3.0",
 		"jwt-decode": "4.0.0",
 		"next": "16.3.8",
@@ -30,7 +30,7 @@
 		"@types/react-dom": "19",
 		"autoprefixer": "10.4.20",
 		"postcss": "^8.5.23",
-		"tailwindcss": "3.4.13",
+		"tailwindcss": "4.3.3",
 		"typescript": "6.0.3"
 	}
 }
