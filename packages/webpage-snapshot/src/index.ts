@@ -7,8 +7,7 @@ import {
 	sendMessage,
 } from '@guardian/transcription-service-backend-common';
 import { getTestMessage, sqsMessageToTestMessage } from '../test/testMessage';
-import { PuppeteerBlocker } from '@ghostery/adblocker-puppeteer';
-import crossFetch from 'cross-fetch';
+import { setupAutoconsent } from './autoconsent';
 
 import chromium from '@sparticuz/chromium';
 import {
@@ -16,7 +15,7 @@ import {
 	uploadToS3,
 	WebpageSnapshot,
 } from '@guardian/transcription-service-common';
-import { Page } from 'puppeteer-core';
+import { Browser, Page } from 'puppeteer-core';
 
 const runningLocally = !process.env['AWS_EXECUTION_ENV'];
 
@@ -39,54 +38,32 @@ const getBrowser = async () => {
 	}
 };
 
-const ACCEPT_COOKIES_TEXT = [
-	'accept all',
-	'accept all cookies',
-	'allow all cookies',
-	'allow all',
-];
-
-const acceptCookies = async (page: Page) => {
-	const frames = page.frames();
-	for (const frame of frames) {
-		const elements = await frame.$$('button');
-		for (const element of elements) {
-			const text = await frame.evaluate(
-				(e) => e.innerText.trim().toLowerCase(),
-				element,
-			);
-			if (ACCEPT_COOKIES_TEXT.includes(text)) {
-				logger.info(`Found accept all button, clicking it.`);
-				await element.click();
-				return;
-			}
-		}
-	}
-};
-
 const snapshotPage = async (
 	page: Page,
 	url: string,
 ): Promise<WebpageSnapshot> => {
 	logger.info(`Snapshotting url: ${url}`);
 
-	const blocker = await PuppeteerBlocker.fromLists(crossFetch, [
-		'https://secure.fanboy.co.nz/fanboy-cookiemonster.txt',
-		'https://raw.githubusercontent.com/uBlockOrigin/uAssets/4248839208994e389687cd966f871c5b900840d1/filters/annoyances-cookies.txt',
-	]);
+	const consent = await setupAutoconsent(page);
+	try {
+		await page.goto(url, { waitUntil: 'domcontentloaded' });
+		await consent.waitForCompletion();
+		// Some pages keep analytics or media connections open indefinitely.
+		await page
+			.waitForNetworkIdle({ idleTime: 1000, timeout: 10000 })
+			.catch((error) => {
+				if (error instanceof Error && error.name === 'TimeoutError') return;
+				throw error;
+			});
+		await consent.waitForCompletion();
+	} finally {
+		await consent.dispose();
+	}
 
-	await blocker.enableBlockingInPage(page);
-
-	await page.goto(url, {
-		waitUntil: 'networkidle2',
-	});
-	// wait for cookie banner to load
-	await page.waitForNetworkIdle({ idleTime: 3000 });
-
-	await acceptCookies(page);
-
-	// wait for page to reload after cookie banner accepted
-	await page.waitForNetworkIdle({ idleTime: 3000 });
+	// A standalone Google/YouTube consent page is never a successful snapshot.
+	if (/^consent\.(youtube|google)\./.test(new URL(page.url()).hostname)) {
+		throw new Error('Page is still on a cookie consent interstitial');
+	}
 
 	const image = await page.screenshot({
 		fullPage: true,
@@ -95,10 +72,6 @@ const snapshotPage = async (
 		quality: 100,
 	});
 	const html = await page.content();
-
-	await acceptCookies(page);
-
-	await page.waitForNetworkIdle();
 
 	const title = await page.title();
 
@@ -112,6 +85,15 @@ const snapshotPage = async (
 		html,
 		title: sanitisedTitle,
 	};
+};
+
+const capturePage = async (browser: Browser, url: string) => {
+	const page = await browser.newPage();
+	try {
+		return await snapshotPage(page, url);
+	} finally {
+		await page.close();
+	}
 };
 
 const processMessage = async (event: unknown) => {
@@ -128,52 +110,54 @@ const processMessage = async (event: unknown) => {
 		throw new Error('Failed to parse SQS message');
 	}
 	const browser = await getBrowser();
-	const page = await browser.newPage();
 
-	for (const record of parsedEvent.data.Records) {
-		try {
-			const snapshotJson = await snapshotPage(page, record.body.url);
+	try {
+		for (const record of parsedEvent.data.Records) {
+			try {
+				const snapshotJson = await capturePage(browser, record.body.url);
 
-			const s3Result = await uploadToS3(
-				record.body.webpageSnapshotOutputSignedUrl,
-				Buffer.from(JSON.stringify(snapshotJson)),
-				false,
-			);
+				const s3Result = await uploadToS3(
+					record.body.webpageSnapshotOutputSignedUrl,
+					Buffer.from(JSON.stringify(snapshotJson)),
+					false,
+				);
 
-			if (s3Result.isSuccess) {
-				const output: ExternalJobOutput = {
-					id: record.body.id,
-					taskId: record.body.webpageSnapshotId,
-					status: 'SUCCESS',
-					outputType: 'WEBPAGE_SNAPSHOT',
-				};
+				if (s3Result.isSuccess) {
+					const output: ExternalJobOutput = {
+						id: record.body.id,
+						taskId: record.body.webpageSnapshotId,
+						status: 'SUCCESS',
+						outputType: 'WEBPAGE_SNAPSHOT',
+					};
+					await sendMessage(
+						sqsClient,
+						record.body.outputQueueUrl,
+						JSON.stringify(output),
+						record.body.id,
+					);
+				} else {
+					logger.error(
+						`Failed to upload snapshot to S3 for message ${record.body.id}`,
+						s3Result.errorMsg,
+					);
+					throw new Error('Failed to upload snapshot to S3 for message');
+				}
+			} catch (error) {
 				await sendMessage(
 					sqsClient,
 					record.body.outputQueueUrl,
-					JSON.stringify(output),
+					JSON.stringify({
+						id: record.body.id,
+						status: 'FAILURE',
+					}),
 					record.body.id,
 				);
-			} else {
-				logger.error(
-					`Failed to upload snapshot to S3 for message ${record.body.id}`,
-					s3Result.errorMsg,
-				);
-				throw new Error('Failed to upload snapshot to S3 for message');
+				logger.error(`Failed to process message ${record.body.id}`, error);
 			}
-		} catch (error) {
-			await sendMessage(
-				sqsClient,
-				record.body.outputQueueUrl,
-				JSON.stringify({
-					id: record.body.id,
-					status: 'FAILURE',
-				}),
-				record.body.id,
-			);
-			logger.error(`Failed to process message ${record.body.id}`, error);
 		}
+	} finally {
+		await browser.close();
 	}
-	await browser.close();
 };
 
 const handler: Handler = async (event) => {

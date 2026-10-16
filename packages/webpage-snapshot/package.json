@@ -4,22 +4,22 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"build": "esbuild --bundle --platform=node --target=node20 --external:puppeteer --external:@sparticuz/chromium --outfile=dist/index.js src/index.ts",
-		"start": "STAGE=DEV nodemon src/index.ts"
+		"build": "node build.mjs",
+		"start": "STAGE=DEV nodemon src/index.ts",
+		"test": "esbuild --bundle --platform=node --packages=external --outfile=dist/autoconsent.test.cjs test/autoconsent.test.ts && node --test dist/autoconsent.test.cjs"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"@guardian/transcription-service-common": "1.0.0",
+		"@duckduckgo/autoconsent": "16.51.0",
 		"@guardian/transcription-service-backend-common": "1.0.0",
-		"puppeteer-core": "24.43.1",
-		"@ghostery/adblocker-puppeteer": "2.12.5",
-		"cross-fetch": "4.1.0"
+		"@guardian/transcription-service-common": "1.0.0",
+		"puppeteer-core": "24.43.1"
 	},
 	"devDependencies": {
-		"@types/aws-lambda": "8.10.145",
 		"@sparticuz/chromium": "140.0.0",
+		"@types/aws-lambda": "8.10.145",
 		"puppeteer": "24.43.1"
 	}
 }
