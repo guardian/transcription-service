@@ -44,13 +44,37 @@ environment and run the worker. We use [uv](https://docs.astral.sh/uv/) to manag
 
 The same python environment can be used to test changes to the model download python script.
 
+To install just the worker dependencies and models, skipping dev-nginx and all
+Docker/LocalStack setup, run:
+
+```bash
+./scripts/setup.sh --worker-only
+```
+
 ## Testing the integration with giant
 
-To perform and end to end test locally:
+From a sibling giant checkout, run:
 
-- Run giant
-- Make sure you have started localstack and run ./scripts/create-local-queues.sh (see above)
-- Run the transcription service gpu worker: npm run gpu-worker::start
+```bash
+./scripts/start-backend.sh --external
+# In a separate terminal, also from giant:
+./scripts/start-external-worker.sh
+```
+
+Giant starts its own LocalStack on port **4567**. Its worker script provisions the
+resources using this repository's script and runs `npm run gpu-worker::start` with
+`LOCALSTACK_PORT=4567`.
+
+If you only want to run the worker then you can run a simplified setup script with
+`scripts/setup.sh --worker-only`.
+
+For standalone transcription-service, the default localstack port is **4566**:
+
+```bash
+docker compose up -d
+./scripts/create-localstack-resources.sh
+npm run gpu-worker::start
+```
 
 If you're finding the end to end testing painful due to how long it takes whisperx to transcribe anything, then you're
 looking for SHAKIRA MODE: npm run gpu-worker::shakira. This skips tedious transcription and just returns shakira lyrics,
