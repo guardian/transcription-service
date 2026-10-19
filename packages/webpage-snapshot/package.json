@@ -19,7 +19,7 @@
 	},
 	"devDependencies": {
 		"@types/aws-lambda": "8.10.145",
-		"@sparticuz/chromium": "140.0.0",
+		"@sparticuz/chromium": "148.0.0",
 		"puppeteer": "24.43.1"
 	}
 }

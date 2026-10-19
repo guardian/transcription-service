@@ -829,7 +829,7 @@ export class TranscriptionService extends GuStack {
 			{
 				description:
 					"Key for the chromium layer's zip file (pushed to layerBucket by publish-chromium-layer.sh script)",
-				default: 'chromium-v140.0.0-layer.arm64.zip',
+				default: 'chromium-v148.0.0-layer.arm64.zip',
 			},
 		);
 

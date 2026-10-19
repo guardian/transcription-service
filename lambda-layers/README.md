@@ -9,3 +9,15 @@ parameter on the transcription-service stack.
 
 It probably would be possible to automate this process, but as we don't expect many updates to ffmpeg (I imagine it will
 only be necessary when we want to support new media codecs etc), I haven't bothered.
+
+# Chromium Lambda layer
+
+The webpage snapshot Lambda uses the ARM64 Sparticuz Chromium 148 layer with
+Node.js 24. Keep the npm dependency in `packages/webpage-snapshot/package.json`,
+the version in `publish-chromium-layer.sh`, and the CDK layer key in sync.
+
+Before deploying the stack, run `bash lambda-layers/publish-chromium-layer.sh`
+with AWS credentials that can upload to `transcription-service-lambda-layers`.
+Then explicitly set the stack's `ChromiumLayerZipKey` parameter to
+`chromium-v148.0.0-layer.arm64.zip` when deploying. Updating the CDK default does
+not replace an existing stack's saved parameter value.
