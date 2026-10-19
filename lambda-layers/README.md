@@ -9,3 +9,9 @@ parameter on the transcription-service stack.
 
 It probably would be possible to automate this process, but as we don't expect many updates to ffmpeg (I imagine it will
 only be necessary when we want to support new media codecs etc), I haven't bothered.
+
+# Chromium Lambda layer
+
+The webpage snapshot Lambda uses the ARM64 Sparticuz Chromium 148 layer with
+Node.js 24. Keep the npm dependency in `packages/webpage-snapshot/package.json`,
+the version in `publish-chromium-layer.sh`, and the CDK layer key in sync.

@@ -8,7 +8,7 @@ mkdir -p $WORKING_DIRECTORY
 
 pushd $WORKING_DIRECTORY
 
-VERSION="v140.0.0"
+VERSION="v148.0.0"
 
 ZIP_NAME="chromium-${VERSION}-layer.arm64.zip"
 

@@ -99,7 +99,7 @@ exports[`Giant's stacks should match the snapshots 1`] = `
       "Type": "AWS::EC2::Image::Id",
     },
     "ChromiumLayerZipKey": {
-      "Default": "chromium-v140.0.0-layer.arm64.zip",
+      "Default": "chromium-v148.0.0-layer.arm64.zip",
       "Description": "Key for the chromium layer's zip file (pushed to layerBucket by publish-chromium-layer.sh script)",
       "Type": "String",
     },
@@ -5240,7 +5240,7 @@ exports[`Giant's stacks should match the snapshots 2`] = `
       "Type": "AWS::EC2::Image::Id",
     },
     "ChromiumLayerZipKey": {
-      "Default": "chromium-v140.0.0-layer.arm64.zip",
+      "Default": "chromium-v148.0.0-layer.arm64.zip",
       "Description": "Key for the chromium layer's zip file (pushed to layerBucket by publish-chromium-layer.sh script)",
       "Type": "String",
     },
