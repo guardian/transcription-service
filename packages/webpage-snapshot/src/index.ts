@@ -98,14 +98,13 @@ const capturePage = async (browser: Browser, url: string) => {
 
 const processMessage = async (event: unknown) => {
 	const config = await getConfig();
-	console.log(JSON.stringify(event, null, 2));
 
 	const sqsClient = getSQSClient(config.aws, config.dev?.localstackEndpoint);
 	const parsedEvent = IncomingSQSEvent.safeParse(event);
 	if (!parsedEvent.success) {
 		logger.error(
-			`Failed to parse SQS message ${parsedEvent.error.message} + ${JSON.stringify(event)}`,
-			event,
+			'Failed to parse webpage snapshot SQS message',
+			new Error(parsedEvent.error.message),
 		);
 		throw new Error('Failed to parse SQS message');
 	}
@@ -136,11 +135,9 @@ const processMessage = async (event: unknown) => {
 						record.body.id,
 					);
 				} else {
-					logger.error(
-						`Failed to upload snapshot to S3 for message ${record.body.id}`,
-						s3Result.errorMsg,
+					throw new Error(
+						`Failed to upload snapshot to S3 for message ${record.body.id}: ${s3Result.errorMsg ?? 'No upload error details returned'}`,
 					);
-					throw new Error('Failed to upload snapshot to S3 for message');
 				}
 			} catch (error) {
 				await sendMessage(
