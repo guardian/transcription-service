@@ -6,7 +6,21 @@ import type {
 import rules from '@duckduckgo/autoconsent/rules/rules.json';
 import type { Page, CDPSession, Frame } from 'puppeteer-core';
 import { setTimeout } from 'node:timers/promises';
-import script from './autoconsent-script';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+const packagedScript = join(__dirname, 'autoconsent.playwright.js');
+
+// Lambda reads the asset beside index.js; local ts-node runs use the npm package.
+const script = readFileSync(
+	existsSync(packagedScript)
+		? packagedScript
+		: join(
+				__dirname,
+				'../../../node_modules/@duckduckgo/autoconsent/dist/autoconsent.playwright.js',
+			),
+	'utf8',
+);
 
 const worldName = 'snapshot-autoconsent';
 const bindingName = 'snapshotAutoconsentMessage';

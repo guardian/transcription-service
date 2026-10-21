@@ -4,7 +4,7 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"build": "node build.mjs",
+		"build": "esbuild --bundle --platform=node --target=node20 --external:puppeteer --external:@sparticuz/chromium --outfile=dist/index.js src/index.ts && cp ../../node_modules/@duckduckgo/autoconsent/dist/autoconsent.playwright.js dist/autoconsent.playwright.js",
 		"start": "STAGE=DEV nodemon src/index.ts",
 		"test": "esbuild --bundle --platform=node --packages=external --outfile=dist/autoconsent.test.cjs test/autoconsent.test.ts && node --test dist/autoconsent.test.cjs"
 	},

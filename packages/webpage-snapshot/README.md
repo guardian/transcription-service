@@ -2,8 +2,9 @@
 
 The Lambda uses Puppeteer and DuckDuckGo Autoconsent to reject optional cookies
 before capturing the screenshot, rendered HTML, and title. Autoconsent runs in an
-isolated browser world and handles frames and consent redirects. Its script and
-rules are bundled into `dist/index.js`; no external consent or screenshot service
+isolated browser world and handles frames and consent redirects. Its rules are
+bundled into `dist/index.js`, and its browser script is packaged as
+`autoconsent.playwright.js` alongside it; no external consent or screenshot service
 is used. Update the pinned `@duckduckgo/autoconsent` dependency to refresh rules.
 
 The former cookie filter lists and English button-text matcher have been removed
@@ -12,9 +13,10 @@ hiding is disabled. Detected consent failures and failed upstream self-tests fai
 the job rather than producing a successful snapshot of a known consent wall.
 Unsupported banners may still require additional rules.
 
-Run `npm run webpage-snapshot::build` from the repository root. The build embeds
-the browser script as text because it must execute inside Chromium, not Node.
-The existing single-file Lambda packaging command remains sufficient.
+Run `npm run webpage-snapshot::build` from the repository root. The build uses
+esbuild and copies the browser script into `dist`. The root `npm run package` command includes both
+files in `webpage-snapshot.zip`. At runtime the Lambda reads the browser script
+from the directory containing `index.js`.
 
 Run browser regression tests with `npm test --workspace webpage-snapshot`.
 By default these use the installed Sparticuz Chromium binary. On platforms where

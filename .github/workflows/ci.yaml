@@ -88,6 +88,10 @@ jobs:
       - name: Package API/Client/Update
         run: |
           npm run package
+      - name: Verify webpage-snapshot browser script is packaged
+        run: |
+          unzip -p target/webpage-snapshot.zip autoconsent.playwright.js > /tmp/packaged-autoconsent.js
+          cmp packages/webpage-snapshot/dist/autoconsent.playwright.js /tmp/packaged-autoconsent.js
       - name: Run tests and package Worker
         run: |
           npm run worker::test
