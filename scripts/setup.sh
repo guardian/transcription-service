@@ -40,7 +40,6 @@ case "$(uname -s)" in
       pyenv \
       ffmpeg \
       qpdf
-    ;;
     curl -LsSf https://astral.sh/uv/install.sh | sh
     ;;
   *)
