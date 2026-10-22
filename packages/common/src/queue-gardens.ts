@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 // IMPORTANT: the order is crucial here, when it's iterated over in the worker for example
 export const priorityLevels = [
 	// trumps standard, but will let the current standard level job complete - might result in higher cost services being used to clear
@@ -7,7 +9,8 @@ export const priorityLevels = [
 	// only expect things on here to be processed when our services are idle and will be killed if something comes in on standard/high
 	'low',
 ] as const;
-export type PriorityLevel = (typeof priorityLevels)[number];
+export const PriorityLevel = z.enum(priorityLevels);
+export type PriorityLevel = z.infer<typeof PriorityLevel>;
 
 // TODO for each consider linking to the type definition for the payload
 export const activityTypes = [
@@ -18,7 +21,8 @@ export const activityTypes = [
 	// 'snapshotting', // standalone queue, doesn't need the priority/sensitivity
 	'ai-prompt',
 ] as const;
-export type ActivityType = (typeof activityTypes)[number];
+export const ActivityType = z.enum(activityTypes);
+export type ActivityType = z.infer<typeof ActivityType>;
 
 // used to determine where the activity takes place
 export const sensitivityLevels = [
@@ -26,16 +30,14 @@ export const sensitivityLevels = [
 	'regular-sensitivity', // non-public documents, which we should only process in AWS/on-prem
 	// "super-sensitive" // super sensitive documents are only process by the offline giant in the bunker
 ] as const;
-export type SensitivityLevel = (typeof sensitivityLevels)[number];
+export const SensitivityLevel = z.enum(sensitivityLevels);
+export type SensitivityLevel = z.infer<typeof SensitivityLevel>;
 
-type QueueType = 'queue' | 'DLQ';
+export const QueueType = z.enum(['queue', 'DLQ']);
+export type QueueType = z.infer<typeof QueueType>;
 
-type Stage = 'DEV' | 'CODE' | 'PROD';
-
-type QueueNameWithoutStage =
-	`investigations-${QueueType}_${Uppercase<PriorityLevel>}-priority_${SensitivityLevel}_${ActivityType}`;
-export type QueueGardensQueueNameWithStage =
-	`${QueueNameWithoutStage}_${Stage}`;
+export const Stage = z.enum(['DEV', 'CODE', 'PROD']);
+export type Stage = z.infer<typeof Stage>;
 
 export const buildQueueUrl = (
 	queuesBaseUrl: string,
@@ -43,7 +45,7 @@ export const buildQueueUrl = (
 	priorityLevel: PriorityLevel,
 	sensitivityLevel: SensitivityLevel,
 	activityType: ActivityType,
-	stage: string,
+	stage: Stage,
 ) =>
 	`${queuesBaseUrl}${buildVerifiedQueueName(priorityLevel, sensitivityLevel, activityType)(queueType, stage)}`;
 
@@ -56,9 +58,7 @@ export const buildVerifiedQueueName =
 	(
 		queueType: QueueType,
 		maybeStage?: Stage, // optional because we also want to build logical IDs for the queues, which don't have the stage suffix
-	): typeof maybeStage extends Stage
-		? QueueGardensQueueNameWithStage
-		: QueueNameWithoutStage => {
+	) => {
 		const suffix = maybeStage ? `_${maybeStage}` : '';
 		const potentialName = `investigations-${queueType}_${priorityLevel.toUpperCase()}-priority_${sensitivityLevel}_${activityType}${suffix}`;
 		if (potentialName.length > 80) {

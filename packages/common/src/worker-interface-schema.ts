@@ -33,6 +33,14 @@ import {
 	OcrOutput,
 } from './worker-interface-types';
 
+import {
+	PriorityLevel,
+	ActivityType,
+	SensitivityLevel,
+	QueueType,
+	Stage,
+} from './queue-gardens';
+
 const JSON_SCHEMA_TARGET = 'draft-2020-12' as const;
 const JSON_SCHEMA_DIALECT = 'https://json-schema.org/draft/2020-12/schema';
 
@@ -68,6 +76,11 @@ export const workerInterfaceSchemas = {
 	TranscriptionResult,
 	TranscriptionOutput,
 	MediaDownloadFailure,
+	PriorityLevel,
+	ActivityType,
+	SensitivityLevel,
+	QueueType,
+	Stage,
 };
 
 export const workerInterfaceSchemaNames = Object.keys(workerInterfaceSchemas);
