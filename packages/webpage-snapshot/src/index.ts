@@ -60,11 +60,6 @@ const snapshotPage = async (
 		await consent.dispose();
 	}
 
-	// A standalone Google/YouTube consent page is never a successful snapshot.
-	if (/^consent\.(youtube|google)\./.test(new URL(page.url()).hostname)) {
-		throw new Error('Page is still on a cookie consent interstitial');
-	}
-
 	const image = await page.screenshot({
 		fullPage: true,
 		encoding: 'base64',

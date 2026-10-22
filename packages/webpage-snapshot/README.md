@@ -17,9 +17,3 @@ Run `npm run webpage-snapshot::build` from the repository root. The build uses
 esbuild and copies the browser script into `dist`. The root `npm run package` command includes both
 files in `webpage-snapshot.zip`. At runtime the Lambda reads the browser script
 from the directory containing `index.js`.
-
-Run browser regression tests with `npm test --workspace webpage-snapshot`.
-By default these use the installed Sparticuz Chromium binary. On platforms where
-that binary cannot run, set `CHROMIUM_EXECUTABLE_PATH` to a compatible Chromium
-executable. Tests use intercepted fixture pages, including YouTube consent markup,
-so they do not depend on live websites or AWS services.
