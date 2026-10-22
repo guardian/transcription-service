@@ -16,6 +16,7 @@ export const uploadToS3 = async (
 	url: string,
 	blob: Blob | Buffer,
 	gzipped: boolean = false,
+	maybeAbortSignal?: AbortSignal,
 ): Promise<UploadResult> => {
 	// NOTE: Content-Encoding header MUST match that specified in the presigned url
 	const contentEncodingHeader: Record<string, string> = gzipped
@@ -28,6 +29,7 @@ export const uploadToS3 = async (
 			headers: {
 				...contentEncodingHeader,
 			},
+			signal: maybeAbortSignal,
 		});
 		const status = response.status;
 		const isSuccess = status === 200;
