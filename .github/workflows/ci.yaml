@@ -21,9 +21,16 @@ jobs:
         run: npm install
       - name: Build media-download
         run: npm run media-download::build
-      - name: Sanitise branch name
-        id: branch_name
-        run: echo "container_version=${GITHUB_REF_NAME//\//-}" >> "$GITHUB_OUTPUT"
+
+      - name: Read node version from .tool-versions
+        id: tool-versions
+        run: |
+          node_version=$(awk '$1 == "nodejs" { print $2 }' .tool-versions)
+          if [ -z "$node_version" ]; then
+            echo "Could not find nodejs version in .tool-versions" >&2
+            exit 1
+          fi
+          echo "node_version=$node_version" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -46,7 +53,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            node_version=24.14.1
+            node_version=${{ steps.tool-versions.outputs.node_version }}
   ci:
     permissions:
       id-token: write
