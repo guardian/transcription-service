@@ -35,10 +35,9 @@ create_queue() {
   local_aws sqs create-queue --queue-name "$name" --attributes "$attributes"
 }
 
-TASK_DLQ="$APP_NAME-task-dead-letter-queue-DEV.fifo"
-create_queue "$TASK_DLQ"
-create_queue "$APP_NAME-task-queue-DEV.fifo" "$TASK_DLQ"
-create_queue "$APP_NAME-gpu-task-queue-DEV.fifo" "$TASK_DLQ"
+echo "Created QueueGardens..."
+aws --endpoint-url=http://localhost:4566 sqs list-queues | cat
+
 create_queue "$APP_NAME-output-queue-DEV"
 create_queue "$APP_NAME-media-download-queue-DEV"
 create_queue "$APP_NAME-webpage-snapshot-queue-DEV"

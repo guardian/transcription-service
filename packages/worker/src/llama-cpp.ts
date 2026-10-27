@@ -32,6 +32,7 @@ const processTranslationTask = async (
 	backend: LlmBackend,
 	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
 	metrics: MetricsService,
+	maybeAbortSignal: AbortSignal | undefined,
 ): Promise<string> => {
 	const parsedTask = TranslationTask.safeParse(JSON.parse(taskData));
 	if (!parsedTask.success) {
@@ -61,6 +62,7 @@ const processTranslationTask = async (
 			backend,
 			setMessageVisibility,
 			metrics,
+			maybeAbortSignal,
 		);
 		promptOutputs.push({
 			name: prompt.fieldName,
@@ -76,6 +78,7 @@ const processLLmPrompt = async (
 	backend: LlmBackend,
 	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
 	metrics: MetricsService,
+	maybeAbortSignal: AbortSignal | undefined,
 ) => {
 	const parsedPrompts = LlmPrompt.safeParse(JSON.parse(taskData));
 	if (!parsedPrompts.success) {
@@ -87,6 +90,7 @@ const processLLmPrompt = async (
 		backend,
 		setMessageVisibility,
 		metrics,
+		maybeAbortSignal,
 	);
 };
 
@@ -97,7 +101,8 @@ export const processLLMOrTranslationJob = async (
 	sqsClient: SQSClient,
 	setMessageVisibility: (visibilityTimeoutSeconds: number) => Promise<void>,
 	metrics: MetricsService,
-	messageAttributes?: Record<string, MessageAttributeValue>,
+	messageAttributes: Record<string, MessageAttributeValue>,
+	maybeAbortSignal: AbortSignal | undefined,
 ) => {
 	logger.info(`Processing LLM job with id ${job.id}`);
 
@@ -111,6 +116,7 @@ export const processLLMOrTranslationJob = async (
 					job.backend,
 					setMessageVisibility,
 					metrics,
+					maybeAbortSignal,
 				)
 			: await processTranslationTask(
 					taskData,
@@ -118,6 +124,7 @@ export const processLLMOrTranslationJob = async (
 					job.backend,
 					setMessageVisibility,
 					metrics,
+					maybeAbortSignal,
 				);
 
 	const gzippedResult = await gzip(llmResult);
@@ -126,6 +133,7 @@ export const processLLMOrTranslationJob = async (
 		job.combinedOutputUrl.url,
 		Buffer.from(gzippedResult),
 		true, // gzip as, especially results from giant document translations, output will be quite large
+		maybeAbortSignal,
 	);
 	if (!uploadResult.isSuccess) {
 		throw new Error(
