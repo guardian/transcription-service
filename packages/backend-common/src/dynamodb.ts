@@ -186,12 +186,12 @@ export const getLlmItem = async (
 		logger.warn(
 			`User ${ownershipCheck.currentUserEmail} attempted to access LLM result ${item.id} which does not belong to them.`,
 		);
-		// TODO: Add back ownership check once we have a solution for sharing prompts
-		// return {
-		// 	status: 'FAILURE',
-		// 	errorMessage: genericNotFoundMessage,
-		// 	statusCode: 404,
-		// };
+		// TODO: Add come up with solution for sharing transcription service output
+		return {
+			status: 'FAILURE',
+			errorMessage: genericNotFoundMessage,
+			statusCode: 404,
+		};
 	}
 	return { status: 'SUCCESS', item: parsedItem.data };
 };
