@@ -945,6 +945,10 @@ exports[`Giant's stacks should match the snapshots 1`] = `
             "Value": "CODE",
           },
         ],
+        "TimeToLiveSpecification": {
+          "AttributeName": "expires",
+          "Enabled": true,
+        },
       },
       "Type": "AWS::DynamoDB::Table",
       "UpdateReplacePolicy": "Retain",
@@ -6231,6 +6235,10 @@ exports[`Giant's stacks should match the snapshots 2`] = `
             "Value": "PROD",
           },
         ],
+        "TimeToLiveSpecification": {
+          "AttributeName": "expires",
+          "Enabled": true,
+        },
       },
       "Type": "AWS::DynamoDB::Table",
       "UpdateReplacePolicy": "Retain",

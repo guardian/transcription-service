@@ -749,6 +749,8 @@ export class TranscriptionService extends GuStack {
 			},
 			readCapacity: 1,
 			writeCapacity: 1,
+			// Short-lived OAuth sessions share this table using an oauth-session: prefix.
+			timeToLiveAttribute: 'expires',
 		});
 
 		// Enable nightly backups (via https://github.com/guardian/aws-backup)

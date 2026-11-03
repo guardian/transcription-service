@@ -7,7 +7,6 @@ import {
 	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
 import { NextFunction, Request, RequestHandler, Response } from 'express';
-import { createOAuthState } from '../services/oauthState';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Action = (...args: any[]) => RequestHandler[];
@@ -17,20 +16,18 @@ export const checkAuth = passport.authenticate('jwt', { session: false });
 export class GoogleAuth {
 	rootUrl: string;
 	secret: string;
-	state: ReturnType<typeof createOAuthState>;
 
 	constructor(config: TranscriptionConfig) {
 		this.rootUrl = config.app.rootUrl;
 		this.secret = config.app.secret;
-		this.state = createOAuthState(this.secret, this.rootUrl);
 	}
 
 	googleAuth: Action = () => [
-		this.state.begin,
 		(req: Request, res: Response, next: NextFunction) => {
+			res.set('Cache-Control', 'no-store');
+			req.session.oauthReturnQuery = req.query;
 			const authenticator = passport.authenticate('google', {
 				scope: ['email'],
-				state: res.locals.oauthState,
 				// we're going to manage this ourselves using JWT
 				session: false,
 			});
@@ -39,10 +36,19 @@ export class GoogleAuth {
 	];
 
 	oauthCallback: Action = () => [
-		this.state.verify,
+		(_req: Request, res: Response, next: NextFunction) => {
+			res.set('Cache-Control', 'no-store');
+			next();
+		},
 		passport.authenticate('google', {
 			session: false,
 		}),
+		(req: Request, res: Response, next: NextFunction) => {
+			res.locals.oauthReturnQuery = req.session.oauthReturnQuery;
+			// The session is only needed for the OAuth handshake.
+			res.clearCookie('transcription-oauth-session', { path: '/api/auth' });
+			req.session.destroy(next);
+		},
 		(req: Request, res: Response) => {
 			const email = req.user?.email;
 			const returnUrl = new URL(this.rootUrl);
