@@ -2852,6 +2852,7 @@ service transcription-service-worker start",
         "Environment": {
           "Variables": {
             "APP": "transcription-service-api",
+            "NODE_ENV": "production",
             "STACK": "investigations",
             "STAGE": "CODE",
           },
@@ -8180,6 +8181,7 @@ service transcription-service-worker start",
         "Environment": {
           "Variables": {
             "APP": "transcription-service-api",
+            "NODE_ENV": "production",
             "STACK": "investigations",
             "STAGE": "PROD",
           },
