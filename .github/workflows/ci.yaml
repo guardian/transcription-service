@@ -67,6 +67,8 @@ jobs:
       - name: build API
         run: |
           npm run api::build
+      - name: Test API request parsing
+        run: npm run test:request-body --workspace api
       - name: build Client
         run: |
           npm run client::build
