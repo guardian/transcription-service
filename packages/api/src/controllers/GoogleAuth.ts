@@ -7,6 +7,7 @@ import {
 	TranscriptionConfig,
 } from '@guardian/transcription-service-backend-common';
 import { NextFunction, Request, RequestHandler, Response } from 'express';
+import { createOAuthState } from '../services/oauthState';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Action = (...args: any[]) => RequestHandler[];
@@ -16,18 +17,20 @@ export const checkAuth = passport.authenticate('jwt', { session: false });
 export class GoogleAuth {
 	rootUrl: string;
 	secret: string;
+	state: ReturnType<typeof createOAuthState>;
 
 	constructor(config: TranscriptionConfig) {
 		this.rootUrl = config.app.rootUrl;
 		this.secret = config.app.secret;
+		this.state = createOAuthState(this.secret, this.rootUrl);
 	}
 
 	googleAuth: Action = () => [
+		this.state.begin,
 		(req: Request, res: Response, next: NextFunction) => {
-			const { query } = req;
 			const authenticator = passport.authenticate('google', {
 				scope: ['email'],
-				state: JSON.stringify(query),
+				state: res.locals.oauthState,
 				// we're going to manage this ourselves using JWT
 				session: false,
 			});
@@ -36,18 +39,18 @@ export class GoogleAuth {
 	];
 
 	oauthCallback: Action = () => [
+		this.state.verify,
 		passport.authenticate('google', {
 			session: false,
 		}),
 		(req: Request, res: Response) => {
 			const email = req.user?.email;
-			const { state } = req.query;
 			const returnUrl = new URL(this.rootUrl);
 			logger.info(`user ${email} logged in`);
 
 			// preserve query string and path from state
-			if (typeof state === 'string') {
-				const authState = JSON.parse(state);
+			if (res.locals.oauthReturnQuery) {
+				const authState = res.locals.oauthReturnQuery;
 				// path
 				returnUrl.pathname = authState.returnPath;
 				delete authState.returnPath; // remove returnPath from the object - we don't need it in the query string
