@@ -1,4 +1,5 @@
 import express from 'express';
+import { errorHandler } from './services/errorHandler';
 import asyncHandler from 'express-async-handler';
 import serverlessExpress from '@codegenie/serverless-express';
 import bodyParser from 'body-parser';
@@ -693,6 +694,8 @@ const getApp = async () => {
 		}
 	}
 
+	// Register last so parser, authentication, route and static-file errors are handled.
+	app.use(errorHandler);
 	return app;
 };
 

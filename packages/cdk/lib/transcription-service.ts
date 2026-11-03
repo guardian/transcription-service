@@ -243,6 +243,7 @@ export class TranscriptionService extends GuStack {
 		);
 
 		const apiLambda = new GuApiLambda(this, 'transcription-service-api', {
+			environment: { NODE_ENV: 'production' },
 			fileName: 'api.zip',
 			handler: 'index.api',
 			runtime: nodeRuntime,

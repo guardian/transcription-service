@@ -67,6 +67,8 @@ jobs:
       - name: build API
         run: |
           npm run api::build
+      - name: Test API error handling
+        run: npm run test:errors --workspace api
       - name: build Client
         run: |
           npm run client::build
