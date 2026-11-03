@@ -24,10 +24,10 @@ export class GoogleAuth {
 
 	googleAuth: Action = () => [
 		(req: Request, res: Response, next: NextFunction) => {
-			const { query } = req;
+			res.set('Cache-Control', 'no-store');
+			req.session.oauthReturnQuery = req.query;
 			const authenticator = passport.authenticate('google', {
 				scope: ['email'],
-				state: JSON.stringify(query),
 				// we're going to manage this ourselves using JWT
 				session: false,
 			});
@@ -36,18 +36,27 @@ export class GoogleAuth {
 	];
 
 	oauthCallback: Action = () => [
+		(_req: Request, res: Response, next: NextFunction) => {
+			res.set('Cache-Control', 'no-store');
+			next();
+		},
 		passport.authenticate('google', {
 			session: false,
 		}),
+		(req: Request, res: Response, next: NextFunction) => {
+			res.locals.oauthReturnQuery = req.session.oauthReturnQuery;
+			// The session is only needed for the OAuth handshake.
+			res.clearCookie('transcription-oauth-session', { path: '/api/auth' });
+			req.session.destroy(next);
+		},
 		(req: Request, res: Response) => {
 			const email = req.user?.email;
-			const { state } = req.query;
 			const returnUrl = new URL(this.rootUrl);
 			logger.info(`user ${email} logged in`);
 
 			// preserve query string and path from state
-			if (typeof state === 'string') {
-				const authState = JSON.parse(state);
+			if (res.locals.oauthReturnQuery) {
+				const authState = res.locals.oauthReturnQuery;
 				// path
 				returnUrl.pathname = authState.returnPath;
 				delete authState.returnPath; // remove returnPath from the object - we don't need it in the query string
