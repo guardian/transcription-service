@@ -1,7 +1,7 @@
 import express from 'express';
 import asyncHandler from 'express-async-handler';
 import serverlessExpress from '@codegenie/serverless-express';
-import bodyParser from 'body-parser';
+import { smallJson, llmJson } from './services/requestBody';
 import path from 'path';
 import { checkAuth, initPassportAuth } from './services/passport';
 import { GoogleAuth } from './controllers/GoogleAuth';
@@ -87,7 +87,6 @@ const getApp = async () => {
 	const lambdaClient = new LambdaClient(config.aws);
 	const metrics = new MetricsService(config.app.stage, config.aws, 'api');
 
-	app.use(bodyParser.json({ limit: '40mb' }));
 	app.use(passport.initialize());
 
 	// auth
@@ -107,6 +106,7 @@ const getApp = async () => {
 
 	apiRouter.post('/transcribe-url', [
 		checkAuth,
+		smallJson,
 		asyncHandler(async (req, res) => {
 			const userEmail = req.user?.email;
 			const body = transcribeUrlRequestBody.safeParse(req.body);
@@ -153,6 +153,7 @@ const getApp = async () => {
 
 	apiRouter.post('/transcribe-file', [
 		checkAuth,
+		smallJson,
 		asyncHandler(async (req, res) => {
 			const userEmail = req.user?.email;
 			const body = transcribeFileRequestBody.safeParse(req.body);
@@ -236,6 +237,7 @@ const getApp = async () => {
 
 	apiRouter.post('/llm-prompt', [
 		checkAuth,
+		llmJson,
 		asyncHandler(async (req, res) => {
 			const userEmail = req.user?.email;
 			if (!userEmail) {
@@ -465,6 +467,7 @@ const getApp = async () => {
 
 	apiRouter.post('/export/create-folder', [
 		checkAuth,
+		smallJson,
 		asyncHandler(async (req, res) => {
 			const createRequest = CreateFolderRequest.safeParse(req.body);
 			if (!createRequest.success) {
@@ -501,6 +504,7 @@ const getApp = async () => {
 
 	apiRouter.post('/export/export', [
 		checkAuth,
+		smallJson,
 		asyncHandler(async (req, res) => {
 			const exportRequest = TranscriptExportRequest.safeParse(req.body);
 			if (!exportRequest.success) {
@@ -599,6 +603,7 @@ const getApp = async () => {
 
 	apiRouter.post('/signed-url', [
 		checkAuth,
+		smallJson,
 		asyncHandler(async (req, res) => {
 			const parsedRequest = signedUrlRequestBody.safeParse(req.body);
 			if (!parsedRequest.success) {
