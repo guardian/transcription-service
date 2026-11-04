@@ -31,7 +31,11 @@ import {
 	Size,
 	Tags,
 } from 'aws-cdk-lib';
-import { EndpointType } from 'aws-cdk-lib/aws-apigateway';
+import {
+	AccessLogFormat,
+	EndpointType,
+	LogGroupLogDestination,
+} from 'aws-cdk-lib/aws-apigateway';
 import {
 	Schedule as AsgSchedule,
 	AutoScalingGroup,
@@ -61,6 +65,7 @@ import {
 	Runtime,
 } from 'aws-cdk-lib/aws-lambda';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
+import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
@@ -242,6 +247,11 @@ export class TranscriptionService extends GuStack {
 			},
 		);
 
+		const apiAccessLogs = new LogGroup(this, 'ApiAccessLogs', {
+			logGroupName: `/aws/apigateway/${apiId}-api/access`,
+			retention: RetentionDays.ONE_WEEK,
+		});
+
 		const apiLambda = new GuApiLambda(this, 'transcription-service-api', {
 			fileName: 'api.zip',
 			handler: 'index.api',
@@ -255,6 +265,11 @@ export class TranscriptionService extends GuStack {
 			api: {
 				id: apiId,
 				description: 'API for transcription service frontend',
+				cloudWatchRole: true,
+				deployOptions: {
+					accessLogDestination: new LogGroupLogDestination(apiAccessLogs),
+					accessLogFormat: AccessLogFormat.jsonWithStandardFields(),
+				},
 				domainName: {
 					certificate,
 					domainName,
