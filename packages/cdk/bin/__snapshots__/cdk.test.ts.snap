@@ -168,7 +168,7 @@ exports[`Giant's stacks should match the snapshots 1`] = `
     "ApiAccessLogsE9DF007D": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "LogGroupName": "/aws/apigateway/transcription-service-CODE/access",
+        "LogGroupName": "/aws/apigateway/transcription-service-CODE-api/access",
         "RetentionInDays": 7,
         "Tags": [
           {
@@ -5345,7 +5345,7 @@ exports[`Giant's stacks should match the snapshots 2`] = `
     "ApiAccessLogsE9DF007D": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "LogGroupName": "/aws/apigateway/transcription-service-PROD/access",
+        "LogGroupName": "/aws/apigateway/transcription-service-PROD-api/access",
         "RetentionInDays": 7,
         "Tags": [
           {
