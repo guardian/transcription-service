@@ -28,6 +28,7 @@ import {
 	CfnOutput,
 	Duration,
 	Fn,
+	RemovalPolicy,
 	Size,
 	Tags,
 } from 'aws-cdk-lib';
@@ -37,10 +38,10 @@ import {
 	LogGroupLogDestination,
 } from 'aws-cdk-lib/aws-apigateway';
 import {
-	Schedule as AsgSchedule,
 	AutoScalingGroup,
 	BlockDeviceVolume,
 	GroupMetrics,
+	Schedule as AsgSchedule,
 	SpotAllocationStrategy,
 } from 'aws-cdk-lib/aws-autoscaling';
 import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
@@ -250,6 +251,7 @@ export class TranscriptionService extends GuStack {
 		const apiAccessLogs = new LogGroup(this, 'ApiAccessLogs', {
 			logGroupName: `/aws/apigateway/${apiId}-api/access`,
 			retention: RetentionDays.ONE_WEEK,
+			removalPolicy: RemovalPolicy.DESTROY,
 		});
 
 		const apiLambda = new GuApiLambda(this, 'transcription-service-api', {
@@ -268,7 +270,22 @@ export class TranscriptionService extends GuStack {
 				cloudWatchRole: true,
 				deployOptions: {
 					accessLogDestination: new LogGroupLogDestination(apiAccessLogs),
-					accessLogFormat: AccessLogFormat.jsonWithStandardFields(),
+					// we use a custom format here rather than jsonWithStandardFields because we want to include $context.path
+					accessLogFormat: AccessLogFormat.custom(
+						JSON.stringify({
+							requestId: '$context.requestId',
+							ip: '$context.identity.sourceIp',
+							user: '$context.identity.user',
+							caller: '$context.identity.caller',
+							requestTime: '$context.requestTime',
+							httpMethod: '$context.httpMethod',
+							resourcePath: '$context.resourcePath',
+							path: '$context.path',
+							status: '$context.status',
+							protocol: '$context.protocol',
+							responseLength: '$context.responseLength',
+						}),
+					),
 				},
 				domainName: {
 					certificate,

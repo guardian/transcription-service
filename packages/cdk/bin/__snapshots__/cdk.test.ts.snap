@@ -166,7 +166,7 @@ exports[`Giant's stacks should match the snapshots 1`] = `
   },
   "Resources": {
     "ApiAccessLogsE9DF007D": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "Delete",
       "Properties": {
         "LogGroupName": "/aws/apigateway/transcription-service-CODE-api/access",
         "RetentionInDays": 7,
@@ -190,7 +190,7 @@ exports[`Giant's stacks should match the snapshots 1`] = `
         ],
       },
       "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Retain",
+      "UpdateReplacePolicy": "Delete",
     },
     "CertificateTranscriptionservice1882E1FE": {
       "DeletionPolicy": "Retain",
@@ -3516,7 +3516,7 @@ service transcription-service-worker start",
               "Arn",
             ],
           },
-          "Format": "{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","user":"$context.identity.user","caller":"$context.identity.caller","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","resourcePath":"$context.resourcePath","status":"$context.status","protocol":"$context.protocol","responseLength":"$context.responseLength"}",
+          "Format": "{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","user":"$context.identity.user","caller":"$context.identity.caller","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","resourcePath":"$context.resourcePath","path":"$context.path","status":"$context.status","protocol":"$context.protocol","responseLength":"$context.responseLength"}",
         },
         "DeploymentId": {
           "Ref": "transcriptionserviceapitranscriptionserviceCODEDeployment17CF614417d397abd2e581329cd970e5edbd8e75",
@@ -5343,7 +5343,7 @@ exports[`Giant's stacks should match the snapshots 2`] = `
   },
   "Resources": {
     "ApiAccessLogsE9DF007D": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "Delete",
       "Properties": {
         "LogGroupName": "/aws/apigateway/transcription-service-PROD-api/access",
         "RetentionInDays": 7,
@@ -5367,7 +5367,7 @@ exports[`Giant's stacks should match the snapshots 2`] = `
         ],
       },
       "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Retain",
+      "UpdateReplacePolicy": "Delete",
     },
     "CertificateTranscriptionservice1882E1FE": {
       "DeletionPolicy": "Retain",
@@ -8880,7 +8880,7 @@ service transcription-service-worker start",
               "Arn",
             ],
           },
-          "Format": "{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","user":"$context.identity.user","caller":"$context.identity.caller","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","resourcePath":"$context.resourcePath","status":"$context.status","protocol":"$context.protocol","responseLength":"$context.responseLength"}",
+          "Format": "{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","user":"$context.identity.user","caller":"$context.identity.caller","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","resourcePath":"$context.resourcePath","path":"$context.path","status":"$context.status","protocol":"$context.protocol","responseLength":"$context.responseLength"}",
         },
         "DeploymentId": {
           "Ref": "transcriptionserviceapitranscriptionservicePRODDeployment34658EC0308289003973aa7a3af21a3a5ee4c9e2",
