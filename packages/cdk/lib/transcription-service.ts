@@ -38,8 +38,8 @@ import {
 	LogGroupLogDestination,
 } from 'aws-cdk-lib/aws-apigateway';
 import {
-	AutoScalingGroup,
 	Schedule as AsgSchedule,
+	AutoScalingGroup,
 	BlockDeviceVolume,
 	GroupMetrics,
 	SpotAllocationStrategy,
