@@ -39,9 +39,9 @@ import {
 } from 'aws-cdk-lib/aws-apigateway';
 import {
 	AutoScalingGroup,
+	Schedule as AsgSchedule,
 	BlockDeviceVolume,
 	GroupMetrics,
-	Schedule as AsgSchedule,
 	SpotAllocationStrategy,
 } from 'aws-cdk-lib/aws-autoscaling';
 import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
