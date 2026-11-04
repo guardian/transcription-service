@@ -272,18 +272,12 @@ export class TranscriptionService extends GuStack {
 					accessLogDestination: new LogGroupLogDestination(apiAccessLogs),
 					// we use a custom format here rather than jsonWithStandardFields because we want to include $context.path
 					accessLogFormat: AccessLogFormat.custom(
+						// yes I know, stringify then parse then stringify again. There is method in the madness
 						JSON.stringify({
-							requestId: '$context.requestId',
-							ip: '$context.identity.sourceIp',
-							user: '$context.identity.user',
-							caller: '$context.identity.caller',
-							requestTime: '$context.requestTime',
-							httpMethod: '$context.httpMethod',
-							resourcePath: '$context.resourcePath',
+							...JSON.parse(
+								AccessLogFormat.jsonWithStandardFields().toString(),
+							),
 							path: '$context.path',
-							status: '$context.status',
-							protocol: '$context.protocol',
-							responseLength: '$context.responseLength',
 						}),
 					),
 				},
