@@ -560,10 +560,6 @@ export class TranscriptionService extends GuStack {
 			},
 		);
 
-		Tags.of(transcriptionGpuWorkerASG).add('OPT_OUT_TRACKING', 'true', {
-			applyToLaunchedInstances: true,
-		});
-
 		if (this.stage === 'PROD') {
 			// Set VolumeInitializationRate via L1 escape hatch (not yet supported in L2)
 			// Note - EBS charges $0.0036/GB for this https://aws.amazon.com/ebs/pricing/ so we're only enabling for PROD
@@ -657,6 +653,10 @@ export class TranscriptionService extends GuStack {
 				applyToLaunchedInstances: true,
 			},
 		);
+
+		Tags.of(transcriptionGpuWorkerASG).add('OPT_OUT_TRACKING', 'true', {
+			applyToLaunchedInstances: true,
+		});
 
 		const transcriptionDeadLetterQueue = new Queue(
 			this,
