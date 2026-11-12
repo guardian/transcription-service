@@ -654,6 +654,10 @@ export class TranscriptionService extends GuStack {
 			},
 		);
 
+		Tags.of(transcriptionGpuWorkerASG).add('OPT_OUT_TRACKING', 'true', {
+			applyToLaunchedInstances: true,
+		});
+
 		const transcriptionDeadLetterQueue = new Queue(
 			this,
 			`${APP_NAME}-task-dead-letter-queue`,

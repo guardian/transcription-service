@@ -1036,6 +1036,11 @@ exports[`Giant's stacks should match the snapshots 1`] = `
             },
           },
           {
+            "Key": "OPT_OUT_TRACKING",
+            "PropagateAtLaunch": true,
+            "Value": "true",
+          },
+          {
             "Key": "Stack",
             "PropagateAtLaunch": true,
             "Value": "investigations",
@@ -6363,6 +6368,11 @@ exports[`Giant's stacks should match the snapshots 2`] = `
             "Value": {
               "Ref": "LoggingStreamName",
             },
+          },
+          {
+            "Key": "OPT_OUT_TRACKING",
+            "PropagateAtLaunch": true,
+            "Value": "true",
           },
           {
             "Key": "Stack",
