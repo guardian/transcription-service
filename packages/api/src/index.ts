@@ -5,6 +5,7 @@ import { smallJson, llmJson } from './services/requestBody';
 import path from 'path';
 import { checkAuth, initPassportAuth } from './services/passport';
 import { GoogleAuth } from './controllers/GoogleAuth';
+import { createOAuthSession } from './services/oauthSession';
 import passport from 'passport';
 import { Request, Response } from 'express';
 import {
@@ -92,6 +93,7 @@ const getApp = async () => {
 	// auth
 	initPassportAuth(config);
 	const auth = new GoogleAuth(config);
+	apiRouter.use('/auth', createOAuthSession(config));
 	apiRouter.get('/auth/google', ...auth.googleAuth());
 	apiRouter.get('/auth/oauth-callback', ...auth.oauthCallback());
 

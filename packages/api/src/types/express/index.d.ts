@@ -3,6 +3,12 @@
 
 export {};
 
+declare module 'express-session' {
+	interface SessionData {
+		oauthReturnQuery?: import('express').Request['query'];
+	}
+}
+
 // eslint-disable-next-line @typescript-eslint/no-namespace
 declare global {
 	namespace Express {

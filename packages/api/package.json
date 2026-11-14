@@ -5,19 +5,23 @@
 	"main": "index.js",
 	"scripts": {
 		"start": "nodemon src/index.ts",
+		"test:auth": "esbuild src/services/oauthSession.test.ts --bundle --platform=node --external:@aws-sdk/* --external:passport --external:passport-google-oauth2 --outfile=dist/oauthSession.test.cjs && node --test dist/oauthSession.test.cjs",
 		"build": "esbuild --bundle --platform=node --target=node20 --outfile=dist/index.js src/index.ts"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
+		"@aws-sdk/client-dynamodb": "3.1000.0",
 		"@aws-sdk/client-lambda": "3.1000.0",
 		"@aws-sdk/s3-request-presigner": "3.1000.0",
 		"@codegenie/serverless-express": "4.15.0",
 		"@guardian/transcription-service-backend-common": "1.0.0",
 		"aws-lambda": "1.0.7",
+		"connect-dynamodb": "3.0.5",
 		"express": "4.22.3",
 		"express-async-handler": "1.2.0",
+		"express-session": "1.19.0",
 		"googleapis": "133.0.0",
 		"jwt-decode": "4.0.0",
 		"passport": "0.7.0",
@@ -28,6 +32,7 @@
 	"devDependencies": {
 		"@types/aws-lambda": "8.10.145",
 		"@types/express": "4.17.21",
+		"@types/express-session": "1.19.0",
 		"@types/passport": "1.0.16",
 		"@types/passport-google-oauth2": "0.1.10",
 		"@types/passport-jwt": "4.0.1",
