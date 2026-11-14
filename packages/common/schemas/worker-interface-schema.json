@@ -91,6 +91,21 @@
 		},
 		"MediaDownloadFailure": {
 			"$ref": "#/$defs/MediaDownloadFailure"
+		},
+		"PriorityLevel": {
+			"$ref": "#/$defs/PriorityLevel"
+		},
+		"ActivityType": {
+			"$ref": "#/$defs/ActivityType"
+		},
+		"SensitivityLevel": {
+			"$ref": "#/$defs/SensitivityLevel"
+		},
+		"QueueType": {
+			"$ref": "#/$defs/QueueType"
+		},
+		"Stage": {
+			"$ref": "#/$defs/Stage"
 		}
 	},
 	"required": [
@@ -123,7 +138,12 @@
 		"OcrOutput",
 		"TranscriptionResult",
 		"TranscriptionOutput",
-		"MediaDownloadFailure"
+		"MediaDownloadFailure",
+		"PriorityLevel",
+		"ActivityType",
+		"SensitivityLevel",
+		"QueueType",
+		"Stage"
 	],
 	"additionalProperties": false,
 	"$defs": {
@@ -1046,6 +1066,26 @@
 			},
 			"required": ["id", "userEmail", "status", "failureReason", "url"],
 			"additionalProperties": false
+		},
+		"PriorityLevel": {
+			"type": "string",
+			"enum": ["high", "standard", "low"]
+		},
+		"ActivityType": {
+			"type": "string",
+			"enum": ["transcription", "translation", "visual-ocr", "ai-prompt"]
+		},
+		"SensitivityLevel": {
+			"type": "string",
+			"enum": ["public-domain", "regular-sensitivity"]
+		},
+		"QueueType": {
+			"type": "string",
+			"enum": ["queue", "DLQ"]
+		},
+		"Stage": {
+			"type": "string",
+			"enum": ["DEV", "CODE", "PROD"]
 		}
 	}
 }

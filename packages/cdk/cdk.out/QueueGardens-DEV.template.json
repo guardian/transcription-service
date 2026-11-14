@@ -1,0 +1,1472 @@
+{
+	"Metadata": {
+		"gu:cdk:constructs": [],
+		"gu:cdk:version": "TEST"
+	},
+	"Resources": {
+		"investigationsDLQHIGHprioritypublicdomaintranscription81FAE980": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_HIGH-priority_public-domain_transcription_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueHIGHprioritypublicdomaintranscriptionF92C00BE": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_HIGH-priority_public-domain_transcription_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQHIGHprioritypublicdomaintranscription81FAE980",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQHIGHprioritypublicdomaintranslation7F60707E": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_HIGH-priority_public-domain_translation_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueHIGHprioritypublicdomaintranslation52EA9347": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_HIGH-priority_public-domain_translation_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQHIGHprioritypublicdomaintranslation7F60707E",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQHIGHprioritypublicdomainvisualocr917F4F16": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_HIGH-priority_public-domain_visual-ocr_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueHIGHprioritypublicdomainvisualocrD2FCE1A8": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_HIGH-priority_public-domain_visual-ocr_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQHIGHprioritypublicdomainvisualocr917F4F16",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQHIGHprioritypublicdomainaiprompt8EA7DD2E": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_HIGH-priority_public-domain_ai-prompt_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueHIGHprioritypublicdomainaiprompt0EB43C28": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_HIGH-priority_public-domain_ai-prompt_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQHIGHprioritypublicdomainaiprompt8EA7DD2E",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQHIGHpriorityregularsensitivitytranscription2DC8B646": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_HIGH-priority_regular-sensitivity_transcription_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueHIGHpriorityregularsensitivitytranscriptionEED4AF0D": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_HIGH-priority_regular-sensitivity_transcription_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQHIGHpriorityregularsensitivitytranscription2DC8B646",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQHIGHpriorityregularsensitivitytranslation3C3E2578": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_HIGH-priority_regular-sensitivity_translation_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueHIGHpriorityregularsensitivitytranslationE1032814": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_HIGH-priority_regular-sensitivity_translation_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQHIGHpriorityregularsensitivitytranslation3C3E2578",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQHIGHpriorityregularsensitivityvisualocr27A7CE8C": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_HIGH-priority_regular-sensitivity_visual-ocr_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueHIGHpriorityregularsensitivityvisualocr91EFA724": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_HIGH-priority_regular-sensitivity_visual-ocr_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQHIGHpriorityregularsensitivityvisualocr27A7CE8C",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQHIGHpriorityregularsensitivityaiprompt0B6F9D5A": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_HIGH-priority_regular-sensitivity_ai-prompt_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueHIGHpriorityregularsensitivityaiprompt94528DFE": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_HIGH-priority_regular-sensitivity_ai-prompt_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQHIGHpriorityregularsensitivityaiprompt0B6F9D5A",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQSTANDARDprioritypublicdomaintranscriptionA2AC096D": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_STANDARD-priority_public-domain_transcription_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueSTANDARDprioritypublicdomaintranscriptionEA1108CF": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_STANDARD-priority_public-domain_transcription_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQSTANDARDprioritypublicdomaintranscriptionA2AC096D",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQSTANDARDprioritypublicdomaintranslation8CE7901E": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_STANDARD-priority_public-domain_translation_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueSTANDARDprioritypublicdomaintranslationCBC107DF": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_STANDARD-priority_public-domain_translation_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQSTANDARDprioritypublicdomaintranslation8CE7901E",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQSTANDARDprioritypublicdomainvisualocr4B745DB6": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_STANDARD-priority_public-domain_visual-ocr_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueSTANDARDprioritypublicdomainvisualocrF9FF864D": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_STANDARD-priority_public-domain_visual-ocr_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQSTANDARDprioritypublicdomainvisualocr4B745DB6",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQSTANDARDprioritypublicdomainaiprompt786CDDB9": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_STANDARD-priority_public-domain_ai-prompt_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueSTANDARDprioritypublicdomainaiprompt204617AE": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_STANDARD-priority_public-domain_ai-prompt_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQSTANDARDprioritypublicdomainaiprompt786CDDB9",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQSTANDARDpriorityregularsensitivitytranscriptionB705C837": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_STANDARD-priority_regular-sensitivity_transcription_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueSTANDARDpriorityregularsensitivitytranscription5747071F": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_STANDARD-priority_regular-sensitivity_transcription_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQSTANDARDpriorityregularsensitivitytranscriptionB705C837",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQSTANDARDpriorityregularsensitivitytranslation304AEDC1": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_STANDARD-priority_regular-sensitivity_translation_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueSTANDARDpriorityregularsensitivitytranslation9174678C": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_STANDARD-priority_regular-sensitivity_translation_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQSTANDARDpriorityregularsensitivitytranslation304AEDC1",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQSTANDARDpriorityregularsensitivityvisualocrD05BD0A5": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_STANDARD-priority_regular-sensitivity_visual-ocr_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueSTANDARDpriorityregularsensitivityvisualocrE8E29B4F": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_STANDARD-priority_regular-sensitivity_visual-ocr_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQSTANDARDpriorityregularsensitivityvisualocrD05BD0A5",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQSTANDARDpriorityregularsensitivityaipromptDBF59486": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_STANDARD-priority_regular-sensitivity_ai-prompt_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueSTANDARDpriorityregularsensitivityaiprompt4A4B0DF4": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_STANDARD-priority_regular-sensitivity_ai-prompt_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQSTANDARDpriorityregularsensitivityaipromptDBF59486",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQLOWprioritypublicdomaintranscription21BA1A2C": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_LOW-priority_public-domain_transcription_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueLOWprioritypublicdomaintranscription849489E9": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_LOW-priority_public-domain_transcription_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQLOWprioritypublicdomaintranscription21BA1A2C",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQLOWprioritypublicdomaintranslation0B7B8C47": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_LOW-priority_public-domain_translation_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueLOWprioritypublicdomaintranslation0AA164E6": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_LOW-priority_public-domain_translation_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQLOWprioritypublicdomaintranslation0B7B8C47",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQLOWprioritypublicdomainvisualocr645FC809": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_LOW-priority_public-domain_visual-ocr_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueLOWprioritypublicdomainvisualocr8E250DC0": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_LOW-priority_public-domain_visual-ocr_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQLOWprioritypublicdomainvisualocr645FC809",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQLOWprioritypublicdomainaiprompt70425DE3": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_LOW-priority_public-domain_ai-prompt_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueLOWprioritypublicdomainaipromptBE259682": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_LOW-priority_public-domain_ai-prompt_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQLOWprioritypublicdomainaiprompt70425DE3",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQLOWpriorityregularsensitivitytranscriptionFBB8366F": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_LOW-priority_regular-sensitivity_transcription_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueLOWpriorityregularsensitivitytranscription07855EC6": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_LOW-priority_regular-sensitivity_transcription_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQLOWpriorityregularsensitivitytranscriptionFBB8366F",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQLOWpriorityregularsensitivitytranslationB93465A5": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_LOW-priority_regular-sensitivity_translation_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueLOWpriorityregularsensitivitytranslation42E00D4F": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_LOW-priority_regular-sensitivity_translation_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQLOWpriorityregularsensitivitytranslationB93465A5",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQLOWpriorityregularsensitivityvisualocrABA64333": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_LOW-priority_regular-sensitivity_visual-ocr_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueLOWpriorityregularsensitivityvisualocrD8820D34": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_LOW-priority_regular-sensitivity_visual-ocr_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQLOWpriorityregularsensitivityvisualocrABA64333",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsDLQLOWpriorityregularsensitivityaiprompt6240AE3F": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-DLQ_LOW-priority_regular-sensitivity_ai-prompt_DEV",
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		},
+		"investigationsqueueLOWpriorityregularsensitivityaiprompt7C4457E5": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": "investigations-queue_LOW-priority_regular-sensitivity_ai-prompt_DEV",
+				"RedrivePolicy": {
+					"deadLetterTargetArn": {
+						"Fn::GetAtt": [
+							"investigationsDLQLOWpriorityregularsensitivityaiprompt6240AE3F",
+							"Arn"
+						]
+					},
+					"maxReceiveCount": 3
+				},
+				"Tags": [
+					{
+						"Key": "gu:cdk:version",
+						"Value": "TEST"
+					},
+					{
+						"Key": "gu:repo",
+						"Value": "guardian/transcription-service"
+					},
+					{
+						"Key": "Stack",
+						"Value": "investigations"
+					},
+					{
+						"Key": "Stage",
+						"Value": "DEV"
+					}
+				]
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete"
+		}
+	}
+}

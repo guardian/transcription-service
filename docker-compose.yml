@@ -8,7 +8,7 @@ services:
     environment:
       # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
       - DEBUG=${DEBUG:-0}
-      - SERVICES=sqs,sns,dynamodb
+      - SERVICES=sqs,sns,dynamodb,cloudformation
       - PERSISTENCE=1
     volumes:
       - '${LOCALSTACK_VOLUME_DIR:-./localstack}:/var/lib/localstack'

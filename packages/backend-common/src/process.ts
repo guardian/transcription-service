@@ -31,6 +31,7 @@ export const runSpawnCommand = (
 	args: ReadonlyArray<string>,
 	logImmediately: boolean = false,
 	rejectOnFailure: boolean = true,
+	maybeAbortSignal?: AbortSignal,
 	maybeLoggingCallback?: (data: SpawnCommandOutput) => void,
 ): Promise<ProcessResult> => {
 	logger.info(
@@ -38,7 +39,9 @@ export const runSpawnCommand = (
 	);
 	const logStdout = !processesWithHiddenStdout.includes(processName);
 	return new Promise((resolve, reject) => {
-		const cp = spawn(cmd, args);
+		const cp = spawn(cmd, args, {
+			signal: maybeAbortSignal,
+		});
 		const stdout: string[] = [];
 		const stderr: string[] = [];
 		cp.stdout.on('data', (data) => {

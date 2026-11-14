@@ -4,17 +4,37 @@ import type { AutoScalingGroup } from 'aws-cdk-lib/aws-autoscaling';
 import {
 	Alarm,
 	ComparisonOperator,
+	MathExpression,
 	Metric,
 	TreatMissingData,
 } from 'aws-cdk-lib/aws-cloudwatch';
 import { SnsAction } from 'aws-cdk-lib/aws-cloudwatch-actions';
 import { Topic } from 'aws-cdk-lib/aws-sns';
-import type { Queue } from 'aws-cdk-lib/aws-sqs';
+
+export const TAG_ALARM_FOR_OLD_MESSAGES = 'shouldAlarmOnOldMessages';
+export const TAG_IS_DLQ = 'isDLQ';
+
+const buildOldMessagesMetricMathExpression = ({
+	isDLQ,
+	period,
+}: {
+	isDLQ: boolean;
+	period: Duration;
+}) =>
+	new MathExpression({
+		expression: `SELECT MAX(ApproximateAgeOfOldestMessage)
+            FROM SCHEMA("AWS/SQS", QueueName)
+            WHERE tag.${TAG_ALARM_FOR_OLD_MESSAGES} = 'true'
+            AND tag.${TAG_IS_DLQ} = '${isDLQ}'
+            GROUP BY QueueName
+            ORDER BY COUNT() DESC`,
+		usingMetrics: {},
+		period,
+		label: `Old messages in ${isDLQ ? 'DLQs' : 'task queues'}`,
+	});
 
 export const makeAlarms = (
 	scope: GuStack,
-	gpuTaskQueue: Queue,
-	dlQueue: Queue,
 	gpuWorkerAsg: AutoScalingGroup,
 	alarmTopicArn: string,
 ) => {
@@ -27,23 +47,23 @@ export const makeAlarms = (
 		// for this alarm to trigger - see https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-monitoring-using-cloudwatch.html
 		new Alarm(scope, 'DeadLetterQueueAlarm', {
 			alarmName: `transcription-service-dead-letter-queue-${scope.stage}`,
-			metric: dlQueue.metricApproximateNumberOfMessagesVisible({
+			metric: buildOldMessagesMetricMathExpression({
+				isDLQ: true,
 				period: Duration.minutes(1),
-				statistic: 'max',
 			}),
 			threshold: 1,
 			evaluationPeriods: 1,
 			actionsEnabled: true,
-			alarmDescription: `A transcription job has been sent to the dead letter queue. This may be because ffmpeg can't convert the file (maybe it's a JPEG) or because the transcription job has failed multiple times.`,
+			alarmDescription: `A transcription job has been sent to one of the dead letter queues. This may be because ffmpeg can't convert the file (maybe it's a JPEG) or because the transcription job has failed multiple times.`,
 			treatMissingData: TreatMissingData.IGNORE,
 			comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
 		}),
 		// alarm when there's a really old message in the task queue
 		new Alarm(scope, 'GpuTaskQueueOldMessageAlarm', {
 			alarmName: `transcription-service-gpu-task-queue-${scope.stage}`,
-			metric: gpuTaskQueue.metricApproximateAgeOfOldestMessage({
+			metric: buildOldMessagesMetricMathExpression({
+				isDLQ: false,
 				period: Duration.minutes(5),
-				statistic: 'max',
 			}),
 			threshold: oldestMessageAlarmThresholdSeconds,
 			evaluationPeriods: 1,
