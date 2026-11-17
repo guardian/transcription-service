@@ -1860,7 +1860,7 @@ service transcription-service-worker start",
       "Type": "AWS::SSM::Parameter",
     },
     "mediadownloadqueuesfnpipelog51AF4181": {
-      "DeletionPolicy": "Snapshot",
+      "DeletionPolicy": "Delete",
       "Properties": {
         "LogGroupName": "/aws/pipes/CODE/media-download-queue-sfn-pipe",
         "RetentionInDays": 7,
@@ -1884,7 +1884,7 @@ service transcription-service-worker start",
         ],
       },
       "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Snapshot",
+      "UpdateReplacePolicy": "Delete",
     },
     "mediadownloadsgMediadownload47EFEEBF": {
       "Properties": {
@@ -7200,7 +7200,7 @@ service transcription-service-worker start",
       "Type": "AWS::CloudWatch::Alarm",
     },
     "mediadownloadqueuesfnpipelog51AF4181": {
-      "DeletionPolicy": "Snapshot",
+      "DeletionPolicy": "Delete",
       "Properties": {
         "LogGroupName": "/aws/pipes/PROD/media-download-queue-sfn-pipe",
         "RetentionInDays": 7,
@@ -7224,7 +7224,7 @@ service transcription-service-worker start",
         ],
       },
       "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Snapshot",
+      "UpdateReplacePolicy": "Delete",
     },
     "mediadownloadsgMediadownload47EFEEBF": {
       "Properties": {
