@@ -241,7 +241,7 @@ export const makeMediaDownloadService = (
 	const logGroup = new LogGroup(scope, 'media-download-queue-sfn-pipe-log', {
 		logGroupName: `/aws/pipes/${scope.stage}/media-download-queue-sfn-pipe`,
 		retention: 7,
-		removalPolicy: RemovalPolicy.SNAPSHOT,
+		removalPolicy: RemovalPolicy.DESTROY,
 	});
 
 	new CfnPipe(scope, 'media-download-sqs-sfn', {
