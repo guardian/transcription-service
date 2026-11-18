@@ -3,7 +3,24 @@ on:
   workflow_dispatch:
   push:
 jobs:
+  container-version:
+    runs-on: ubuntu-latest
+    outputs:
+      container_version: ${{ steps.branch_name.outputs.container_version }}
+    steps:
+      - name: Determine container version from branch name
+        id: branch_name
+        run: |
+          # Docker tags may only contain [A-Za-z0-9_.-], so replace anything else (e.g. "/" in branch names)
+          container_version=$(echo "${{ github.ref_name }}" | sed 's/[^A-Za-z0-9_.-]/-/g')
+          if [ -z "$container_version" ]; then
+            echo "Could not determine container version from ref name" >&2
+            exit 1
+          fi
+          echo "container_version=$container_version" >> "$GITHUB_OUTPUT"
+
   media-download-ci:
+    needs: container-version
     permissions:
       id-token: write
       contents: read
@@ -49,12 +66,13 @@ jobs:
           file: containers/media-download.Dockerfile
           platforms: linux/arm64
           push: true
-          tags: ${{ secrets.MEDIA_DOWNLOAD_ECR_URI }}:${{ steps.branch_name.outputs.container_version }}
+          tags: ${{ secrets.MEDIA_DOWNLOAD_ECR_URI }}:${{ needs.container-version.outputs.container_version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             node_version=${{ steps.tool-versions.outputs.node_version }}
   ci:
+    needs: container-version
     permissions:
       id-token: write
       contents: read
@@ -103,13 +121,10 @@ jobs:
       - name: Run common tests
         run: |
           npm run common::test
-      - name: Sanitise branch name
-        id: branch_name
-        run: echo "container_version=${GITHUB_REF_NAME//\//-}" >> "$GITHUB_OUTPUT"
       - name: CDK synth
         # Note testing and linting is done in separate cdk-snapshot-test workflow
         run: |
-          export CONTAINER_VERSION=${{ steps.branch_name.outputs.container_version }}
+          export CONTAINER_VERSION=${{ needs.container-version.outputs.container_version }}
           npm run cdk::build
           npm run cdk::synth
       - name: Upload to riff-raff
@@ -136,7 +151,6 @@ jobs:
               - target/worker-capacity-manager.zip
             transcription-service-worker:
               - packages/worker/dist/transcription-service-worker_1.0.0_all.deb
-              - packages/worker/fluent-bit/td-agent-bit.conf
       - name: Upload repository project to riff-raff
         uses: guardian/actions-riff-raff@v4
         with:
