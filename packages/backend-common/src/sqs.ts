@@ -205,25 +205,33 @@ export const publishTranscriptionOutput = async (
 	}
 };
 
+// this is the max - see
+// https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SetQueueAttributes.html#API_SetQueueAttributes_RequestSyntax
+const MAX_VISIBILITY_TIMEOUT_SECONDS = 12 * 60 * 60;
+
 export const changeMessageVisibility = async (
 	client: SQSClient,
 	queueUrl: string,
 	receiptHandle: string,
 	timeoutOverride: number,
 ) => {
+	const visibilityTimeout = Math.min(
+		timeoutOverride,
+		MAX_VISIBILITY_TIMEOUT_SECONDS,
+	);
 	const command = new ChangeMessageVisibilityCommand({
 		QueueUrl: queueUrl,
-		VisibilityTimeout: timeoutOverride,
+		VisibilityTimeout: visibilityTimeout,
 		ReceiptHandle: receiptHandle,
 	});
 
 	try {
 		await client.send(command);
 		logger.info(
-			`Successfully updated the VisibilityTimeout of the message to ${timeoutOverride}`,
+			`Successfully updated the VisibilityTimeout of the message to ${visibilityTimeout}`,
 		);
 	} catch (error) {
-		const errorMsg = `Failed to update VisibilityTimeout to ${timeoutOverride} for message`;
+		const errorMsg = `Failed to update VisibilityTimeout to ${visibilityTimeout} for message`;
 		logger.error(errorMsg, error);
 		throw error;
 	}
