@@ -42,6 +42,11 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+      - name: Sanitise branch name
+        id: branch_name
+        run: |
+          container_version=$(scripts/sanitise-branch-name.sh "$GITHUB_REF_NAME")
+          printf 'container_version=%s\n' "$container_version" >> "$GITHUB_OUTPUT"
       - name: Build and push media-download Docker image
         uses: docker/build-push-action@v5
         with:
@@ -105,11 +110,14 @@ jobs:
           npm run common::test
       - name: Sanitise branch name
         id: branch_name
-        run: echo "container_version=${GITHUB_REF_NAME//\//-}" >> "$GITHUB_OUTPUT"
+        run: |
+          container_version=$(scripts/sanitise-branch-name.sh "$GITHUB_REF_NAME")
+          printf 'container_version=%s\n' "$container_version" >> "$GITHUB_OUTPUT"
       - name: CDK synth
+        env:
+          CONTAINER_VERSION: ${{ steps.branch_name.outputs.container_version }}
         # Note testing and linting is done in separate cdk-snapshot-test workflow
         run: |
-          export CONTAINER_VERSION=${{ steps.branch_name.outputs.container_version }}
           npm run cdk::build
           npm run cdk::synth
       - name: Upload to riff-raff
@@ -136,7 +144,6 @@ jobs:
               - target/worker-capacity-manager.zip
             transcription-service-worker:
               - packages/worker/dist/transcription-service-worker_1.0.0_all.deb
-              - packages/worker/fluent-bit/td-agent-bit.conf
       - name: Upload repository project to riff-raff
         uses: guardian/actions-riff-raff@v4
         with:
