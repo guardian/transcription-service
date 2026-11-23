@@ -1491,13 +1491,13 @@ aws s3 cp s3://",
                   {
                     "Ref": "DistributionBucketName",
                   },
-                  "/investigations/CODE/transcription-service-worker/td-agent-bit.conf /etc/td-agent-bit/td-agent-bit.conf
+                  "/investigations/CODE/transcription-service-worker/fluent-bit.conf /etc/fluent-bit/fluent-bit.conf
 sed -i -e 's|<INVESTIGATIONS_LOGS_ENDPOINT>|",
                   {
                     "Ref": "InvestigationsLogsOpenSearchDomain",
                   },
-                  "|g' -e 's|<STAGE>|CODE|g' /etc/td-agent-bit/td-agent-bit.conf
-systemctl restart td-agent-bit
+                  "|g' -e 's|<STAGE>|CODE|g' /etc/fluent-bit/fluent-bit.conf
+systemctl restart fluent-bit
 rm /usr/local/cuda
 ln -s /usr/local/cuda-12.8 /usr/local/cuda
 aws s3 cp --quiet s3://",
@@ -6737,13 +6737,13 @@ aws s3 cp s3://",
                   {
                     "Ref": "DistributionBucketName",
                   },
-                  "/investigations/PROD/transcription-service-worker/td-agent-bit.conf /etc/td-agent-bit/td-agent-bit.conf
+                  "/investigations/PROD/transcription-service-worker/fluent-bit.conf /etc/fluent-bit/fluent-bit.conf
 sed -i -e 's|<INVESTIGATIONS_LOGS_ENDPOINT>|",
                   {
                     "Ref": "InvestigationsLogsOpenSearchDomain",
                   },
-                  "|g' -e 's|<STAGE>|PROD|g' /etc/td-agent-bit/td-agent-bit.conf
-systemctl restart td-agent-bit
+                  "|g' -e 's|<STAGE>|PROD|g' /etc/fluent-bit/fluent-bit.conf
+systemctl restart fluent-bit
 rm /usr/local/cuda
 ln -s /usr/local/cuda-12.8 /usr/local/cuda
 aws s3 cp --quiet s3://",
