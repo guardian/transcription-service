@@ -5,7 +5,7 @@ requires-python = ">=3.11,<3.14"
 dependencies = [
     "ocrmypdf>=17.3.0",
     "ocrmypdf-rapidocr==1.0.1",
-    "whisperx==3.8.5",
+    "whisperx==3.8.6",
 ]
 
 [tool.uv]
