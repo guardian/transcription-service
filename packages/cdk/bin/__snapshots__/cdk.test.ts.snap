@@ -1513,6 +1513,7 @@ mkdir -p /home/ubuntu/.cache
 [ -d /opt/dlami/nvme/models/huggingface ] && ln -s /opt/dlami/nvme/models/huggingface /home/ubuntu/.cache/huggingface || true
 [ -d /opt/dlami/nvme/models/rapidocr ] &&  ln -s /opt/dlami/nvme/models/rapidocr /home/ubuntu/.cache/rapidocr || true
 chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface /home/ubuntu/.cache/rapidocr || true
+install -d -o ubuntu -g ubuntu -m 0700 /opt/dlami/nvme/transcription-workspace
 aws s3 cp s3://",
                   {
                     "Ref": "DistributionBucketName",
@@ -6759,6 +6760,7 @@ mkdir -p /home/ubuntu/.cache
 [ -d /opt/dlami/nvme/models/huggingface ] && ln -s /opt/dlami/nvme/models/huggingface /home/ubuntu/.cache/huggingface || true
 [ -d /opt/dlami/nvme/models/rapidocr ] &&  ln -s /opt/dlami/nvme/models/rapidocr /home/ubuntu/.cache/rapidocr || true
 chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface /home/ubuntu/.cache/rapidocr || true
+install -d -o ubuntu -g ubuntu -m 0700 /opt/dlami/nvme/transcription-workspace
 aws s3 cp s3://",
                   {
                     "Ref": "DistributionBucketName",

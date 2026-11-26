@@ -31,10 +31,14 @@ import {
 } from '@guardian/transcription-service-backend-common/src/metrics';
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { setTimeout } from 'timers/promises';
-import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
+import {
+	MAX_RECEIVE_COUNT,
+	TRANSCRIPTION_WORKSPACE,
+} from '@guardian/transcription-service-common';
 import { checkSpotInterrupt } from './spot-termination';
 import { AutoScalingClient } from '@aws-sdk/client-auto-scaling';
 import fs from 'node:fs';
+import path from 'node:path';
 import { newArtifactAvailable } from './s3';
 import {
 	processTranscriptionJob,
@@ -57,6 +61,11 @@ const main = async () => {
 	const appStartTime = new Date();
 
 	const config = await getConfig();
+	const workspace =
+		config.app.stage === 'DEV'
+			? path.resolve(__dirname, '../../../worker-tmp-files')
+			: TRANSCRIPTION_WORKSPACE;
+	fs.mkdirSync(workspace, { recursive: true });
 	const instanceId =
 		config.app.stage === 'DEV'
 			? ''
@@ -112,6 +121,7 @@ const main = async () => {
 				metrics,
 				config,
 				instanceId,
+				workspace,
 			);
 		} else {
 			logger.warn(
@@ -131,6 +141,7 @@ const pollTranscriptionQueue = async (
 	metrics: MetricsService,
 	config: TranscriptionConfig,
 	instanceId: string,
+	workspace: string,
 ) => {
 	const stage = config.app.stage;
 	const isDev = config.app.stage === 'DEV';
@@ -260,6 +271,7 @@ const pollTranscriptionQueue = async (
 		);
 	};
 
+	let destinationDirectory: string | undefined;
 	try {
 		// from this point all worker logs will have id & userEmail in their fields
 		// (plus the attempt number and how long it was in seconds between when the item entered the queue to when it was picked up)
@@ -272,11 +284,7 @@ const pollTranscriptionQueue = async (
 
 		const { inputSignedUrl, jobType } = job;
 
-		const destinationDirectory = isDev
-			? `${__dirname}/../../../worker-tmp-files`
-			: '/tmp';
-
-		fs.mkdirSync(destinationDirectory, { recursive: true });
+		destinationDirectory = fs.mkdtempSync(path.join(workspace, 'job-'));
 
 		const downloadedFile = await getObjectWithPresignedUrl(
 			inputSignedUrl,
@@ -387,6 +395,16 @@ const pollTranscriptionQueue = async (
 			}
 		}
 	} finally {
+		if (destinationDirectory) {
+			try {
+				fs.rmSync(destinationDirectory, { recursive: true, force: true });
+			} catch (error) {
+				logger.error(
+					`Failed to clean up job directory ${destinationDirectory}`,
+					error,
+				);
+			}
+		}
 		logger.resetCommonMetadata();
 		await updateScaleInProtection(
 			autoScalingClient,

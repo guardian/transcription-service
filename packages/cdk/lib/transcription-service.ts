@@ -21,7 +21,10 @@ import {
 } from '@guardian/cdk/lib/constructs/iam';
 import { GuLambdaFunction } from '@guardian/cdk/lib/constructs/lambda';
 import { GuS3Bucket } from '@guardian/cdk/lib/constructs/s3';
-import { MAX_RECEIVE_COUNT } from '@guardian/transcription-service-common';
+import {
+	MAX_RECEIVE_COUNT,
+	TRANSCRIPTION_WORKSPACE,
+} from '@guardian/transcription-service-common';
 import {
 	type App,
 	aws_events_targets,
@@ -416,6 +419,7 @@ export class TranscriptionService extends GuStack {
 			`[ -d /opt/dlami/nvme/models/rapidocr ] &&  ln -s /opt/dlami/nvme/models/rapidocr /home/ubuntu/.cache/rapidocr || true`,
 			`chown -h ubuntu:ubuntu /home/ubuntu/.cache/torch /home/ubuntu/.cache/huggingface /home/ubuntu/.cache/rapidocr || true`,
 			// Set up transcription service worker
+			`install -d -o ubuntu -g ubuntu -m 0700 ${TRANSCRIPTION_WORKSPACE}`,
 			`aws s3 cp ${baseS3DistPath}/${workerApp}/transcription-service-worker_1.0.0_all.deb .`,
 			`dpkg -i transcription-service-worker_1.0.0_all.deb`,
 			// warm up whisperx by transcribing sample file then start the service NOTE: won't work for whisper.cpp if we bring that back
